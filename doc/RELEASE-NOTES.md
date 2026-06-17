@@ -84,6 +84,8 @@ This version enables multiline by default and adds TKL IDs.
   * In a future release we will make server linking with `spkifp` mandatory,
     so all of this helps with getting people ready for that, making such
     a future transition smooth.
+  * The command `./unrealircd genlinkblock` now also deals with ECC + ML-DSA
+    where you have multiple `password ".." { spkifp; }` entries.
 * Spamfilter regexes now use more sensible defaults in terms of "max effort",
   similar to what PHP has been using for years. This means very slow regexes
   will now raise a `SPAMFILTER_REGEX_ERROR` warning during execution if

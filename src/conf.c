@@ -202,7 +202,6 @@ int tls_tests(void);
 
 /* Conf sub-sub-functions */
 void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, TLSOptions *inherit_from);
-TLSOptions *duplicate_tls_options(TLSOptions *src);
 void free_tls_options(TLSOptions *tlsoptions);
 
 /*
@@ -3252,6 +3251,10 @@ int config_run_blocks(void)
 				tempiConf.server_linking_tls_options = safe_alloc(sizeof(TLSOptions));
 				conf_tlsblock(conf, server_linking_tlsoptions_ce, tempiConf.server_linking_tls_options, tempiConf.tls_options);
 				server_linking_tlsoptions_ce = NULL;
+				/* ctx_link_server and ctx_link_client is
+				 * created/updated by init_tls() and reinit_tls(). Those
+				 * also compute the cached spkifp.
+				 */
 			}
 		}
 	}
@@ -5614,14 +5617,10 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 		              tempiConf.server_linking_tls_options : tempiConf.tls_options);
 		listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 	}
-	else if ((options & LISTENER_SERVERSONLY) && tempiConf.server_linking_tls_options)
-	{
-		/* No explicit tls-options on this serversonly listener, but
-		 * set::server-linking::tls-options exists/is configured. Use that one.
-		 */
-		listen->tls_options = duplicate_tls_options(tempiConf.server_linking_tls_options);
-		listen->ssl_ctx = init_ctx(listen->tls_options, 1);
-	}
+	/* A serversonly listener with no tls-options of its own uses the shared
+	 * set::server-linking context at runtime (tls_ctx_for_listener()), so we
+	 * deliberately do NOT build a per-listener context here.
+	 */
 
 	/* For modules that hook CONFIG_LISTEN and CONFIG_LISTEN_OPTIONS.
 	 * Yeah, ugly we have this here..
@@ -6773,19 +6772,10 @@ int	_conf_link(ConfigFile *conf, ConfigEntry *ce)
 	if (!link->hub && !link->leaf)
 		safe_strdup(link->hub, "*");
 
-	/* TLS Configuration for this link block: if this link connects out
-	 * (any non-'insecure' link, including plaintext links that upgrade to
-	 * TLS via STARTTLS), and there is no explicit link::outgoing::tls-options
-	 * set, then we use set::server-linking::tls-options.
+	/* An outgoing link with no link::outgoing::tls-options of its own uses the
+	 * shared set::server-linking context at connect time
+	 * (tls_ctx_for_outgoing_link()), so we do NOT build a per-link context here.
 	 */
-	if ((link->outgoing.hostname || link->outgoing.file) &&
-	    !(link->outgoing.options & CONNECT_OUTGOING_INSECURE) &&
-	    !link->tls_options &&
-	    tempiConf.server_linking_tls_options)
-	{
-		link->tls_options = duplicate_tls_options(tempiConf.server_linking_tls_options);
-		link->ssl_ctx = init_ctx(link->tls_options, 0);
-	}
 
 	AppendListItem(link, conf_link);
 	return 0;
@@ -7706,6 +7696,7 @@ void free_tls_options(TLSOptions *tlsoptions)
 
 	safe_free_name_list(tlsoptions->certificate_files);
 	safe_free_name_list(tlsoptions->key_files);
+	safe_free_name_list(tlsoptions->spkifp);
 	safe_free(tlsoptions->trusted_ca_file);
 	safe_free(tlsoptions->ciphers);
 	safe_free(tlsoptions->ciphersuites);
@@ -7715,43 +7706,6 @@ void free_tls_options(TLSOptions *tlsoptions)
 	safe_free(tlsoptions->outdated_ciphers);
 	memset(tlsoptions, 0, sizeof(TLSOptions));
 	safe_free(tlsoptions);
-}
-
-/** Make a complete (deep) copy of TLSOptions.
- * Unlike conf_tlsblock()'s inheritance, this is a 100% clone with no
- * base+block merge, so certificate_files and key_files are copied as-is
- * (a multi-cert RSA+ECC or ECC+postquantum set stays intact, so be
- *  careful if you have to deal with overriding this that you don't
- *  accidentally "add" but "replace" instead).
- * If you are in config-based code, you almost definately will want to
- * use conf_tlsblock() instead.
- */
-TLSOptions *duplicate_tls_options(TLSOptions *src)
-{
-	TLSOptions *n;
-
-	if (!src)
-		return NULL;
-
-	n = safe_alloc(sizeof(TLSOptions));
-	n->certificate_files = duplicate_name_list(src->certificate_files);
-	n->key_files = duplicate_name_list(src->key_files);
-	safe_strdup(n->trusted_ca_file, src->trusted_ca_file);
-	n->protocols = src->protocols;
-	safe_strdup(n->ciphers, src->ciphers);
-	safe_strdup(n->ciphersuites, src->ciphersuites);
-	safe_strdup(n->groups, src->groups);
-	safe_strdup(n->signature_algorithms, src->signature_algorithms);
-	safe_strdup(n->outdated_protocols, src->outdated_protocols);
-	safe_strdup(n->outdated_ciphers, src->outdated_ciphers);
-	n->options = src->options;
-	n->renegotiate_bytes = src->renegotiate_bytes;
-	n->renegotiate_timeout = src->renegotiate_timeout;
-	n->sts_port = src->sts_port;
-	n->sts_duration = src->sts_duration;
-	n->sts_preload = src->sts_preload;
-	n->certificate_expiry_notification = src->certificate_expiry_notification;
-	return n;
 }
 
 void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, TLSOptions *inherit_from)
@@ -11967,29 +11921,14 @@ int reloadable_perm_module_unloaded(void)
 	return ret;
 }
 
-const char *link_generator_spkifp(TLSOptions *tlsoptions)
-{
-	SSL_CTX *ctx;
-	SSL *ssl;
-	X509 *cert;
-
-	ctx = init_ctx(tlsoptions, 1);
-	if (!ctx)
-		exit(1);
-	ssl = SSL_new(ctx);
-	if (!ssl)
-		exit(1);
-	cert = SSL_get_certificate(ssl);
-	return spki_fingerprint_ex(cert);
-}
-
 void link_generator(void)
 {
 	ConfigItem_listen *lstn;
 	TLSOptions *tlsopt = iConf.server_linking_tls_options ? iConf.server_linking_tls_options : iConf.tls_options; /* set::server-linking::tls-options and otherwise set::tls */
 	int port = 0;
 	char *ip = NULL;
-	const char *spkifp;
+	SSL_CTX *ctx;
+	NameList *fp;
 
 	for (lstn = conf_listen; lstn; lstn = lstn->next)
 	{
@@ -12014,8 +11953,9 @@ void link_generator(void)
 		exit(1);
 	}
 
-	spkifp = link_generator_spkifp(tlsopt);
-	if (!spkifp)
+	/* init_ctx() will compute the spkifp(s) */
+	ctx = init_ctx(tlsopt, 1);
+	if (!ctx || !tlsopt->spkifp)
 	{
 		printf("Could not calculate spkifp. Maybe you have uncommon TLS options set? Odd...\n");
 		exit(1);
@@ -12033,14 +11973,18 @@ void link_generator(void)
 	       "        hostname %s;\n"
 	       "        port %d;\n"
 	       "        options { tls; autoconnect; }\n"
-	       "    }\n"
-	       "    password \"%s\" { spkifp; }\n"
-	       "    class servers;\n"
-	       "}\n",
+	       "    }\n",
 	       conf_me->name,
 	       ip ? ip : conf_me->name,
-	       port,
-	       spkifp);
+	       port);
+	/* The simple case is a single password ".." { spkifp; } line, but we also
+	 * have to deal with the case of multiple certificate/keys with multiple
+	 * password..spkifp lines. Like for ECC+RSA or ECC+ML-DSA.
+	 */
+	for (fp = tlsopt->spkifp; fp; fp = fp->next)
+		printf("    password \"%s\" { spkifp; }\n", fp->name);
+	printf("    class servers;\n"
+	       "}\n");
 	printf("################################################################################\n");
 	exit(0);
 }

@@ -48,8 +48,10 @@ int cipher_check(SSL_CTX *ctx, char **errstr);
 int certificate_quality_check(SSL_CTX *ctx, char **errstr);
 
 /* The TLS structures */
-SSL_CTX *ctx_server;
-SSL_CTX *ctx_client;
+SSL_CTX *ctx_server; /**< Default TLS context for incoming connections (set::tls). */
+SSL_CTX *ctx_client; /**< Default TLS context for outgoing connections (set::tls). */
+static SSL_CTX *ctx_link_server = NULL; /**< Default TLS context for incoming server links (set::server-linking::tls-options). NULL when not set, then use ctx_server instead. */
+static SSL_CTX *ctx_link_client = NULL; /**< Default TLS context for outgoing server links (set::server-linking::tls-options). NULL when not set, then use ctx_client instead. */
 
 char *TLSKeyPasswd;
 
@@ -381,6 +383,16 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 
 	// TODO: verify same amount of certificate_files vs key_files :D
 
+	/* (Re)compute the cached spkifp list for these options. init_ctx() can be
+	 * called more than once on the same TLSOptions (eg ctx_server + ctx_client,
+	 * and again on rehash), so clear it first to avoid duplicate entries.
+	 *
+	 * Note: rebuilding spkifp is a side effect, so throwaway callers (the expiry
+	 * check, test_tlsblock) also rebuild the live list. Harmless for now.
+	 * TODO: add an init_ctx() flag so those callers can skip it.
+	 */
+	safe_free_name_list(tlsoptions->spkifp);
+
 	for (n = tlsoptions->certificate_files, n2 = tlsoptions->key_files; n && n2; n = n->next, n2 = n2->next)
 	{
 		if (SSL_CTX_use_certificate_chain_file(ctx, n->name) <= 0)
@@ -421,6 +433,24 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 					   );
 			}
 			goto fail;
+		}
+
+		/* Cache the spkifp of this just-loaded leaf certificate, so consumers
+		 * (genlinkblock and the server-linking advisor) see all of a multi-cert
+		 * server's fingerprints without re-reading files. SSL_new() +
+		 * SSL_get_certificate() works on all OpenSSL/LibreSSL versions and
+		 * returns the context's current (= just-loaded) certificate.
+		 */
+		{
+			SSL *probe = SSL_new(ctx);
+			if (probe)
+			{
+				X509 *leafcert = SSL_get_certificate(probe);
+				const char *fp = leafcert ? spki_fingerprint_ex(leafcert) : NULL;
+				if (fp)
+					add_name_list(tlsoptions->spkifp, fp);
+				SSL_free(probe);
+			}
 		}
 	}
 
@@ -579,6 +609,8 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 
 	return ctx;
 fail:
+	/* Don't leave a partial cached spkifp behind on failure. */
+	safe_free_name_list(tlsoptions->spkifp);
 	SSL_CTX_free(ctx);
 	return NULL;
 }
@@ -719,6 +751,56 @@ int early_init_tls(void)
 	return 1;
 }
 
+/** Return the TLS context an incoming connection on this listener should use.
+ * A serversonly listener with no per-listener tls-options presents the
+ * set::server-linking certificate (when configured); everything else uses the
+ * normal set::tls server context.
+ */
+SSL_CTX *tls_ctx_for_listener(ConfigItem_listen *listener)
+{
+	if (listener->ssl_ctx)
+		return listener->ssl_ctx;
+	if ((listener->options & LISTENER_SERVERSONLY) && ctx_link_server)
+		return ctx_link_server;
+	return ctx_server;
+}
+
+/** Return the TLS context an outgoing server link should use. A link with no
+ * per-link tls-options presents the set::server-linking certificate (when
+ * configured); otherwise the normal set::tls client context.
+ */
+SSL_CTX *tls_ctx_for_outgoing_link(ConfigItem_link *link)
+{
+	if (link->ssl_ctx)
+		return link->ssl_ctx;
+	if (ctx_link_client)
+		return ctx_link_client;
+	return ctx_client;
+}
+
+/** Return the effective TLSOptions for an incoming connection on this listener
+ * (same selection as tls_ctx_for_listener(), but the options struct). Used for
+ * STARTTLS option flags and by the server-linking certificate advisor.
+ */
+TLSOptions *tls_options_for_listener(ConfigItem_listen *listener)
+{
+	if (listener->tls_options)
+		return listener->tls_options;
+	if ((listener->options & LISTENER_SERVERSONLY) && iConf.server_linking_tls_options)
+		return iConf.server_linking_tls_options;
+	return iConf.tls_options;
+}
+
+/** Return the effective TLSOptions for an outgoing server link. */
+TLSOptions *tls_options_for_outgoing_link(ConfigItem_link *link)
+{
+	if (link->tls_options)
+		return link->tls_options;
+	if (iConf.server_linking_tls_options)
+		return iConf.server_linking_tls_options;
+	return iConf.tls_options;
+}
+
 /** Initialize the server and client contexts.
  * This is only possible after reading the configuration file.
  */
@@ -730,6 +812,15 @@ int init_tls(void)
 	ctx_client = init_ctx(iConf.tls_options, 0);
 	if (!ctx_client)
 		return 0;
+	if (iConf.server_linking_tls_options)
+	{
+		ctx_link_server = init_ctx(iConf.server_linking_tls_options, 1);
+		if (!ctx_link_server)
+			return 0;
+		ctx_link_client = init_ctx(iConf.server_linking_tls_options, 0);
+		if (!ctx_link_client)
+			return 0;
+	}
 	return 1;
 }
 
@@ -763,6 +854,45 @@ int reinit_tls(void)
 	if (ctx_client)
 		SSL_CTX_free(ctx_client);
 	ctx_client = tmp; /* activate */
+
+	/* set::server-linking::tls-options (free+NULL if no longer configured) */
+	if (iConf.server_linking_tls_options)
+	{
+		tmp = init_ctx(iConf.server_linking_tls_options, 1);
+		if (!tmp)
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+				   "TLS Reload failed at set::server-linking::tls-options. See previous errors.");
+			return 0;
+		}
+		if (ctx_link_server)
+			SSL_CTX_free(ctx_link_server);
+		ctx_link_server = tmp; /* activate */
+
+		tmp = init_ctx(iConf.server_linking_tls_options, 0);
+		if (!tmp)
+		{
+			unreal_log(ULOG_ERROR, "config", "TLS_RELOAD_FAILED", NULL,
+				   "TLS Reload failed at set::server-linking::tls-options (client). See previous errors.");
+			return 0;
+		}
+		if (ctx_link_client)
+			SSL_CTX_free(ctx_link_client);
+		ctx_link_client = tmp; /* activate */
+	}
+	else
+	{
+		if (ctx_link_server)
+		{
+			SSL_CTX_free(ctx_link_server);
+			ctx_link_server = NULL;
+		}
+		if (ctx_link_client)
+		{
+			SSL_CTX_free(ctx_link_client);
+			ctx_link_client = NULL;
+		}
+	}
 
 	/* listen::tls-options.... */
 	for (listen = conf_listen; listen; listen = listen->next)
@@ -875,6 +1005,16 @@ TLSOptions *get_tls_options_for_client(Client *client)
 		return client->server->conf->tls_options;
 	if (client->local && client->local->listener && client->local->listener->tls_options)
 		return client->local->listener->tls_options;
+	/* No own tls-options: fall back to set::server-linking for s2s paths (like
+	 * tls_ctx_for_*() does for the context), else set::tls.
+	 */
+	if (iConf.server_linking_tls_options)
+	{
+		if (client->server && client->server->conf)
+			return iConf.server_linking_tls_options;
+		if (client->local->listener && (client->local->listener->options & LISTENER_SERVERSONLY))
+			return iConf.server_linking_tls_options;
+	}
 	return iConf.tls_options;
 }
 
@@ -882,7 +1022,7 @@ TLSOptions *get_tls_options_for_client(Client *client)
 void unreal_tls_client_handshake(int fd, int revents, void *data)
 {
 	Client *client = data;
-	SSL_CTX *ctx = (client->server && client->server->conf && client->server->conf->ssl_ctx) ? client->server->conf->ssl_ctx : ctx_client;
+	SSL_CTX *ctx = (client->server && client->server->conf) ? tls_ctx_for_outgoing_link(client->server->conf) : ctx_client;
 	TLSOptions *tlsoptions = get_tls_options_for_client(client);
 
 	if (!ctx)
@@ -1206,7 +1346,7 @@ int client_starttls(Client *client)
 	 * falling back to set::server-linking::tls-options.
 	 * Otherwise, use the client context.
 	 */
-	SSL_CTX *ctx = (client->server && client->server->conf && client->server->conf->ssl_ctx) ? client->server->conf->ssl_ctx : ctx_client;
+	SSL_CTX *ctx = (client->server && client->server->conf) ? tls_ctx_for_outgoing_link(client->server->conf) : ctx_client;
 
 	if ((client->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail_starttls;
@@ -1566,45 +1706,6 @@ const char *spki_fingerprint_ex(X509 *x509_cert)
 	return NULL;
 }
 
-/** Return the spkifp of the certificate specified as an SSL_CTX.
- */
-const char *spkifp_from_ctx(SSL_CTX *ctx)
-{
-	SSL *ssl;
-	X509 *cert;
-	const char *fp = NULL;
-
-	if (!ctx)
-		return NULL;
-	ssl = SSL_new(ctx);
-	if (ssl)
-	{
-		cert = SSL_get_certificate(ssl);
-		if (cert)
-			fp = spki_fingerprint_ex(cert);
-		SSL_free(ssl);
-	}
-	return fp;
-}
-
-/** Return the spkifp of the certificate as specified in 'tlsoptions'.
- * NOTE: if you already have an SSL_CTX then spkifp_from_ctx() is much faster.
- */
-const char *server_linking_spkifp(TLSOptions *tlsoptions)
-{
-	SSL_CTX *ctx;
-	const char *fp;
-
-	if (!tlsoptions)
-		return NULL;
-	ctx = init_ctx(tlsoptions, 1);
-	if (!ctx)
-		return NULL;
-	fp = spkifp_from_ctx(ctx);
-	SSL_CTX_free(ctx);
-	return fp;
-}
-
 /** Returns 1 if the client is using an outdated protocol or cipher, 0 otherwise */
 int outdated_tls_client(Client *client)
 {
@@ -1743,6 +1844,9 @@ EVENT(tls_check_expiry)
 
 	/* set block */
 	check_certificate_expiry_tlsoptions_and_warn(iConf.tls_options);
+
+	if (iConf.server_linking_tls_options)
+		check_certificate_expiry_tlsoptions_and_warn(iConf.server_linking_tls_options);
 
 	for (listen = conf_listen; listen; listen = listen->next)
 		if (listen->tls_options)

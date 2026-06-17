@@ -1893,6 +1893,7 @@ typedef struct TLSOptions TLSOptions;
 struct TLSOptions {
 	NameList *certificate_files;
 	NameList *key_files;
+	NameList *spkifp;		/**< spkifp of each loaded certificate, computed by init_ctx() */
 	char *trusted_ca_file;
 	unsigned int protocols;
 	char *ciphers;

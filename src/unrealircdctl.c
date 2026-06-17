@@ -193,10 +193,13 @@ void unrealircdctl_spkifp(int argc, char *argv[])
 
 	if (!file)
 	{
-		printf("NOTE: This script uses the default certificate location. Any\n"
-		       "set::server-linking::tls-options and set::tls settings are ignored.\n"
-		       "If this is not what you want, then specify a certificate explicitly\n"
-		       "like this: %s spkifp conf/tls/example.pem\n\n", UNREALCMD);
+		printf("IMPORTANT: If you are configuring server linking then we HIGHLY recommend\n"
+		       "using the '%s genlinkblock' command instead. It outputs a complete\n"
+		       "link block, with the right port and the correct spkifp(s), and it uses\n"
+		       "your configured set::server-linking and set::tls certificates. This\n"
+		       "'spkifp' command ignores those and just reads the default certificate,\n"
+		       "or a file you specify like '%s spkifp conf/tls/example.pem'.\n\n",
+		       UNREALCMD, UNREALCMD);
 		safe_strdup(file, "tls/server.cert.pem");
 		convert_to_absolute_path(&file, CONFDIR);
 	}
@@ -205,7 +208,7 @@ void unrealircdctl_spkifp(int argc, char *argv[])
 	{
 		printf("Could not open certificate: %s\n"
 		       "You can specify a certificate like this: %s spkifp conf/tls/example.pem\n",
-		       UNREALCMD, file);
+		       file, UNREALCMD);
 		exit(1);
 	}
 

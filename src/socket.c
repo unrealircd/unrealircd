@@ -939,7 +939,7 @@ refuse_client:
 
 	if ((listener->options & LISTENER_TLS) && ctx_server)
 	{
-		SSL_CTX *ctx = listener->ssl_ctx ? listener->ssl_ctx : ctx_server;
+		SSL_CTX *ctx = tls_ctx_for_listener(listener);
 
 		if (ctx)
 		{

@@ -68,8 +68,8 @@ CMD_FUNC(cmd_starttls)
 	if (!MyConnect(client) || !IsUnknown(client))
 		return;
 
-	ctx = client->local->listener->ssl_ctx ? client->local->listener->ssl_ctx : ctx_server;
-	tls_options = client->local->listener->tls_options ? client->local->listener->tls_options->options : iConf.tls_options->options;
+	ctx = tls_ctx_for_listener(client->local->listener);
+	tls_options = tls_options_for_listener(client->local->listener)->options;
 
 	/* This should never happen? */
 	if (!ctx)

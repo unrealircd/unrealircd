@@ -363,10 +363,26 @@ static void check_server_linking_cert_consistency_suggest_fix(TLSOptions *opts, 
 	}
 }
 
+/* Return 1 if two spkifp lists hold the same set of fingerprints (order-
+ * independent). Used to compare the certificate sets of two server-to-server paths.
+ */
+static int spkifp_sets_equal(NameList *a, NameList *b)
+{
+	NameList *e;
+
+	for (e = a; e; e = e->next)
+		if (!find_name_list(b, e->name))
+			return 0;
+	for (e = b; e; e = e->next)
+		if (!find_name_list(a, e->name))
+			return 0;
+	return 1;
+}
+
 /** HOOKTYPE_POSTCONF: advise on the certificate(s) used for server linking.
- * A server pins a single SPKI fingerprint per server, so all our server-to-server
+ * A peer authenticates us by our SPKI fingerprint(s), so all our server-to-server
  * paths (serversonly listeners and outgoing TLS links) must present the same
- * certificate. We also require it to be a long-lived self-signed ceritifcate as
+ * certificate(s). We also require it to be a long-lived self-signed ceritifcate as
  * a publicly-trusted CA cert is short(er)-lived and typically rekeys on renewal,
  * which changes the spkifp and breaks linking). Because this runs in postconf,
  * all the TLS context are fully available (this runs on both boot & rehash).
@@ -375,7 +391,6 @@ int check_server_linking_cert_consistency(void)
 {
 	struct {
 		char desc[128];
-		char spki[64];
 		int trusted;
 		int has_own_tls_options;	/* explicit per-block tls-options, vs the global default */
 		TLSOptions *opts;
@@ -385,12 +400,13 @@ int check_server_linking_cert_consistency(void)
 	ConfigItem_listen *listen;
 	ConfigItem_link *link;
 	SSL_CTX *ctx;
-	const char *fp;
 	char fix[768];
 
 	/* Gather every server-to-server path that presents a certificate. */
 	for (listen = conf_listen; listen; listen = listen->next)
 	{
+		TLSOptions *opts;
+
 		if (listen->flag.temporary)
 			continue; /* block pending removal on rehash, holds stale tls_options */
 		/* Only serversonly listeners. A port presents one certificate to
@@ -405,31 +421,29 @@ int check_server_linking_cert_consistency(void)
 			continue;
 		if (n >= (int)(sizeof(s2s)/sizeof(s2s[0]))) { capped = 1; break; }
 		/* A serversonly listener may also be reached plaintext and upgraded via
-		 * STARTTLS, which still presents listener->ssl_ctx, so no LISTENER_TLS
-		 * check. Prefer the already-built context (no disk I/O); only build a
-		 * fresh one when there is none yet (a plain path at boot, before init_tls()).
+		 * STARTTLS, which still presents listener->ssl_ctx, so no LISTENER_TLS check.
 		 */
-		ctx = listen->ssl_ctx ? listen->ssl_ctx : ctx_server;
-		fp = ctx ? spkifp_from_ctx(ctx)
-		         : server_linking_spkifp(listen->tls_options ? listen->tls_options : iConf.tls_options);
-		if (!fp)
-			continue;
-		strlcpy(s2s[n].spki, fp, sizeof(s2s[n].spki));
+		opts = tls_options_for_listener(listen);
+		if (!opts || !opts->spkifp)
+			continue; /* no certificate loaded, nothing to compare */
+		ctx = tls_ctx_for_listener(listen);
 		snprintf(s2s[n].desc, sizeof(s2s[n].desc), "listen %s:%d",
 		         listen->ip ? listen->ip : "*", listen->port);
 		s2s[n].trusted = ctx ? is_trusted_cert(ctx) : 0;
-		s2s[n].opts = listen->tls_options ? listen->tls_options : iConf.tls_options;
+		s2s[n].opts = opts;
 		s2s[n].has_own_tls_options = (listen->tls_options != NULL);
 		n++;
 		n_inbound++;
 	}
 	for (link = conf_link; link && !capped; link = link->next)
 	{
+		TLSOptions *opts;
+
 		if (link->flag.temporary)
 			continue;
 		/* Only outgoing links that present a certificate and may be spkifp/cert-
-		 * verified by the peer. Skip incoming-only, 'insecure' (plaintext) and
-		 * password-authenticated links (our cert is not pinned by either side).
+		 * authenticated by the peer. Skip incoming-only, 'insecure' (plaintext) and
+		 * password-authenticated links (our cert is not authenticated by either side).
 		 */
 		if (!link->outgoing.hostname && !link->outgoing.file)
 			continue;
@@ -438,15 +452,13 @@ int check_server_linking_cert_consistency(void)
 		if (link->auth && link->auth->type == AUTHTYPE_PLAINTEXT)
 			continue;
 		if (n >= (int)(sizeof(s2s)/sizeof(s2s[0]))) { capped = 1; break; }
-		ctx = link->ssl_ctx ? link->ssl_ctx : ctx_client;
-		fp = ctx ? spkifp_from_ctx(ctx)
-		         : server_linking_spkifp(link->tls_options ? link->tls_options : iConf.tls_options);
-		if (!fp)
-			continue;
-		strlcpy(s2s[n].spki, fp, sizeof(s2s[n].spki));
+		opts = tls_options_for_outgoing_link(link);
+		if (!opts || !opts->spkifp)
+			continue; /* no certificate loaded, nothing to compare */
+		ctx = tls_ctx_for_outgoing_link(link);
 		snprintf(s2s[n].desc, sizeof(s2s[n].desc), "link %s", link->servername);
 		s2s[n].trusted = ctx ? is_trusted_cert(ctx) : 0;
-		s2s[n].opts = link->tls_options ? link->tls_options : iConf.tls_options;
+		s2s[n].opts = opts;
 		s2s[n].has_own_tls_options = (link->tls_options != NULL);
 		n++;
 		n_outbound++;
@@ -461,10 +473,10 @@ int check_server_linking_cert_consistency(void)
 	if (n == 0)
 		return 0;
 
-	/* Mismatch = not all SPKIs equal. Recommended cert = first non-trusted one. */
+	/* Mismatch = not all certificate sets equal. Recommended cert = first non-trusted one. */
 	for (i = 1; i < n; i++)
 	{
-		if (strcasecmp(s2s[0].spki, s2s[i].spki))
+		if (!spkifp_sets_equal(s2s[0].opts->spkifp, s2s[i].opts->spkifp))
 		{
 			mismatch = 1;
 			if (diff < 0)
@@ -501,17 +513,12 @@ int check_server_linking_cert_consistency(void)
 			 * exactly what to remove.
 			 */
 			char offenders[512];
-			char slfp[64];
-			const char *raw;
 
 			offenders[0] = '\0';
-			slfp[0] = '\0';
-			raw = server_linking_spkifp(iConf.server_linking_tls_options);
-			if (raw)
-				strlcpy(slfp, raw, sizeof(slfp));
 			for (i = 0; i < n; i++)
 			{
-				if (slfp[0] && strcasecmp(s2s[i].spki, slfp))
+				if (iConf.server_linking_tls_options->spkifp &&
+				    !spkifp_sets_equal(s2s[i].opts->spkifp, iConf.server_linking_tls_options->spkifp))
 				{
 					if (offenders[0])
 						strlcat(offenders, ", ", sizeof(offenders));
@@ -536,12 +543,11 @@ int check_server_linking_cert_consistency(void)
 			 * name those so the admin removes them too.
 			 */
 			char overrides[512];
-			const char *rec_spki = (rec >= 0) ? s2s[rec].spki : "";
 
 			overrides[0] = '\0';
 			for (i = 0; i < n; i++)
 			{
-				if (s2s[i].has_own_tls_options && (rec < 0 || strcasecmp(s2s[i].spki, rec_spki)))
+				if (s2s[i].has_own_tls_options && (rec < 0 || !spkifp_sets_equal(s2s[i].opts->spkifp, s2s[rec].opts->spkifp)))
 				{
 					if (overrides[0])
 						strlcat(overrides, ", ", sizeof(overrides));
@@ -554,7 +560,7 @@ int check_server_linking_cert_consistency(void)
 				           "This server uses a different TLS certificate for incoming server "
 				           "connections than for outgoing links ($desc1 vs $desc2). This can break "
 				           "server linking.\nFirst, remove tls-options from the following blocks: $overrides\n"
-				           "After that, set one certificate for all server linking:\n$fix",
+				           "After that, use the same certificate(s) for all server linking:\n$fix",
 				           log_data_string("desc1", s2s[0].desc),
 				           log_data_string("desc2", s2s[diff >= 0 ? diff : 0].desc),
 				           log_data_string("fix", fix),
@@ -563,7 +569,7 @@ int check_server_linking_cert_consistency(void)
 				unreal_log(ULOG_WARNING, "config", "SERVER_LINKING_CERT_MISMATCH", NULL,
 				           "This server uses a different TLS certificate for incoming server "
 				           "connections than for outgoing links ($desc1 vs $desc2). This can break "
-				           "server linking. Set one certificate for all server linking:\n$fix",
+				           "server linking. Use the same certificate(s) for all server linking:\n$fix",
 				           log_data_string("desc1", s2s[0].desc),
 				           log_data_string("desc2", s2s[diff >= 0 ? diff : 0].desc),
 				           log_data_string("fix", fix));

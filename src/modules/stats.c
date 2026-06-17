@@ -565,15 +565,11 @@ int stats_port(Client *client, const char *para)
 		}
 		if (listener->options & LISTENER_TLS)
 		{
+			TLSOptions *o = tls_options_for_listener(listener);
+			const char *kind = listener->tls_options ? "" : (o == iConf.server_linking_tls_options) ? "server-linking " : "default ";
 			NameList *n, *n2;
-			if (listener->tls_options)
-			{
-				for (n = listener->tls_options->certificate_files, n2 = listener->tls_options->key_files; n && n2; n = n->next, n2 = n2->next)
-					sendtxtnumeric(client, "- using tls certificate %s + key %s", n->name, n2->name);
-			} else {
-				for (n = iConf.tls_options->certificate_files, n2 = iConf.tls_options->key_files; n && n2; n = n->next, n2 = n2->next)
-					sendtxtnumeric(client, "- using default tls certificate %s + key %s", n->name, n2->name);
-			}
+			for (n = o->certificate_files, n2 = o->key_files; n && n2; n = n->next, n2 = n2->next)
+				sendtxtnumeric(client, "- using %stls certificate %s + key %s", kind, n->name, n2->name);
 		}
 	}
 	return 0;
