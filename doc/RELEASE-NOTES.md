@@ -4,7 +4,10 @@ UnrealIRCd 6.2.6-git
 This is the git version (development version) for future UnrealIRCd 6.2.6.
 This is work in progress and may not always be a stable version.
 
-This version enables multiline by default and adds TKL IDs.
+This version enables multiline by default, adds TKL IDs and tracking of
+hit counts on *LINES/Spamfilter. New crule functions were added to fetch
+server flood counts. Guidance to admins for server linking with 'spkifp'
+has been improved.
 
 ### Enhancements:
 * [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
@@ -92,10 +95,17 @@ This version enables multiline by default and adds TKL IDs.
   this happens (should be extremely rare).
 * The UnrealIRCd base directory (eg `~/unrealircd/`) is now created with
   0700 permissions, just like most subdirectories were.
+* We now have `./unrealircd mkcert` which replaces `make pem`
+  certificate/key generation.
+* Translation updates: `help.fr.conf`
 
 ### Fixes:
 * The following config items previously raised a config error:
   allow channel::except, deny channel::except and spamfilter::except.
+* deny channel::mask with a [Mask item](https://www.unrealircd.org/docs/Mask_item)
+  caused a config error.
+* Long multiline messages could be cut off when sent to clients that do not
+  support multiline.
 * Hardening of the built-in HTTPS client
 * JSON-RPC: Remote RPC was broken and causing "not authorized" error messages.
   This was used by `server.rehash` and `server.module_list`. Plus,
