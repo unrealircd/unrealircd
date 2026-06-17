@@ -1255,6 +1255,7 @@ extern int write_str(FILE *fd, const char *x);
 extern int read_str(FILE *fd, char **x);
 extern void _free_entire_name_list(NameList *n);
 extern void _add_name_list(NameList **list, const char *name);
+extern void _append_name_list(NameList **list, const char *name);
 extern void _del_name_list(NameList **list, const char *name);
 extern NameList *duplicate_name_list(NameList *e);
 extern NameList *find_name_list(NameList *list, const char *name);

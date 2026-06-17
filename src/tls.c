@@ -448,7 +448,7 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 				X509 *leafcert = SSL_get_certificate(probe);
 				const char *fp = leafcert ? spki_fingerprint_ex(leafcert) : NULL;
 				if (fp)
-					add_name_list(tlsoptions->spkifp, fp);
+					append_name_list(tlsoptions->spkifp, fp);
 				SSL_free(probe);
 			}
 		}

@@ -802,7 +802,7 @@ typedef struct NameList NameList;
  * that only have a name and no other properties.
  *
  * Use the following functions to add, find and delete entries:
- * add_name_list(), find_name_list(), del_name_list(), free_entire_name_list()
+ * add_name_list(), append_name_list(), find_name_list(), del_name_list(), free_entire_name_list()
  */
 struct NameList {
 	NameList *prev, *next;
@@ -815,6 +815,8 @@ struct NameList {
 
 /** Add an entry to a NameList */
 #define add_name_list(list, str)  _add_name_list(&list, str)
+/** Append an entry to the end of a NameList */
+#define append_name_list(list, str)  _append_name_list(&list, str)
 /** Delete an entry from a NameList - AND free it */
 #define del_name_list(list, str)  _del_name_list(&list, str)
 

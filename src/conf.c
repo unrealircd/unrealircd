@@ -7801,12 +7801,12 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, T
 		else if (!strcmp(cepp->name, "certificate"))
 		{
 			convert_to_absolute_path(&cepp->value, CONFDIR);
-			add_name_list(tlsoptions->certificate_files, cepp->value);
+			append_name_list(tlsoptions->certificate_files, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "key"))
 		{
 			convert_to_absolute_path(&cepp->value, CONFDIR);
-			add_name_list(tlsoptions->key_files, cepp->value);
+			append_name_list(tlsoptions->key_files, cepp->value);
 		}
 		else if (!strcmp(cepp->name, "trusted-ca-file"))
 		{

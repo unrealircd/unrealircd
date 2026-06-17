@@ -563,6 +563,13 @@ void _add_name_list(NameList **list, const char *name)
 	AddListItem(e, *list);
 }
 
+void _append_name_list(NameList **list, const char *name)
+{
+	NameList *e = safe_alloc(sizeof(NameList)+strlen(name)+1);
+	strcpy(e->name, name); /* safe, allocated above */
+	AppendListItem(e, *list);
+}
+
 void _free_entire_name_list(NameList *n)
 {
 	NameList *n_next;
@@ -576,13 +583,20 @@ void _free_entire_name_list(NameList *n)
 
 NameList *duplicate_name_list(NameList *e)
 {
-	NameList *ret = NULL;
+	NameList *ret = NULL, *tail = NULL, *n;
 
-	if (e == NULL)
-		return NULL;
-
+	/* We do manual pointer tracking here to speed things up */
 	for (; e; e = e->next)
-		add_name_list(ret, e->name);
+	{
+		n = safe_alloc(sizeof(NameList)+strlen(e->name)+1);
+		strcpy(n->name, e->name); /* safe, allocated above */
+		if (tail)
+			tail->next = n;
+		else
+			ret = n;
+		n->prev = tail;
+		tail = n;
+	}
 	return ret;
 }
 
