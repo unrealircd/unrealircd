@@ -9220,8 +9220,9 @@ int	_test_set(ConfigFile *conf, ConfigEntry *ce)
 					}
 					else if (!strcmp(ceppp->name, "away-count"))
 					{
-						int temp = atol(ceppp->value);
+						int temp;
 						CheckNull(ceppp);
+						temp = atol(ceppp->value);
 						if (temp < 1 || temp > 255)
 						{
 							config_error("%s:%i: set::anti-flood::away-count must be between 1 and 255",
