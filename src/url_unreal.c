@@ -824,9 +824,14 @@ int https_handle_response_header(Download *handle, char *readbuf, int n)
 		}
 	}
 
-	if (lastloc)
+	if (!end_of_request && lastloc)
 	{
-		/* Last line was cut somewhere, save it for next round. */
+		/* Save a cut-off (incomplete) header line for the next packet.
+		 * Only while still reading headers: once end_of_request is set,
+		 * lastloc points at body data that https_handle_response_body()
+		 * already owns via handle->lefttoparse/lefttoparselen, so touching
+		 * it here would desync those two and cause an out-of-bounds read.
+		 */
 		safe_strdup(handle->lefttoparse, lastloc);
 	}
 
