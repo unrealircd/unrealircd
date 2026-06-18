@@ -725,11 +725,12 @@ void chmode_str(struct ChMode *modes, char *mbuf, char *pbuf, size_t mbuf_size, 
 {
 	Cmode *cm;
 
-	if (!(mbuf_size && pbuf_size))
+	if ((mbuf_size < 2) || !pbuf_size)
 		return;
 
 	*pbuf = 0;
 	*mbuf++ = '+';
+	mbuf_size--;
 
 	for (cm=channelmodes; cm; cm = cm->next)
 	{
