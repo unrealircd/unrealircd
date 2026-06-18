@@ -2937,6 +2937,8 @@ int config_item_allowed_for_config_file(const char *resource, const char *item)
 		/* Special hardcoded handling for central spamfilter */
 		if (!strcmp(resource, "central_spamfilter.conf"))
 		{
+			if (!item)
+				return 0;
 			if (!strcmp(item, "spamfilter") ||
 			    !strcmp(item, "ban"))
 				return 1;
@@ -2953,7 +2955,7 @@ int config_item_allowed_for_config_file(const char *resource, const char *item)
 	if (rs->restrict_config == NULL)
 		return 1; /* No restrictions */
 
-	if (item == NULL)
+	if (!item)
 		return 0;
 
 	if (find_name_list(rs->restrict_config, item))
