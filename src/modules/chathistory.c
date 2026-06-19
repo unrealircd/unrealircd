@@ -219,7 +219,7 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 		/* Start a new batch */
 		MessageTag *batch_open_mtags = NULL;
 		generate_batch_id(batch);
-		if (sent < limit)
+		if (sent <= limit)
 		{
 			batch_open_mtags = safe_alloc(sizeof(MessageTag));
 			safe_strdup(batch_open_mtags->name, "draft/chathistory-end");
@@ -233,7 +233,7 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 	for (; targets; targets = targets_next)
 	{
 		targets_next = targets->next;
-		if (++sent < limit)
+		if (sent++ < limit)
 			chathistory_targets_send_line(client, targets, batch);
 		safe_free(targets->datetime);
 		safe_free(targets->object);
