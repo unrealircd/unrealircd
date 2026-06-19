@@ -105,45 +105,42 @@ void message_tag_unescape(char *in, char *out)
 }
 
 /** Escape a message tag (name or value).
- * @param in  The input string
- * @param out The output string for writing
- * @note  No size checking, so ensure that the output buffer
- *        is at least twice as long as the input buffer + 1.
+ * @param in       The input string
+ * @param out      The output buffer
+ * @param outsize  Size of the output buffer
+ * @note  Escaping can double the length of the input, so the output is
+ *        truncated if it does not fit. We always NUL-terminate and never
+ *        write a half-finished escape sequence.
  */
-void message_tag_escape(char *in, char *out)
+void message_tag_escape(char *in, char *out, size_t outsize)
 {
+	char *o = out;
+	char *end = out + outsize;
+
 	for (; *in; in++)
 	{
-		if (*in == ';')
+		if (*in == ';' || *in == ' ' || *in == '\\' || *in == '\r' || *in == '\n')
 		{
-			*out++ = '\\';
-			*out++ = ':';
-		} else
-		if (*in == ' ')
-		{
-			*out++ = '\\';
-			*out++ = 's';
-		} else
-		if (*in == '\\')
-		{
-			*out++ = '\\';
-			*out++ = '\\';
-		} else
-		if (*in == '\r')
-		{
-			*out++ = '\\';
-			*out++ = 'r';
-		} else
-		if (*in == '\n')
-		{
-			*out++ = '\\';
-			*out++ = 'n';
-		} else
-		{
-			*out++ = *in;
+			if (end - o < 3) /* 2-byte escape + NUL */
+				break;
+			*o++ = '\\';
+			if (*in == ';')
+				*o++ = ':';
+			else if (*in == ' ')
+				*o++ = 's';
+			else if (*in == '\\')
+				*o++ = '\\';
+			else if (*in == '\r')
+				*o++ = 'r';
+			else
+				*o++ = 'n';
+		} else {
+			if (end - o < 2) /* 1 byte + NUL */
+				break;
+			*o++ = *in;
 		}
 	}
-	*out = '\0';
+	*o = '\0';
 }
 
 /** Incoming filter for message tags */
@@ -300,11 +297,11 @@ const char *_mtags_to_string(MessageTag *m, Client *client)
 			continue;
 		if (m->value)
 		{
-			message_tag_escape(m->name, name);
-			message_tag_escape(m->value, value);
+			message_tag_escape(m->name, name, sizeof(name));
+			message_tag_escape(m->value, value, sizeof(value));
 			snprintf(tbuf, sizeof(tbuf), "%s=%s;", name, value);
 		} else {
-			message_tag_escape(m->name, name);
+			message_tag_escape(m->name, name, sizeof(name));
 			snprintf(tbuf, sizeof(tbuf), "%s;", name);
 		}
 		strlcat(buf, tbuf, sizeof(buf));
