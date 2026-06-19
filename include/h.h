@@ -1241,7 +1241,7 @@ extern HistoryResult *history_request(const char *object, HistoryFilter *filter)
 extern int history_delete(const char *object, HistoryFilter *filter, int *rejected_deletes);
 extern int history_destroy(const char *object);
 extern int can_receive_history(Client *client);
-extern void history_send_result(Client *client, HistoryResult *r);
+extern void history_send_result(Client *client, HistoryResult *r, int end_of_pagination);
 extern void free_history_result(HistoryResult *r);
 extern void free_history_filter(HistoryFilter *f);
 extern void special_delayed_unloading(void);

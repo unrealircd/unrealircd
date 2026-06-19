@@ -740,7 +740,7 @@ int history_join(Client *client, Channel *channel, MessageTag *mtags)
 		r = history_request(channel->name, &filter);
 		if (r)
 		{
-			history_send_result(client, r);
+			history_send_result(client, r, 0);
 			free_history_result(r);
 		}
 	}
