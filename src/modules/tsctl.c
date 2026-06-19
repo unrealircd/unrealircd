@@ -68,7 +68,7 @@ CMD_FUNC(cmd_tsctl)
 		gettimeofday(&currenttime_tv, NULL);
 		sendnotice(client, "*** Server=%s TStime=%lld.%ld",
 			me.name, (long long)currenttime_tv.tv_sec, (long)currenttime_tv.tv_usec);
-		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->id);
+		sendto_server(client, 0, 0, recv_mtags, ":%s TSCTL alltime", client->id);
 		return;
 	}
 }
