@@ -621,6 +621,7 @@ struct HistoryResult {
         HistoryLogLine *log_tail;			/**< Last entry in the log lines */
         int num_lines;					/**< Total number of lines in the result */
         int num_bytes;					/**< Total bytes of all lines in the result */
+        int reached_end;				/**< Set by backend: 1 = no more history beyond this page, 0 = more may exist (or unknown). Used by the draft/chathistory-end tag. Default 0. */
 };
 
 /** History Backend */

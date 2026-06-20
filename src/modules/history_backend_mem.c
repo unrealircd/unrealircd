@@ -893,6 +893,7 @@ static int hbm_return_after(HistoryResult *r, HistoryLogObject *h, HistoryFilter
 	HistoryLogLine *l, *n;
 	int written = 0;
 	int started = 0;
+	int reached_end = 1;
 	MessageTag *m;
 
 	for (l = h->head; l; l = l->next)
@@ -922,14 +923,20 @@ static int hbm_return_after(HistoryResult *r, HistoryLogObject *h, HistoryFilter
 				break;
 			}
 
+			/* Limit reached but there are more lines available */
+			if (written >= filter->limit)
+			{
+				reached_end = 0;
+				break;
+			}
 			/* Add line to the return buffer */
 			n = duplicate_log_line(l);
 			hbm_result_append_line(r, n);
-			if (++written >= filter->limit)
-				break;
+			written++;
 		}
 	}
 
+	r->reached_end = reached_end;
 	return written;
 }
 
@@ -946,6 +953,7 @@ static int hbm_return_before(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 	HistoryLogLine *l, *n;
 	int written = 0;
 	int started = 0;
+	int reached_end = 1;
 	MessageTag *m;
 
 	for (l = h->tail; l; l = l->prev)
@@ -975,14 +983,20 @@ static int hbm_return_before(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 				break;
 			}
 
+			/* Limit reached but there are more lines available */
+			if (written >= filter->limit)
+			{
+				reached_end = 0;
+				break;
+			}
 			/* Add line to the return buffer */
 			n = duplicate_log_line(l);
 			hbm_result_prepend_line(r, n);
-			if (++written >= filter->limit)
-				break;
+			written++;
 		}
 	}
 
+	r->reached_end = reached_end;
 	return written;
 }
 
@@ -997,6 +1011,7 @@ static int hbm_return_latest(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 {
 	HistoryLogLine *l, *n;
 	int written = 0;
+	int reached_end = 1;
 	MessageTag *m;
 
 	for (l = h->tail; l; l = l->prev)
@@ -1007,12 +1022,18 @@ static int hbm_return_latest(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 		if (filter->msgid_a && !strcmp(l->msgid, filter->msgid_a))
 			break; /* Stop now */
 
+		/* Limit reached but there are more lines available */
+		if (written >= filter->limit)
+		{
+			reached_end = 0;
+			break;
+		}
 		n = duplicate_log_line(l);
 		hbm_result_prepend_line(r, n);
-		if (++written >= filter->limit)
-			break;
+		written++;
 	}
 
+	r->reached_end = reached_end;
 	return written;
 }
 

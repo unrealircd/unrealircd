@@ -452,22 +452,7 @@ CMD_FUNC(cmd_chathistory)
 			if (fakelag_ms > 5000)
 				fakelag_ms = 5000;
 			add_fake_lag(client, fakelag_ms);
-			/* Count logical messages to determine end-of-pagination.
-			 * Not for AROUND: it is a centered window, so getting
-			 * fewer than the limit does not mean we hit the end.
-			 */
-			{
-				HistoryLogLine *l;
-				int count = 0;
-				int end_of_pagination = 0;
-				if (filter->cmd != HFC_AROUND)
-				{
-					for (l = r->log; l; l = l->next)
-						count++;
-					end_of_pagination = (count < filter->limit);
-				}
-				history_send_result(client, r, end_of_pagination);
-			}
+			history_send_result(client, r, r->reached_end);
 		}
 	}
 
