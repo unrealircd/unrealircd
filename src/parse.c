@@ -676,8 +676,12 @@ long parse_addlag(Client *client, int command_bytes, int mtags_bytes)
  */
 void add_fake_lag(Client *client, long msec)
 {
-	if (!MyConnect(client))
+	if (!MyConnect(client) || IsNoFakeLag(client))
 		return;
+#ifdef FAKELAG_CONFIGURABLE
+	if (client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG))
+		return;
+#endif
 
 	client->local->fake_lag_msec += msec;
 	client->local->fake_lag += (client->local->fake_lag_msec / 1000);
