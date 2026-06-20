@@ -43,35 +43,35 @@ Name: "fixperm"; Description: "Make UnrealIRCd folder writable by current user";
 
 [Files]
 ; UnrealIRCd binaries
-Source: "UnrealIRCd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "UnrealIRCd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "UnrealIRCd.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "unrealircdctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "unrealsvc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "unrealircdctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "unrealsvc.exe";  DestDir: "{app}\bin"; Flags: ignoreversion
 
 ; TLS certificate generation helpers
 Source: "src\windows\makecert.bat"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "doc\conf\tls\tls.cnf"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 ; UnrealIRCd modules
-Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion signonce
-Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion signonce
-Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion signonce
-Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion signonce
-Source: "src\modules\rpc\*.dll"; DestDir: "{app}\modules\rpc"; Flags: ignoreversion signonce
-Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignoreversion skipifsourcedoesntexist signonce
+Source: "src\modules\*.dll"; DestDir: "{app}\modules"; Flags: ignoreversion
+Source: "src\modules\chanmodes\*.dll"; DestDir: "{app}\modules\chanmodes"; Flags: ignoreversion
+Source: "src\modules\usermodes\*.dll"; DestDir: "{app}\modules\usermodes"; Flags: ignoreversion
+Source: "src\modules\extbans\*.dll"; DestDir: "{app}\modules\extbans"; Flags: ignoreversion
+Source: "src\modules\rpc\*.dll"; DestDir: "{app}\modules\rpc"; Flags: ignoreversion
+Source: "src\modules\third\*.dll"; DestDir: "{app}\modules\third"; Flags: ignoreversion skipifsourcedoesntexist
 
 ; Libraries
-Source: "c:\dev\unrealircd-6-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\libsodium\bin\x64\Release\v142\dynamic\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\jansson\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\openssl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\openssl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\GeoIP\libGeoIP\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "c:\dev\unrealircd-6-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion signonce
+Source: "c:\dev\unrealircd-6-libs\pcre2\bin\pcre*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\argon2\vs2015\build\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\libsodium\bin\x64\Release\v142\dynamic\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\jansson\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\c-ares\msvc\cares\dll-release\cares.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\openssl\bin\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\openssl\bin\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\GeoIP\libGeoIP\*.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "c:\dev\unrealircd-6-libs\setacl.exe"; DestDir: "{app}\tmp"; Flags: ignoreversion
 #ifdef USE_CURL
-Source: "c:\dev\unrealircd-6-libs\curl\bin\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "c:\dev\unrealircd-6-libs\curl\bin\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 #endif
 Source: "doc\conf\tls\curl-ca-bundle.crt"; DestDir: "{app}\conf\tls"; Flags: ignoreversion
 
