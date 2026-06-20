@@ -1289,8 +1289,9 @@ static int hbm_return_between(HistoryResult *r, HistoryLogObject *h, HistoryFilt
 		f.msgid_b = filter->msgid_a;
 		return hbm_return_after(r, h, &f);
 	}
-	/* else direction is -1 which means not found / invalid */
 
+	/* else direction is -1 which means not found / invalid */
+	r->reached_end = 1;
 	return 0;
 }
 
