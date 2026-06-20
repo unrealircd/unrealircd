@@ -1,8 +1,8 @@
-UnrealIRCd 6.2.6-git
-=================
+UnrealIRCd 6.2.6-rc1
+=====================
 
-This is the git version (development version) for future UnrealIRCd 6.2.6.
-This is work in progress and may not always be a stable version.
+This is the Release Candidate for future version 6.2.6. You can help us by
+testing this release and reporting bugs to https://bugs.unrealircd.org/
 
 This version enables multiline by default, adds TKL IDs and tracking of
 hit counts on *LINES/Spamfilter. New crule functions were added to fetch
@@ -98,6 +98,11 @@ has been improved.
 * We now have `./unrealircd mkcert` which replaces `make pem`
   certificate/key generation.
 * Translation updates: `help.fr.conf`
+* CHATHISTORY now sends a `draft/chathistory-end` if the end of history
+  has been reached ([a recent spec improvement](https://github.com/unrealircd/unrealircd/pull/337)).
+* The IRCv3 [reply](https://ircv3.net/specs/client-tags/reply) client tag
+  and [no-implicit-names](https://ircv3.net/specs/extensions/no-implicit-names)
+  extensions have been ratified. During the transition period we support both.
 
 ### Fixes:
 * The following config items previously raised a config error:
