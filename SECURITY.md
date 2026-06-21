@@ -35,17 +35,19 @@ as an issue but in practice it may be impossible to happen because of some extra
 check somewhere or other requirements.
 
 If you are trying to reproduce an issue, then we suggest running `./Config` and
-answering `Yes` to the near-last question about AddressSanitizer (ASan). Please
-include both the reproducer and the ASan output in the bug report. It helps us a
-lot.
+answering `Yes` to the near-last question about AddressSanitizer (ASan),
+especially for memory safety issues. Please include the reproducer and any
+relevant ASan output in the bug report. ASan output is useful even if a normal
+build does not visibly crash. It helps us a lot.
 
-If you are submitting issues and fail to follow the procedure above, expect us
-to ask you again to reproduce the issue. If you refuse to do so, don't respond
-in a timely manner, or send in multiple reports without doing so, then we will
-close the bug report and may proceed with putting you on ignore, banning or
-deleting your account, or similar. Giving a reproducer is not a big ask and is
-normal procedure nowadays. It should be part of your standard workflow if you
-are a security researcher.
+If you used AI, static code analyzers, fuzzing, or similar tools and fail to
+follow the procedure above, expect us to ask you again to reproduce the issue.
+If you refuse to do so, don't respond in a timely manner, or keep sending reports
+without doing so after we asked, then we will close the bug report. For repeat
+offenders, we may proceed with putting you on ignore, banning or deleting your
+account, or similar. Giving a reproducer is not a big ask and is normal procedure
+nowadays. It should be part of your standard workflow if you are a security
+researcher.
 
 ## Reporting a Vulnerability
 
