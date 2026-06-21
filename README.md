@@ -38,7 +38,7 @@ We use a private BuildBot instance to test each commit. The **tested** systems a
 likely to work too):
 * Linux: Debian (10, 11, 12, 13), Ubuntu (18.04, 20.04, 22.04, 24.04, 26.04)
 * FreeBSD: 15
-* Windows: Visual Studio 2019
+* Windows: 11
 
 UnrealIRCd is architecture-agnostic. Most of the BuildBot workers run on x64 but we
 also have some on x86 and arm64 to ensure these work as well.
@@ -48,3 +48,6 @@ also have some on x86 and arm64 to ensure these work as well.
 * https://bugs.unrealircd.org - Bug tracker
 * https://fosstodon.org/@unrealircd - Mastodon
 * https://twitter.com/Unreal_IRCd - Twitter
+* [SECURITY.md](https://github.com/unrealircd/unrealircd/blob/unreal60_dev/SECURITY.md#security-policy) - How to report security issues
+* [LICENSE](https://github.com/unrealircd/unrealircd/blob/unreal60_dev/LICENSE) - LICENSE: GPLv2 or later
+* [Contributing](https://www.unrealircd.org/docs/Contributing) - How to help: report bugs, test, write or translate documentations, ..
