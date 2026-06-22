@@ -165,6 +165,9 @@ static void clicap_generate(Client *client, const char *subcmd, int flags)
 		if (cap->visible && !cap->visible(client))
 			continue; /* hidden */
 
+		if (cap->minimum_cap_version && (client->local->cap_protocol < cap->minimum_cap_version))
+			continue; /* skip: doesn't meet minimum CAP version */
+
 		if (flags)
 		{
 			if (!cap->cap || !(client->local->caps & cap->cap))

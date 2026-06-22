@@ -428,6 +428,7 @@ static void init_history_storage(ModuleInfo *modinfo)
 	cap.name = "unrealircd.org/history-storage";
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.parameter = history_storage_capability_parameter;
+	cap.minimum_cap_version = 302;
 	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }
 

@@ -204,6 +204,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 	/* Add or update the following fields: */
 	clicap->owner = module;
 	clicap->flags = clicap_request->flags;
+	clicap->minimum_cap_version = clicap_request->minimum_cap_version;
 	clicap->visible = clicap_request->visible;
 	clicap->parameter = clicap_request->parameter;
 

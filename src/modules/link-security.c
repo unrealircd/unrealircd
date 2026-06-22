@@ -80,6 +80,7 @@ MOD_LOAD()
 	cap.name = "unrealircd.org/link-security";
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.parameter = link_security_capability_parameter;
+	cap.minimum_cap_version = 302;
 	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 
 	EventAdd(modinfo->handle, "checklinksec", checklinksec, NULL, 2000, 0);

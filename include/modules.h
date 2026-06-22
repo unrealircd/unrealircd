@@ -517,6 +517,7 @@ struct ClientCapability {
 	MessageTagHandler *mtag_handler;         /**< For reverse dependency */
 	Module *owner;                           /**< Module introducing this CAP. */
 	char unloaded;                           /**< Internal flag to indicate module is being unloaded */
+	int minimum_cap_version;                 /**< Minimum CAP version to show this CAP */
 };
 
 typedef struct {
@@ -524,6 +525,7 @@ typedef struct {
 	int flags;
 	int (*visible)(Client *);
 	const char *(*parameter)(Client *);
+	int minimum_cap_version;
 } ClientCapabilityInfo;
 
 /** @defgroup MessagetagAPI Message tag API

@@ -71,5 +71,6 @@ void init_plaintext_policy(ModuleInfo *modinfo)
 	cap.name = "unrealircd.org/plaintext-policy";
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.parameter = plaintext_policy_capability_parameter;
+	cap.minimum_cap_version = 302;
 	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }

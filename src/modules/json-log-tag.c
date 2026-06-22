@@ -54,6 +54,7 @@ MOD_INIT()
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "unrealircd.org/json-log";
+	cap.minimum_cap_version = 302;
 	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_JSON_LOG);
 
 	memset(&mtag, 0, sizeof(mtag));

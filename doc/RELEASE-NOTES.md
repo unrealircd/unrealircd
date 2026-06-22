@@ -120,6 +120,12 @@ has been improved.
   telling the server "does not support remote JSON-RPC".
 
 ### Developers and protocol:
+* If you use `CAP LS` instead of `CAP LS 302` then you will now miss various
+  capabilities. We had to trim it down because only 302 and later allow
+  responses that span multiple lines. If your client is still not using 302
+  then please do so soon (the IRCv3 spec is from Nov'2017). For this first
+  change, you won't miss out much, but somewhere in the future this can
+  become a real problem for you.
 * URL API: The OutgoingWebRequest `max_size` (introduced last release) now
   also caps file-backed downloads. Default for file-backed when left at 0
   is 50MB (`DOWNLOAD_MAX_SIZE_FILE_BACKED`). For memory-backed, it stays
