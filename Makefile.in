@@ -170,6 +170,10 @@ depend:
 		( cd $$i; ${MAKE} ${MAKEARGS} depend; ) \
 	done
 
+# Code reformatting using clang-format: work on git .c/.h files only, but skip vendored files.
+format:
+	clang-format -i `git ls-files src include | grep -E '\.(c|h)$$' | grep -vE 'crypt_blowfish|openssl_hostname_validation'`
+
 install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@BINDIR@
 	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/unrealircd
