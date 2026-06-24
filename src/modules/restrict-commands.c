@@ -63,7 +63,7 @@ CmdMap conf_cmdmaps[] = {
 	{ "channel-create", "JOIN" },
 	{ "private-message", "PRIVMSG" },
 	{ "private-notice", "NOTICE" },
-	{ NULL, NULL, }, // REQUIRED for the loop to properly work
+	{ NULL, NULL }, // REQUIRED for the loop to properly work
 };
 
 MOD_TEST()

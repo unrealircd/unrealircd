@@ -98,6 +98,7 @@ static int	_test_secret		(ConfigFile *conf, ConfigEntry *ce);
 static int	_test_proxy		(ConfigFile *conf, ConfigEntry *ce);
 
 /* This MUST be alphabetized */
+/* clang-format off */
 static ConfigCommand _ConfigCommands[] = {
 	{ "admin", 		_conf_admin,		_test_admin 	},
 	{ "alias",		_conf_alias,		_test_alias	},
@@ -129,6 +130,7 @@ static ConfigCommand _ConfigCommands[] = {
 	{ "ulines",		_conf_ulines,		_test_ulines	},
 	{ "webirc", 		_conf_proxy,		_test_proxy	},
 };
+/* clang-format on */
 
 /* This MUST be alphabetized */
 static NameValue _ListenerFlags[] = {

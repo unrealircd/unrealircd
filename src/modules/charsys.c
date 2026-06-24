@@ -83,6 +83,7 @@ struct LangList
 };
 
 /* MUST be alphabetized (first column) */
+/* clang-format off */
 static LangList langlist[] = {
 	{ "arabic-utf8", "ara-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_ARABIC_UTF8 },
 	{ "belarussian-utf8", "blr-utf8", LANGAV_ASCII|LANGAV_UTF8|LANGAV_CYRILLIC_UTF8 },
@@ -144,6 +145,7 @@ static LangList langlist[] = {
 	{ "windows-1251", "rus,ukr,blr", LANGAV_ASCII|LANGAV_W1251 },
 	{ NULL, NULL, 0 }
 };
+/* clang-format on */
 
 /* For temporary use during config_run */
 typedef struct ILangList ILangList;

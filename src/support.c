@@ -1254,6 +1254,7 @@ struct u_WSA_errors {
 };
 
 /* Must be sorted ascending by error code */
+/* clang-format off */
 struct u_WSA_errors WSAErrors[] = {
  { WSAEINTR,              "Interrupted system call" },
  { WSAEBADF,              "Bad file number" },
@@ -1309,6 +1310,7 @@ struct u_WSA_errors WSAErrors[] = {
  { WSASYSCALLFAILURE,     "System call failure" },
  { 0,NULL}
 };
+/* clang-format on */
 
 /** Get socket error string */
 const char *sock_strerror(int error)

@@ -96,6 +96,7 @@ struct statstab {
 
 /* Must be listed lexicographically */
 /* Long flags must be lowercase */
+/* clang-format off */
 struct statstab StatsTable[] = {
 	{ 'B', "banversion",	stats_banversion,	0		},
 	{ 'C', "link", 		stats_links,		0 		},
@@ -136,6 +137,7 @@ struct statstab StatsTable[] = {
 	{ '9', "linecache",	stats_linecache,	0		},
 	{ 0, 	NULL, 		NULL, 			0		}
 };
+/* clang-format on */
 
 int stats_compare(const char *s1, const char *s2)
 {

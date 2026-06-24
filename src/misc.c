@@ -57,6 +57,7 @@ typedef struct {
 	char config_only;
 } BanActTable;
 
+/* clang-format off */
 static BanActTable banacttable[] = {
 	{ BAN_ACT_KILL,		'K',	"kill",			0 },
 	{ BAN_ACT_SOFT_KILL,	'i',	"soft-kill",		0 },
@@ -83,6 +84,7 @@ static BanActTable banacttable[] = {
 	{ BAN_ACT_STOP,		'0',	"stop",			1 },
 	{ 0, 0, 0, 0 }
 };
+/* clang-format on */
 
 typedef struct {
 	int value;			/** Unique integer value of item */
@@ -91,6 +93,7 @@ typedef struct {
 	char *irccommand;	/** Raw IRC command of item (not unique!) */
 } SpamfilterTargetTable;
 
+/* clang-format off */
 SpamfilterTargetTable spamfiltertargettable[] = {
 	{ SPAMF_CHANMSG,	'c',	"channel",		"PRIVMSG" },
 	{ SPAMF_USERMSG,	'p',	"private",		"PRIVMSG" },
@@ -106,6 +109,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 	{ SPAMF_RAW,		'R',	"raw",			"cmd" },
 	{ 0, 0, 0, 0 }
 };
+/* clang-format on */
 
 /** IRC Statistics (quite useless?) */
 struct IRCStatistics ircstats;

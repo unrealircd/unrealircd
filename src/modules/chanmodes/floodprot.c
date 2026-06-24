@@ -64,16 +64,18 @@ typedef struct FloodType {
 /* All the floodtypes that are tracked.
  * IMPORTANT: the first row MUST be in alphabetic order!!
  */
+/* clang-format off */
 FloodType floodtypes[] = {
-	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"",	NULL,						0, },
-	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	"~security-group:unknown-users",		0, },
-	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	NULL,						0, },
-	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	"~quiet:~security-group:unknown-users",		0, },
-	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	"~nickchange:~security-group:unknown-users",	0, },
-	{ 'p', CHFLD_PASTE,	"pasteflood",		'\0',	"mM",	"~quiet:~security-group:unknown-users",		0, },
-	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	NULL,						1, },
-	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	NULL,						1, },
+	{ 'c', CHFLD_CTCP,	"CTCPflood",		'C',	"",	NULL,						0 },
+	{ 'j', CHFLD_JOIN,	"joinflood",		'i',	"R",	"~security-group:unknown-users",		0 },
+	{ 'k', CHFLD_KNOCK,	"knockflood",		'K',	"",	NULL,						0 },
+	{ 'm', CHFLD_MSG,	"msg/noticeflood",	'm',	"M",	"~quiet:~security-group:unknown-users",		0 },
+	{ 'n', CHFLD_NICK,	"nickflood",		'N',	"",	"~nickchange:~security-group:unknown-users",	0 },
+	{ 'p', CHFLD_PASTE,	"pasteflood",		'\0',	"mM",	"~quiet:~security-group:unknown-users",		0 },
+	{ 't', CHFLD_TEXT,	"msg/noticeflood",	'\0',	"bd",	NULL,						1 },
+	{ 'r', CHFLD_REPEAT,	"repeating",		'\0',	"bd",	NULL,						1 },
 };
+/* clang-format on */
 
 #define MODEF_DEFAULT_UNSETTIME		cfg.modef_default_unsettime
 #define MODEF_MAX_UNSETTIME		cfg.modef_max_unsettime

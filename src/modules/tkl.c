@@ -150,6 +150,7 @@ struct TKLTypeTable
  * - update help.conf (HELPOP ELINE)
  * - more?
  */
+/* clang-format off */
 TKLTypeTable tkl_types[] = {
 	/* <config name> <letter> <TKL_xxx type>               <logging name> <tkl option?> <exempt option?> <ip address only?> <TKLID Prefix> */
 	{ "gline",                'G', TKL_KILL       | TKL_GLOBAL, "G-Line",               1, 1, 0, "G" },
@@ -172,6 +173,7 @@ TKLTypeTable tkl_types[] = {
 	{ "ban-version",          'v', TKL_BAN_VERSION,             "Ban Version",          0, 1, 0, NULL },
 	{ NULL,                   '\0', 0,                          NULL,                   0, 0, 0, NULL },
 };
+/* clang-format on */
 #define ALL_VALID_EXCEPTION_TYPES "kline, gline, zline, gzline, spamfilter, shun, qline, blacklist, connect-flood, handshake-data-flood, antirandom, antimixedutf8, ban-version"
 
 /* Global variables for this module */

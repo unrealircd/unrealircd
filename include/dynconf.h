@@ -249,7 +249,6 @@ extern MODVAR BestPractices bestpractices;
 #define NOCONNECTTLSLINFO		iConf.no_connect_tls_info
 #define ALLOW_USER_STATS			iConf.allow_user_stats
 #define ANTI_SPAM_QUIT_MSG_TIME		iConf.anti_spam_quit_message_time
-
 #define NETWORK_NAME			iConf.network_name
 #define NETWORK_NAME_005		iConf.network_name_005
 #define DEFAULT_SERVER			iConf.default_server
@@ -260,7 +259,6 @@ extern MODVAR BestPractices bestpractices;
 #define SASL_SERVER			iConf.sasl_server
 #define iNAH				iConf.inah
 #define PREFIX_QUIT			iConf.prefix_quit
-
 #define UHOST_ALLOWED			iConf.userhost_allowed
 #define RESTRICT_CHANNELMODES		iConf.restrict_channelmodes
 #define THROTTLING_PERIOD		iConf.throttle_period
@@ -268,27 +266,19 @@ extern MODVAR BestPractices bestpractices;
 #define USE_BAN_VERSION			iConf.use_ban_version
 #define MODES_ON_JOIN			iConf.modes_on_join.extmodes
 #define LEVEL_ON_JOIN			iConf.level_on_join
-
 #define IDENT_CONNECT_TIMEOUT	iConf.ident_connect_timeout
 #define IDENT_READ_TIMEOUT		iConf.ident_read_timeout
-
 #define MKPASSWD_FOR_EVERYONE	iConf.mkpasswd_for_everyone
 #define HIDE_BAN_REASON		iConf.hide_ban_reason
 #define ALLOW_INSANE_BANS		iConf.allow_insane_bans
 #define CHANCMDPFX iConf.channel_command_prefix
-
 #define DEFAULT_BANTIME			iConf.default_bantime
 #define WHOLIMIT			iConf.who_limit
-
 #define ALLOW_PART_IF_SHUNNED	iConf.allow_part_if_shunned
-
 #define DISABLE_CAP	iConf.disable_cap
-
 #define DISABLE_IPV6	ipv6_disabled
-
 #define BAN_VERSION_TKL_TIME	iConf.ban_version_tkl_time
 #define SILENCE_LIMIT (iConf.silence_limit ? iConf.silence_limit : 15)
-
 #define SPAMFILTER_BAN_TIME		iConf.spamfilter_ban_time
 #define SPAMFILTER_BAN_REASON	iConf.spamfilter_ban_reason
 #define SPAMFILTER_VIRUSCHAN	iConf.spamfilter_virus_help_channel
@@ -297,17 +287,11 @@ extern MODVAR BestPractices bestpractices;
 #define SPAMFILTER_DETECTSLOW_WARN	iConf.spamfilter_detectslow_warn
 #define SPAMFILTER_DETECTSLOW_FATAL	iConf.spamfilter_detectslow_fatal
 #define SPAMFILTER_STOP_ON_FIRST_MATCH	iConf.spamfilter_stop_on_first_match
-
 #define CHECK_TARGET_NICK_BANS	iConf.check_target_nick_bans
-
 #define MAXBANS		iConf.maxbans
-
 #define WATCH_AWAY_NOTIFICATION	iConf.watch_away_notification
-
 #define UHNAMES_ENABLED	iConf.uhnames
-
 #define UTF8ONLY	iConf.utf8_only
-
 #define NETWORK_ICON iConf.network_icon
 
 /** Used for testing the set { } block configuration.
