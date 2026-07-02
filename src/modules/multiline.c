@@ -827,6 +827,9 @@ CMD_OVERRIDE_FUNC(multiline_override_batch)
 		/* Deliver the batch */
 		multiline_deliver(client, batch);
 
+		if (IsDead(client))
+			return;
+
 		/* Apply batch fake lag */
 		add_fake_lag(client, calculate_multiline_fakelag(client, batch));
 
