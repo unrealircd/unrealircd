@@ -1,13 +1,16 @@
-UnrealIRCd 6.2.6-rc1
-=====================
+UnrealIRCd 6.2.6
+=================
 
-This is the Release Candidate for future version 6.2.6. You can help us by
-testing this release and reporting bugs to https://bugs.unrealircd.org/
-
-This version enables multiline by default, adds TKL IDs and tracking of
+UnrealIRCd 6.2.6 enables multiline by default, adds TKL IDs and tracking of
 hit counts on *LINES/Spamfilter. New crule functions were added to fetch
 server flood counts. Guidance to admins for server linking with 'spkifp'
 has been improved.
+
+A crash bug in the multiline implementation in 6.2.4/6.2.5/6.2.6-rc1
+has been fixed as well. Note that multiline was not enabled by default
+in 6.2.4/6.2.5. If you *only* want to fix that issue then it is possible
+to run the following command on *NIX to patch it without a server restart:
+`./unrealircd hot-patch multiline-62x-crash`
 
 ### Enhancements:
 * [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
@@ -105,6 +108,7 @@ has been improved.
   extensions have been ratified. During the transition period we support both.
 
 ### Fixes:
+* A crash if multiline was enabled
 * The following config items previously raised a config error:
   allow channel::except, deny channel::except and spamfilter::except.
 * deny channel::mask with a [Mask item](https://www.unrealircd.org/docs/Mask_item)

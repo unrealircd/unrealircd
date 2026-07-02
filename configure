@@ -2713,7 +2713,7 @@ printf "%s\n" "#define UNREAL_VERSION_MINOR $UNREAL_VERSION_MINOR" >>confdefs.h
 # The version suffix such as a beta marker or release candidate
 # marker. (e.g.: -rcX for unrealircd-3.2.9-rcX). This macro is a
 # string instead of an integer because it contains arbitrary data.
-UNREAL_VERSION_SUFFIX="-rc1"
+UNREAL_VERSION_SUFFIX=""
 
 printf "%s\n" "#define UNREAL_VERSION_SUFFIX \"$UNREAL_VERSION_SUFFIX\"" >>confdefs.h
 
