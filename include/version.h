@@ -5,7 +5,7 @@
 ** $Id$
 */
 #ifndef __versioninclude
-#define __versioninclude 1
+#define __versioninclude
 
 /*
  * Utility macros to convert version number constants to strings.

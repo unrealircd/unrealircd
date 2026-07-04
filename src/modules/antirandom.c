@@ -36,6 +36,7 @@ ModuleHeader MOD_HEADER
 #endif
 
 /* "<char1><char2>" followed by "<rest>" */
+/* clang-format off */
 static char *triples_txt[] = {
 	"aj", "fqtvxz",
 	"aq", "deghjkmnprtxyz",
@@ -478,6 +479,7 @@ static char *triples_txt[] = {
 	"zz", "cdfhjnpqrvx",
 	NULL, NULL
 };
+/* clang-format on */
 
 /* Used for parsed triples: */
 #define TRIPLES_REST_SIZE	32

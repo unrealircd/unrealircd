@@ -2788,6 +2788,6 @@ typedef enum JsonRpcError {
 #define BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY	0x4
 #define BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR	0x8
 
-#endif /* __struct_include__ */
-
 #include "dynconf.h"
+
+#endif /* __struct_include__ */
