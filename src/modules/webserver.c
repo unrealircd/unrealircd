@@ -28,8 +28,9 @@ ModuleHeader MOD_HEADER
 /* Macros */
 #define WEB(client)		((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 #define WEBSERVER(client)	((client->local && client->local->listener) ? client->local->listener->webserver : NULL)
-#define reset_handshake_timeout(client, delta)  do { client->local->creationtime = TStime() - iConf.handshake_timeout + delta; } while(0)
 #define WSU(client)     ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
+
+#define reset_handshake_timeout(client, delta)  do { client->local->creationtime = TStime() - iConf.handshake_timeout + delta; } while(0)
 
 /* Forward declarations */
 int webserver_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);

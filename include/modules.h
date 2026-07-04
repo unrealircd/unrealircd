@@ -832,6 +832,7 @@ struct Module
 #define MOD_OPT_GLOBAL		0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
 #define MOD_OPT_PRIORITY	0x1000 /* Module wants a higher or lower priority for unloading, init, load, etc */
 #define MOD_OPT_UNLOAD_PRIORITY	0x1000 /* Alias for MOD_OPT_PRIORITY */
+
 #define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
 
 /** Websocket module should init 'first' because it handles sockets */
