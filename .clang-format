@@ -33,11 +33,16 @@ BraceWrapping:
 IndentPPDirectives: BeforeHash
 PPIndentWidth: 1
 
-# Keep existing #define-value and trailing-comment column alignment (not declarations).
+# Keep existing #define-value column alignment (not declarations).
 AlignConsecutiveMacros:
   Enabled: true
+# Trailing comments: leave them wherever they are, don't align and don't
+# un-align. Exception: in include/ they ARE aligned automatically, see
+# include/.clang-format. We don't want alignment in .c files because one
+# long line would drag the comments of all surrounding lines far to the
+# right (clang-format can't align "only when reasonable").
 AlignTrailingComments:
-  Kind: Always
+  Kind: Leave
   OverEmptyLines: 0
 
 IndentCaseLabels: true                 # case labels are indented one level
