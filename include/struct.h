@@ -409,7 +409,7 @@ typedef enum ClientStatus {
 #define IsTLSAcceptHandshake(x)  ((x)->status == CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)   /**< Currently doing a TLS handshake - incoming */
 #define IsTLSConnectHandshake(x) ((x)->status == CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)  /**< Currently doing a TLS handshake - outgoing */
 /** Currently doing a TLS handshake (incoming/outgoing/STARTTLS) */
-#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))
+#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) || IsStartTLSHandshake(x))
 
 #define SetStartTLSHandshake(x)   ((x)->status = CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)
 #define SetTLSAcceptHandshake(x)  ((x)->status = CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)
