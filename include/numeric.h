@@ -29,6 +29,7 @@
  * from another server then it is remapped to 100-199.
  */
 
+/* clang-format off */
 #define	RPL_WELCOME          001
 #define	RPL_YOURHOST         002
 #define	RPL_CREATED          003
@@ -345,6 +346,7 @@
 #define ERR_SASLTOOLONG         905
 #define ERR_SASLABORTED         906
 #define RPL_SASLMECHS           908
+/* clang-format on */
 
 /* Numeric texts */
 

@@ -544,6 +544,7 @@ typedef enum ClientStatus {
 #define IsIdentLookupSent(x)		((x)->flags & CLIENT_FLAG_IDENTLOOKUPSENT)
 #define IsAsyncRPC(x)			((x)->flags & CLIENT_FLAG_ASYNC_RPC)
 #define IsIPV6(x)			((x)->flags & CLIENT_FLAG_IPV6)
+/* clang-format off */
 #define SetIdentLookup(x)		do { (x)->flags |= CLIENT_FLAG_IDENTLOOKUP; } while(0)
 #define SetClosing(x)			do { (x)->flags |= CLIENT_FLAG_CLOSING; } while(0)
 #define SetDCCBlock(x)			do { (x)->flags |= CLIENT_FLAG_DCCBLOCK; } while(0)
@@ -609,6 +610,7 @@ typedef enum ClientStatus {
 #define ClearIdentLookupSent(x)		do { (x)->flags &= ~CLIENT_FLAG_IDENTLOOKUPSENT; } while(0)
 #define ClearAsyncRPC(x)		do { (x)->flags &= ~CLIENT_FLAG_ASYNC_RPC; } while(0)
 #define ClearIPV6(x)			do { (x)->flags &= ~CLIENT_FLAG_IPV6; } while(0)
+/* clang-format on */
 /** @} */
 
 #define IsUnixSocket(x)			((x)->local->socket_type == SOCKET_TYPE_UNIX)

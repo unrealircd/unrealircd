@@ -143,7 +143,6 @@
 #define MSG_VHOST 	"VHOST"
 #define MSG_BOTMOTD 	"BOTMOTD"
 #define MSG_REMGLINE	"REMGLINE"	/* remove g-line */
-
 #define MSG_UMODE2	"UMODE2"
 #define MSG_DCCDENY	"DCCDENY"
 #define MSG_UNDCCDENY   "UNDCCDENY"
@@ -153,18 +152,11 @@
 #define MSG_POST	"POST"
 #define MSG_INFOSERV 	"INFOSERV"
 #define MSG_IS		"IS"
-
 #define MSG_BOTSERV	"BOTSERV"
-
 #define MSG_CYCLE	"CYCLE"
-
 #define MSG_MODULE	"MODULE"
-/* BR and BT are in use */
-
 #define MSG_SENDSNO	"SENDSNO"
-
 #define MSG_EOS		"EOS"
-
 #define MSG_MLOCK	"MLOCK"
 
 #define MAXPARA    	30

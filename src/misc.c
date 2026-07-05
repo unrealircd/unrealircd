@@ -30,16 +30,18 @@
 
 #include "unrealircd.h"
 
+/* clang-format off */
 static const char *months[] = {
 	"January", "February", "March", "April",
 	"May", "June", "July", "August",
-	"September", "October", "November", "December",
+	"September", "October", "November", "December"
 };
 
 static const char *weekdays[] = {
 	"Sunday", "Monday", "Tuesday", "Wednesday",
-	"Thursday", "Friday", "Saturday",
+	"Thursday", "Friday", "Saturday"
 };
+/* clang-format on */
 
 static const char *short_months[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",

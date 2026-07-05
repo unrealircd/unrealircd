@@ -302,9 +302,11 @@ static int bad_command(const char *argv0)
 	return (-1);
 }
 
+/* clang-format off */
 char chess[] = {
-	85, 110, 114, 101, 97, 108, 0,
+	85, 110, 114, 101, 97, 108, 0
 };
+/* clang-format on */
 
 extern void applymeblock(void);
 
