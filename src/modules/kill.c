@@ -22,18 +22,17 @@
 
 CMD_FUNC(cmd_kill);
 
-ModuleHeader MOD_HEADER
-  = {
-	"kill",
-	"5.0",
-	"command /kill",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "kill",
+    "5.0",
+    "command /kill",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "KILL", cmd_kill, 2, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "KILL", cmd_kill, 2, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -71,7 +70,7 @@ CMD_FUNC(cmd_kill)
 		return;
 	}
 
-	if (!IsServer(client->direction) && !ValidatePermissionsForPath("kill:global",client,NULL,NULL,NULL) && !ValidatePermissionsForPath("kill:local",client,NULL,NULL,NULL))
+	if (!IsServer(client->direction) && !ValidatePermissionsForPath("kill:global", client, NULL, NULL, NULL) && !ValidatePermissionsForPath("kill:local", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -113,9 +112,7 @@ CMD_FUNC(cmd_kill)
 			continue;
 		}
 
-		if ((!MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:global",client,target,NULL,NULL))
-		    || (MyConnect(target) && MyUser(client)
-		    && !ValidatePermissionsForPath("kill:local",client,target,NULL,NULL)))
+		if ((!MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:global", client, target, NULL, NULL)) || (MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:local", client, target, NULL, NULL)))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			continue;
@@ -149,14 +146,13 @@ CMD_FUNC(cmd_kill)
 		if (MyConnect(target))
 		{
 			sendto_prefix_one(target, client, NULL, ":%s KILL %s :%s",
-			    client->name, target->name, reason);
+			                  client->name, target->name, reason);
 		}
 
 		if (MyConnect(target) && MyConnect(client))
 		{
 			/* Local kill. This is handled as if it were a QUIT */
-		}
-		else
+		} else
 		{
 			/* Kill from one server to another (we may be src, victim or something in-between) */
 

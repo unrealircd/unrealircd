@@ -21,18 +21,17 @@
 
 CMD_FUNC(noctcp);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/noctcp",
-	"4.2",
-	"Channel Mode +C",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/noctcp",
+    "4.2",
+    "Channel Mode +C",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NOCTCP;
 
-#define IsNoCTCP(channel)    (channel->mode.mode & EXTCMODE_NOCTCP)
+#define IsNoCTCP(channel) (channel->mode.mode & EXTCMODE_NOCTCP)
 
 int noctcp_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
@@ -43,16 +42,16 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.letter = 'C';
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOCTCP);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, noctcp_can_send_to_channel);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

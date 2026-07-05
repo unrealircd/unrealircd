@@ -30,7 +30,7 @@
 // TODO: Make configurable at compile time (runtime won't do, as we haven't read the config file)
 #define show_event_console 0
 
-#define MAXLOGLENGTH 16384	/**< Maximum length of a log entry (which may be multiple lines) */
+#define MAXLOGLENGTH            16384 /**< Maximum length of a log entry (which may be multiple lines) */
 #define LOG_THROTTLE_TABLE_SIZE 256
 
 typedef struct LogThrottleEntry LogThrottleEntry;
@@ -47,12 +47,12 @@ struct LogThrottleEntry {
 };
 
 /* Variables */
-Log *logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL, NULL };
-Log *temp_logs[NUM_LOG_DESTINATIONS] = { NULL, NULL, NULL, NULL, NULL, NULL };
+Log *logs[NUM_LOG_DESTINATIONS] = {NULL, NULL, NULL, NULL, NULL, NULL};
+Log *temp_logs[NUM_LOG_DESTINATIONS] = {NULL, NULL, NULL, NULL, NULL, NULL};
 static int snomask_num_destinations = 0;
 
-static char snomasks_in_use[257] = { '\0' };
-static char snomasks_in_use_testing[257] = { '\0' };
+static char snomasks_in_use[257] = {'\0'};
+static char snomasks_in_use_testing[257] = {'\0'};
 
 LogEntry *memory_log = NULL; /**< Log entries in memory (OLDEST entry) */
 LogEntry *memory_log_tail = NULL; /**< Tail of log entries in memory (NEWEST entry) */
@@ -81,7 +81,7 @@ LogType log_type_stringtoval(const char *str)
 
 const char *log_type_valtostring(LogType v)
 {
-	switch(v)
+	switch (v)
 	{
 		case LOG_TYPE_TEXT:
 			return "text";
@@ -119,7 +119,7 @@ LogSource *add_log_source(const char *str)
 	if (*str == '!')
 	{
 		negative = 1;
-		strlcpy(buf, str+1, sizeof(buf));
+		strlcpy(buf, str + 1, sizeof(buf));
 	} else
 	{
 		strlcpy(buf, str, sizeof(buf));
@@ -142,8 +142,7 @@ LogSource *add_log_source(const char *str)
 		if (isupper(*p))
 		{
 			event_id = p;
-		} else
-		if (loglevel == ULOG_INVALID)
+		} else if (loglevel == ULOG_INVALID)
 		{
 			loglevel = log_level_stringtoval(p);
 			if ((loglevel == ULOG_INVALID) && !subsystem)
@@ -195,8 +194,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 				/* TODO: Validate the sources lightly for formatting issues */
 				any_sources = 1;
 			}
-		} else
-		if (!strcmp(ce->name, "destination"))
+		} else if (!strcmp(ce->name, "destination"))
 		{
 			for (cep = ce->items; cep; cep = cep->next)
 			{
@@ -209,17 +207,16 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 					{
 						config_error_blank(cep->file->filename, cep->line_number, "set::logging::snomask");
 						errors++;
-					} else
-					if ((strlen(cep->value) != 1) || !(islower(cep->value[0]) || isupper(cep->value[0])))
+					} else if ((strlen(cep->value) != 1) || !(islower(cep->value[0]) || isupper(cep->value[0])))
 					{
 						config_error("%s:%d: snomask must be a single letter",
-							cep->file->filename, cep->line_number);
+						             cep->file->filename, cep->line_number);
 						errors++;
-					} else {
+					} else
+					{
 						strlcat(snomasks_in_use_testing, cep->value, sizeof(snomasks_in_use_testing));
 					}
-				} else
-				if (!strcmp(cep->name, "channel"))
+				} else if (!strcmp(cep->name, "channel"))
 				{
 					destinations++;
 					/* We need to validate the parameter here as well */
@@ -227,11 +224,10 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 					{
 						config_error_blank(cep->file->filename, cep->line_number, "set::logging::channel");
 						errors++;
-					} else
-					if (!valid_channelname(cep->value))
+					} else if (!valid_channelname(cep->value))
 					{
 						config_error("%s:%d: Invalid channel name '%s'",
-							cep->file->filename, cep->line_number, cep->value);
+						             cep->file->filename, cep->line_number, cep->value);
 						errors++;
 					}
 					for (cepp = cep->items; cepp; cepp = cepp->next)
@@ -250,8 +246,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							errors++;
 						}
 					}
-				} else
-				if (!strcmp(cep->name, "file"))
+				} else if (!strcmp(cep->name, "file"))
 				{
 					destinations++;
 					if (!cep->value)
@@ -268,24 +263,23 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							if (!cepp->value)
 							{
 								config_error_empty(cepp->file->filename,
-									cepp->line_number, "log", cepp->name);
+								                   cepp->line_number, "log", cepp->name);
 								errors++;
 								continue;
 							}
 							if (!log_type_stringtoval(cepp->value))
 							{
 								config_error("%s:%i: unknown log type '%s'",
-									cepp->file->filename, cepp->line_number,
-									cepp->value);
+								             cepp->file->filename, cepp->line_number,
+								             cepp->value);
 								errors++;
 							}
-						} else
-						if (!strcmp(cepp->name, "maxsize") || !strcmp(cepp->name, "max-size"))
+						} else if (!strcmp(cepp->name, "maxsize") || !strcmp(cepp->name, "max-size"))
 						{
 							if (!cepp->value)
 							{
 								config_error_empty(cepp->file->filename,
-									cepp->line_number, "log", cepp->name);
+								                   cepp->line_number, "log", cepp->name);
 								errors++;
 							}
 						} else
@@ -294,12 +288,10 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							errors++;
 						}
 					}
-				} else
-				if (!strcmp(cep->name, "remote"))
+				} else if (!strcmp(cep->name, "remote"))
 				{
 					destinations++;
-				} else
-				if (!strcmp(cep->name, "syslog"))
+				} else if (!strcmp(cep->name, "syslog"))
 				{
 					destinations++;
 					for (cepp = cep->items; cepp; cepp = cepp->next)
@@ -309,15 +301,15 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							if (!cepp->value)
 							{
 								config_error_empty(cepp->file->filename,
-									cepp->line_number, "log", cepp->name);
+								                   cepp->line_number, "log", cepp->name);
 								errors++;
 								continue;
 							}
 							if (!log_type_stringtoval(cepp->value))
 							{
 								config_error("%s:%i: unknown log type '%s'",
-									cepp->file->filename, cepp->line_number,
-									cepp->value);
+								             cepp->file->filename, cepp->line_number,
+								             cepp->value);
 								errors++;
 							}
 						} else
@@ -326,8 +318,7 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							errors++;
 						}
 					}
-				} else
-				if (!strcmp(cep->name, "memory"))
+				} else if (!strcmp(cep->name, "memory"))
 				{
 					destinations++;
 					for (cepp = cep->items; cepp; cepp = cepp->next)
@@ -337,16 +328,15 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 							if (!cepp->value)
 							{
 								config_error_empty(cepp->file->filename,
-									cepp->line_number, "log", cepp->name);
+								                   cepp->line_number, "log", cepp->name);
 								errors++;
 							}
-						} else
-						if (!strcmp(cepp->name, "max-time"))
+						} else if (!strcmp(cepp->name, "max-time"))
 						{
 							if (!cepp->value)
 							{
 								config_error_empty(cepp->file->filename,
-									cepp->line_number, "log", cepp->name);
+								                   cepp->line_number, "log", cepp->name);
 								errors++;
 							}
 						} else
@@ -361,12 +351,12 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 					if (!cep->value)
 					{
 						config_error("%s:%i: webhook needs a url",
-							cep->file->filename, cep->line_number);
+						             cep->file->filename, cep->line_number);
 						errors++;
 					} else if (strncmp(cep->value, "http://", 7) != 0 && strncmp(cep->value, "https://", 8) != 0)
 					{
 						config_error("%s:%i: webhook url must be a HTTP/HTTPS URL (%s)",
-							cep->file->filename, cep->line_number, cep->value);
+						             cep->file->filename, cep->line_number, cep->value);
 						errors++;
 					}
 				} else
@@ -399,19 +389,19 @@ int config_test_log(ConfigFile *conf, ConfigEntry *block)
 	if (!any_sources)
 	{
 		config_error("%s:%d: log block contains no sources. Old log block perhaps?",
-			block->file->filename, block->line_number);
+		             block->file->filename, block->line_number);
 		errors++;
 	}
 	if (destinations == 0)
 	{
 		config_error("%s:%d: log block contains no destinations. Old log block perhaps?",
-			block->file->filename, block->line_number);
+		             block->file->filename, block->line_number);
 		errors++;
 	}
 	if (destinations > 1)
 	{
 		config_error("%s:%d: log block contains multiple destinations. This is not support... YET!",
-			block->file->filename, block->line_number);
+		             block->file->filename, block->line_number);
 		errors++;
 	}
 	return errors;
@@ -458,8 +448,7 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 						AddListItem(log, temp_logs[LOG_DEST_OPER]);
 					else
 						AddListItem(log, temp_logs[LOG_DEST_SNOMASK]);
-				} else
-				if (!strcmp(cep->name, "channel"))
+				} else if (!strcmp(cep->name, "channel"))
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					strlcpy(log->destination, cep->value, sizeof(log->destination)); /* destination is the channel */
@@ -482,15 +471,13 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 						else if (!strcmp(cepp->name, "oper-only"))
 							log->oper_only = config_checkval(cepp->value, CFG_YESNO);
 					}
-				} else
-				if (!strcmp(cep->name, "remote"))
+				} else if (!strcmp(cep->name, "remote"))
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					/* destination stays empty */
 					log->sources = sources;
 					AddListItem(log, temp_logs[LOG_DEST_REMOTE]);
-				} else
-				if (!strcmp(cep->name, "file") || !strcmp(cep->name, "syslog"))
+				} else if (!strcmp(cep->name, "file") || !strcmp(cep->name, "syslog"))
 				{
 					Log *log;
 
@@ -506,9 +493,9 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 							    (log->filefmt && !strcmp(log->filefmt, cep->value)))
 							{
 								config_warn("%s:%d: Ignoring duplicate log block for file '%s'. "
-									    "You cannot have multiple log blocks logging to the same file.",
-									    cep->file->filename, cep->line_number,
-									    cep->value);
+								            "You cannot have multiple log blocks logging to the same file.",
+								            cep->file->filename, cep->line_number,
+								            cep->value);
 								free_log_sources(sources);
 								return 0;
 							}
@@ -528,22 +515,20 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					{
 						if (!strcmp(cepp->name, "maxsize") || !strcmp(cepp->name, "max-size"))
 						{
-							log->max_size = config_checkval(cepp->value,CFG_SIZE);
-						}
-						else if (!strcmp(cepp->name, "type"))
+							log->max_size = config_checkval(cepp->value, CFG_SIZE);
+						} else if (!strcmp(cepp->name, "type"))
 						{
 							log->type = log_type_stringtoval(cepp->value);
 						}
 					}
 					AddListItem(log, temp_logs[LOG_DEST_DISK]);
-				} else
-				if (!strcmp(cep->name, "memory"))
+				} else if (!strcmp(cep->name, "memory"))
 				{
 					if (temp_logs[LOG_DEST_MEMORY])
 					{
 						config_warn("%s:%d: Ignoring duplicate log block for memory. "
-							    "You cannot have multiple log blocks logging to memory.",
-							    cep->file->filename, cep->line_number);
+						            "You cannot have multiple log blocks logging to memory.",
+						            cep->file->filename, cep->line_number);
 						free_log_sources(sources);
 						return 0;
 					}
@@ -555,16 +540,14 @@ int config_run_log(ConfigFile *conf, ConfigEntry *block)
 					{
 						if (!strcmp(cepp->name, "max-lines"))
 						{
-							log->max_lines = config_checkval(cepp->value,CFG_SIZE);
-						}
-						else if (!strcmp(cepp->name, "max-time"))
+							log->max_lines = config_checkval(cepp->value, CFG_SIZE);
+						} else if (!strcmp(cepp->name, "max-time"))
 						{
-							log->max_time = config_checkval(cepp->value,CFG_TIME);
+							log->max_time = config_checkval(cepp->value, CFG_TIME);
 						}
 					}
 					AddListItem(log, temp_logs[LOG_DEST_MEMORY]);
-				} else
-				if (!strcmp(cep->name, "webhook"))
+				} else if (!strcmp(cep->name, "webhook"))
 				{
 					Log *log = safe_alloc(sizeof(Log));
 					safe_strdup(log->url, cep->value);
@@ -730,7 +713,8 @@ LogData *log_data_tls_error(void)
 	json_object_set_new(j, "error_stack", error_stack);
 	*all_errors = '\0';
 
-	do {
+	do
+	{
 		json_t *obj;
 
 		e = ERR_get_error();
@@ -750,7 +734,7 @@ LogData *log_data_tls_error(void)
 		}
 		strlcat(all_errors, buf, sizeof(all_errors));
 		strlcat(all_errors, "\n", sizeof(all_errors));
-	} while(e);
+	} while (e);
 
 	json_object_set_new(j, "all", json_string_unreal(all_errors));
 
@@ -829,7 +813,7 @@ void log_data_free(LogData *d)
 
 const char *log_level_valtostring(LogLevel loglevel)
 {
-	switch(loglevel)
+	switch (loglevel)
 	{
 		case ULOG_DEBUG:
 			return "debug";
@@ -849,23 +833,23 @@ const char *log_level_valtostring(LogLevel loglevel)
 }
 
 static NameValue log_colors_irc[] = {
-	{ ULOG_INVALID,	"\0030,01" },
-	{ ULOG_DEBUG,	"\0030,01" },
-	{ ULOG_INFO,	"\00303" },
-	{ ULOG_ADVICE,	"\00312" },
-	{ ULOG_WARNING,	"\00307" },
-	{ ULOG_ERROR,	"\00304" },
-	{ ULOG_FATAL,	"\00313" },
+    {ULOG_INVALID, "\0030,01"},
+    {ULOG_DEBUG, "\0030,01"},
+    {ULOG_INFO, "\00303"},
+    {ULOG_ADVICE, "\00312"},
+    {ULOG_WARNING, "\00307"},
+    {ULOG_ERROR, "\00304"},
+    {ULOG_FATAL, "\00313"},
 };
 
 static NameValue log_colors_terminal[] = {
-	{ ULOG_INVALID,	"\033[90m" },
-	{ ULOG_DEBUG,	"\033[37m" },
-	{ ULOG_INFO,	"\033[92m" },
-	{ ULOG_ADVICE,	"\033[94m" },
-	{ ULOG_WARNING,	"\033[93m" },
-	{ ULOG_ERROR,	"\033[91m" },
-	{ ULOG_FATAL,	"\033[95m" },
+    {ULOG_INVALID, "\033[90m"},
+    {ULOG_DEBUG, "\033[37m"},
+    {ULOG_INFO, "\033[92m"},
+    {ULOG_ADVICE, "\033[94m"},
+    {ULOG_WARNING, "\033[93m"},
+    {ULOG_ERROR, "\033[91m"},
+    {ULOG_FATAL, "\033[95m"},
 };
 
 const char *log_level_irc_color(LogLevel loglevel)
@@ -895,8 +879,8 @@ LogLevel log_level_stringtoval(const char *str)
 	return ULOG_INVALID;
 }
 
-#define valideventidcharacter(x)	(isupper((x)) || isdigit((x)) || ((x) == '_'))
-#define validsubsystemcharacter(x)	(islower((x)) || isdigit((x)) || ((x) == '_') || ((x) == '-'))
+#define valideventidcharacter(x)   (isupper((x)) || isdigit((x)) || ((x) == '_'))
+#define validsubsystemcharacter(x) (islower((x)) || isdigit((x)) || ((x) == '_') || ((x) == '-'))
 
 int valid_event_id(const char *s)
 {
@@ -978,7 +962,8 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 			}
 
 			/* find termination */
-			for (p=i; validvarcharacter(*p) || ((*p == '.') && validvarcharacter(p[1])); p++);
+			for (p = i; validvarcharacter(*p) || ((*p == '.') && validvarcharacter(p[1])); p++)
+				;
 
 			/* find variable name in list */
 			strlncpy(varname, i, sizeof(varname), p - i);
@@ -992,25 +977,24 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 				if (varp)
 				{
 					char *varpp;
-					do {
-						varpp = strchr(varp+1, '.');
+					do
+					{
+						varpp = strchr(varp + 1, '.');
 						if (varpp)
 							*varpp = '\0';
 						/* Fetch explicit object.key */
-						t = json_object_get(t, varp+1);
+						t = json_object_get(t, varp + 1);
 						varp = varpp;
-					} while(t && varpp);
+					} while (t && varpp);
 					if (t)
 						output = json_get_value(t);
-				} else
-				if (!strcmp(varname, "socket_error"))
+				} else if (!strcmp(varname, "socket_error"))
 				{
 					/* Fetch socket_error.error_string */
 					t = json_object_get(t, "error_string");
 					if (t)
 						output = json_get_value(t);
-				} else
-				if (json_is_object(t))
+				} else if (json_is_object(t))
 				{
 					/* Fetch object.name */
 					t = json_object_get(t, "name");
@@ -1038,8 +1022,7 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 					if (left <= 0)
 						return; /* return - don't write \0 to 'o'. ensured by strlcpy already */
 					o += strlen(output); /* value entirely written */
-				} else
-				if (opt)
+				} else if (opt)
 				{
 					/* Optional field that is empty: show nothing and eat a
 					 * preceding space. */
@@ -1056,7 +1039,7 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 			i = p - 1;
 			continue;
 		}
-literal:
+	literal:
 		if (!left)
 			break;
 		*o++ = *i;
@@ -1090,7 +1073,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 		{
 #ifdef _WIN32
 			if (show_event_console)
-				win_log("* %s.%s%s [%s] %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+				win_log("* %s.%s%s [%s] %s\n", subsystem, event_id, m->next ? "+" : "", log_level_valtostring(loglevel), m->line);
 			else
 				win_log("* [%s] %s\n", log_level_valtostring(loglevel), m->line);
 #else
@@ -1099,17 +1082,19 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 				if (show_event_console)
 				{
 					fprintf(stderr, "%s%s.%s%s %s[%s]%s %s\n",
-							log_level_terminal_color(ULOG_INVALID), subsystem, event_id, TERMINAL_COLOR_RESET,
-							log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
-							m->line);
-				} else {
+					        log_level_terminal_color(ULOG_INVALID), subsystem, event_id, TERMINAL_COLOR_RESET,
+					        log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
+					        m->line);
+				} else
+				{
 					fprintf(stderr, "%s[%s]%s %s\n",
-							log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
-							m->line);
+					        log_level_terminal_color(loglevel), log_level_valtostring(loglevel), TERMINAL_COLOR_RESET,
+					        m->line);
 				}
-			} else {
+			} else
+			{
 				if (show_event_console)
-					fprintf(stderr, "%s.%s%s [%s] %s\n", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+					fprintf(stderr, "%s.%s%s [%s] %s\n", subsystem, event_id, m->next ? "+" : "", log_level_valtostring(loglevel), m->line);
 				else
 					fprintf(stderr, "[%s] %s\n", log_level_valtostring(loglevel), m->line);
 			}
@@ -1132,11 +1117,10 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 			if (l->type == LOG_TYPE_JSON)
 			{
 				syslog(LOG_INFO, "%s", json_serialized);
-			} else
-			if (l->type == LOG_TYPE_TEXT)
+			} else if (l->type == LOG_TYPE_TEXT)
 			{
 				for (m = msg; m; m = m->next)
-					syslog(LOG_INFO, "%s.%s%s %s: %s", subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+					syslog(LOG_INFO, "%s.%s%s %s: %s", subsystem, event_id, m->next ? "+" : "", log_level_valtostring(loglevel), m->line);
 			}
 			continue;
 		}
@@ -1162,7 +1146,7 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 			if (l->logfd == -1)
 			{
 				/* Try to open, so we can write the 'Max file size reached' message. */
-				l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
+				l->logfd = fd_fileopen(l->file, O_CREAT | O_APPEND | O_WRONLY);
 			}
 			if (l->logfd != -1)
 			{
@@ -1186,14 +1170,14 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 		/* generic code for opening log if not open yet.. */
 		if (l->logfd == -1)
 		{
-			l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
+			l->logfd = fd_fileopen(l->file, O_CREAT | O_APPEND | O_WRONLY);
 			if (l->logfd == -1)
 			{
 				if (errno == ENOENT)
 				{
 					/* Create directory structure and retry */
 					unreal_create_directory_structure_for_file(l->file, 0777);
-					l->logfd = fd_fileopen(l->file, O_CREAT|O_APPEND|O_WRONLY);
+					l->logfd = fd_fileopen(l->file, O_CREAT | O_APPEND | O_WRONLY);
 				}
 				if (l->logfd == -1)
 				{
@@ -1201,7 +1185,8 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 					if (!loop.booted)
 					{
 						config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
-					} else {
+					} else
+					{
 						if (last_log_file_warning + 300 < TStime())
 						{
 							config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(errno));
@@ -1221,19 +1206,19 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 			if (n < strlen(json_serialized))
 			{
 				write_error = 1;
-			} else {
+			} else
+			{
 				if (write(l->logfd, "\n", 1) < 1) // FIXME: no.. we should do it this way..... and why do we use direct I/O at all?
 					write_error = 1;
 			}
-		} else
-		if (l->type == LOG_TYPE_TEXT)
+		} else if (l->type == LOG_TYPE_TEXT)
 		{
 			for (m = msg; m; m = m->next)
 			{
 				static char text_buf[MAXLOGLENGTH];
 				snprintf(text_buf, sizeof(text_buf), "%s%s %s.%s%s %s: %s\n",
-					timebuf, from_server->name,
-					subsystem, event_id, m->next?"+":"", log_level_valtostring(loglevel), m->line);
+				         timebuf, from_server->name,
+				         subsystem, event_id, m->next ? "+" : "", log_level_valtostring(loglevel), m->line);
 				n = write(l->logfd, text_buf, strlen(text_buf));
 				if (n < strlen(text_buf))
 				{
@@ -1248,7 +1233,8 @@ void do_unreal_log_disk(LogLevel loglevel, const char *subsystem, const char *ev
 			if (!loop.booted)
 			{
 				config_status("WARNING: Unable to write to '%s': %s", l->file, strerror(errno));
-			} else {
+			} else
+			{
 				if (last_log_file_warning + 300 < TStime())
 				{
 					config_status("WARNING: Unable to write to '%s': %s. This warning will not re-appear for at least 5 minutes.", l->file, strerror(errno));
@@ -1345,7 +1331,7 @@ const char *log_to_snomask(LogLevel loglevel, const char *subsystem, const char 
 	return *snomasks ? snomasks : NULL;
 }
 
-#define COLOR_NONE "\xf"
+#define COLOR_NONE     "\xf"
 #define COLOR_DARKGREY "\00314"
 
 /** Generic sendto function for logging to IRC. Used for notices to IRCOps and also for sending to individual users on channels */
@@ -1373,29 +1359,32 @@ void sendto_log(Client *client, const char *msgtype, const char *destination, in
 			if (show_event)
 			{
 				sendto_one(client, mtags, ":%s %s %s :%s%s.%s%s%s %s[%s]%s %s",
-					from_server->name, msgtype, destination,
-					COLOR_DARKGREY, subsystem, event_id, m->next?"+":"", COLOR_NONE,
-					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-					m->line);
-			} else {
+				           from_server->name, msgtype, destination,
+				           COLOR_DARKGREY, subsystem, event_id, m->next ? "+" : "", COLOR_NONE,
+				           log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+				           m->line);
+			} else
+			{
 				sendto_one(client, mtags, ":%s %s %s :%s[%s]%s %s",
-					from_server->name, msgtype, destination,
-					log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
-					m->line);
+				           from_server->name, msgtype, destination,
+				           log_level_irc_color(loglevel), log_level_valtostring(loglevel), COLOR_NONE,
+				           m->line);
 			}
-		} else {
+		} else
+		{
 			if (show_event)
 			{
 				sendto_one(client, mtags, ":%s %s %s :%s.%s%s [%s] %s",
-					from_server->name, msgtype, destination,
-					subsystem, event_id, m->next?"+":"",
-					log_level_valtostring(loglevel),
-					m->line);
-			} else {
+				           from_server->name, msgtype, destination,
+				           subsystem, event_id, m->next ? "+" : "",
+				           log_level_valtostring(loglevel),
+				           m->line);
+			} else
+			{
 				sendto_one(client, mtags, ":%s %s %s :[%s] %s",
-					from_server->name, msgtype, destination,
-					log_level_valtostring(loglevel),
-					m->line);
+				           from_server->name, msgtype, destination,
+				           log_level_valtostring(loglevel),
+				           m->line);
 			}
 		}
 		safe_free_message_tags(mtags);
@@ -1543,7 +1532,7 @@ void webhook_send_async(const char *url, const char *json_data)
 {
 	OutgoingWebRequest *request;
 	NameValuePrioList *headers = NULL;
-	
+
 	request = safe_alloc(sizeof(OutgoingWebRequest));
 	safe_strdup(request->url, url);
 	request->http_method = HTTP_METHOD_POST;
@@ -1551,16 +1540,16 @@ void webhook_send_async(const char *url, const char *json_data)
 	add_nvplist(&headers, 0, "Content-Type", "application/json");
 	add_nvplist(&headers, 0, "User-Agent", "UnrealIRCd-Webhook/1.0");
 	request->headers = headers;
-	
+
 	if (json_data && *json_data)
 	{
 		safe_strdup(request->body, json_data);
 	}
-	
+
 	/* Use default callback that doesn't care about response */
 	request->callback = download_complete_dontcare;
 	request->max_redirects = 3;
-	
+
 	url_start_async(request);
 }
 
@@ -1577,10 +1566,8 @@ void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char 
 	if (!strcmp(subsystem, "rawtraffic"))
 		return;
 
-	list_for_each_entry(client, &control_list, lclient_node)
-		if (IsMonitorRehash(client) && IsControl(client))
-			for (m = msg; m; m = m->next)
-				sendto_one(client, NULL, "REPLY [%s] %s", log_level_valtostring(loglevel), m->line);
+	list_for_each_entry(client, &control_list, lclient_node) if (IsMonitorRehash(client) && IsControl(client)) for (m = msg; m; m = m->next)
+	    sendto_one(client, NULL, "REPLY [%s] %s", log_level_valtostring(loglevel), m->line);
 
 	if (json_rehash_log)
 	{
@@ -1651,8 +1638,7 @@ void log_throttle_init(void)
 
 static unsigned int hash_log_throttle_entry(const char *event_id)
 {
-	return (unsigned int)(siphash_nocase(event_id, log_throttle_siphashkey)
-	                      % LOG_THROTTLE_TABLE_SIZE);
+	return (unsigned int)(siphash_nocase(event_id, log_throttle_siphashkey) % LOG_THROTTLE_TABLE_SIZE);
 }
 
 static LogThrottleEntry *find_log_throttle_entry(const char *event_id, unsigned int idx)
@@ -1665,8 +1651,8 @@ static LogThrottleEntry *find_log_throttle_entry(const char *event_id, unsigned 
 }
 
 static LogThrottleEntry *add_log_throttle_entry(const char *event_id, const char *subsystem,
-                                            int threshold, int period, int unlimited,
-                                            unsigned int idx)
+                                                int threshold, int period, int unlimited,
+                                                unsigned int idx)
 {
 	LogThrottleEntry *e = safe_alloc(sizeof(LogThrottleEntry));
 	safe_strdup(e->event_id, event_id);
@@ -1695,12 +1681,12 @@ static void emit_log_throttle_summary(LogThrottleEntry *e)
 		return;
 
 	unreal_log(ULOG_INFO, "log", "LOG_RATE_LIMIT_SUMMARY", NULL,
-		"Suppressed $count log entries with event_id $throttled_event_id "
-		"(subsystem $throttled_subsystem) over the last $period seconds",
-		log_data_integer("count", suppressed),
-		log_data_string("throttled_event_id", e->event_id),
-		log_data_string("throttled_subsystem", log_throttle_subsystem_or(e)),
-		log_data_integer("period", period));
+	           "Suppressed $count log entries with event_id $throttled_event_id "
+	           "(subsystem $throttled_subsystem) over the last $period seconds",
+	           log_data_integer("count", suppressed),
+	           log_data_string("throttled_event_id", e->event_id),
+	           log_data_string("throttled_subsystem", log_throttle_subsystem_or(e)),
+	           log_data_integer("period", period));
 }
 
 /* Returns 1 if this log line should be suppressed.
@@ -1785,8 +1771,7 @@ void log_throttle_rehash(void)
 				e->threshold = threshold;
 				e->period = period;
 				e->unlimited = unlimited;
-			}
-			else
+			} else
 			{
 				e->unlimited = 1;
 			}
@@ -1878,31 +1863,31 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	if (loglevel_string == NULL)
 	{
 		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_LOGLEVEL", NULL,
-		                       "[BUG] Next log message had an invalid log level -- corrected to ULOG_ERROR",
-		                       NULL);
+		                               "[BUG] Next log message had an invalid log level -- corrected to ULOG_ERROR",
+		                               NULL);
 		loglevel = ULOG_ERROR;
 		loglevel_string = log_level_valtostring(loglevel);
 	}
 	if (!valid_subsystem(subsystem))
 	{
 		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_SUBSYSTEM", NULL,
-		                       "[BUG] Next log message had an invalid subsystem -- changed to 'unknown'",
-		                       NULL);
+		                               "[BUG] Next log message had an invalid subsystem -- changed to 'unknown'",
+		                               NULL);
 		subsystem = "unknown";
 	}
 	if (!valid_event_id(event_id))
 	{
 		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_EVENT_ID", NULL,
-		                       "[BUG] Next log message had an invalid event id -- changed to 'unknown'",
-		                       NULL);
+		                               "[BUG] Next log message had an invalid event id -- changed to 'unknown'",
+		                               NULL);
 		event_id = "unknown";
 	}
 	/* This one is probably temporary since it should not be a real error, actually (but often is) */
 	if (expand_msg && strchr(msg, '%'))
 	{
 		do_unreal_log_norecursioncheck(ULOG_ERROR, "log", "BUG_LOG_MESSAGE_PERCENT", NULL,
-		                       "[BUG] Next log message contains a percent sign -- possibly accidental format string!",
-		                       NULL);
+		                               "[BUG] Next log message contains a percent sign -- possibly accidental format string!",
+		                               NULL);
 	}
 
 	j = json_object();
@@ -1924,7 +1909,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	/* Additional details (if any) */
 	while ((d = va_arg(vl, LogData *)))
 	{
-		switch(d->type)
+		switch (d->type)
 		{
 			case LOG_FIELD_INTEGER:
 				json_object_set_new(j_details, d->key, json_integer(d->value.integer));
@@ -2029,8 +2014,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 	if (remote_rehash_client &&
 	    ((!strcmp(event_id, "CONFIG_ERROR_GENERIC") ||
 	      !strcmp(event_id, "CONFIG_WARNING_GENERIC") ||
-	      !strcmp(event_id, "CONFIG_INFO_GENERIC"))
-	     ||
+	      !strcmp(event_id, "CONFIG_INFO_GENERIC")) ||
 	     (loop.config_status >= CONFIG_STATUS_TEST)) &&
 	    strcmp(subsystem, "rawtraffic"))
 	{
@@ -2164,7 +2148,7 @@ void config_pre_run_log(void)
 void log_blocks_switchover(void)
 {
 	int i;
-	for (i=0; i < NUM_LOG_DESTINATIONS; i++)
+	for (i = 0; i < NUM_LOG_DESTINATIONS; i++)
 		free_log_block(logs[i]);
 	memcpy(logs, temp_logs, sizeof(logs));
 	memset(temp_logs, 0, sizeof(temp_logs));
@@ -2242,8 +2226,7 @@ void memory_log_do_add_message(time_t t, LogLevel loglevel, const char *subsyste
 		memory_log_tail->next = e;
 		e->prev = memory_log_tail;
 		memory_log_tail = e;
-	} else
-	if (memory_log != memory_log_tail)
+	} else if (memory_log != memory_log_tail)
 	{
 		/* Impossible: memory_log NULL but memory_log_tail is not NULL, or vice versa */
 		abort();

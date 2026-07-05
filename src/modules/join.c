@@ -40,17 +40,16 @@ static int bouncedtimes = 0;
 long CAP_EXTENDED_JOIN = 0L;
 
 /* Macros */
-#define MAXBOUNCE   5 /** Most sensible */
-#define MSG_JOIN 	"JOIN"	
+#define MAXBOUNCE 5 /** Most sensible */
+#define MSG_JOIN  "JOIN"
 
-ModuleHeader MOD_HEADER
-  = {
-	"join",
-	"5.0",
-	"command /join", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "join",
+    "5.0",
+    "command /join",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_TEST()
 {
@@ -102,7 +101,7 @@ int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 		int j = 0;
 		for (h = Hooks[HOOKTYPE_INVITE_BYPASS]; h; h = h->next)
 		{
-			j = (*(h->func.intfunc))(client,channel);
+			j = (*(h->func.intfunc))(client, channel);
 			if (j != 0)
 				break;
 		}
@@ -113,7 +112,7 @@ int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 
 	for (h = Hooks[HOOKTYPE_CAN_JOIN]; h; h = h->next)
 	{
-		int i = (*(h->func.intfunc))(client,channel,key, errmsg);
+		int i = (*(h->func.intfunc))(client, channel, key, errmsg);
 		if (i != 0)
 			return i;
 	}
@@ -126,14 +125,13 @@ int _can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 	}
 
 #ifndef NO_OPEROVERRIDE
-#ifdef OPEROVERRIDE_VERIFY
-	if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL)
-		&& (SecretChannel(channel) || HiddenChannel(channel)))
+ #ifdef OPEROVERRIDE_VERIFY
+	if (ValidatePermissionsForPath("channel:override:privsecret", client, NULL, channel, NULL) && (SecretChannel(channel) || HiddenChannel(channel)))
 	{
 		*errmsg = STR_ERR_OPERSPVERIFY;
 		return (ERR_OPERSPVERIFY);
 	}
-#endif
+ #endif
 #endif
 
 	return 0;
@@ -175,20 +173,20 @@ CMD_FUNC(cmd_join)
 void _send_join_to_local_users(Client *client, Channel *channel, MessageTag *mtags)
 {
 	sendto_channel(channel, client, NULL, NULL,
-	               CAP_EXTENDED_JOIN|CAP_INVERT,
-	               CHECK_INVISIBLE|SEND_LOCAL,
+	               CAP_EXTENDED_JOIN | CAP_INVERT,
+	               CHECK_INVISIBLE | SEND_LOCAL,
 	               mtags,
-		       ":%s JOIN :%s",
-		       client->name, channel->name);
+	               ":%s JOIN :%s",
+	               client->name, channel->name);
 
 	sendto_channel(channel, client, NULL, NULL,
 	               CAP_EXTENDED_JOIN,
-	               CHECK_INVISIBLE|SEND_LOCAL,
+	               CHECK_INVISIBLE | SEND_LOCAL,
 	               mtags,
-		       ":%s JOIN %s %s :%s",
-		       client->name, channel->name,
-		       IsLoggedIn(client) ? client->user->account : "*",
-		       client->info);
+	               ":%s JOIN %s %s :%s",
+	               client->name, channel->name,
+	               IsLoggedIn(client) ? client->user->account : "*",
+	               client->info);
 }
 
 /* Routine that actually makes a user join the channel
@@ -211,8 +209,8 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 	send_join_to_local_users(client, channel, mtags);
 
 	sendto_server(client, 0, 0, mtags_sjoin, ":%s SJOIN %lld %s :%s%s ",
-		me.id, (long long)channel->creationtime,
-		channel->name, modes_to_sjoin_prefix(member_modes), client->id);
+	              me.id, (long long)channel->creationtime,
+	              channel->name, modes_to_sjoin_prefix(member_modes), client->id);
 
 	if (MyUser(client))
 	{
@@ -225,7 +223,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 		{
 			channel->creationtime = TStime();
 			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-			    me.id, channel->name, (long long)channel->creationtime);
+			              me.id, channel->name, (long long)channel->creationtime);
 		}
 
 		if (channel->topic)
@@ -233,7 +231,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 			sendnumeric(client, RPL_TOPIC, channel->name, channel->topic);
 			sendnumeric(client, RPL_TOPICWHOTIME, channel->name, channel->topic_nick, (long long)channel->topic_time);
 		}
-		
+
 		/* Set default channel modes (set::modes-on-join).
 		 * Set only if it's the 1st user and only if no other modes have been set
 		 * already (eg: +P, permanent).
@@ -248,12 +246,12 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 			channel->mode.mode = MODES_ON_JOIN;
 
 			/* Param fun */
-			for (cm=channelmodes; cm; cm = cm->next)
+			for (cm = channelmodes; cm; cm = cm->next)
 			{
 				if (!cm->letter || !cm->paracount)
 					continue;
 				if (channel->mode.mode & cm->mode)
-				        cm_putparameter(channel, cm->letter, iConf.modes_on_join.extparams[cm->letter]);
+					cm_putparameter(channel, cm->letter, iConf.modes_on_join.extparams[cm->letter]);
 			}
 
 			*modebuf = *parabuf = 0;
@@ -261,7 +259,7 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 			/* This should probably be in the SJOIN stuff */
 			new_message_special(&me, recv_mtags, &mtags_mode, ":%s MODE %s %s %s", me.name, channel->name, modebuf, parabuf);
 			sendto_server(NULL, 0, 0, mtags_mode, ":%s MODE %s %s %s %lld",
-			    me.id, channel->name, modebuf, parabuf, (long long)channel->creationtime);
+			              me.id, channel->name, modebuf, parabuf, (long long)channel->creationtime);
 			sendto_one(client, mtags_mode, ":%s MODE %s %s %s", me.name, channel->name, modebuf, parabuf);
 			RunHook(HOOKTYPE_LOCAL_CHANMODE, &me, channel, mtags_mode, modebuf, parabuf, 0, 0, &should_destroy);
 			free_message_tags(mtags_mode);
@@ -270,22 +268,24 @@ void _join_channel(Channel *channel, Client *client, MessageTag *recv_mtags, con
 		parv[0] = NULL;
 		parv[1] = channel->name;
 		parv[2] = NULL;
-		if (!HasCapability(client,"draft/no-implicit-names") && !HasCapability(client, "no-implicit-names"))
-			do_cmd(client, NULL, "NAMES", 2, parv);;
+		if (!HasCapability(client, "draft/no-implicit-names") && !HasCapability(client, "no-implicit-names"))
+			do_cmd(client, NULL, "NAMES", 2, parv);
+		;
 
 		unreal_log(ULOG_INFO, "join", "LOCAL_CLIENT_JOIN", client,
-			   "User $client joined $channel",
-			   log_data_channel("channel", channel),
-			   log_data_string("modes", member_modes));
+		           "User $client joined $channel",
+		           log_data_channel("channel", channel),
+		           log_data_string("modes", member_modes));
 
 		RunHook(HOOKTYPE_LOCAL_JOIN, client, channel, mtags);
-	} else {
+	} else
+	{
 		if (IsSynched(client->uplink))
 		{
 			unreal_log(ULOG_INFO, "join", "REMOTE_CLIENT_JOIN", client,
-				   "User $client joined $channel",
-				   log_data_channel("channel", channel),
-				   log_data_string("modes", member_modes));
+			           "User $client joined $channel",
+			           log_data_channel("channel", channel),
+			           log_data_string("modes", member_modes));
 		}
 		RunHook(HOOKTYPE_REMOTE_JOIN, client, channel, mtags);
 	}
@@ -317,7 +317,13 @@ void _do_join(Client *client, int parc, const char *parv[])
 	int maxtargets = max_targets_for_command("JOIN");
 	const char *member_modes = "";
 
-#define RET() do { bouncedtimes--; parv[1] = orig_parv1; return; } while(0)
+#define RET() \
+	do \
+	{ \
+		bouncedtimes--; \
+		parv[1] = orig_parv1; \
+		return; \
+	} while (0)
 
 	if (parc < 2 || *parv[1] == '\0')
 	{
@@ -365,8 +371,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 				continue;
 			strlcpy(jbuf, "0", sizeof(jbuf));
 			continue;
-		} else
-		if (MyConnect(client) && !valid_channelname(name))
+		} else if (MyConnect(client) && !valid_channelname(name))
 		{
 			send_invalid_channelname(client, name);
 			if (IsOper(client) && find_channel(name))
@@ -376,11 +381,10 @@ void _do_join(Client *client, int parc, const char *parv[])
 				                   "However, it does exist because another server in your "
 				                   "network, which has a more loose restriction, created it. "
 				                   "See https://www.unrealircd.org/docs/Set_block#set::allowed-channelchars",
-				                   name);
+				           name);
 			}
 			continue;
-		}
-		else if (!IsChannelName(name))
+		} else if (!IsChannelName(name))
 		{
 			if (MyUser(client))
 				sendnumeric(client, ERR_NOSUCHCHANNEL, name);
@@ -404,7 +408,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 		strlcpy(request_key, parv[2], sizeof(request_key));
 		key = strtoken(&p2, request_key, ",");
 	}
-	parv[2] = NULL;		/* for cmd_names call later, parv[parc] must == NULL */
+	parv[2] = NULL;  /* for cmd_names call later, parv[parc] must == NULL */
 
 	for (name = strtoken(&p, jbuf, ",");
 	     name;
@@ -446,7 +450,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 		{
 			member_modes = (ChannelExists(name)) ? "" : LEVEL_ON_JOIN;
 
-			if (!ValidatePermissionsForPath("immune:maxchannelsperuser",client,NULL,NULL,NULL))	/* opers can join unlimited chans */
+			if (!ValidatePermissionsForPath("immune:maxchannelsperuser", client, NULL, NULL, NULL)) /* opers can join unlimited chans */
 			{
 				if (client->user->joined >= get_setting_for_user_number(client, SET_MAX_CHANNELS_PER_USER))
 				{
@@ -458,7 +462,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 			/* RESTRICTCHAN */
 			if (conf_deny_channel)
 			{
-				if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",client,NULL,NULL,NULL))
+				if (!ValidatePermissionsForPath("immune:server-ban:deny-channel", client, NULL, NULL, NULL))
 				{
 					ConfigItem_deny_channel *d;
 					if ((d = find_channel_allowed(client, name)))
@@ -484,7 +488,7 @@ void _do_join(Client *client, int parc, const char *parv[])
 					}
 				}
 			}
-			if (!ValidatePermissionsForPath("immune:server-ban:deny-channel",client,NULL,NULL,NULL) && (tklban = find_qline(client, name, &ishold)))
+			if (!ValidatePermissionsForPath("immune:server-ban:deny-channel", client, NULL, NULL, NULL) && (tklban = find_qline(client, name, &ishold)))
 			{
 				tkl_hit(client, tklban);
 				sendnumeric(client, ERR_FORBIDDENCHANNEL, name, tklban->ptr.nameban->reason);
@@ -493,14 +497,15 @@ void _do_join(Client *client, int parc, const char *parv[])
 			/* ugly set::spamfilter::virus-help-channel-deny hack.. */
 			if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 			    !strcasecmp(name, SPAMFILTER_VIRUSCHAN) &&
-			    !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL) && !spamf_ugly_vchanoverride)
+			    !ValidatePermissionsForPath("immune:server-ban:viruschan", client, NULL, NULL, NULL) && !spamf_ugly_vchanoverride)
 			{
 				Channel *channel = find_channel(name);
-				
+
 				if (!channel || !is_invited(client, channel))
 				{
 					sendnotice(client, "*** Cannot join '%s' because it's the virus-help-channel "
-					                   "which is reserved for infected users only", name);
+					                   "which is reserved for infected users only",
+					           name);
 					continue;
 				}
 			}
@@ -520,9 +525,9 @@ void _do_join(Client *client, int parc, const char *parv[])
 		{
 			Hook *h;
 			char *errmsg = NULL;
-			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next) 
+			for (h = Hooks[HOOKTYPE_PRE_LOCAL_JOIN]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(client,channel,key);
+				i = (*(h->func.intfunc))(client, channel, key);
 				if (i == HOOK_DENY || i == HOOK_ALLOW)
 					break;
 			}
@@ -535,8 +540,8 @@ void _do_join(Client *client, int parc, const char *parv[])
 				continue;
 			}
 			/* If they are allowed, don't check can_join */
-			if (i != HOOK_ALLOW && 
-			   (i = can_join(client, channel, key, &errmsg)))
+			if (i != HOOK_ALLOW &&
+			    (i = can_join(client, channel, key, &errmsg)))
 			{
 				if (i != -1)
 					send_cannot_join_error(client, i, errmsg, name);
@@ -566,8 +571,8 @@ void _do_join(Client *client, int parc, const char *parv[])
 }
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 void send_cannot_join_error(Client *client, int numeric, char *fmtstr, char *channel_name)
 {
@@ -575,7 +580,7 @@ void send_cannot_join_error(Client *client, int numeric, char *fmtstr, char *cha
 	sendnumericfmt(client, numeric, fmtstr, channel_name);
 }
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
 
 /* Additional channel-related functions. I've put it here instead
@@ -596,7 +601,7 @@ char *_get_chmodes_for_user(Client *client, const char *member_flags)
 	n = strlen(member_flags);
 	if (n)
 	{
-		for (i=0; i < n; i++)
+		for (i = 0; i < n; i++)
 		{
 			strlcat(parabuf, client->name, sizeof(parabuf));
 			if (i < n - 1)

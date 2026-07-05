@@ -7,11 +7,11 @@
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER = {
-	"channeldb",
-	"1.0",
-	"Stores and retrieves channel settings for persistent (+P) channels",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "channeldb",
+    "1.0",
+    "Stores and retrieves channel settings for persistent (+P) channels",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Database version */
@@ -24,35 +24,40 @@ ModuleHeader MOD_HEADER = {
  */
 #define CHANNELDB_SAVE_EVERY_DELTA -15
 
-#define MAGIC_CHANNEL_START	0x11111111
-#define MAGIC_CHANNEL_END	0x22222222
+#define MAGIC_CHANNEL_START 0x11111111
+#define MAGIC_CHANNEL_END   0x22222222
 
 // #undef BENCHMARK
 
 #define WARN_WRITE_ERROR(fname) \
-	do { \
+	do \
+	{ \
 		unreal_log(ULOG_ERROR, "channeldb", "CHANNELDB_FILE_WRITE_ERROR", NULL, \
-			   "[channeldb] Error writing to temporary database file $filename: $system_error", \
-			   log_data_string("filename", fname), \
-			   log_data_string("system_error", unrealdb_get_error_string())); \
-	} while(0)
+		           "[channeldb] Error writing to temporary database file $filename: $system_error", \
+		           log_data_string("filename", fname), \
+		           log_data_string("system_error", unrealdb_get_error_string())); \
+	} while (0)
 
 #define W_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			WARN_WRITE_ERROR(tmpfname); \
 			unrealdb_close(db); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 #define IsMDErr(x, y, z) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER.name, ModuleGetErrorStr((z)->handle)); \
 			return MOD_FAILED; \
 		} \
-	} while(0)
+	} while (0)
 
 /* Structs */
 struct cfgstruct {
@@ -175,13 +180,11 @@ int channeldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			config_error("%s:%i: blank set::channeldb::%s without value", cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "database"))
+		} else if (!strcmp(cep->name, "database"))
 		{
 			convert_to_absolute_path(&cep->value, PERMDATADIR);
 			safe_strdup(test.database, cep->value);
-		} else
-		if (!strcmp(cep->name, "db-secret"))
+		} else if (!strcmp(cep->name, "db-secret"))
 		{
 			const char *err;
 			if ((err = unrealdb_test_secret(cep->value)))
@@ -270,12 +273,12 @@ int write_channeldb(void)
 	W_SAFE(unrealdb_write_int32(db, channeldb_version));
 
 	/* First, count +P channels and write the count to the database */
-	for (channel = channels; channel; channel=channel->nextch)
+	for (channel = channels; channel; channel = channel->nextch)
 		if (has_channel_mode(channel, 'P'))
 			cnt++;
 	W_SAFE(unrealdb_write_int64(db, cnt));
 
-	for (channel = channels; channel; channel=channel->nextch)
+	for (channel = channels; channel; channel = channel->nextch)
 	{
 		/* We only care about +P (persistent) channels */
 		if (has_channel_mode(channel, 'P'))
@@ -304,7 +307,7 @@ int write_channeldb(void)
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
 	config_status("[channeldb] Benchmark: SAVE DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	              ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
 #endif
 	return 1;
 }
@@ -360,8 +363,10 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 }
 
 #define R_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
 			if (e) \
 			{ \
@@ -371,7 +376,7 @@ int write_channel_entry(UnrealDB *db, const char *tmpfname, Channel *channel)
 			} \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst)
 {
@@ -407,7 +412,8 @@ int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst
 			safe_free(e->banstr);
 			safe_free(e->who);
 			safe_free(e);
-		} else {
+		} else
+		{
 			/* Add to list */
 			e->when = when;
 			e->next = *lst;
@@ -420,7 +426,8 @@ int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst
 #undef R_SAFE
 
 #define FreeChannelEntry() \
- 	do { \
+	do \
+	{ \
 		/* Some of these might be NULL */ \
 		safe_free(chname); \
 		safe_free(topic); \
@@ -428,17 +435,19 @@ int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst
 		safe_free(modes1); \
 		safe_free(modes2); \
 		safe_free(mode_lock); \
-	} while(0)
+	} while (0)
 
 #define R_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_warn("[channeldb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
 			unrealdb_close(db); \
 			FreeChannelEntry(); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 int read_channeldb(void)
 {
@@ -472,8 +481,7 @@ int read_channeldb(void)
 			/* Database does not exist. Could be first boot */
 			config_warn("[channeldb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
-		} else
-		if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
+		} else if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
 		{
 			/* Re-open as unencrypted */
 			db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, NULL);
@@ -500,7 +508,7 @@ int read_channeldb(void)
 
 	R_SAFE(unrealdb_read_int64(db, &count));
 
-	for (i=1; i <= count; i++)
+	for (i = 1; i <= count; i++)
 	{
 		// Variables
 		chname = NULL;
@@ -511,7 +519,7 @@ int read_channeldb(void)
 		modes1 = NULL;
 		modes2 = NULL;
 		mode_lock = NULL;
-		
+
 		Channel *channel;
 		R_SAFE(unrealdb_read_int32(db, &magic));
 		if (magic != MAGIC_CHANNEL_START)

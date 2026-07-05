@@ -37,9 +37,9 @@ APICallback *APICallbackAdd(Module *module, APICallback *mreq)
 	if (!mreq->callback_type)
 	{
 		unreal_log(ULOG_ERROR, "module", "API_CALLBACK_ADD_API_ERROR", NULL,
-			   "APICallbackAdd() from module $module_name: "
-			   "Missing required fields.",
-			   log_data_string("module_name", module->header->name));
+		           "APICallbackAdd() from module $module_name: "
+		           "Missing required fields.",
+		           log_data_string("module_name", module->header->name));
 		abort();
 	}
 
@@ -49,12 +49,14 @@ APICallback *APICallbackAdd(Module *module, APICallback *mreq)
 		if (m->unloaded)
 		{
 			m->unloaded = 0;
-		} else {
+		} else
+		{
 			if (module)
 				module->errorcode = MODERR_EXISTS;
 			return NULL;
 		}
-	} else {
+	} else
+	{
 		/* New API callback */
 		m = safe_alloc(sizeof(APICallback));
 		safe_strdup(m->name, mreq->name);
@@ -177,9 +179,9 @@ void print_apicallbacks(void)
 	{
 		m_next = m->next;
 		unreal_log(ULOG_DEBUG, "module", "API_CALLBACK_LIST", NULL,
-			"$name ($deleted)",
-			log_data_string("name", m->name),
-			log_data_string("deleted", m->unloaded ? "deleted" : ""));
+		           "$name ($deleted)",
+		           log_data_string("name", m->name),
+		           log_data_string("deleted", m->unloaded ? "deleted" : ""));
 	}
 	unreal_log(ULOG_DEBUG, "module", "API_CALLBACK_LIST", NULL, "----");
 }

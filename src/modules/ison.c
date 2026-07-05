@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_ison);
 
-#define MSG_ISON 	"ISON"	
+#define MSG_ISON "ISON"
 
-ModuleHeader MOD_HEADER
-  = {
-	"ison",
-	"5.0",
-	"command /ison", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "ison",
+    "5.0",
+    "command /ison",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -92,7 +91,8 @@ CMD_FUNC(cmd_ison)
 			if (user)
 			{
 				ircsnprintf(namebuf, sizeof(namebuf), "%s@%s", acptr->user->username, GetHost(acptr));
-				if (!match_simple(user, namebuf)) continue;
+				if (!match_simple(user, namebuf))
+					continue;
 				*--user = '!';
 			}
 

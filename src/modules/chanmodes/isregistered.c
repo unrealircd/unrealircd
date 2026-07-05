@@ -20,18 +20,17 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/isregistered",
-	"6.0",
-	"Channel Mode +r",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/isregistered",
+    "6.0",
+    "Channel Mode +r",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_REGISTERED;
 
-#define IsRegisteredChannel(channel)    (channel->mode.mode & EXTCMODE_REGISTERED)
+#define IsRegisteredChannel(channel) (channel->mode.mode & EXTCMODE_REGISTERED)
 
 int isregistered_chanmode_is_ok(Client *client, Channel *channel, char mode, const char *param, int type, int what);
 

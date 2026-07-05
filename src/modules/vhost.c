@@ -20,28 +20,27 @@
 #include "unrealircd.h"
 
 /* Defines */
-#define MSG_VHOST       "VHOST"
+#define MSG_VHOST "VHOST"
 
 /* Structs */
-ModuleHeader MOD_HEADER
-  = {
-	"vhost",
-	"6.1.8.1",
-	"command /VHOST and vhost { } blocks",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "vhost",
+    "6.1.8.1",
+    "command /VHOST and vhost { } blocks",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 typedef struct ConfigItem_vhost ConfigItem_vhost;
 struct ConfigItem_vhost {
 	ConfigItem_vhost *prev, *next;
-	int auto_login;			/**< Auto-login users on connect? If they match 'auth' */
+	int auto_login;   /**< Auto-login users on connect? If they match 'auth' */
 	SecurityGroup *match;           /**< Match criteria for user */
 	char *login;                    /**< Login name for 'VHOST login pass' */
-	AuthConfig *auth;		/**< Password for 'VHOST login pass */
-	char *virtuser;			/**< Virtual ident to set */
+	AuthConfig *auth;  /**< Password for 'VHOST login pass */
+	char *virtuser;   /**< Virtual ident to set */
 	char *virthost;                 /**< Virtual host to set */
-	SWhois *swhois;			/**< SWhois items to set */
+	SWhois *swhois;   /**< SWhois items to set */
 };
 
 /* Variables */
@@ -130,15 +129,14 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 		if (!strcmp(cep->name, "auto-login"))
 		{
 			has_auto_login = config_checkval(cep->value, CFG_YESNO);
-		}
-		else if (!strcmp(cep->name, "vhost"))
+		} else if (!strcmp(cep->name, "vhost"))
 		{
 			char *at, *tmp, *host, *p;
 			config_detect_duplicate(&has_vhost, cep, &errors);
 			if (!cep->value)
 			{
 				config_error_empty(cep->file->filename,
-					cep->line_number, "vhost", "vhost");
+				                   cep->line_number, "vhost", "vhost");
 				errors++;
 				continue;
 			}
@@ -148,52 +146,46 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 				 * original cep->value and not on fakehost.
 				 */
 				config_error("%s:%i: vhost::vhost contains illegal characters or is too long: '%s'",
-					     cep->file->filename, cep->line_number, cep->value);
+				             cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
-		}
-		else if (!strcmp(cep->name, "login"))
+		} else if (!strcmp(cep->name, "login"))
 		{
 			config_detect_duplicate(&has_login, cep, &errors);
 			if (!cep->value)
 			{
 				config_error_empty(cep->file->filename,
-					cep->line_number, "vhost", "login");
+				                   cep->line_number, "vhost", "login");
 				errors++;
 				continue;
 			}
-		}
-		else if (!strcmp(cep->name, "password"))
+		} else if (!strcmp(cep->name, "password"))
 		{
 			config_detect_duplicate(&has_password, cep, &errors);
 			if (!cep->value)
 			{
 				config_error_empty(cep->file->filename,
-					cep->line_number, "vhost", "password");
+				                   cep->line_number, "vhost", "password");
 				errors++;
 				continue;
 			}
 			if (Auth_CheckError(cep, 0) < 0)
 				errors++;
-		}
-		else if (!strcmp(cep->name, "mask"))
+		} else if (!strcmp(cep->name, "mask"))
 		{
 			has_mask = 1;
 			test_match_block(conf, cep, &errors);
-		}
-		else if (!strcmp(cep->name, "match"))
+		} else if (!strcmp(cep->name, "match"))
 		{
 			has_match = 1;
 			test_match_block(conf, cep, &errors);
-		}
-		else if (!strcmp(cep->name, "swhois"))
+		} else if (!strcmp(cep->name, "swhois"))
 		{
 			/* multiple is ok */
-		}
-		else
+		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
-				"vhost", cep->name);
+			                     "vhost", cep->name);
 			errors++;
 		}
 	}
@@ -201,7 +193,7 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 	if (!has_vhost)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"vhost::vhost");
+		                     "vhost::vhost");
 		errors++;
 	}
 
@@ -210,14 +202,13 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 		if (!has_login)
 		{
 			config_error_missing(ce->file->filename, ce->line_number,
-				"vhost::login");
+			                     "vhost::login");
 			errors++;
-
 		}
 		if (!has_password)
 		{
 			config_error_missing(ce->file->filename, ce->line_number,
-				"vhost::password");
+			                     "vhost::password");
 			errors++;
 		}
 	}
@@ -225,7 +216,7 @@ int vhost_config_test(ConfigFile *conf, ConfigEntry *ce, int type, int *errs)
 	if (!has_mask && !has_match)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"vhost::match");
+		                     "vhost::match");
 		errors++;
 	}
 	if (has_mask && has_match)
@@ -265,8 +256,7 @@ int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "auto-login"))
 		{
 			vhost->auto_login = config_checkval(cep->value, CFG_YESNO);
-		}
-		else if (!strcmp(cep->name, "vhost"))
+		} else if (!strcmp(cep->name, "vhost"))
 		{
 			char *user, *host;
 			user = strtok(cep->value, "@");
@@ -278,16 +268,14 @@ int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type)
 				safe_strdup(vhost->virtuser, user);
 				safe_strdup(vhost->virthost, host);
 			}
-		}
-		else if (!strcmp(cep->name, "login"))
+		} else if (!strcmp(cep->name, "login"))
 			safe_strdup(vhost->login, cep->value);
 		else if (!strcmp(cep->name, "password"))
 			AuthBlockToAuthConfig(cep, &vhost->auth);
 		else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
 			conf_match_block(conf, cep, &vhost->match);
-		}
-		else if (!strcmp(cep->name, "swhois"))
+		} else if (!strcmp(cep->name, "swhois"))
 		{
 			SWhois *s;
 			if (cep->items)
@@ -299,8 +287,7 @@ int vhost_config_run(ConfigFile *conf, ConfigEntry *ce, int type)
 					safe_strdup(s->setby, "vhost");
 					AddListItem(s, vhost->swhois);
 				}
-			} else
-			if (cep->value)
+			} else if (cep->value)
 			{
 				s = safe_alloc(sizeof(SWhois));
 				safe_strdup(s->line, cep->value);
@@ -338,7 +325,6 @@ static int stats_vhost(Client *client, const char *flag)
 }
 
 
-
 ConfigItem_vhost *find_vhost(const char *name)
 {
 	ConfigItem_vhost *vhost;
@@ -353,7 +339,7 @@ ConfigItem_vhost *find_vhost(const char *name)
 CMD_FUNC(cmd_vhost)
 {
 	ConfigItem_vhost *vhost;
-	char login[HOSTLEN+1];
+	char login[HOSTLEN + 1];
 	const char *password;
 
 	if (!MyUser(client))
@@ -363,7 +349,6 @@ CMD_FUNC(cmd_vhost)
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "VHOST");
 		return;
-
 	}
 
 	/* cut-off too long login names. HOSTLEN is arbitrary, we just don't want our
@@ -436,8 +421,8 @@ CMD_FUNC(cmd_vhost)
 
 void do_vhost(Client *client, ConfigItem_vhost *vhost)
 {
-	char olduser[USERLEN+1];
-	char newhost[HOSTLEN+1];
+	char olduser[USERLEN + 1];
+	char newhost[HOSTLEN + 1];
 
 	/* There are various IsUser() checks in the code below, that is because
 	 * this code is also called for CLIENT_STATUS_UNKNOWN users in the handshake
@@ -488,9 +473,9 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 	if (IsUser(client))
 	{
 		sendnotice(client, "*** Your vhost is now %s%s%s",
-			vhost->virtuser ? vhost->virtuser : "",
-			vhost->virtuser ? "@" : "",
-			newhost);
+		           vhost->virtuser ? vhost->virtuser : "",
+		           vhost->virtuser ? "@" : "",
+		           newhost);
 	}
 
 	/* Only notify on logins, not on auto logins (should we make that configurable?)
@@ -503,16 +488,17 @@ void do_vhost(Client *client, ConfigItem_vhost *vhost)
 		{
 			/* virtuser@virthost */
 			unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
-				   "$client.details is now using vhost $virtuser@$virthost [vhost-block: $vhost_block]",
-				   log_data_string("virtuser", vhost->virtuser),
-				   log_data_string("virthost", newhost),
-				   log_data_string("vhost_block", vhost->login));
-		} else {
+			           "$client.details is now using vhost $virtuser@$virthost [vhost-block: $vhost_block]",
+			           log_data_string("virtuser", vhost->virtuser),
+			           log_data_string("virthost", newhost),
+			           log_data_string("vhost_block", vhost->login));
+		} else
+		{
 			/* just virthost */
 			unreal_log(ULOG_INFO, "vhost", "VHOST_SUCCESS", client,
-				   "$client.details is now using vhost $virthost [vhost-block: $vhost_block]",
-				   log_data_string("virthost", newhost),
-				   log_data_string("vhost_block", vhost->login));
+			           "$client.details is now using vhost $virthost [vhost-block: $vhost_block]",
+			           log_data_string("virthost", newhost),
+			           log_data_string("vhost_block", vhost->login));
 		}
 	}
 

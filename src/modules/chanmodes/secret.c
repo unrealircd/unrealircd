@@ -20,18 +20,17 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/secret",
-	"6.0",
-	"Channel Mode +s",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/secret",
+    "6.0",
+    "Channel Mode +s",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_SECRET;
 
-#define IsSecret(channel)    (channel->mode.mode & EXTCMODE_SECRET)
+#define IsSecret(channel) (channel->mode.mode & EXTCMODE_SECRET)
 
 int secret_modechar_add(Channel *channel, int modechar);
 

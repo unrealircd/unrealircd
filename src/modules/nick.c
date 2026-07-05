@@ -22,20 +22,19 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"nick",
-	"5.0",
-	"command /nick",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "nick",
+    "5.0",
+    "command /nick",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Defines */
 
-#define NICKCOL_EQUAL         0
-#define NICKCOL_NEW_WON       1
-#define NICKCOL_EXISTING_WON  2
+#define NICKCOL_EQUAL        0
+#define NICKCOL_NEW_WON      1
+#define NICKCOL_EXISTING_WON 2
 
 /* Assume that on collision a NICK is in flight and the other server will take
  * the exact same decision we would do, and thus we don't send a KILL to cptr?
@@ -69,7 +68,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, "NICK", cmd_nick, MAXPARA, CMD_USER|CMD_SERVER|CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, "NICK", cmd_nick, MAXPARA, CMD_USER | CMD_SERVER | CMD_UNREGISTERED);
 	CommandAdd(modinfo->handle, "UID", cmd_uid, MAXPARA, CMD_SERVER);
 
 	return MOD_SUCCESS;
@@ -167,11 +166,11 @@ CMD_FUNC(cmd_nick_remote)
 	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)) && !ishold)
 	{
 		unreal_log(ULOG_INFO, "nick", "QLINE_NICK_REMOTE", client,
-			   "Banned nick $nick used by $client.details, allowed through by server $server ($reason)",
-			   log_data_string("nick", parv[1]),
-			   log_data_string("ip", GetIP(client)),
-			   log_data_client("server", client->uplink),
-			   log_data_string("reason", tklban->ptr.nameban->reason));
+		           "Banned nick $nick used by $client.details, allowed through by server $server ($reason)",
+		           log_data_string("nick", parv[1]),
+		           log_data_string("ip", GetIP(client)),
+		           log_data_client("server", client->uplink),
+		           log_data_string("reason", tklban->ptr.nameban->reason));
 		/* Let it through */
 	}
 
@@ -182,8 +181,7 @@ CMD_FUNC(cmd_nick_remote)
 		{
 			SetKilled(acptr);
 			exit_client(acptr, NULL, "Overridden");
-		} else
-		if (acptr == client)
+		} else if (acptr == client)
 		{
 			/* 100% identical? Must be a bug, but ok */
 			if (!strcmp(acptr->name, nick))
@@ -202,21 +200,19 @@ CMD_FUNC(cmd_nick_remote)
 			{
 				nick_collision(client, parv[1], client->id, client, acptr, NICKCOL_EQUAL);
 				return; /* Now that I killed them both, ignore the NICK */
-			} else
-			if ((differ && (acptr->lastnick > lastnick)) ||
-			    (!differ && (acptr->lastnick < lastnick)))
+			} else if ((differ && (acptr->lastnick > lastnick)) ||
+			           (!differ && (acptr->lastnick < lastnick)))
 			{
 				nick_collision(client, parv[1], client->id, client, acptr, NICKCOL_NEW_WON);
 				/* fallthrough: their user won, continue and proceed with the nick change */
-			} else
-			if ((differ && (acptr->lastnick < lastnick)) ||
-			    (!differ && (acptr->lastnick > lastnick)))
+			} else if ((differ && (acptr->lastnick < lastnick)) ||
+			           (!differ && (acptr->lastnick > lastnick)))
 			{
 				nick_collision(client, parv[1], client->id, client, acptr, NICKCOL_EXISTING_WON);
 				return; /* their user lost, ignore the NICK */
 			} else
 			{
-				return;		/* just in case */
+				return;  /* just in case */
 			}
 		}
 	}
@@ -235,7 +231,7 @@ CMD_FUNC(cmd_nick_remote)
 	client->lastnick = lastnick ? lastnick : TStime();
 	add_history(client, 1, WHOWAS_EVENT_NICK_CHANGE);
 	sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
-	    client->id, nick, (long long)client->lastnick);
+	              client->id, nick, (long long)client->lastnick);
 	sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
 	if (removemoder)
 		client->umodes &= ~UMODE_REGNICK;
@@ -312,23 +308,23 @@ CMD_FUNC(cmd_nick_local)
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 			return;
 		}
-		if (!ValidatePermissionsForPath("immune:server-ban:ban-nick",client,NULL,NULL,nick))
+		if (!ValidatePermissionsForPath("immune:server-ban:ban-nick", client, NULL, NULL, nick))
 		{
 			tkl_hit(client, tklban);
 			add_fake_lag(client, 4000); /* lag them up */
 			sendnumeric(client, ERR_ERRONEUSNICKNAME, nick, tklban->ptr.nameban->reason);
 			unreal_log(ULOG_INFO, "nick", "QLINE_NICK_LOCAL_ATTEMPT", client,
-				   "Attempt to use banned nick $nick by $client.details blocked ($reason)",
-				   log_data_string("nick", parv[1]),
-				   log_data_string("ip", GetIP(client)),
-				   log_data_client("server", client->uplink),
-				   log_data_string("reason", tklban->ptr.nameban->reason));
-			return;	/* NICK message ignored */
+			           "Attempt to use banned nick $nick by $client.details blocked ($reason)",
+			           log_data_string("nick", parv[1]),
+			           log_data_string("ip", GetIP(client)),
+			           log_data_client("server", client->uplink),
+			           log_data_string("reason", tklban->ptr.nameban->reason));
+			return; /* NICK message ignored */
 		}
 		/* fallthrough for ircops that have sufficient privileges */
 	}
 
-	if (!ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("immune:nick-flood", client, NULL, NULL, NULL))
 		add_fake_lag(client, 3000);
 
 	if ((acptr = find_client(nick, NULL)))
@@ -347,22 +343,22 @@ CMD_FUNC(cmd_nick_local)
 			/* Changing cAsE */
 			removemoder = 0;
 		} else
-		/* Collision with a nick of a session that is still in handshake */
-		if (IsUnknown(acptr) && MyConnect(acptr))
-		{
-			/* Kill the other connection that is still in progress */
-			SetKilled(acptr);
-			exit_client(acptr, NULL, "Overridden");
-		} else
-		{
-			sendnumeric(client, ERR_NICKNAMEINUSE, nick);
-			return;	/* NICK message ignored */
-		}
+                /* Collision with a nick of a session that is still in handshake */
+			if (IsUnknown(acptr) && MyConnect(acptr))
+			{
+                        /* Kill the other connection that is still in progress */
+				SetKilled(acptr);
+				exit_client(acptr, NULL, "Overridden");
+			} else
+			{
+				sendnumeric(client, ERR_NICKNAMEINUSE, nick);
+				return; /* NICK message ignored */
+			}
 	}
 
 	/* set::anti-flood::nick-flood */
 	if (client->user &&
-	    !ValidatePermissionsForPath("immune:nick-flood",client,NULL,NULL,NULL) &&
+	    !ValidatePermissionsForPath("immune:nick-flood", client, NULL, NULL, NULL) &&
 	    flood_limit_exceeded(client, FLD_NICK))
 	{
 		/* Throttle... */
@@ -409,13 +405,13 @@ CMD_FUNC(cmd_nick_local)
 				/* ..otherwise.. fallthrough so we run the same code
 				 * as in case of !is_handshake_finished()
 				 */
-			} else {
+			} else
+			{
 				/* New user! */
 				strlcpy(nick, client->name, sizeof(nick)); /* don't ask, but I need this. do not remove! -- Syzop */
 			}
 		}
-	} else
-	if (MyUser(client))
+	} else if (MyUser(client))
 	{
 		MessageTag *mtags = NULL;
 		int ret;
@@ -436,7 +432,7 @@ CMD_FUNC(cmd_nick_local)
 			if (!check_channel_access(client, mp->channel, "hoaq") && is_banned(client, mp->channel, BANCHK_NICK, NULL, NULL))
 			{
 				sendnumeric(client, ERR_BANNICKCHANGE,
-				    mp->channel->name);
+				            mp->channel->name);
 				return;
 			}
 			if (CHECK_TARGET_NICK_BANS && !check_channel_access(client, mp->channel, "hoaq") && is_banned_with_nick(client, mp->channel, BANCHK_NICK, nick, NULL, NULL))
@@ -447,7 +443,7 @@ CMD_FUNC(cmd_nick_local)
 
 			for (h = Hooks[HOOKTYPE_CHAN_PERMIT_NICK_CHANGE]; h; h = h->next)
 			{
-				ret = (*(h->func.intfunc))(client,mp->channel);
+				ret = (*(h->func.intfunc))(client, mp->channel);
 				if (ret != HOOK_CONTINUE)
 					break;
 			}
@@ -468,7 +464,7 @@ CMD_FUNC(cmd_nick_local)
 		add_history(client, 1, WHOWAS_EVENT_NICK_CHANGE);
 		client->lastnick = TStime(); /* needs to be done AFTER add_history() */
 		sendto_server(client, 0, 0, mtags, ":%s NICK %s %lld",
-		    client->id, nick, (long long)client->lastnick);
+		              client->id, nick, (long long)client->lastnick);
 		sendto_local_common_channels(client, client, 0, mtags, ":%s NICK :%s", client->name, nick);
 		sendto_one(client, mtags, ":%s NICK :%s", client->name, nick);
 		free_message_tags(mtags);
@@ -608,9 +604,9 @@ CMD_FUNC(cmd_uid)
 		{
 			ircstats.is_kill++;
 			unreal_log(ULOG_ERROR, "link", "BAD_IP", client,
-				   "Server link $client ($client.id) introduced user $nick with bad IP: $bad_ip.",
-				   log_data_string("nick", nick),
-				   log_data_string("bad_ip", ip_raw));
+			           "Server link $client ($client.id) introduced user $nick with bad IP: $bad_ip.",
+			           log_data_string("nick", nick),
+			           log_data_string("bad_ip", ip_raw));
 			/* Send kill to uplink only, hasn't been broadcasted to the rest, anyway */
 			sendto_one(client, NULL, ":%s KILL %s :Bad IP in UID command", me.id, parv[6]);
 			return;
@@ -633,11 +629,11 @@ CMD_FUNC(cmd_uid)
 	if (!IsULine(client) && (tklban = find_qline(client, nick, &ishold)))
 	{
 		unreal_log(ULOG_INFO, "nick", "QLINE_NICK_REMOTE", client,
-			   "Banned nick $nick [$nick.ip] from server $server ($reason)",
-			   log_data_string("nick", parv[1]),
-			   log_data_string("ip", ip),
-			   log_data_client("server", client->uplink),
-			   log_data_string("reason", tklban->ptr.nameban->reason));
+		           "Banned nick $nick [$nick.ip] from server $server ($reason)",
+		           log_data_string("nick", parv[1]),
+		           log_data_string("ip", ip),
+		           log_data_client("server", client->uplink),
+		           log_data_string("reason", tklban->ptr.nameban->reason));
 		/* Let it through */
 	}
 
@@ -660,11 +656,11 @@ CMD_FUNC(cmd_uid)
 		if (acptr->lastnick == lastnick)
 		{
 			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EQUAL);
-			return;	/* We killed both users, now stop the process. */
+			return; /* We killed both users, now stop the process. */
 		}
 
 		if ((differ && (acptr->lastnick > lastnick)) ||
-		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == client->direction)	/* we missed a QUIT somewhere ? */
+		    (!differ && (acptr->lastnick < lastnick)) || acptr->direction == client->direction) /* we missed a QUIT somewhere ? */
 		{
 			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_NEW_WON);
 			/* We got rid of the "wrong" user. Introduce the correct one. */
@@ -675,7 +671,7 @@ CMD_FUNC(cmd_uid)
 		if ((differ && (acptr->lastnick < lastnick)) || (!differ && (acptr->lastnick > lastnick)))
 		{
 			nick_collision(client, parv[1], parv[6], NULL, acptr, NICKCOL_EXISTING_WON);
-			return;	/* Ignore the NICK */
+			return; /* Ignore the NICK */
 		}
 		return; /* just in case */
 	}
@@ -689,7 +685,7 @@ nickkill2done:
 	add_client_to_list(client);
 	add_to_id_hash_table(client->id, client);
 	client->lastnick = atol(parv[3]);
-	strlcpy(client->name, nick, NICKLEN+1);
+	strlcpy(client->name, nick, NICKLEN + 1);
 	add_to_client_hash_table(nick, client);
 
 	make_user(client);
@@ -706,8 +702,8 @@ nickkill2done:
 			 * the call to decode_ip() about 100 lines up.
 			 */
 			unreal_log(ULOG_ERROR, "nick", "REMOTE_CLIENT_IP_BUG", client,
-				   "[BUG] client $client has invalid ip $ip -- rejected",
-				   log_data_string("ip", ip));
+			           "[BUG] client $client has invalid ip $ip -- rejected",
+			           log_data_string("ip", ip));
 #ifdef DEBUGMODE
 			abort();
 #endif
@@ -745,7 +741,7 @@ nickkill2done:
 	if (*virthost != '*')
 		safe_strdup(client->user->virthost, virthost);
 
-	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+	build_umode_string(client, 0, SEND_UMODES | UMODE_SERVNOTICE, buf);
 
 	sendto_serv_butone_nickcmd(client->direction, recv_mtags, client, (*buf == '\0' ? "+" : buf));
 
@@ -766,8 +762,8 @@ nickkill2done:
 	if (!IsULine(serv) && IsSynched(serv))
 	{
 		unreal_log(ULOG_INFO, "connect", "REMOTE_CLIENT_CONNECT", client,
-			   "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
-			   log_data_string("extended_client_info", get_connect_extinfo(client)),
+		           "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
+		           log_data_string("extended_client_info", get_connect_extinfo(client)),
 		           log_data_string("from_server_name", client->user->server));
 	}
 }
@@ -790,8 +786,7 @@ CMD_FUNC(cmd_nick)
 	if (MyConnect(client) && !IsServer(client))
 	{
 		CALL_CMD_FUNC(cmd_nick_local);
-	} else
-	if (!IsUser(client))
+	} else if (!IsUser(client))
 	{
 		unreal_log(ULOG_ERROR, "link", "LINK_OLD_PROTOCOL_NICK", client->direction,
 		           "Server link $client tried to introduce $nick using NICK command. "
@@ -852,7 +847,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 		if (client->local->ssl && !iConf.no_connect_tls_info)
 		{
 			sendnotice(client, "*** You are connected to %s with %s",
-				me.name, tls_get_cipher(client));
+			           me.name, tls_get_cipher(client));
 		}
 	}
 
@@ -873,15 +868,15 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 
 #ifdef EXPERIMENTAL
 	sendnotice(client,
-		"*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). "
-		"If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
-		VERSIONONLY);
+	           "*** \2NOTE:\2 This server is running experimental IRC server software (UnrealIRCd %s). "
+	           "If you find any bugs or problems, please report them at https://bugs.unrealircd.org/",
+	           VERSIONONLY);
 #endif
 
 	if (client->umodes & UMODE_INVISIBLE)
 		irccounts.invisible++;
 
-	build_umode_string(client, 0, SEND_UMODES|UMODE_SERVNOTICE, buf);
+	build_umode_string(client, 0, SEND_UMODES | UMODE_SERVNOTICE, buf);
 
 	sendto_serv_butone_nickcmd(client->direction, NULL, client, (*buf == '\0' ? "+" : buf));
 
@@ -889,7 +884,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 
 	if (buf[0] != '\0' && buf[1] != '\0')
 		sendto_one(client, NULL, ":%s MODE %s :%s", client->name,
-		    client->name, buf);
+		           client->name, buf);
 
 	if (client->user->snomask)
 		sendnumeric(client, RPL_SNOMASK, client->user->snomask);
@@ -926,22 +921,21 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 	{
 		char *chans = strdup(tld->channel);
 		const char *args[3] = {
-			NULL,
-			chans,
-			NULL,
+		    NULL,
+		    chans,
+		    NULL,
 		};
 		do_cmd(client, NULL, "JOIN", 3, args);
 		safe_free(chans);
 		if (IsDead(client))
 			return;
-	}
-	else if ((chans = (char *)get_setting_for_user_string(client, SET_AUTO_JOIN)) && strcmp(chans, "0"))
+	} else if ((chans = (char *)get_setting_for_user_string(client, SET_AUTO_JOIN)) && strcmp(chans, "0"))
 	{
 		chans = strdup(chans); // work on a copy (wait, is this still needed? we have a const guarantee now right?)
 		const char *args[3] = {
-			NULL,
-			chans,
-			NULL,
+		    NULL,
+		    chans,
+		    NULL,
 		};
 		do_cmd(client, NULL, "JOIN", 3, args);
 		safe_free(chans);
@@ -982,7 +976,7 @@ int make_valid_username(Client *client, int noident)
 	if (*stripuser == '\0')
 		return 0; /* Zero valid characters, reject it */
 
-	strlcpy(client->user->username + 1, stripuser, sizeof(client->user->username)-1);
+	strlcpy(client->user->username + 1, stripuser, sizeof(client->user->username) - 1);
 	client->user->username[0] = '~';
 	client->user->username[USERLEN] = '\0';
 	return 1; /* Filtered, but OK */
@@ -1074,11 +1068,10 @@ int _register_user(Client *client)
 		{
 			/* ident succeeded: overwite client->user->username with the ident reply */
 			strlcpy(client->user->username, client->ident, sizeof(client->user->username));
-		} else
-		if (IDENT_CHECK)
+		} else if (IDENT_CHECK)
 		{
 			/* ident check is enabled and it failed: prefix the username with ~ */
-			char temp[USERLEN+1];
+			char temp[USERLEN + 1];
 			strlcpy(temp, client->user->username, sizeof(temp));
 			snprintf(client->user->username, sizeof(client->user->username), "~%s", temp);
 			noident = 1;
@@ -1098,7 +1091,7 @@ int _register_user(Client *client)
 	if ((bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 	{
 		ircstats.is_ref++;
-		banned_client(client, "realname", bconf->reason?bconf->reason:"", NULL, 0, 0);
+		banned_client(client, "realname", bconf->reason ? bconf->reason : "", NULL, 0, 0);
 		return 0;
 	}
 	/* Check G/Z lines before shuns -- kill before quite -- codemastr */
@@ -1127,7 +1120,8 @@ int _register_user(Client *client)
 			 * of this function we will do the actual joining to the
 			 * virus channel.
 			 */
-		} else {
+		} else
+		{
 			/* Client is either dead or blocked (will hang, on purpose, and timeout) */
 			return 0;
 		}
@@ -1189,8 +1183,8 @@ int _register_user(Client *client)
 	update_known_user_cache(client);
 
 	unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_CONNECT", client,
-		   "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
-		   log_data_string("extended_client_info", get_connect_extinfo(client)));
+	           "Client connecting: $client ($client.user.username@$client.hostname) [$client.ip] $extended_client_info",
+	           log_data_string("extended_client_info", get_connect_extinfo(client)));
 
 	/* Send the RPL_WELCOME, LUSERS, MOTD, auto join channels, everything... */
 	welcome_user(client, savetkl);
@@ -1336,7 +1330,8 @@ int AllowClient(Client *client)
 			{
 				exit_client(client, NULL, iConf.reject_message_unauthorized);
 				return 0;
-			} else {
+			} else
+			{
 				continue; /* Continue (this is the default behavior) */
 			}
 		}
@@ -1363,8 +1358,7 @@ int AllowClient(Client *client)
 		{
 			client->local->class = aconf->class;
 			client->local->class->clients++;
-		}
-		else
+		} else
 		{
 			/* Class is full */
 			sendnumeric(client, RPL_REDIR, aconf->server ? aconf->server : DEFAULT_SERVER, aconf->port ? aconf->port : 6667);
@@ -1436,7 +1430,8 @@ char *_unreal_expand_string(const char *str, char *buf, size_t buflen, NameValue
 				 */
 				snprintf(asn, sizeof(asn), "%d", geo->asn);
 				add_nvplist(&nvp, 0, "asn", asn);
-			} else {
+			} else
+			{
 				add_nvplist(&nvp, 0, "country_code", "XX");
 				add_nvplist(&nvp, 0, "asn", "0");
 			}

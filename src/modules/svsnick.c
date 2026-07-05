@@ -26,16 +26,15 @@
 
 CMD_FUNC(cmd_svsnick);
 
-#define MSG_SVSNICK 	"SVSNICK"	
+#define MSG_SVSNICK "SVSNICK"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svsnick",
-	"5.0",
-	"command /svsnick", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svsnick",
+    "5.0",
+    "command /svsnick",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -64,8 +63,8 @@ CMD_FUNC(cmd_svsnick)
 	Client *acptr;
 	Client *ocptr; /* Other client */
 	MessageTag *mtags = NULL;
-	char nickname[NICKLEN+1];
-	char oldnickname[NICKLEN+1];
+	char nickname[NICKLEN + 1];
+	char oldnickname[NICKLEN + 1];
 	time_t ts;
 
 	if (!IsSvsCmdOk(client) || parc < 4 || (strlen(parv[2]) > NICKLEN))
@@ -84,8 +83,8 @@ CMD_FUNC(cmd_svsnick)
 	if ((ocptr = find_client(nickname, NULL)) && ocptr != acptr) /* Collision */
 	{
 		exit_client(acptr, NULL,
-		                   "Nickname collision due to forced "
-		                   "nickname change, your nick was overruled");
+		            "Nickname collision due to forced "
+		            "nickname change, your nick was overruled");
 		return;
 	}
 

@@ -40,4 +40,3 @@ extern DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG 
 extern DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb);
 
 #define OSVER_SIZE 256
-

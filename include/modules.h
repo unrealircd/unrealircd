@@ -21,35 +21,35 @@
 #ifndef MODULES_H
 #define MODULES_H
 #include "types.h"
-#define MAXCUSTOMHOOKS  30
-#define MAXHOOKTYPES	200
-#define MAXCALLBACKS	30
-#define MAXEFUNCTIONS	192
+#define MAXCUSTOMHOOKS 30
+#define MAXHOOKTYPES   200
+#define MAXCALLBACKS   30
+#define MAXEFUNCTIONS  192
 #if defined(_WIN32)
- #define MOD_EXTENSION "dll"
- #define DLLFUNC	_declspec(dllexport)
- #define irc_dlopen(x,y) LoadLibrary(x)
- #define irc_dlclose FreeLibrary
- #define irc_dlsym(x,y,z) z = (void *)GetProcAddress(x,y)
- #define irc_dlerror our_dlerror
+ #define MOD_EXTENSION      "dll"
+ #define DLLFUNC            _declspec(dllexport)
+ #define irc_dlopen(x, y)   LoadLibrary(x)
+ #define irc_dlclose        FreeLibrary
+ #define irc_dlsym(x, y, z) z = (void *)GetProcAddress(x, y)
+ #define irc_dlerror        our_dlerror
 #else
  #define MOD_EXTENSION "so"
- #define irc_dlopen dlopen
- #define irc_dlclose dlclose
+ #define irc_dlopen    dlopen
+ #define irc_dlclose   dlclose
  #if defined(UNDERSCORE)
-  #define irc_dlsym(x,y,z) z = obsd_dlsym(x,y)
+  #define irc_dlsym(x, y, z) z = obsd_dlsym(x, y)
  #else
-  #define irc_dlsym(x,y,z) z = dlsym(x,y)
+  #define irc_dlsym(x, y, z) z = dlsym(x, y)
  #endif
  #define irc_dlerror dlerror
- #define DLLFUNC 
+ #define DLLFUNC
 #endif
 
-#define EVENT(x) void (x) (void *data)
+#define EVENT(x) void(x)(void *data)
 
 /* Casts to int, void, void *, and char * function pointers */
-#define TO_INTFUNC(x) (int (*)())(x)
-#define TO_VOIDFUNC(x) (void (*)())(x)
+#define TO_INTFUNC(x)   (int (*)())(x)
+#define TO_VOIDFUNC(x)  (void (*)())(x)
 #define TO_PVOIDFUNC(x) (void *(*)())(x)
 #define TO_PCHARFUNC(x) (char *(*)())(x)
 
@@ -77,9 +77,8 @@ typedef struct ModuleHeader {
 
 typedef struct Module Module;
 
-typedef struct ModuleChild
-{
-	struct ModuleChild *prev, *next; 
+typedef struct ModuleChild {
+	struct ModuleChild *prev, *next;
 	Module *child; /* Aww. aint it cute? */
 } ModuleChild;
 
@@ -115,23 +114,23 @@ typedef enum ModuleObjectType {
 typedef struct Umode Umode;
 struct Umode {
 	Umode *prev, *next;
-	long mode; /**< Mode mask */
-	char letter; /**< Mode character */
-	int unset_on_deoper; /**< When set to 1 then this user mode will be unset on de-oper */
+	long mode;                                /**< Mode mask */
+	char letter;                              /**< Mode character */
+	int unset_on_deoper;                      /**< When set to 1 then this user mode will be unset on de-oper */
 	int (*allowed)(Client *client, int what); /**< The 'is this user allowed to set this mode?' routine */
-	char unloaded; /**< Internal flag to indicate module is being unloaded */
-	Module *owner; /**< Module that owns this user mode */
+	char unloaded;                            /**< Internal flag to indicate module is being unloaded */
+	Module *owner;                            /**< Module that owns this user mode */
 };
 
 #define HIGHESTMODDATATYPE 7
 typedef enum ModDataType {
-	MODDATATYPE_LOCAL_VARIABLE	= 1,
-	MODDATATYPE_GLOBAL_VARIABLE	= 2,
-	MODDATATYPE_CLIENT		= 3,
-	MODDATATYPE_LOCAL_CLIENT	= 4,
-	MODDATATYPE_CHANNEL		= 5,
-	MODDATATYPE_MEMBER		= 6,
-	MODDATATYPE_MEMBERSHIP		= 7,
+	MODDATATYPE_LOCAL_VARIABLE = 1,
+	MODDATATYPE_GLOBAL_VARIABLE = 2,
+	MODDATATYPE_CLIENT = 3,
+	MODDATATYPE_LOCAL_CLIENT = 4,
+	MODDATATYPE_CHANNEL = 5,
+	MODDATATYPE_MEMBER = 6,
+	MODDATATYPE_MEMBERSHIP = 7,
 	/* If you add more here, then 1) increase MODDATATYPES,
 	 * 2) in src/api-moddata.c update moddatatypelimits[],
 	 * 3) add a lot of code at other places in src/api-moddata.c.
@@ -139,35 +138,35 @@ typedef enum ModDataType {
 } ModDataType;
 
 typedef enum ModDataSync {
-	MODDATA_SYNC_NORMAL		= 1, /**< Sync normally via MD command */
-	MODDATA_SYNC_EARLY		= 2, /**< Attempt to (also) sync early in the UID command */
+	MODDATA_SYNC_NORMAL = 1, /**< Sync normally via MD command */
+	MODDATA_SYNC_EARLY = 2,  /**< Attempt to (also) sync early in the UID command */
 } ModDataSync;
 
 typedef struct ModDataInfo ModDataInfo;
 
 struct ModDataInfo {
 	ModDataInfo *prev, *next;
-	int priority; /**< For sorting purposes (ones with most key lookups should go first) */
-	char *name; /**< Name for this moddata */
-	Module *owner; /**< Owner of this moddata */
-	ModDataType type; /**< Type of module data (eg: for client, channel, etc..) */
-	int slot; /**< Assigned slot */
-	char unloaded; /**< Module being unloaded? */
-	void (*free)(ModData *m); /**< Function will be called when the data needs to be freed (may be NULL if not using dynamic storage) */
-	const char *(*serialize)(ModData *m); /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
+	int priority;                                     /**< For sorting purposes (ones with most key lookups should go first) */
+	char *name;                                       /**< Name for this moddata */
+	Module *owner;                                    /**< Owner of this moddata */
+	ModDataType type;                                 /**< Type of module data (eg: for client, channel, etc..) */
+	int slot;                                         /**< Assigned slot */
+	char unloaded;                                    /**< Module being unloaded? */
+	void (*free)(ModData *m);                         /**< Function will be called when the data needs to be freed (may be NULL if not using dynamic storage) */
+	const char *(*serialize)(ModData *m);             /**< Function which converts the data to a string. May return NULL if 'm' contains no data (since for example m->ptr may be NULL). */
 	void (*unserialize)(const char *str, ModData *m); /**< Function which converts the string back to data */
-	ModDataSync sync; /**< Send in netsynch (when servers connect) */
-	int remote_write; /**< Allow remote servers to set/unset this moddata, even if it they target one of our own clients */
-	int self_write; /**< Allow remote servers to set/unset moddata of their own server object (irc1.example.net writing the MD object of irc1.example.net) */
+	ModDataSync sync;                                 /**< Send in netsynch (when servers connect) */
+	int remote_write;                                 /**< Allow remote servers to set/unset this moddata, even if it they target one of our own clients */
+	int self_write;                                   /**< Allow remote servers to set/unset moddata of their own server object (irc1.example.net writing the MD object of irc1.example.net) */
 };
 
-#define moddata_client(acptr, md)    acptr->moddata[md->slot]
-#define moddata_local_client(acptr, md)    acptr->local->moddata[md->slot]
-#define moddata_channel(channel, md)   channel->moddata[md->slot]
-#define moddata_member(m, md)        m->moddata[md->slot]
-#define moddata_membership(m, md)    m->moddata[md->slot]
-#define moddata_local_variable(md)         local_variable_moddata[md->slot]
-#define moddata_global_variable(md)        global_variable_moddata[md->slot]
+#define moddata_client(acptr, md)       acptr->moddata[md->slot]
+#define moddata_local_client(acptr, md) acptr->local->moddata[md->slot]
+#define moddata_channel(channel, md)    channel->moddata[md->slot]
+#define moddata_member(m, md)           m->moddata[md->slot]
+#define moddata_membership(m, md)       m->moddata[md->slot]
+#define moddata_local_variable(md)      local_variable_moddata[md->slot]
+#define moddata_global_variable(md)     global_variable_moddata[md->slot]
 
 /* Can bypass message restriction - Types */
 typedef enum BypassChannelMessageRestrictionType {
@@ -182,33 +181,33 @@ typedef enum BypassChannelMessageRestrictionType {
  * @{
  */
 
-#define EXCHK_ACCESS		0 /**< Check user access */
-#define EXCHK_ACCESS_ERR	1 /**< Check user access and send error to user */
-#define EXCHK_PARAM		2 /**< Check parameter */
+#define EXCHK_ACCESS     0 /**< Check user access */
+#define EXCHK_ACCESS_ERR 1 /**< Check user access and send error to user */
+#define EXCHK_PARAM      2 /**< Check parameter */
 
 /* return values for EXCHK_ACCESS*: */
-#define EX_DENY			0  /**< MODE change disallowed, except in case of operoverride */
-#define EX_ALLOW		1  /**< MODE change allowed */
-#define EX_ALWAYS_DENY		-1 /**< MODE change disallowed, even in case of operoverride */
+#define EX_DENY        0  /**< MODE change disallowed, except in case of operoverride */
+#define EX_ALLOW       1  /**< MODE change allowed */
+#define EX_ALWAYS_DENY -1 /**< MODE change disallowed, even in case of operoverride */
 
-#define EXSJ_SAME		0 /**< SJOIN: Parameters are the same */
-#define EXSJ_WEWON		1 /**< SJOIN: We won! w00t */
-#define EXSJ_THEYWON		2 /**< SJOIN: They won :( */
-#define EXSJ_MERGE		3 /**< SJOIN: Merging of modes, neither won nor lost */
+#define EXSJ_SAME    0 /**< SJOIN: Parameters are the same */
+#define EXSJ_WEWON   1 /**< SJOIN: We won! w00t */
+#define EXSJ_THEYWON 2 /**< SJOIN: They won :( */
+#define EXSJ_MERGE   3 /**< SJOIN: Merging of modes, neither won nor lost */
 
 /** Channel mode bit/value */
 typedef unsigned long long Cmode_t;
 
 typedef enum CmodeType {
-	CMODE_NORMAL=0,
-	CMODE_MEMBER=1,
+	CMODE_NORMAL = 0,
+	CMODE_MEMBER = 1,
 } CmodeType;
 
-#define RANK_CHANOWNER  4000
-#define RANK_CHANADMIN  3000
-#define RANK_CHANOP     2000
-#define RANK_HALFOP     1000
-#define RANK_VOICE        -1
+#define RANK_CHANOWNER 4000
+#define RANK_CHANADMIN 3000
+#define RANK_CHANOP    2000
+#define RANK_HALFOP    1000
+#define RANK_VOICE     -1
 
 /** Channel mode handler.
  * This struct contains all extended channel mode information,
@@ -223,20 +222,20 @@ struct Cmode {
 	Cmode *prev, *next;
 
 	/** mode character (like 'Z') */
-	char		letter;
+	char letter;
 
-	CmodeType	type;
+	CmodeType type;
 
 	/** If type is CMODE_NORMAL, then bitmask (eg: 0x10) that
 	 * is used in channel->mode.mode
 	 */
-	Cmode_t		mode;
+	Cmode_t mode;
 
 	/** If type is CMODE_MEMBER, then the prefix used in NAMES etc (eg @) */
-	char		prefix;
+	char prefix;
 
 	/** If type is CMODE_MEMBER, then the prefix used in SJOIN (eg @) */
-	char		sjoin_prefix;
+	char sjoin_prefix;
 
 	/** If type is CMODE_MEMBER, then the rank of this prefix.
 	 * Higher ranking = more rights.
@@ -244,10 +243,10 @@ struct Cmode {
 	 * show one symbol but not all.
 	 * For the shipped modules vhoaq we use the RANK_* values.
 	 */
-	int		rank;
+	int rank;
 
 	/** Number of parameters (1 or 0) */
-	int		paracount;
+	int paracount;
 
 	/** Check access or parameter of the channel mode.
 	 * @param client	The client
@@ -325,7 +324,7 @@ struct Cmode {
 
 	/** Local channel mode? Prevents remote servers from setting/unsetting this */
 	char local;
-	
+
 	/** Unsetting also eats/requires a parameter. Unusual, but possible. */
 	char unset_with_param;
 
@@ -344,93 +343,93 @@ struct Cmode {
 
 	/** Slot number - Can be used instead of GETPARAMSLOT() */
 	int param_slot;
-	
+
 	/** Module owner */
-        Module *owner;
+	Module *owner;
 };
 
 /** The struct used to register a channel mode handler.
  * For documentation, see Cmode struct.
  */
 typedef struct {
-	char		letter;
-	CmodeType	type;
-	char		prefix;
-	char		sjoin_prefix;
-	int		rank;
-	int		paracount;
-	int		(*is_ok)(Client *,Channel *, char mode, const char *para, int, int);
-	void *		(*put_param)(void *, const char *);
-	const char *	(*get_param)(void *);
-	const char *	(*conv_param)(const char *, Client *, Channel *);
-	int		(*free_param)(void *, int);
-	void *		(*dup_struct)(void *);
-	int		(*sjoin_check)(Channel *, void *, void *);
-	char		local;
-	char		unset_with_param;
-	char		flood_type_action;
+	char letter;
+	CmodeType type;
+	char prefix;
+	char sjoin_prefix;
+	int rank;
+	int paracount;
+	int (*is_ok)(Client *, Channel *, char mode, const char *para, int, int);
+	void *(*put_param)(void *, const char *);
+	const char *(*get_param)(void *);
+	const char *(*conv_param)(const char *, Client *, Channel *);
+	int (*free_param)(void *, int);
+	void *(*dup_struct)(void *);
+	int (*sjoin_check)(Channel *, void *, void *);
+	char local;
+	char unset_with_param;
+	char flood_type_action;
 } CmodeInfo;
 
 /** Get a slot number for a param - eg GETPARAMSLOT('k') */
-#define GETPARAMSLOT(x)	param_to_slot_mapping[x]
+#define GETPARAMSLOT(x) param_to_slot_mapping[x]
 
 /** Get a cmode handler by slot - for example for [dont use this]: GETPARAMHANDLERBYSLOT(5)->get_param(channel) */
-#define GETPARAMHANDLERBYSLOT(slotid)	ParamTable[slotid]
+#define GETPARAMHANDLERBYSLOT(slotid) ParamTable[slotid]
 
 /** Same as GETPARAMHANDLERBYSLOT but then by letter - like [dont use this]: GETPARAMHANDLERBYSLOT('k')->get_param(channel) */
-#define GETPARAMHANDLERBYLETTER(x)	ParamTable[GETPARAMSLOT(x)]
+#define GETPARAMHANDLERBYLETTER(x) ParamTable[GETPARAMSLOT(x)]
 
 /** Get paramter data struct - for like: ((aModejEntry *)GETPARASTRUCT(channel, 'j'))->t */
-#define GETPARASTRUCT(mychannel, mychar)	channel->mode.mode_params[GETPARAMSLOT(mychar)]
+#define GETPARASTRUCT(mychannel, mychar) channel->mode.mode_params[GETPARAMSLOT(mychar)]
 
-#define GETPARASTRUCTEX(v, mychar)	v[GETPARAMSLOT(mychar)]
+#define GETPARASTRUCTEX(v, mychar) v[GETPARAMSLOT(mychar)]
 
 /** @} */
 
-#define CMP_GETSLOT(x) GETPARAMSLOT(x)
-#define CMP_GETHANDLERBYSLOT(x) GETPARAMHANDLERBYSLOT(x)
+#define CMP_GETSLOT(x)            GETPARAMSLOT(x)
+#define CMP_GETHANDLERBYSLOT(x)   GETPARAMHANDLERBYSLOT(x)
 #define CMP_GETHANDLERBYLETTER(x) GETPARAMHANDLERBYLETTER(x)
-#define CMP_GETSTRUCT(x,y) GETPARASTRUCT(x,y)
+#define CMP_GETSTRUCT(x, y)       GETPARASTRUCT(x, y)
 
 /*** Extended bans ***/
 
 typedef enum ExtbanCheck {
-	EXBCHK_ACCESS=0,	/**< Check access */
-	EXBCHK_ACCESS_ERR=1,	/**< Check access and send error */
-	EXBCHK_PARAM=2		/**< Check if the parameter is valid */
+	EXBCHK_ACCESS = 0,     /**< Check access */
+	EXBCHK_ACCESS_ERR = 1, /**< Check access and send error */
+	EXBCHK_PARAM = 2       /**< Check if the parameter is valid */
 } ExtbanCheck;
 
 typedef enum ExtbanType {
-	EXBTYPE_BAN=0,		/**< Ban (channel mode +b) */
-	EXBTYPE_EXCEPT=1,	/**< Ban exception (channel mode +e) */
-	EXBTYPE_INVEX=2,	/**< Invite exception (channel mode +I) */
-	EXBTYPE_TKL=3		/**< TKL or other generic matcher outside banning routines */
+	EXBTYPE_BAN = 0,    /**< Ban (channel mode +b) */
+	EXBTYPE_EXCEPT = 1, /**< Ban exception (channel mode +e) */
+	EXBTYPE_INVEX = 2,  /**< Invite exception (channel mode +I) */
+	EXBTYPE_TKL = 3     /**< TKL or other generic matcher outside banning routines */
 } ExtbanType;
 
-#define BCTX_CONV_OPTION_WRITE_LETTER_BANS	1 /* Always write letter extbans in output of conv_param */
+#define BCTX_CONV_OPTION_WRITE_LETTER_BANS 1 /* Always write letter extbans in output of conv_param */
 
-#define EXTBANTABLESZ		32
+#define EXTBANTABLESZ 32
 
 typedef enum ExtbanOptions {
-        EXTBOPT_CHSVSMODE=0x1,		/**< SVSMODE -b/-e/-I will clear this ban (UNUSED as of 6.0.1+) */
-        EXTBOPT_ACTMODIFIER=0x2,	/**< Action modifier (not a matcher). These are extended bans like ~q/~n/~j. */
-        EXTBOPT_NOSTACKCHILD=0x4,	/**< Disallow prefixing with another extban. Eg disallow ~n:~T:censor:xyz */
-        EXTBOPT_INVEX=0x8,		/**< Available for use with +I too */
-        EXTBOPT_TKL=0x10		/**< Available for use in TKL's too (eg: /GLINE ~a:account) */
+	EXTBOPT_CHSVSMODE = 0x1,    /**< SVSMODE -b/-e/-I will clear this ban (UNUSED as of 6.0.1+) */
+	EXTBOPT_ACTMODIFIER = 0x2,  /**< Action modifier (not a matcher). These are extended bans like ~q/~n/~j. */
+	EXTBOPT_NOSTACKCHILD = 0x4, /**< Disallow prefixing with another extban. Eg disallow ~n:~T:censor:xyz */
+	EXTBOPT_INVEX = 0x8,        /**< Available for use with +I too */
+	EXTBOPT_TKL = 0x10          /**< Available for use in TKL's too (eg: /GLINE ~a:account) */
 } ExtbanOptions;
 
 typedef struct {
-	Client *client;		/**< Client to check, can be a remote client */
-	Channel *channel;	/**< Channel to check */
-	const char *banstr;	/**< Mask string (ban) */
-	int ban_check_types;	/**< Ban types to check for, one or more of BANCHK_* OR'd together */
-	const char *msg;	/**< Message, only for some BANCHK_* types (for censoring text) */
-	const char *error_msg;	/**< Error message, can be NULL */
-	int no_extbans;		/**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
-	int what;		/**< MODE_ADD or MODE_DEL (for is_ok) */
-	ExtbanType ban_type;	/**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
-	ExtbanCheck is_ok_check;/**< One of EXBCHK_* (for is_ok) */
-	int conv_options;	/**< One of BCTX_CONV_OPTION_* (for conv_param) */
+	Client *client;          /**< Client to check, can be a remote client */
+	Channel *channel;        /**< Channel to check */
+	const char *banstr;      /**< Mask string (ban) */
+	int ban_check_types;     /**< Ban types to check for, one or more of BANCHK_* OR'd together */
+	const char *msg;         /**< Message, only for some BANCHK_* types (for censoring text) */
+	const char *error_msg;   /**< Error message, can be NULL */
+	int no_extbans;          /**< Set to 1 to disable extended bans checking - only nick!user@host allowed */
+	int what;                /**< MODE_ADD or MODE_DEL (for is_ok) */
+	ExtbanType ban_type;     /**< EXBTYPE_BAN or EXBTYPE_EXCEPT (for is_ok) */
+	ExtbanCheck is_ok_check; /**< One of EXBCHK_* (for is_ok) */
+	int conv_options;        /**< One of BCTX_CONV_OPTION_* (for conv_param) */
 } BanContext;
 
 typedef struct Extban Extban;
@@ -447,7 +446,7 @@ struct Extban {
 	/** extban options */
 	ExtbanOptions options;
 
-	unsigned int is_banned_events;	/**< Which BANCHK_* events to listen on */
+	unsigned int is_banned_events; /**< Which BANCHK_* events to listen on */
 
 	int (*is_ok)(BanContext *b);
 
@@ -502,22 +501,22 @@ struct Versionflag {
 /* This type needs a forward declaration: */
 typedef struct MessageTagHandler MessageTagHandler;
 
-#define CLICAP_FLAGS_NONE               0x0
-#define CLICAP_FLAGS_AFFECTS_MTAGS	0x1	/**< Setting this clientcapability can have an effect on which message tags are displayed or their content */
-#define CLICAP_FLAGS_ADVERTISE_ONLY     0x4
+#define CLICAP_FLAGS_NONE           0x0
+#define CLICAP_FLAGS_AFFECTS_MTAGS  0x1 /**< Setting this clientcapability can have an effect on which message tags are displayed or their content */
+#define CLICAP_FLAGS_ADVERTISE_ONLY 0x4
 
 typedef struct ClientCapability ClientCapability;
 struct ClientCapability {
 	ClientCapability *prev, *next;
-	char *name;                              /**< The name of the CAP */
-	long cap;                                /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
-	int flags;                               /**< A flag from CLICAP_FLAGS_* */
-	int (*visible)(Client *);                /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
-	const char *(*parameter)(Client *);      /**< CAP parameters. Note: parameter may be NULL. [optional] */
-	MessageTagHandler *mtag_handler;         /**< For reverse dependency */
-	Module *owner;                           /**< Module introducing this CAP. */
-	char unloaded;                           /**< Internal flag to indicate module is being unloaded */
-	int minimum_cap_version;                 /**< Minimum CAP version to show this CAP */
+	char *name;                         /**< The name of the CAP */
+	long cap;                           /**< The acptr->user->proto we should set (if any, can be 0, like for sts) */
+	int flags;                          /**< A flag from CLICAP_FLAGS_* */
+	int (*visible)(Client *);           /**< Should the capability be visible? Note: parameter may be NULL. [optional] */
+	const char *(*parameter)(Client *); /**< CAP parameters. Note: parameter may be NULL. [optional] */
+	MessageTagHandler *mtag_handler;    /**< For reverse dependency */
+	Module *owner;                      /**< Module introducing this CAP. */
+	char unloaded;                      /**< Internal flag to indicate module is being unloaded */
+	int minimum_cap_version;            /**< Minimum CAP version to show this CAP */
 };
 
 typedef struct {
@@ -533,25 +532,25 @@ typedef struct {
  */
 
 /** No special message-tag handler flags */
-#define MTAG_HANDLER_FLAGS_NONE			0x0
+#define MTAG_HANDLER_FLAGS_NONE 0x0
 /** This message-tag does not have a CAP REQ xx (eg: for "msgid") */
-#define MTAG_HANDLER_FLAGS_NO_CAP_NEEDED	0x1
+#define MTAG_HANDLER_FLAGS_NO_CAP_NEEDED 0x1
 /** This tag should only appear on the first message of the
  * multiline fallback (for clients that don't support multiline).
  * Used by "msgid" and "+draft/reply".
  */
-#define MTAG_HANDLER_FLAGS_FIRST_ONLY		0x2
+#define MTAG_HANDLER_FLAGS_FIRST_ONLY 0x2
 
 /** Message Tag Handler */
 struct MessageTagHandler {
 	MessageTagHandler *prev, *next;
-	char *name;                                             /**< The name of the message-tag */
-	int flags;                                              /**< A flag of MTAG_HANDLER_FLAGS_* */
-	int (*is_ok)(Client *, const char *, const char *);     /**< Verify syntax and access rights */
-	int (*should_send_to_client)(Client *);                 /**< Tag may be sent to this client (normally NULL!) */
-	Module *owner;                                          /**< Module introducing this CAP. */
-	ClientCapability *clicap_handler;                       /**< Client capability handler associated with this */
-	char unloaded;                                          /**< Internal flag to indicate module is being unloaded */
+	char *name;                                         /**< The name of the message-tag */
+	int flags;                                          /**< A flag of MTAG_HANDLER_FLAGS_* */
+	int (*is_ok)(Client *, const char *, const char *); /**< Verify syntax and access rights */
+	int (*should_send_to_client)(Client *);             /**< Tag may be sent to this client (normally NULL!) */
+	Module *owner;                                      /**< Module introducing this CAP. */
+	ClientCapability *clicap_handler;                   /**< Client capability handler associated with this */
+	char unloaded;                                      /**< Internal flag to indicate module is being unloaded */
 };
 
 /** The struct used to register a message tag handler.
@@ -569,26 +568,26 @@ typedef struct {
 
 /** Filter for history: the command / type of the request */
 typedef enum HistoryFilterCommand {
-        HFC_SIMPLE=1,		/**< Simple history request for lines / unixtime */
-        HFC_BEFORE=2,		/**< CHATHISTORY BEFORE */
-        HFC_AFTER=3,		/**< CHATHISTORY AFTER */
-        HFC_LATEST=4,		/**< CHATHISTORY LATEST */
-        HFC_AROUND=5,		/**< CHATHISTORY AROUND */
-        HFC_BETWEEN=6		/**< CHATHISTORY BETWEEN */
+	HFC_SIMPLE = 1, /**< Simple history request for lines / unixtime */
+	HFC_BEFORE = 2, /**< CHATHISTORY BEFORE */
+	HFC_AFTER = 3,  /**< CHATHISTORY AFTER */
+	HFC_LATEST = 4, /**< CHATHISTORY LATEST */
+	HFC_AROUND = 5, /**< CHATHISTORY AROUND */
+	HFC_BETWEEN = 6 /**< CHATHISTORY BETWEEN */
 } HistoryFilterCommand;
 
 /** Filter for history get requests */
 typedef struct HistoryFilter HistoryFilter;
 struct HistoryFilter {
-        HistoryFilterCommand cmd;	/**< Filter command, one of HistoryFilterCommand */
-        int last_lines;			/**< Used by HFC_SIMPLE */
-        int last_seconds;		/**< Used by HFC_SIMPLE */
-        char *timestamp_a;		/**< First parameter of HFC_* (either this or msgid_a) */
-        char *msgid_a;			/**< First parameter of HFC_* (either this or timestamp_a) */
-        char *timestamp_b;		/**< Second parameter of HFC_BETWEEN (either this or msgid_b) */
-        char *msgid_b;			/**< Second parameter of HFC_BETWEEN (either this or timestamp_b) */
-        char *account;			/**< (For deletion only) if not NULL, reject deletion of messages not from this account */
-        int limit;			/**< Maximum number of lines to return */
+	HistoryFilterCommand cmd; /**< Filter command, one of HistoryFilterCommand */
+	int last_lines;           /**< Used by HFC_SIMPLE */
+	int last_seconds;         /**< Used by HFC_SIMPLE */
+	char *timestamp_a;        /**< First parameter of HFC_* (either this or msgid_a) */
+	char *msgid_a;            /**< First parameter of HFC_* (either this or timestamp_a) */
+	char *timestamp_b;        /**< Second parameter of HFC_BETWEEN (either this or msgid_b) */
+	char *msgid_b;            /**< Second parameter of HFC_BETWEEN (either this or timestamp_b) */
+	char *account;            /**< (For deletion only) if not NULL, reject deletion of messages not from this account */
+	int limit;                /**< Maximum number of lines to return */
 };
 
 /** A single line within a multiline batch.
@@ -597,33 +596,33 @@ struct HistoryFilter {
 typedef struct MLine MLine;
 struct MLine {
 	MLine *next;
-	char *text;		/**< Message text for this line (may be empty string for blank lines) */
-	int concat;		/**< 1 if draft/multiline-concat tag was present */
+	char *text; /**< Message text for this line (may be empty string for blank lines) */
+	int concat; /**< 1 if draft/multiline-concat tag was present */
 };
 
 /** History log lines, used by HistoryResult among others */
 typedef struct HistoryLogLine HistoryLogLine;
 struct HistoryLogLine {
 	HistoryLogLine *prev, *next;
-	HistoryLogLine *next_in_batch;	/**< Next line in multiline batch, or NULL for standalone/last-in-batch */
-	int num_lines;		/**< Number of physical lines: 1 for regular msgs, N for multiline */
-	int num_bytes;		/**< Total strlen of line(s): for a batch this includes all lines in the batch */
-	int concat;		/**< 1 if draft/multiline-concat tag was present */
-	time_t t;		/**< Rounded time on seconds, for quick access. */
-	char *msgid;		/**< Pointer to 'msgid' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
-	char *time;		/**< Pointer to 'time' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
-	MessageTag *mtags;	/**< Message tags associated with this message */
-	char line[];		/**< The full (old-skool) IRC protocol line */
+	HistoryLogLine *next_in_batch; /**< Next line in multiline batch, or NULL for standalone/last-in-batch */
+	int num_lines;                 /**< Number of physical lines: 1 for regular msgs, N for multiline */
+	int num_bytes;                 /**< Total strlen of line(s): for a batch this includes all lines in the batch */
+	int concat;                    /**< 1 if draft/multiline-concat tag was present */
+	time_t t;                      /**< Rounded time on seconds, for quick access. */
+	char *msgid;                   /**< Pointer to 'msgid' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
+	char *time;                    /**< Pointer to 'time' mtag. Do NOT free this, it is freed by freeing 'mtags'. */
+	MessageTag *mtags;             /**< Message tags associated with this message */
+	char line[];                   /**< The full (old-skool) IRC protocol line */
 };
 
 typedef struct HistoryResult HistoryResult;
 struct HistoryResult {
-        char *object;					/**< Name of the history object, eg '#test' */
-        HistoryLogLine *log;				/**< The resulting log lines */
-        HistoryLogLine *log_tail;			/**< Last entry in the log lines */
-        int num_lines;					/**< Total number of lines in the result */
-        int num_bytes;					/**< Total bytes of all lines in the result */
-        int reached_end;				/**< Set by backend: 1 = no more history beyond this page, 0 = more may exist (or unknown). Used by the draft/chathistory-end tag. Default 0. */
+	char *object;             /**< Name of the history object, eg '#test' */
+	HistoryLogLine *log;      /**< The resulting log lines */
+	HistoryLogLine *log_tail; /**< Last entry in the log lines */
+	int num_lines;            /**< Total number of lines in the result */
+	int num_bytes;            /**< Total bytes of all lines in the result */
+	int reached_end;          /**< Set by backend: 1 = no more history beyond this page, 0 = more may exist (or unknown). Used by the draft/chathistory-end tag. Default 0. */
 };
 
 /** History Backend */
@@ -668,19 +667,19 @@ typedef struct {
  */
 
 /** No special flags set */
-#define RPC_HANDLER_FLAGS_NONE			0x0
-#define RPC_HANDLER_FLAGS_UNFILTERED		0x1	/**< Don't filter input (don't reject strings bigger than 510 in length or containing \r or \n) */
+#define RPC_HANDLER_FLAGS_NONE       0x0
+#define RPC_HANDLER_FLAGS_UNFILTERED 0x1 /**< Don't filter input (don't reject strings bigger than 510 in length or containing \r or \n) */
 
 /** RPC Tag Handler */
 typedef struct RPCHandler RPCHandler;
 struct RPCHandler {
 	RPCHandler *prev, *next;
-	char *method;                                             /**< Name of the method handler, eg "client.get" */
-	int flags;                                                /**< A flag of RPC_HANDLER_FLAG_* */
-	LogLevel loglevel;                                        /**< Log level to use for this call: for example ULOG_DEBUG for .list calls, leave 0 for default */
-	void (*call)(Client *, json_t *request, json_t *params);  /**< RPC call: use RPC_CALL_FUNC() ! */
-	Module *owner;                                            /**< Module introducing this. */
-	char unloaded;                                            /**< Internal flag to indicate module is being unloaded */
+	char *method;                                            /**< Name of the method handler, eg "client.get" */
+	int flags;                                               /**< A flag of RPC_HANDLER_FLAG_* */
+	LogLevel loglevel;                                       /**< Log level to use for this call: for example ULOG_DEBUG for .list calls, leave 0 for default */
+	void (*call)(Client *, json_t *request, json_t *params); /**< RPC call: use RPC_CALL_FUNC() ! */
+	Module *owner;                                           /**< Module introducing this. */
+	char unloaded;                                           /**< Internal flag to indicate module is being unloaded */
 };
 
 /** The struct used to register a RPC handler.
@@ -702,7 +701,7 @@ typedef struct {
  * @param params      Parameters of the JSON-RPC call
  * @note You are expected to call rpc_response() or rpc_error() on the request.
  */
-#define RPC_CALL_FUNC(x) void (x) (Client *client, json_t *request, json_t *params)
+#define RPC_CALL_FUNC(x) void(x)(Client * client, json_t * request, json_t * params)
 
 /** @} */
 
@@ -799,10 +798,10 @@ typedef struct ModuleObject {
  * What we use to keep track internally of the modules
 */
 
-#define MODERR_NOERROR 0
-#define MODERR_EXISTS  1
-#define MODERR_NOSPACE 2
-#define MODERR_INVALID 3
+#define MODERR_NOERROR  0
+#define MODERR_EXISTS   1
+#define MODERR_NOSPACE  2
+#define MODERR_INVALID  3
 #define MODERR_NOTFOUND 4
 
 extern unsigned int ModuleGetError(Module *module);
@@ -810,17 +809,16 @@ extern const char *ModuleGetErrorStr(Module *module);
 extern unsigned int ModuleGetOptions(Module *module);
 extern void ModuleSetOptions(Module *module, unsigned int options, int action);
 
-struct Module
-{
+struct Module {
 	struct Module *prev, *next;
 	int priority;
-	ModuleHeader    *header; /* The module's header */
+	ModuleHeader *header; /* The module's header */
 #ifdef _WIN32
-	HMODULE dll;		/* Return value of LoadLibrary */
+	HMODULE dll; /* Return value of LoadLibrary */
 #else
-	void	*dll;		/* Return value of dlopen */
-#endif	
-	unsigned char flags;    /* 8-bits for flags .. [<- this is misleading, there's mod->flags = .. everywhere] */
+	void *dll; /* Return value of dlopen */
+#endif
+	unsigned char flags; /* 8-bits for flags .. [<- this is misleading, there's mod->flags = .. everywhere] */
 	ModuleChild *children;
 	ModuleObject *objects;
 	ModuleInfo modinfo; /* Used to store handle info for module */
@@ -835,39 +833,39 @@ struct Module
  * Symbol table
 */
 
-#define MOD_OPT_PERM		0x0001 /* Permanent module (not unloadable) */
-#define MOD_OPT_OFFICIAL	0x0002 /* Official module, do not set "tainted" */
-#define MOD_OPT_PERM_RELOADABLE	0x0004 /* Module is semi-permanent: it can be re-loaded but not un-loaded */
-#define MOD_OPT_GLOBAL		0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
-#define MOD_OPT_PRIORITY	0x1000 /* Module wants a higher or lower priority for unloading, init, load, etc */
-#define MOD_OPT_UNLOAD_PRIORITY	0x1000 /* Alias for MOD_OPT_PRIORITY */
+#define MOD_OPT_PERM            0x0001 /* Permanent module (not unloadable) */
+#define MOD_OPT_OFFICIAL        0x0002 /* Official module, do not set "tainted" */
+#define MOD_OPT_PERM_RELOADABLE 0x0004 /* Module is semi-permanent: it can be re-loaded but not un-loaded */
+#define MOD_OPT_GLOBAL          0x0008 /* Module is required to be loaded globally (i.e. across the entire network) */
+#define MOD_OPT_PRIORITY        0x1000 /* Module wants a higher or lower priority for unloading, init, load, etc */
+#define MOD_OPT_UNLOAD_PRIORITY 0x1000 /* Alias for MOD_OPT_PRIORITY */
 
-#define MOD_Dep(name, container,module) {#name, (vFP *) &container, module}
+#define MOD_Dep(name, container, module) {#name, (vFP *)&container, module}
 
 /** Websocket module should init 'first' because it handles sockets */
-#define WEBSOCKET_MODULE_PRIORITY_INIT		-1000000000
+#define WEBSOCKET_MODULE_PRIORITY_INIT -1000000000
 /** Websocket module should unload 'last' because it handles sockets */
-#define WEBSOCKET_MODULE_PRIORITY_UNLOAD	1000000000
+#define WEBSOCKET_MODULE_PRIORITY_UNLOAD 1000000000
 
 /** Event structs */
 struct Event {
-	Event		*prev;		/**< Previous event (linked list) */
-	Event		*next;		/**< Next event (linked list) */
-	char		*name;		/**< Name of the event */
-	long		every_msec;	/**< How often we should run this event */
-	long		count;		/**< How many times this event should run (0 = infinite) */
-	vFP		event;		/**< Actual function to call */
-	void		*data;		/**< The data to pass in the function call */
-	struct timeval	last_run;	/**< Last time this event ran */
-	char		deleted;	/**< Set to 1 if this event is marked for deletion */
-	Module		*owner;		/**< To which module this event belongs */
+	Event *prev;             /**< Previous event (linked list) */
+	Event *next;             /**< Next event (linked list) */
+	char *name;              /**< Name of the event */
+	long every_msec;         /**< How often we should run this event */
+	long count;              /**< How many times this event should run (0 = infinite) */
+	vFP event;               /**< Actual function to call */
+	void *data;              /**< The data to pass in the function call */
+	struct timeval last_run; /**< Last time this event ran */
+	char deleted;            /**< Set to 1 if this event is marked for deletion */
+	Module *owner;           /**< To which module this event belongs */
 };
 
-#define EMOD_EVERY 0x0001
+#define EMOD_EVERY   0x0001
 #define EMOD_HOWMANY 0x0002
-#define EMOD_NAME 0x0004
-#define EMOD_EVENT 0x0008
-#define EMOD_DATA 0x0010
+#define EMOD_NAME    0x0004
+#define EMOD_EVENT   0x0008
+#define EMOD_DATA    0x0010
 
 /** event struct information, for EventMod() only - see Event for documentation */
 struct EventInfo {
@@ -886,7 +884,7 @@ typedef enum APICallbackType {
 
 struct APICallback {
 	APICallback *prev, *next;
-	char *name; /**< Name of the api callback */
+	char *name;    /**< Name of the api callback */
 	Module *owner; /**< To which module this object belongs */
 	char unloaded; /**< Set to 1 if this object is marked for deletion */
 	APICallbackType callback_type;
@@ -896,14 +894,14 @@ struct APICallback {
 	} callback; /**< The callback itself, obviously chosen by .callback_type */
 };
 
-extern MODVAR Hook		*Hooks[MAXHOOKTYPES];
-extern MODVAR Hooktype		Hooktypes[MAXCUSTOMHOOKS];
+extern MODVAR Hook *Hooks[MAXHOOKTYPES];
+extern MODVAR Hooktype Hooktypes[MAXCUSTOMHOOKS];
 extern MODVAR Callback *Callbacks[MAXCALLBACKS], *RCallbacks[MAXCALLBACKS];
 extern MODVAR ClientCapability *clicaps;
 extern MODVAR long clicaps_affecting_mtag;
 
 extern Event *EventAdd(Module *module, const char *name, vFP event, void *data, long every_msec, int count);
-extern void   EventDel(Event *event);
+extern void EventDel(Event *event);
 extern Event *EventMarkDel(Event *event);
 extern Event *EventFind(const char *name);
 extern int EventMod(Event *event, EventInfo *mods);
@@ -937,7 +935,7 @@ extern void ISupportSetValue(ISupport *isupport, const char *value);
 extern void ISupportDel(ISupport *isupport);
 extern ISupport *ISupportFind(const char *token);
 extern void ISupportSet(Module *module, const char *name, const char *value);
-extern void ISupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
+extern void ISupportSetFmt(Module *module, const char *name, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 extern void ISupportDelByName(const char *name);
 
 extern ClientCapability *ClientCapabilityFind(const char *token, Client *client);
@@ -958,7 +956,7 @@ extern RPCHandler *RPCHandlerAdd(Module *module, RPCHandlerInfo *mreq);
 extern void RPCHandlerDel(RPCHandler *m);
 
 #ifndef GCC_TYPECHECKING
-/** Add a hook that returns an int.
+ /** Add a hook that returns an int.
  * @param module	The module adding the hook
  * @param hooktype	The hook type (HOOKTYPE_*)
  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
@@ -967,8 +965,8 @@ extern void RPCHandlerDel(RPCHandler *m);
  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
  */
-#define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL)
-/** Add a hook that returns void.
+ #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL)
+ /** Add a hook that returns void.
  * @param module	The module adding the hook
  * @param hooktype	The hook type (HOOKTYPE_*)
  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
@@ -977,8 +975,8 @@ extern void RPCHandlerDel(RPCHandler *m);
  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
  */
-#define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL)
-/** Add a hook that returns a string (char *).
+ #define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL)
+ /** Add a hook that returns a string (char *).
  * @param module	The module adding the hook
  * @param hooktype	The hook type (HOOKTYPE_*)
  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
@@ -987,8 +985,8 @@ extern void RPCHandlerDel(RPCHandler *m);
  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
  */
-#define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL)
-/** Add a hook that returns a const string (const char *).
+ #define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL)
+ /** Add a hook that returns a const string (const char *).
  * @param module	The module adding the hook
  * @param hooktype	The hook type (HOOKTYPE_*)
  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
@@ -997,30 +995,30 @@ extern void RPCHandlerDel(RPCHandler *m);
  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
  */
-#define HookAddConstString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func)
+ #define HookAddConstString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func)
 #else
-#define HookAdd(module, hooktype, priority, func) \
-__extension__ ({ \
-	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL); \
-})
+ #define HookAdd(module, hooktype, priority, func) \
+	 __extension__({ \
+	  ValidateHooks(hooktype, func); \
+	  HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL); \
+	 })
 
-#define HookAddVoid(module, hooktype, priority, func) \
-__extension__ ({ \
-	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL); \
-})
+ #define HookAddVoid(module, hooktype, priority, func) \
+	 __extension__({ \
+	  ValidateHooks(hooktype, func); \
+	  HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL); \
+	 })
 
-#define HookAddString(module, hooktype, priority, func) \
-__extension__ ({ \
-	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL); \
-})
-#define HookAddConstString(module, hooktype, priority, func) \
-__extension__ ({ \
-	ValidateHooks(hooktype, func); \
-    HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func); \
-})
+ #define HookAddString(module, hooktype, priority, func) \
+	 __extension__({ \
+	  ValidateHooks(hooktype, func); \
+	  HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL); \
+	 })
+ #define HookAddConstString(module, hooktype, priority, func) \
+	 __extension__({ \
+	  ValidateHooks(hooktype, func); \
+	  HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func); \
+	 })
 #endif /* GCC_TYPCHECKING */
 
 /** Add a hook - internal function.
@@ -1037,8 +1035,8 @@ __extension__ ({ \
  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
  */
-extern Hook	*HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
-extern Hook	*HookDel(Hook *hook);
+extern Hook *HookAddMain(Module *module, int hooktype, int priority, int (*intfunc)(), void (*voidfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
+extern Hook *HookDel(Hook *hook);
 
 extern Hooktype *HooktypeAdd(Module *module, const char *string, int *type);
 extern void HooktypeDel(Hooktype *hooktype, Module *module);
@@ -1049,23 +1047,30 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
  * @param hooktype	The hook type (HOOKTYPE_*)
  * @param ...		Arguments to pass to the hook functions
  */
-#define RunHook(hooktype,...) do { Hook *h; for (h = Hooks[hooktype]; h; h = h->next) (*(h->func.intfunc))(__VA_ARGS__); } while(0)
+#define RunHook(hooktype, ...) \
+	do \
+	{ \
+		Hook *h; \
+		for (h = Hooks[hooktype]; h; h = h->next) \
+			(*(h->func.intfunc))(__VA_ARGS__); \
+	} while (0)
 /** Run all hooks for a given hook type, returning early from the calling function
  * if a hook signals to stop processing (used by the IRCd core to call modules).
  * @param hooktype	The hook type (HOOKTYPE_*)
  * @param retchk	Condition on return value to stop processing, eg != 0
  * @param ...		Arguments to pass to the hook functions
  */
-#define RunHookReturn(hooktype,retchk,...) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(__VA_ARGS__); \
-  if (retval retchk) return; \
- } \
-}
+#define RunHookReturn(hooktype, retchk, ...) \
+	{ \
+		int retval; \
+		Hook *h; \
+		for (h = Hooks[hooktype]; h; h = h->next) \
+		{ \
+			retval = (*(h->func.intfunc))(__VA_ARGS__); \
+			if (retval retchk) \
+				return; \
+		} \
+	}
 /** Run all hooks for a given hook type, returning the hook's return value from
  * the calling function if a hook signals to stop processing
  * (used by the IRCd core to call modules).
@@ -1074,16 +1079,17 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
  * @param ...		Arguments to pass to the hook functions
  * @returns The return value of the hook function that triggered the early return
  */
-#define RunHookReturnInt(hooktype,retchk,...) \
-{ \
- int retval; \
- Hook *h; \
- for (h = Hooks[hooktype]; h; h = h->next) \
- { \
-  retval = (*(h->func.intfunc))(__VA_ARGS__); \
-  if (retval retchk) return retval; \
- } \
-}
+#define RunHookReturnInt(hooktype, retchk, ...) \
+	{ \
+		int retval; \
+		Hook *h; \
+		for (h = Hooks[hooktype]; h; h = h->next) \
+		{ \
+			retval = (*(h->func.intfunc))(__VA_ARGS__); \
+			if (retval retchk) \
+				return retval; \
+		} \
+	}
 
 /** Add a callback that returns an int.
  * @param module	The module adding the callback
@@ -1132,7 +1138,7 @@ extern void HooktypeDel(Hooktype *hooktype, Module *module);
 #define CallbackAddConstString(module, cbtype, func) CallbackAddMain(module, cbtype, NULL, NULL, NULL, NULL, func)
 
 extern Callback *CallbackAddMain(Module *module, int cbtype, int (*func)(), void (*vfunc)(), void *(*pvfunc)(), char *(*stringfunc)(), const char *(*conststringfunc)());
-extern Callback	*CallbackDel(Callback *cb);
+extern Callback *CallbackDel(Callback *cb);
 
 /** Add an efunction that returns an int.
  * @param module	The module adding the efunction
@@ -1212,7 +1218,7 @@ extern void CallCommandOverride(CommandOverride *ovr, ClientContext *clictx, Cli
  * in future UnrealIRCd versions.
  * @note Can only be used inside a CMD_OVERRIDE_FUNC() function.
  */
-#define CALL_NEXT_COMMAND_OVERRIDE()	CallCommandOverride(ovr, clictx, client, recv_mtags, parc, parv)
+#define CALL_NEXT_COMMAND_OVERRIDE() CallCommandOverride(ovr, clictx, client, recv_mtags, parc, parv)
 
 extern void moddata_free_client(Client *acptr);
 extern void moddata_free_local_client(Client *acptr);
@@ -1297,14 +1303,15 @@ extern void APICallbackDel(APICallback *m);
 extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 
 #define RegisterApiCallback(modhandle, api_callback_type, api_callback_function, api_name, api_func) \
-	do { \
+	do \
+	{ \
 		APICallback req; \
 		memset(&req, 0, sizeof(req)); \
 		req.name = api_name; \
 		req.callback_type = api_callback_type; \
 		req.callback.api_callback_function = api_func; \
 		APICallbackAdd(modhandle, &req); \
-	} while(0)
+	} while (0)
 
 #define RegisterApiCallbackWebResponse(modhandle, api_name, api_func) \
 	RegisterApiCallback(modhandle, API_CALLBACK_WEB_RESPONSE, web_response, api_name, api_func)
@@ -1324,261 +1331,261 @@ extern APICallback *APICallbackAdd(Module *module, APICallback *mreq);
 
 /* Hook types */
 /** See hooktype_pre_local_connect() */
-#define HOOKTYPE_PRE_LOCAL_CONNECT	1
+#define HOOKTYPE_PRE_LOCAL_CONNECT 1
 /** See hooktype_local_connect() */
-#define HOOKTYPE_LOCAL_CONNECT	2
+#define HOOKTYPE_LOCAL_CONNECT 2
 /** See hooktype_remote_connect() */
-#define HOOKTYPE_REMOTE_CONNECT	3
+#define HOOKTYPE_REMOTE_CONNECT 3
 /** See hooktype_pre_local_quit() */
-#define HOOKTYPE_PRE_LOCAL_QUIT	4
+#define HOOKTYPE_PRE_LOCAL_QUIT 4
 /** See hooktype_local_quit() */
-#define HOOKTYPE_LOCAL_QUIT	5
+#define HOOKTYPE_LOCAL_QUIT 5
 /** See hooktype_remote_quit() */
-#define HOOKTYPE_REMOTE_QUIT	6
+#define HOOKTYPE_REMOTE_QUIT 6
 /** See hooktype_unkuser_quit() */
-#define HOOKTYPE_UNKUSER_QUIT	7
+#define HOOKTYPE_UNKUSER_QUIT 7
 /** See hooktype_server_connect() */
-#define HOOKTYPE_SERVER_CONNECT	8
+#define HOOKTYPE_SERVER_CONNECT 8
 /** See hooktype_server_handshake_out() */
-#define HOOKTYPE_SERVER_HANDSHAKE_OUT	9
+#define HOOKTYPE_SERVER_HANDSHAKE_OUT 9
 /** See hooktype_server_sync() */
-#define HOOKTYPE_SERVER_SYNC	10
+#define HOOKTYPE_SERVER_SYNC 10
 /** See hooktype_post_server_connect() */
-#define HOOKTYPE_POST_SERVER_CONNECT	11
+#define HOOKTYPE_POST_SERVER_CONNECT 11
 /** See hooktype_server_synced() */
-#define HOOKTYPE_SERVER_SYNCED	12
+#define HOOKTYPE_SERVER_SYNCED 12
 /** See hooktype_server_quit() */
-#define HOOKTYPE_SERVER_QUIT	13
+#define HOOKTYPE_SERVER_QUIT 13
 /** See hooktype_local_nickchange() */
-#define HOOKTYPE_LOCAL_NICKCHANGE	14
+#define HOOKTYPE_LOCAL_NICKCHANGE 14
 /** See hooktype_remote_nickchange() */
-#define HOOKTYPE_REMOTE_NICKCHANGE	15
+#define HOOKTYPE_REMOTE_NICKCHANGE 15
 /** See hooktype_can_join() */
-#define HOOKTYPE_CAN_JOIN	16
+#define HOOKTYPE_CAN_JOIN 16
 /** See hooktype_pre_local_join() */
-#define HOOKTYPE_PRE_LOCAL_JOIN	17
+#define HOOKTYPE_PRE_LOCAL_JOIN 17
 /** See hooktype_local_join() */
-#define HOOKTYPE_LOCAL_JOIN	18
+#define HOOKTYPE_LOCAL_JOIN 18
 /** See hooktype_remote_join() */
-#define HOOKTYPE_REMOTE_JOIN	19
+#define HOOKTYPE_REMOTE_JOIN 19
 /** See hooktype_pre_local_part() */
-#define HOOKTYPE_PRE_LOCAL_PART	20
+#define HOOKTYPE_PRE_LOCAL_PART 20
 /** See hooktype_local_part() */
-#define HOOKTYPE_LOCAL_PART	21
+#define HOOKTYPE_LOCAL_PART 21
 /** See hooktype_remote_part() */
-#define HOOKTYPE_REMOTE_PART	22
+#define HOOKTYPE_REMOTE_PART 22
 /** See hooktype_pre_local_kick() */
-#define HOOKTYPE_PRE_LOCAL_KICK	23
+#define HOOKTYPE_PRE_LOCAL_KICK 23
 /** See hooktype_can_kick() */
-#define HOOKTYPE_CAN_KICK	24
+#define HOOKTYPE_CAN_KICK 24
 /** See hooktype_local_kick() */
-#define HOOKTYPE_LOCAL_KICK	25
+#define HOOKTYPE_LOCAL_KICK 25
 /** See hooktype_remote_kick() */
-#define HOOKTYPE_REMOTE_KICK	26
+#define HOOKTYPE_REMOTE_KICK 26
 /** See hooktype_pre_chanmsg() */
-#define HOOKTYPE_PRE_CHANMSG	28
+#define HOOKTYPE_PRE_CHANMSG 28
 /** See hooktype_can_send_to_user() */
-#define HOOKTYPE_CAN_SEND_TO_USER	29
+#define HOOKTYPE_CAN_SEND_TO_USER 29
 /** See hooktype_can_send_to_channel() */
-#define HOOKTYPE_CAN_SEND_TO_CHANNEL	30
+#define HOOKTYPE_CAN_SEND_TO_CHANNEL 30
 /** See hooktype_usermsg() */
-#define HOOKTYPE_USERMSG	31
+#define HOOKTYPE_USERMSG 31
 /** See hooktype_chanmsg() */
-#define HOOKTYPE_CHANMSG	32
+#define HOOKTYPE_CHANMSG 32
 /** See hooktype_pre_local_topic() */
-#define HOOKTYPE_PRE_LOCAL_TOPIC	33
+#define HOOKTYPE_PRE_LOCAL_TOPIC 33
 /** See hooktype_topic() */
-#define HOOKTYPE_TOPIC	35
+#define HOOKTYPE_TOPIC 35
 /** See hooktype_pre_local_chanmode() */
-#define HOOKTYPE_PRE_LOCAL_CHANMODE	36
+#define HOOKTYPE_PRE_LOCAL_CHANMODE 36
 /** See hooktype_pre_remote_chanmode() */
-#define HOOKTYPE_PRE_REMOTE_CHANMODE	37
+#define HOOKTYPE_PRE_REMOTE_CHANMODE 37
 /** See hooktype_local_chanmode() */
-#define HOOKTYPE_LOCAL_CHANMODE	38
+#define HOOKTYPE_LOCAL_CHANMODE 38
 /** See hooktype_remote_chanmode() */
-#define HOOKTYPE_REMOTE_CHANMODE	39
+#define HOOKTYPE_REMOTE_CHANMODE 39
 /** See hooktype_modechar_del() */
-#define HOOKTYPE_MODECHAR_DEL	40
+#define HOOKTYPE_MODECHAR_DEL 40
 /** See hooktype_modechar_add() */
-#define HOOKTYPE_MODECHAR_ADD	41
+#define HOOKTYPE_MODECHAR_ADD 41
 /** See hooktype_away() */
-#define HOOKTYPE_AWAY	42
+#define HOOKTYPE_AWAY 42
 /** See hooktype_pre_invite() */
-#define HOOKTYPE_PRE_INVITE	43
+#define HOOKTYPE_PRE_INVITE 43
 /** See hooktype_invite() */
-#define HOOKTYPE_INVITE	44
+#define HOOKTYPE_INVITE 44
 /** See hooktype_pre_knock() */
-#define HOOKTYPE_PRE_KNOCK	45
+#define HOOKTYPE_PRE_KNOCK 45
 /** See hooktype_knock() */
-#define HOOKTYPE_KNOCK	46
+#define HOOKTYPE_KNOCK 46
 /** See hooktype_whois() */
-#define HOOKTYPE_WHOIS	47
+#define HOOKTYPE_WHOIS 47
 /** See hooktype_who_status() */
-#define HOOKTYPE_WHO_STATUS	48
+#define HOOKTYPE_WHO_STATUS 48
 /** See hooktype_pre_kill() */
-#define HOOKTYPE_PRE_KILL	49
+#define HOOKTYPE_PRE_KILL 49
 /** See hooktype_local_kill() */
-#define HOOKTYPE_LOCAL_KILL	50
+#define HOOKTYPE_LOCAL_KILL 50
 /** See hooktype_rehashflag() */
-#define HOOKTYPE_REHASHFLAG	51
+#define HOOKTYPE_REHASHFLAG 51
 /** See hooktype_configposttest() */
-#define HOOKTYPE_CONFIGPOSTTEST	52
+#define HOOKTYPE_CONFIGPOSTTEST 52
 /** See hooktype_rehash() */
-#define HOOKTYPE_REHASH	53
+#define HOOKTYPE_REHASH 53
 /** See hooktype_rehash_complete() */
-#define HOOKTYPE_REHASH_COMPLETE	54
+#define HOOKTYPE_REHASH_COMPLETE 54
 /** See hooktype_configtest() */
-#define HOOKTYPE_CONFIGTEST	55
+#define HOOKTYPE_CONFIGTEST 55
 /** See hooktype_configrun() */
-#define HOOKTYPE_CONFIGRUN	56
+#define HOOKTYPE_CONFIGRUN 56
 /** See hooktype_configrun_ex() */
-#define HOOKTYPE_CONFIGRUN_EX	57
+#define HOOKTYPE_CONFIGRUN_EX 57
 /** See hooktype_stats() */
-#define HOOKTYPE_STATS	58
+#define HOOKTYPE_STATS 58
 /** See hooktype_local_oper() */
-#define HOOKTYPE_LOCAL_OPER	59
+#define HOOKTYPE_LOCAL_OPER 59
 /** See hooktype_local_pass() */
-#define HOOKTYPE_LOCAL_PASS	60
+#define HOOKTYPE_LOCAL_PASS 60
 /** See hooktype_channel_create() */
-#define HOOKTYPE_CHANNEL_CREATE	61
+#define HOOKTYPE_CHANNEL_CREATE 61
 /** See hooktype_channel_destroy() */
-#define HOOKTYPE_CHANNEL_DESTROY	62
+#define HOOKTYPE_CHANNEL_DESTROY 62
 /** See hooktype_tkl_except() */
-#define HOOKTYPE_TKL_EXCEPT	63
+#define HOOKTYPE_TKL_EXCEPT 63
 /** See hooktype_umode_change() */
-#define HOOKTYPE_UMODE_CHANGE	64
+#define HOOKTYPE_UMODE_CHANGE 64
 /** See hooktype_tkl_add() */
-#define HOOKTYPE_TKL_ADD	65
+#define HOOKTYPE_TKL_ADD 65
 /** See hooktype_tkl_del() */
-#define HOOKTYPE_TKL_DEL	66
+#define HOOKTYPE_TKL_DEL 66
 /** See hooktype_log() */
-#define HOOKTYPE_LOG	67
+#define HOOKTYPE_LOG 67
 /** See hooktype_local_spamfilter() */
-#define HOOKTYPE_LOCAL_SPAMFILTER	68
+#define HOOKTYPE_LOCAL_SPAMFILTER 68
 /** See hooktype_silenced() */
-#define HOOKTYPE_SILENCED	69
+#define HOOKTYPE_SILENCED 69
 /** See hooktype_rawpacket_in() */
-#define HOOKTYPE_RAWPACKET_IN	70
+#define HOOKTYPE_RAWPACKET_IN 70
 /** See hooktype_packet() */
-#define HOOKTYPE_PACKET	71
+#define HOOKTYPE_PACKET 71
 /** See hooktype_handshake() */
-#define HOOKTYPE_HANDSHAKE	72
+#define HOOKTYPE_HANDSHAKE 72
 /** See hooktype_free_client() */
-#define HOOKTYPE_FREE_CLIENT	73
+#define HOOKTYPE_FREE_CLIENT 73
 /** See hooktype_free_user() */
-#define HOOKTYPE_FREE_USER	74
+#define HOOKTYPE_FREE_USER 74
 /** See hooktype_can_join_limitexceeded() */
-#define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED	75
+#define HOOKTYPE_CAN_JOIN_LIMITEXCEEDED 75
 /** See hooktype_see_channel_in_whois() */
-#define HOOKTYPE_SEE_CHANNEL_IN_WHOIS	77
+#define HOOKTYPE_SEE_CHANNEL_IN_WHOIS 77
 /** See hooktype_join_data() */
-#define HOOKTYPE_JOIN_DATA	78
+#define HOOKTYPE_JOIN_DATA 78
 /** See hooktype_invite_bypass() */
-#define HOOKTYPE_INVITE_BYPASS	79
+#define HOOKTYPE_INVITE_BYPASS 79
 /** See hooktype_view_topic_outside_channel() */
-#define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL	80
+#define HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL 80
 /** See hooktype_chan_permit_nick_change() */
-#define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE	81
+#define HOOKTYPE_CHAN_PERMIT_NICK_CHANGE 81
 /** See hooktype_is_channel_secure() */
-#define HOOKTYPE_IS_CHANNEL_SECURE	82
+#define HOOKTYPE_IS_CHANNEL_SECURE 82
 /** See hooktype_channel_synced() */
-#define HOOKTYPE_CHANNEL_SYNCED	83
+#define HOOKTYPE_CHANNEL_SYNCED 83
 /** See hooktype_can_sajoin() */
-#define HOOKTYPE_CAN_SAJOIN	84
+#define HOOKTYPE_CAN_SAJOIN 84
 /** See hooktype_mode_deop() */
-#define HOOKTYPE_MODE_DEOP	86
+#define HOOKTYPE_MODE_DEOP 86
 /** See hooktype_dcc_denied() */
-#define HOOKTYPE_DCC_DENIED	87
+#define HOOKTYPE_DCC_DENIED 87
 /** See hooktype_secure_connect() */
-#define HOOKTYPE_SECURE_CONNECT	88
+#define HOOKTYPE_SECURE_CONNECT 88
 /** See hooktype_can_bypass_channel_message_restriction() */
-#define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION	89
+#define HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION 89
 /** See hooktype_sasl_continuation() */
-#define HOOKTYPE_SASL_CONTINUATION	91
+#define HOOKTYPE_SASL_CONTINUATION 91
 /** See hooktype_sasl_result() */
-#define HOOKTYPE_SASL_RESULT	92
+#define HOOKTYPE_SASL_RESULT 92
 /** See hooktype_take_action() */
-#define HOOKTYPE_TAKE_ACTION	93
+#define HOOKTYPE_TAKE_ACTION 93
 /** See hooktype_find_tkline_match() */
-#define HOOKTYPE_FIND_TKLINE_MATCH	94
+#define HOOKTYPE_FIND_TKLINE_MATCH 94
 /** See hooktype_welcome() */
-#define HOOKTYPE_WELCOME	95
+#define HOOKTYPE_WELCOME 95
 /** See hooktype_pre_command() */
-#define HOOKTYPE_PRE_COMMAND	96
+#define HOOKTYPE_PRE_COMMAND 96
 /** See hooktype_post_command() */
-#define HOOKTYPE_POST_COMMAND	97
+#define HOOKTYPE_POST_COMMAND 97
 /** See hooktype_new_message() */
-#define HOOKTYPE_NEW_MESSAGE	98
+#define HOOKTYPE_NEW_MESSAGE 98
 /** See hooktype_is_handshake_finished() */
-#define HOOKTYPE_IS_HANDSHAKE_FINISHED	99
+#define HOOKTYPE_IS_HANDSHAKE_FINISHED 99
 /** See hooktype_pre_local_quit_chan() */
-#define HOOKTYPE_PRE_LOCAL_QUIT_CHAN	100
+#define HOOKTYPE_PRE_LOCAL_QUIT_CHAN 100
 /** See hooktype_ident_lookup() */
-#define HOOKTYPE_IDENT_LOOKUP	101
+#define HOOKTYPE_IDENT_LOOKUP 101
 /** See hooktype_account_login() */
-#define HOOKTYPE_ACCOUNT_LOGIN	102
+#define HOOKTYPE_ACCOUNT_LOGIN 102
 /** See hooktype_close_connection() */
-#define HOOKTYPE_CLOSE_CONNECTION	103
+#define HOOKTYPE_CLOSE_CONNECTION 103
 /** See hooktype_connect_extinfo() */
-#define HOOKTYPE_CONNECT_EXTINFO	104
+#define HOOKTYPE_CONNECT_EXTINFO 104
 /** See hooktype_is_invited() */
-#define HOOKTYPE_IS_INVITED	105
+#define HOOKTYPE_IS_INVITED 105
 /** See hooktype_post_local_nickchange() */
-#define HOOKTYPE_POST_LOCAL_NICKCHANGE	106
+#define HOOKTYPE_POST_LOCAL_NICKCHANGE 106
 /** See hooktype_post_remote_nickchange() */
-#define HOOKTYPE_POST_REMOTE_NICKCHANGE	107
+#define HOOKTYPE_POST_REMOTE_NICKCHANGE 107
 /** See hooktype_userhost_change() */
 #define HOOKTYPE_USERHOST_CHANGE 108
 /** See hooktype_realname_change() */
 #define HOOKTYPE_REALNAME_CHANGE 109
 /** See hooktype_can_set_topic() */
-#define HOOKTYPE_CAN_SET_TOPIC	110
+#define HOOKTYPE_CAN_SET_TOPIC 110
 /** See hooktype_ip_change() */
-#define HOOKTYPE_IP_CHANGE	111
+#define HOOKTYPE_IP_CHANGE 111
 /** See hooktype_json_expand_client() */
-#define HOOKTYPE_JSON_EXPAND_CLIENT	112
+#define HOOKTYPE_JSON_EXPAND_CLIENT 112
 /** See hooktype_json_expand_client() */
-#define HOOKTYPE_JSON_EXPAND_CLIENT_USER	113
+#define HOOKTYPE_JSON_EXPAND_CLIENT_USER 113
 /** See hooktype_json_expand_client() */
-#define HOOKTYPE_JSON_EXPAND_CLIENT_SERVER	114
+#define HOOKTYPE_JSON_EXPAND_CLIENT_SERVER 114
 /** See hooktype_json_expand_channel() */
-#define HOOKTYPE_JSON_EXPAND_CHANNEL	115
+#define HOOKTYPE_JSON_EXPAND_CHANNEL 115
 /** See hooktype_accept() */
-#define HOOKTYPE_ACCEPT		116
+#define HOOKTYPE_ACCEPT 116
 /** See hooktype_pre_local_handshake_timeout */
-#define HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT	117
+#define HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT 117
 /** See hooktype_rehash_log */
-#define HOOKTYPE_REHASH_LOG	118
+#define HOOKTYPE_REHASH_LOG 118
 /** See hooktype_dns_finished */
-#define HOOKTYPE_DNS_FINISHED	119
+#define HOOKTYPE_DNS_FINISHED 119
 /** See hooktype_reconfigure_web_listener */
-#define HOOKTYPE_CONFIG_LISTENER	120
+#define HOOKTYPE_CONFIG_LISTENER 120
 /** See hooktype_watch_add */
-#define HOOKTYPE_WATCH_ADD	121
+#define HOOKTYPE_WATCH_ADD 121
 /** See hooktype_watch_del */
-#define HOOKTYPE_WATCH_DEL	122
+#define HOOKTYPE_WATCH_DEL 122
 /** See hooktype_monitor_notification */
-#define HOOKTYPE_MONITOR_NOTIFICATION	123
+#define HOOKTYPE_MONITOR_NOTIFICATION 123
 /** See hooktype_sasl_authenticate */
-#define HOOKTYPE_SASL_AUTHENTICATE	124
+#define HOOKTYPE_SASL_AUTHENTICATE 124
 /** See hooktype_sasl_mechs */
-#define HOOKTYPE_SASL_MECHS		125
+#define HOOKTYPE_SASL_MECHS 125
 /* See hooktype_allow_client */
-#define HOOKTYPE_ALLOW_CLIENT	126
+#define HOOKTYPE_ALLOW_CLIENT 126
 /** See hooktype_analyze_text */
-#define HOOKTYPE_ANALYZE_TEXT	127
+#define HOOKTYPE_ANALYZE_TEXT 127
 /** See hooktype_can_use_nick */
-#define HOOKTYPE_CAN_USE_NICK	128
+#define HOOKTYPE_CAN_USE_NICK 128
 /** See hooktype_banned_client */
 #define HOOKTYPE_BANNED_CLIENT 129
 /** See hooktype_motd */
 #define HOOKTYPE_MOTD 130
 /** See hooktype_known_user_cache_change() */
-#define HOOKTYPE_KNOWN_USER_CACHE_CHANGE	131
+#define HOOKTYPE_KNOWN_USER_CACHE_CHANGE 131
 /** See hooktype_chanmsg_multiline() */
-#define HOOKTYPE_CHANMSG_MULTILINE	132
+#define HOOKTYPE_CHANMSG_MULTILINE 132
 /** See hooktype_postconf() */
-#define HOOKTYPE_POSTCONF	133
+#define HOOKTYPE_POSTCONF 133
 
 
 /* Adding a new hook here?
@@ -2772,153 +2779,153 @@ int hooktype_known_user_cache_change(Client *client);
 /** @} */
 
 #ifdef GCC_TYPECHECKING
-#define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
+ #define ValidateHook(validatefunc, func) __builtin_types_compatible_p(__typeof__(func), __typeof__(validatefunc))
 
 _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check arguments and return type of function.")
 
-#define ValidateHooks(hooktype, func) \
-    if (((hooktype == HOOKTYPE_LOCAL_QUIT) && !ValidateHook(hooktype_local_quit, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_local_nickchange, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_CONNECT) && !ValidateHook(hooktype_local_connect, func)) || \
-        ((hooktype == HOOKTYPE_REHASHFLAG) && !ValidateHook(hooktype_rehashflag, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_PART) && !ValidateHook(hooktype_pre_local_part, func)) || \
-        ((hooktype == HOOKTYPE_CONFIGPOSTTEST) && !ValidateHook(hooktype_configposttest, func)) || \
-        ((hooktype == HOOKTYPE_REHASH) && !ValidateHook(hooktype_rehash, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_CONNECT) && !ValidateHook(hooktype_pre_local_connect, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT) && !ValidateHook(hooktype_pre_local_quit, func)) || \
-        ((hooktype == HOOKTYPE_SERVER_CONNECT) && !ValidateHook(hooktype_server_connect, func)) || \
-        ((hooktype == HOOKTYPE_SERVER_SYNC) && !ValidateHook(hooktype_server_sync, func)) || \
-        ((hooktype == HOOKTYPE_SERVER_QUIT) && !ValidateHook(hooktype_server_quit, func)) || \
-        ((hooktype == HOOKTYPE_STATS) && !ValidateHook(hooktype_stats, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_JOIN) && !ValidateHook(hooktype_local_join, func)) || \
-        ((hooktype == HOOKTYPE_CONFIGTEST) && !ValidateHook(hooktype_configtest, func)) || \
-        ((hooktype == HOOKTYPE_CONFIGRUN) && !ValidateHook(hooktype_configrun, func)) || \
-        ((hooktype == HOOKTYPE_USERMSG) && !ValidateHook(hooktype_usermsg, func)) || \
-        ((hooktype == HOOKTYPE_CHANMSG) && !ValidateHook(hooktype_chanmsg, func)) || \
-        ((hooktype == HOOKTYPE_CHANMSG_MULTILINE) && !ValidateHook(hooktype_chanmsg_multiline, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_PART) && !ValidateHook(hooktype_local_part, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_KICK) && !ValidateHook(hooktype_local_kick, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_CHANMODE) && !ValidateHook(hooktype_local_chanmode, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_OPER) && !ValidateHook(hooktype_local_oper, func)) || \
-        ((hooktype == HOOKTYPE_UNKUSER_QUIT) && !ValidateHook(hooktype_unkuser_quit, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_PASS) && !ValidateHook(hooktype_local_pass, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_CONNECT) && !ValidateHook(hooktype_remote_connect, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_QUIT) && !ValidateHook(hooktype_remote_quit, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_JOIN) && !ValidateHook(hooktype_pre_local_join, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_KICK) && !ValidateHook(hooktype_pre_local_kick, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SET_TOPIC) && !ValidateHook(hooktype_can_set_topic, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_TOPIC) && !ValidateHook(hooktype_pre_local_topic, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_remote_nickchange, func)) || \
-        ((hooktype == HOOKTYPE_CHANNEL_CREATE) && !ValidateHook(hooktype_channel_create, func)) || \
-        ((hooktype == HOOKTYPE_CHANNEL_DESTROY) && !ValidateHook(hooktype_channel_destroy, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_CHANMODE) && !ValidateHook(hooktype_remote_chanmode, func)) || \
-        ((hooktype == HOOKTYPE_TKL_EXCEPT) && !ValidateHook(hooktype_tkl_except, func)) || \
-        ((hooktype == HOOKTYPE_UMODE_CHANGE) && !ValidateHook(hooktype_umode_change, func)) || \
-        ((hooktype == HOOKTYPE_TOPIC) && !ValidateHook(hooktype_topic, func)) || \
-        ((hooktype == HOOKTYPE_REHASH_COMPLETE) && !ValidateHook(hooktype_rehash_complete, func)) || \
-        ((hooktype == HOOKTYPE_POSTCONF) && !ValidateHook(hooktype_postconf, func)) || \
-        ((hooktype == HOOKTYPE_TKL_ADD) && !ValidateHook(hooktype_tkl_add, func)) || \
-        ((hooktype == HOOKTYPE_TKL_DEL) && !ValidateHook(hooktype_tkl_del, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_KILL) && !ValidateHook(hooktype_local_kill, func)) || \
-        ((hooktype == HOOKTYPE_LOG) && !ValidateHook(hooktype_log, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_JOIN) && !ValidateHook(hooktype_remote_join, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_PART) && !ValidateHook(hooktype_remote_part, func)) || \
-        ((hooktype == HOOKTYPE_REMOTE_KICK) && !ValidateHook(hooktype_remote_kick, func)) || \
-        ((hooktype == HOOKTYPE_LOCAL_SPAMFILTER) && !ValidateHook(hooktype_local_spamfilter, func)) || \
-        ((hooktype == HOOKTYPE_SILENCED) && !ValidateHook(hooktype_silenced, func)) || \
-        ((hooktype == HOOKTYPE_POST_SERVER_CONNECT) && !ValidateHook(hooktype_post_server_connect, func)) || \
-        ((hooktype == HOOKTYPE_RAWPACKET_IN) && !ValidateHook(hooktype_rawpacket_in, func)) || \
-        ((hooktype == HOOKTYPE_PACKET) && !ValidateHook(hooktype_packet, func)) || \
-        ((hooktype == HOOKTYPE_HANDSHAKE) && !ValidateHook(hooktype_handshake, func)) || \
-        ((hooktype == HOOKTYPE_AWAY) && !ValidateHook(hooktype_away, func)) || \
-        ((hooktype == HOOKTYPE_INVITE) && !ValidateHook(hooktype_invite, func)) || \
-        ((hooktype == HOOKTYPE_CAN_JOIN) && !ValidateHook(hooktype_can_join, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SEND_TO_CHANNEL) && !ValidateHook(hooktype_can_send_to_channel, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SEND_TO_USER) && !ValidateHook(hooktype_can_send_to_user, func)) || \
-        ((hooktype == HOOKTYPE_CAN_KICK) && !ValidateHook(hooktype_can_kick, func)) || \
-        ((hooktype == HOOKTYPE_FREE_CLIENT) && !ValidateHook(hooktype_free_client, func)) || \
-        ((hooktype == HOOKTYPE_FREE_USER) && !ValidateHook(hooktype_free_user, func)) || \
-        ((hooktype == HOOKTYPE_PRE_CHANMSG) && !ValidateHook(hooktype_pre_chanmsg, func)) || \
-        ((hooktype == HOOKTYPE_KNOCK) && !ValidateHook(hooktype_knock, func)) || \
-        ((hooktype == HOOKTYPE_MODECHAR_ADD) && !ValidateHook(hooktype_modechar_add, func)) || \
-        ((hooktype == HOOKTYPE_MODECHAR_DEL) && !ValidateHook(hooktype_modechar_del, func)) || \
-        ((hooktype == HOOKTYPE_CAN_JOIN_LIMITEXCEEDED) && !ValidateHook(hooktype_can_join_limitexceeded, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_CHANMODE) && !ValidateHook(hooktype_pre_local_chanmode, func)) || \
-        ((hooktype == HOOKTYPE_PRE_REMOTE_CHANMODE) && !ValidateHook(hooktype_pre_remote_chanmode, func)) || \
-        ((hooktype == HOOKTYPE_JOIN_DATA) && !ValidateHook(hooktype_join_data, func)) || \
-        ((hooktype == HOOKTYPE_PRE_KNOCK) && !ValidateHook(hooktype_pre_knock, func)) || \
-        ((hooktype == HOOKTYPE_PRE_INVITE) && !ValidateHook(hooktype_pre_invite, func)) || \
-        ((hooktype == HOOKTYPE_INVITE_BYPASS) && !ValidateHook(hooktype_invite_bypass, func)) || \
-        ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
-        ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
-        ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \
-        ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
-        ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
-        ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
-        ((hooktype == HOOKTYPE_WHO_STATUS) && !ValidateHook(hooktype_who_status, func)) || \
-        ((hooktype == HOOKTYPE_MODE_DEOP) && !ValidateHook(hooktype_mode_deop, func)) || \
-        ((hooktype == HOOKTYPE_PRE_KILL) && !ValidateHook(hooktype_pre_kill, func)) || \
-        ((hooktype == HOOKTYPE_SEE_CHANNEL_IN_WHOIS) && !ValidateHook(hooktype_see_channel_in_whois, func)) || \
-        ((hooktype == HOOKTYPE_DCC_DENIED) && !ValidateHook(hooktype_dcc_denied, func)) || \
-        ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) || \
-        ((hooktype == HOOKTYPE_SERVER_SYNCED) && !ValidateHook(hooktype_server_synced, func)) || \
-        ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
-        ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
-        ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
-        ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
-        ((hooktype == HOOKTYPE_TAKE_ACTION) && !ValidateHook(hooktype_take_action, func)) || \
-        ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) || \
-        ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) || \
-        ((hooktype == HOOKTYPE_PRE_COMMAND) && !ValidateHook(hooktype_pre_command, func)) || \
-        ((hooktype == HOOKTYPE_POST_COMMAND) && !ValidateHook(hooktype_post_command, func)) || \
-        ((hooktype == HOOKTYPE_NEW_MESSAGE) && !ValidateHook(hooktype_new_message, func)) || \
-        ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT_CHAN) && !ValidateHook(hooktype_pre_local_quit_chan, func)) || \
-        ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) || \
-        ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) || \
-        ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
-        ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
-        ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) || \
-        ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) || \
-        ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
-        ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
-        ((hooktype == HOOKTYPE_USERHOST_CHANGE) && !ValidateHook(hooktype_userhost_change, func)) || \
-        ((hooktype == HOOKTYPE_REALNAME_CHANGE) && !ValidateHook(hooktype_realname_change, func)) || \
-        ((hooktype == HOOKTYPE_IP_CHANGE) && !ValidateHook(hooktype_ip_change, func)) || \
-        ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT) && !ValidateHook(hooktype_json_expand_client, func)) || \
-        ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_USER) && !ValidateHook(hooktype_json_expand_client_user, func)) || \
-        ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_SERVER) && !ValidateHook(hooktype_json_expand_client_server, func)) || \
-        ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) || \
-        ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
-        ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) || \
-        ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) || \
-        ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func)) || \
-        ((hooktype == HOOKTYPE_WATCH_ADD) && !ValidateHook(hooktype_watch_add, func)) || \
-        ((hooktype == HOOKTYPE_WATCH_DEL) && !ValidateHook(hooktype_watch_del, func)) || \
-        ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func)) || \
-        ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
-        ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
-        ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
-        ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func)) || \
-        ((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func)) || \
-        ((hooktype == HOOKTYPE_BANNED_CLIENT) && !ValidateHook(hooktype_banned_client, func)) || \
-        ((hooktype == HOOKTYPE_MOTD) && !ValidateHook(hooktype_motd, func)) || \
-        ((hooktype == HOOKTYPE_KNOWN_USER_CACHE_CHANGE) && !ValidateHook(hooktype_known_user_cache_change, func))) \
-        _hook_error_incompatible();
+ #define ValidateHooks(hooktype, func) \
+	 if (((hooktype == HOOKTYPE_LOCAL_QUIT) && !ValidateHook(hooktype_local_quit, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_local_nickchange, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_CONNECT) && !ValidateHook(hooktype_local_connect, func)) || \
+	     ((hooktype == HOOKTYPE_REHASHFLAG) && !ValidateHook(hooktype_rehashflag, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_PART) && !ValidateHook(hooktype_pre_local_part, func)) || \
+	     ((hooktype == HOOKTYPE_CONFIGPOSTTEST) && !ValidateHook(hooktype_configposttest, func)) || \
+	     ((hooktype == HOOKTYPE_REHASH) && !ValidateHook(hooktype_rehash, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_CONNECT) && !ValidateHook(hooktype_pre_local_connect, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT) && !ValidateHook(hooktype_pre_local_quit, func)) || \
+	     ((hooktype == HOOKTYPE_SERVER_CONNECT) && !ValidateHook(hooktype_server_connect, func)) || \
+	     ((hooktype == HOOKTYPE_SERVER_SYNC) && !ValidateHook(hooktype_server_sync, func)) || \
+	     ((hooktype == HOOKTYPE_SERVER_QUIT) && !ValidateHook(hooktype_server_quit, func)) || \
+	     ((hooktype == HOOKTYPE_STATS) && !ValidateHook(hooktype_stats, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_JOIN) && !ValidateHook(hooktype_local_join, func)) || \
+	     ((hooktype == HOOKTYPE_CONFIGTEST) && !ValidateHook(hooktype_configtest, func)) || \
+	     ((hooktype == HOOKTYPE_CONFIGRUN) && !ValidateHook(hooktype_configrun, func)) || \
+	     ((hooktype == HOOKTYPE_USERMSG) && !ValidateHook(hooktype_usermsg, func)) || \
+	     ((hooktype == HOOKTYPE_CHANMSG) && !ValidateHook(hooktype_chanmsg, func)) || \
+	     ((hooktype == HOOKTYPE_CHANMSG_MULTILINE) && !ValidateHook(hooktype_chanmsg_multiline, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_PART) && !ValidateHook(hooktype_local_part, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_KICK) && !ValidateHook(hooktype_local_kick, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_CHANMODE) && !ValidateHook(hooktype_local_chanmode, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_OPER) && !ValidateHook(hooktype_local_oper, func)) || \
+	     ((hooktype == HOOKTYPE_UNKUSER_QUIT) && !ValidateHook(hooktype_unkuser_quit, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_PASS) && !ValidateHook(hooktype_local_pass, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_CONNECT) && !ValidateHook(hooktype_remote_connect, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_QUIT) && !ValidateHook(hooktype_remote_quit, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_JOIN) && !ValidateHook(hooktype_pre_local_join, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_KICK) && !ValidateHook(hooktype_pre_local_kick, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_SET_TOPIC) && !ValidateHook(hooktype_can_set_topic, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_TOPIC) && !ValidateHook(hooktype_pre_local_topic, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_remote_nickchange, func)) || \
+	     ((hooktype == HOOKTYPE_CHANNEL_CREATE) && !ValidateHook(hooktype_channel_create, func)) || \
+	     ((hooktype == HOOKTYPE_CHANNEL_DESTROY) && !ValidateHook(hooktype_channel_destroy, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_CHANMODE) && !ValidateHook(hooktype_remote_chanmode, func)) || \
+	     ((hooktype == HOOKTYPE_TKL_EXCEPT) && !ValidateHook(hooktype_tkl_except, func)) || \
+	     ((hooktype == HOOKTYPE_UMODE_CHANGE) && !ValidateHook(hooktype_umode_change, func)) || \
+	     ((hooktype == HOOKTYPE_TOPIC) && !ValidateHook(hooktype_topic, func)) || \
+	     ((hooktype == HOOKTYPE_REHASH_COMPLETE) && !ValidateHook(hooktype_rehash_complete, func)) || \
+	     ((hooktype == HOOKTYPE_POSTCONF) && !ValidateHook(hooktype_postconf, func)) || \
+	     ((hooktype == HOOKTYPE_TKL_ADD) && !ValidateHook(hooktype_tkl_add, func)) || \
+	     ((hooktype == HOOKTYPE_TKL_DEL) && !ValidateHook(hooktype_tkl_del, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_KILL) && !ValidateHook(hooktype_local_kill, func)) || \
+	     ((hooktype == HOOKTYPE_LOG) && !ValidateHook(hooktype_log, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_JOIN) && !ValidateHook(hooktype_remote_join, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_PART) && !ValidateHook(hooktype_remote_part, func)) || \
+	     ((hooktype == HOOKTYPE_REMOTE_KICK) && !ValidateHook(hooktype_remote_kick, func)) || \
+	     ((hooktype == HOOKTYPE_LOCAL_SPAMFILTER) && !ValidateHook(hooktype_local_spamfilter, func)) || \
+	     ((hooktype == HOOKTYPE_SILENCED) && !ValidateHook(hooktype_silenced, func)) || \
+	     ((hooktype == HOOKTYPE_POST_SERVER_CONNECT) && !ValidateHook(hooktype_post_server_connect, func)) || \
+	     ((hooktype == HOOKTYPE_RAWPACKET_IN) && !ValidateHook(hooktype_rawpacket_in, func)) || \
+	     ((hooktype == HOOKTYPE_PACKET) && !ValidateHook(hooktype_packet, func)) || \
+	     ((hooktype == HOOKTYPE_HANDSHAKE) && !ValidateHook(hooktype_handshake, func)) || \
+	     ((hooktype == HOOKTYPE_AWAY) && !ValidateHook(hooktype_away, func)) || \
+	     ((hooktype == HOOKTYPE_INVITE) && !ValidateHook(hooktype_invite, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_JOIN) && !ValidateHook(hooktype_can_join, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_SEND_TO_CHANNEL) && !ValidateHook(hooktype_can_send_to_channel, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_SEND_TO_USER) && !ValidateHook(hooktype_can_send_to_user, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_KICK) && !ValidateHook(hooktype_can_kick, func)) || \
+	     ((hooktype == HOOKTYPE_FREE_CLIENT) && !ValidateHook(hooktype_free_client, func)) || \
+	     ((hooktype == HOOKTYPE_FREE_USER) && !ValidateHook(hooktype_free_user, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_CHANMSG) && !ValidateHook(hooktype_pre_chanmsg, func)) || \
+	     ((hooktype == HOOKTYPE_KNOCK) && !ValidateHook(hooktype_knock, func)) || \
+	     ((hooktype == HOOKTYPE_MODECHAR_ADD) && !ValidateHook(hooktype_modechar_add, func)) || \
+	     ((hooktype == HOOKTYPE_MODECHAR_DEL) && !ValidateHook(hooktype_modechar_del, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_JOIN_LIMITEXCEEDED) && !ValidateHook(hooktype_can_join_limitexceeded, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_CHANMODE) && !ValidateHook(hooktype_pre_local_chanmode, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_REMOTE_CHANMODE) && !ValidateHook(hooktype_pre_remote_chanmode, func)) || \
+	     ((hooktype == HOOKTYPE_JOIN_DATA) && !ValidateHook(hooktype_join_data, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_KNOCK) && !ValidateHook(hooktype_pre_knock, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_INVITE) && !ValidateHook(hooktype_pre_invite, func)) || \
+	     ((hooktype == HOOKTYPE_INVITE_BYPASS) && !ValidateHook(hooktype_invite_bypass, func)) || \
+	     ((hooktype == HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL) && !ValidateHook(hooktype_view_topic_outside_channel, func)) || \
+	     ((hooktype == HOOKTYPE_CHAN_PERMIT_NICK_CHANGE) && !ValidateHook(hooktype_chan_permit_nick_change, func)) || \
+	     ((hooktype == HOOKTYPE_IS_CHANNEL_SECURE) && !ValidateHook(hooktype_is_channel_secure, func)) || \
+	     ((hooktype == HOOKTYPE_CHANNEL_SYNCED) && !ValidateHook(hooktype_channel_synced, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_SAJOIN) && !ValidateHook(hooktype_can_sajoin, func)) || \
+	     ((hooktype == HOOKTYPE_WHOIS) && !ValidateHook(hooktype_whois, func)) || \
+	     ((hooktype == HOOKTYPE_WHO_STATUS) && !ValidateHook(hooktype_who_status, func)) || \
+	     ((hooktype == HOOKTYPE_MODE_DEOP) && !ValidateHook(hooktype_mode_deop, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_KILL) && !ValidateHook(hooktype_pre_kill, func)) || \
+	     ((hooktype == HOOKTYPE_SEE_CHANNEL_IN_WHOIS) && !ValidateHook(hooktype_see_channel_in_whois, func)) || \
+	     ((hooktype == HOOKTYPE_DCC_DENIED) && !ValidateHook(hooktype_dcc_denied, func)) || \
+	     ((hooktype == HOOKTYPE_SERVER_HANDSHAKE_OUT) && !ValidateHook(hooktype_server_handshake_out, func)) || \
+	     ((hooktype == HOOKTYPE_SERVER_SYNCED) && !ValidateHook(hooktype_server_synced, func)) || \
+	     ((hooktype == HOOKTYPE_SECURE_CONNECT) && !ValidateHook(hooktype_secure_connect, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION) && !ValidateHook(hooktype_can_bypass_channel_message_restriction, func)) || \
+	     ((hooktype == HOOKTYPE_SASL_CONTINUATION) && !ValidateHook(hooktype_sasl_continuation, func)) || \
+	     ((hooktype == HOOKTYPE_SASL_RESULT) && !ValidateHook(hooktype_sasl_result, func)) || \
+	     ((hooktype == HOOKTYPE_TAKE_ACTION) && !ValidateHook(hooktype_take_action, func)) || \
+	     ((hooktype == HOOKTYPE_FIND_TKLINE_MATCH) && !ValidateHook(hooktype_find_tkline_match, func)) || \
+	     ((hooktype == HOOKTYPE_WELCOME) && !ValidateHook(hooktype_welcome, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_COMMAND) && !ValidateHook(hooktype_pre_command, func)) || \
+	     ((hooktype == HOOKTYPE_POST_COMMAND) && !ValidateHook(hooktype_post_command, func)) || \
+	     ((hooktype == HOOKTYPE_NEW_MESSAGE) && !ValidateHook(hooktype_new_message, func)) || \
+	     ((hooktype == HOOKTYPE_IS_HANDSHAKE_FINISHED) && !ValidateHook(hooktype_is_handshake_finished, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_QUIT_CHAN) && !ValidateHook(hooktype_pre_local_quit_chan, func)) || \
+	     ((hooktype == HOOKTYPE_IDENT_LOOKUP) && !ValidateHook(hooktype_ident_lookup, func)) || \
+	     ((hooktype == HOOKTYPE_CONFIGRUN_EX) && !ValidateHook(hooktype_configrun_ex, func)) || \
+	     ((hooktype == HOOKTYPE_ACCOUNT_LOGIN) && !ValidateHook(hooktype_account_login, func)) || \
+	     ((hooktype == HOOKTYPE_CLOSE_CONNECTION) && !ValidateHook(hooktype_close_connection, func)) || \
+	     ((hooktype == HOOKTYPE_CONNECT_EXTINFO) && !ValidateHook(hooktype_connect_extinfo, func)) || \
+	     ((hooktype == HOOKTYPE_IS_INVITED) && !ValidateHook(hooktype_is_invited, func)) || \
+	     ((hooktype == HOOKTYPE_POST_LOCAL_NICKCHANGE) && !ValidateHook(hooktype_post_local_nickchange, func)) || \
+	     ((hooktype == HOOKTYPE_POST_REMOTE_NICKCHANGE) && !ValidateHook(hooktype_post_remote_nickchange, func)) || \
+	     ((hooktype == HOOKTYPE_USERHOST_CHANGE) && !ValidateHook(hooktype_userhost_change, func)) || \
+	     ((hooktype == HOOKTYPE_REALNAME_CHANGE) && !ValidateHook(hooktype_realname_change, func)) || \
+	     ((hooktype == HOOKTYPE_IP_CHANGE) && !ValidateHook(hooktype_ip_change, func)) || \
+	     ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT) && !ValidateHook(hooktype_json_expand_client, func)) || \
+	     ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_USER) && !ValidateHook(hooktype_json_expand_client_user, func)) || \
+	     ((hooktype == HOOKTYPE_JSON_EXPAND_CLIENT_SERVER) && !ValidateHook(hooktype_json_expand_client_server, func)) || \
+	     ((hooktype == HOOKTYPE_JSON_EXPAND_CHANNEL) && !ValidateHook(hooktype_json_expand_channel, func)) || \
+	     ((hooktype == HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT) && !ValidateHook(hooktype_pre_local_handshake_timeout, func)) || \
+	     ((hooktype == HOOKTYPE_REHASH_LOG) && !ValidateHook(hooktype_rehash_log, func)) || \
+	     ((hooktype == HOOKTYPE_DNS_FINISHED) && !ValidateHook(hooktype_dns_finished, func)) || \
+	     ((hooktype == HOOKTYPE_CONFIG_LISTENER) && !ValidateHook(hooktype_config_listener, func)) || \
+	     ((hooktype == HOOKTYPE_WATCH_ADD) && !ValidateHook(hooktype_watch_add, func)) || \
+	     ((hooktype == HOOKTYPE_WATCH_DEL) && !ValidateHook(hooktype_watch_del, func)) || \
+	     ((hooktype == HOOKTYPE_MONITOR_NOTIFICATION) && !ValidateHook(hooktype_monitor_notification, func)) || \
+	     ((hooktype == HOOKTYPE_SASL_AUTHENTICATE) && !ValidateHook(hooktype_sasl_authenticate, func)) || \
+	     ((hooktype == HOOKTYPE_SASL_MECHS) && !ValidateHook(hooktype_sasl_mechs, func)) || \
+	     ((hooktype == HOOKTYPE_ALLOW_CLIENT) && !ValidateHook(hooktype_allow_client, func)) || \
+	     ((hooktype == HOOKTYPE_ANALYZE_TEXT) && !ValidateHook(hooktype_analyze_text, func)) || \
+	     ((hooktype == HOOKTYPE_CAN_USE_NICK) && !ValidateHook(hooktype_can_use_nick, func)) || \
+	     ((hooktype == HOOKTYPE_BANNED_CLIENT) && !ValidateHook(hooktype_banned_client, func)) || \
+	     ((hooktype == HOOKTYPE_MOTD) && !ValidateHook(hooktype_motd, func)) || \
+	     ((hooktype == HOOKTYPE_KNOWN_USER_CACHE_CHANGE) && !ValidateHook(hooktype_known_user_cache_change, func))) \
+		 _hook_error_incompatible();
 #endif /* GCC_TYPECHECKING */
 
 /* Hook return values */
 #define HOOK_CONTINUE 0
-#define HOOK_ALLOW -1
-#define HOOK_DENY 1
+#define HOOK_ALLOW    -1
+#define HOOK_DENY     1
 
 /* Callback types */
-#define CALLBACKTYPE_CLOAK 1
-#define CALLBACKTYPE_CLOAK_KEY_CHECKSUM 2
-#define CALLBACKTYPE_CLOAK_EX 3
-#define CALLBACKTYPE_BLACKLIST_CHECK 4
+#define CALLBACKTYPE_CLOAK                1
+#define CALLBACKTYPE_CLOAK_KEY_CHECKSUM   2
+#define CALLBACKTYPE_CLOAK_EX             3
+#define CALLBACKTYPE_BLACKLIST_CHECK      4
 #define CALLBACKTYPE_REPUTATION_STARTTIME 5
-#define CALLBACKTYPE_GEOIP_LOOKUP 6
+#define CALLBACKTYPE_GEOIP_LOOKUP         6
 
 /* To add a new efunction, only if you are an UnrealIRCd coder:
  * 1) Add a new entry here
@@ -2929,7 +2936,7 @@ _UNREAL_ERROR(_hook_error_incompatible, "Incompatible hook function. Check argum
  */
 /** Efunction types. */
 enum EfunctionType {
-	EFUNC_DO_JOIN=1,
+	EFUNC_DO_JOIN = 1,
 	EFUNC_JOIN_CHANNEL,
 	EFUNC_CAN_JOIN,
 	EFUNC_DO_MODE,
@@ -3087,43 +3094,42 @@ enum EfunctionType {
 };
 
 /* Module flags */
-#define MODFLAG_NONE	0x0000
-#define MODFLAG_LOADED	0x0001 /* Fully loaded */
+#define MODFLAG_NONE    0x0000
+#define MODFLAG_LOADED  0x0001 /* Fully loaded */
 #define MODFLAG_TESTING 0x0002 /* Not yet initialized */
-#define MODFLAG_INIT	0x0004 /* Initialized */
+#define MODFLAG_INIT    0x0004 /* Initialized */
 #define MODFLAG_DELAYED 0x0008 /* Delayed unload */
 
 /* Module function return values */
 #define MOD_SUCCESS 0
-#define MOD_FAILED -1
-#define MOD_DELAY 2
+#define MOD_FAILED  -1
+#define MOD_DELAY   2
 
-#define CONFIG_MAIN 1
-#define CONFIG_SET 2
-#define CONFIG_BAN 3
-#define CONFIG_EXCEPT 4
-#define CONFIG_DENY 5
-#define CONFIG_ALLOW 6
-#define CONFIG_CLOAKKEYS 7
-#define CONFIG_SET_ANTI_FLOOD 8
-#define CONFIG_REQUIRE 9
-#define CONFIG_LISTEN 10
-#define CONFIG_LISTEN_OPTIONS 11
+#define CONFIG_MAIN                1
+#define CONFIG_SET                 2
+#define CONFIG_BAN                 3
+#define CONFIG_EXCEPT              4
+#define CONFIG_DENY                5
+#define CONFIG_ALLOW               6
+#define CONFIG_CLOAKKEYS           7
+#define CONFIG_SET_ANTI_FLOOD      8
+#define CONFIG_REQUIRE             9
+#define CONFIG_LISTEN              10
+#define CONFIG_LISTEN_OPTIONS      11
 #define CONFIG_SET_HISTORY_CHANNEL 12
-#define CONFIG_ALLOW_BLOCK 13
-#define CONFIG_CLASS 14
+#define CONFIG_ALLOW_BLOCK         13
+#define CONFIG_CLASS               14
 
-#define MOD_HEADER Mod_Header
-#define MOD_TEST() DLLFUNC int Mod_Test(ModuleInfo *modinfo)
-#define MOD_INIT() DLLFUNC int Mod_Init(ModuleInfo *modinfo)
-#define MOD_LOAD() DLLFUNC int Mod_Load(ModuleInfo *modinfo)
+#define MOD_HEADER   Mod_Header
+#define MOD_TEST()   DLLFUNC int Mod_Test(ModuleInfo *modinfo)
+#define MOD_INIT()   DLLFUNC int Mod_Init(ModuleInfo *modinfo)
+#define MOD_LOAD()   DLLFUNC int Mod_Load(ModuleInfo *modinfo)
 #define MOD_UNLOAD() DLLFUNC int Mod_Unload(ModuleInfo *modinfo)
 
-#define CLOAK_KEY_CHECKSUM	RCallbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM]->func.stringfunc() : "nil"
+#define CLOAK_KEY_CHECKSUM RCallbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM] != NULL ? RCallbacks[CALLBACKTYPE_CLOAK_KEY_CHECKSUM]->func.stringfunc() : "nil"
 
 #ifdef DYNAMIC_LINKING
  #include "modversion.h"
 #endif
 
 #endif
-

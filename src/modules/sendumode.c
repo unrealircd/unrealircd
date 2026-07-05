@@ -23,17 +23,16 @@
 CMD_FUNC(cmd_sendumode);
 
 /* Place includes here */
-#define MSG_SENDUMODE   "SENDUMODE"
-#define MSG_SMO         "SMO"
+#define MSG_SENDUMODE "SENDUMODE"
+#define MSG_SMO       "SMO"
 
-ModuleHeader MOD_HEADER
-  = {
-	"sendumode",	/* Name of module */
-	"5.0", /* Version */
-	"command /sendumode", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sendumode", /* Name of module */
+    "5.0", /* Version */
+    "command /sendumode", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()

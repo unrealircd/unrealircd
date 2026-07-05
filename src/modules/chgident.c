@@ -22,22 +22,21 @@
 
 #include "unrealircd.h"
 
-#define MSG_CHGIDENT 	"CHGIDENT"
+#define MSG_CHGIDENT "CHGIDENT"
 
 CMD_FUNC(cmd_chgident);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chgident",	/* Name of module */
-	"5.0", /* Version */
-	"/chgident", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chgident", /* Name of module */
+    "5.0", /* Version */
+    "/chgident", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CHGIDENT, cmd_chgident, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_CHGIDENT, cmd_chgident, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -66,7 +65,7 @@ CMD_FUNC(cmd_chgident)
 	const char *s;
 	int legalident = 1;
 
-	if (!ValidatePermissionsForPath("client:set:ident",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:set:ident", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -118,7 +117,7 @@ CMD_FUNC(cmd_chgident)
 			if (MyUser(client))
 			{
 				sendnumeric(client, ERR_DISABLED, "CHGIDENT",
-					"This command is disabled on this server");
+				            "This command is disabled on this server");
 				return;
 			}
 			break;
@@ -141,17 +140,18 @@ CMD_FUNC(cmd_chgident)
 		if (issuer)
 		{
 			unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
-				   "CHGIDENT: $issuer changed the username of $target.details to be $new_username",
-				   log_data_string("issuer", issuer),
-				   log_data_string("change_type", "username"),
-				   log_data_client("target", target),
-				   log_data_string("new_username", parv[2]));
-		} else {
+			           "CHGIDENT: $issuer changed the username of $target.details to be $new_username",
+			           log_data_string("issuer", issuer),
+			           log_data_string("change_type", "username"),
+			           log_data_client("target", target),
+			           log_data_string("new_username", parv[2]));
+		} else
+		{
 			unreal_log(ULOG_INFO, "chgcmds", "CHGIDENT_COMMAND", client,
-				   "CHGIDENT: $client changed the username of $target.details to be $new_username",
-				   log_data_string("change_type", "username"),
-				   log_data_client("target", target),
-				   log_data_string("new_username", parv[2]));
+			           "CHGIDENT: $client changed the username of $target.details to be $new_username",
+			           log_data_string("change_type", "username"),
+			           log_data_client("target", target),
+			           log_data_string("new_username", parv[2]));
 		}
 	}
 

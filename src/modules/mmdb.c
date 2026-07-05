@@ -35,19 +35,20 @@
 #include <errno.h>
 
 #ifdef _WIN32
-#include <windows.h>
-#include <io.h>
+ #include <windows.h>
+ #include <io.h>
 #else
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <arpa/inet.h>
+ #include <fcntl.h>
+ #include <unistd.h>
+ #include <sys/stat.h>
+ #include <sys/mman.h>
+ #include <arpa/inet.h>
 #endif
 
 /* Constants */
 
-static const uint8_t METADATA_MARKER[] = "\xAB\xCD\xEF" "MaxMind.com";
+static const uint8_t METADATA_MARKER[] = "\xAB\xCD\xEF"
+                                         "MaxMind.com";
 #define METADATA_MARKER_LEN 14
 #define METADATA_MAX_SIZE   (128 * 1024)
 #define DATA_SEPARATOR_SIZE 16
@@ -56,19 +57,19 @@ static const uint8_t METADATA_MARKER[] = "\xAB\xCD\xEF" "MaxMind.com";
 /* MMDB data types from the spec */
 enum {
 	DT_EXTENDED = 0,
-	DT_POINTER  = 1,
-	DT_STRING   = 2,
-	DT_FLOAT64  = 3,
-	DT_BYTES    = 4,
-	DT_UINT16   = 5,
-	DT_UINT32   = 6,
-	DT_MAP      = 7,
-	DT_INT32    = 8,
-	DT_UINT64   = 9,
-	DT_UINT128  = 10,
-	DT_ARRAY    = 11,
-	DT_BOOL     = 14,
-	DT_FLOAT32  = 15,
+	DT_POINTER = 1,
+	DT_STRING = 2,
+	DT_FLOAT64 = 3,
+	DT_BYTES = 4,
+	DT_UINT16 = 5,
+	DT_UINT32 = 6,
+	DT_MAP = 7,
+	DT_INT32 = 8,
+	DT_UINT64 = 9,
+	DT_UINT128 = 10,
+	DT_ARRAY = 11,
+	DT_BOOL = 14,
+	DT_FLOAT32 = 15,
 };
 
 /* Platform: mmap / file I/O */
@@ -255,10 +256,16 @@ static int decode_pointer(const uint8_t *buf, size_t buflen,
 	/* Add base offset per pointer size */
 	switch (ptr_size)
 	{
-	case 1: break;
-	case 2: pointer += 2048; break;
-	case 3: pointer += 526336; break;
-	case 4: break;
+		case 1:
+			break;
+		case 2:
+			pointer += 2048;
+			break;
+		case 3:
+			pointer += 526336;
+			break;
+		case 4:
+			break;
 	}
 
 	*pointer_out = pointer;
@@ -312,7 +319,10 @@ static int decode_uint16(const uint8_t *buf, size_t buflen,
 static int decode_float64(const uint8_t *buf, size_t buflen,
                           uint32_t size, size_t offset, double *out)
 {
-	union { uint64_t u; double d; } conv;
+	union {
+		uint64_t u;
+		double d;
+	} conv;
 	int i;
 
 	if (size != 8 || offset + 8 > buflen)
@@ -328,7 +338,10 @@ static int decode_float64(const uint8_t *buf, size_t buflen,
 static int decode_float32(const uint8_t *buf, size_t buflen,
                           uint32_t size, size_t offset, float *out)
 {
-	union { uint32_t u; float f; } conv;
+	union {
+		uint32_t u;
+		float f;
+	} conv;
 	int i;
 
 	if (size != 4 || offset + 4 > buflen)
@@ -683,46 +696,46 @@ static int read_node(const uint8_t *buf, size_t buflen,
 
 	switch (record_size)
 	{
-	case 24:
-	{
-		o = offset + bit * 3;
-		if (o + 3 > buflen)
-			return MMDB_ERR_CORRUPT;
-		*value = ((uint32_t)buf[o] << 16) |
-		         ((uint32_t)buf[o + 1] << 8) |
-		         (uint32_t)buf[o + 2];
-		return MMDB_OK;
-	}
-	case 28:
-	{
-		if (offset + 7 > buflen)
-			return MMDB_ERR_CORRUPT;
-		if (bit == 0)
+		case 24:
 		{
-			*value = (((uint32_t)buf[offset + 3] & 0xF0) << 20) |
-			         ((uint32_t)buf[offset] << 16) |
-			         ((uint32_t)buf[offset + 1] << 8) |
-			         (uint32_t)buf[offset + 2];
-		} else
-		{
-			*value = (((uint32_t)buf[offset + 3] & 0x0F) << 24) |
-			         ((uint32_t)buf[offset + 4] << 16) |
-			         ((uint32_t)buf[offset + 5] << 8) |
-			         (uint32_t)buf[offset + 6];
+			o = offset + bit * 3;
+			if (o + 3 > buflen)
+				return MMDB_ERR_CORRUPT;
+			*value = ((uint32_t)buf[o] << 16) |
+			         ((uint32_t)buf[o + 1] << 8) |
+			         (uint32_t)buf[o + 2];
+			return MMDB_OK;
 		}
-		return MMDB_OK;
-	}
-	case 32:
-	{
-		o = offset + bit * 4;
-		if (o + 4 > buflen)
-			return MMDB_ERR_CORRUPT;
-		*value = ((uint32_t)buf[o] << 24) |
-		         ((uint32_t)buf[o + 1] << 16) |
-		         ((uint32_t)buf[o + 2] << 8) |
-		         (uint32_t)buf[o + 3];
-		return MMDB_OK;
-	}
+		case 28:
+		{
+			if (offset + 7 > buflen)
+				return MMDB_ERR_CORRUPT;
+			if (bit == 0)
+			{
+				*value = (((uint32_t)buf[offset + 3] & 0xF0) << 20) |
+				         ((uint32_t)buf[offset] << 16) |
+				         ((uint32_t)buf[offset + 1] << 8) |
+				         (uint32_t)buf[offset + 2];
+			} else
+			{
+				*value = (((uint32_t)buf[offset + 3] & 0x0F) << 24) |
+				         ((uint32_t)buf[offset + 4] << 16) |
+				         ((uint32_t)buf[offset + 5] << 8) |
+				         (uint32_t)buf[offset + 6];
+			}
+			return MMDB_OK;
+		}
+		case 32:
+		{
+			o = offset + bit * 4;
+			if (o + 4 > buflen)
+				return MMDB_ERR_CORRUPT;
+			*value = ((uint32_t)buf[o] << 24) |
+			         ((uint32_t)buf[o + 1] << 16) |
+			         ((uint32_t)buf[o + 2] << 8) |
+			         (uint32_t)buf[o + 3];
+			return MMDB_OK;
+		}
 	}
 	return MMDB_ERR_CORRUPT;
 }
@@ -956,7 +969,7 @@ MMDB_Status mmdb_lookup(MMDB_DB *db, const char *ip_str, MMDB_Result *result)
 }
 
 MMDB_Status mmdb_lookup_sockaddr(MMDB_DB *db, const struct sockaddr *sa,
-                         MMDB_Result *result)
+                                 MMDB_Result *result)
 {
 	uint8_t ip128[16];
 	const struct sockaddr_in *sa4;

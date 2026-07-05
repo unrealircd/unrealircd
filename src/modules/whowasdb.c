@@ -7,15 +7,15 @@
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER = {
-	"whowasdb",
-	"1.0",
-	"Stores and retrieves WHOWAS history",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "whowasdb",
+    "1.0",
+    "Stores and retrieves WHOWAS history",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Our header */
-#define WHOWASDB_HEADER		0x57484F57
+#define WHOWASDB_HEADER 0x57484F57
 /* Database version */
 #define WHOWASDB_VERSION 100
 /* Save whowas of users to file every <this> seconds */
@@ -26,8 +26,8 @@ ModuleHeader MOD_HEADER = {
  */
 #define WHOWASDB_SAVE_EVERY_DELTA -60
 
-#define MAGIC_WHOWASDB_START	0x11111111
-#define MAGIC_WHOWASDB_END		0x22222222
+#define MAGIC_WHOWASDB_START 0x11111111
+#define MAGIC_WHOWASDB_END   0x22222222
 
 // #undef BENCHMARK
 
@@ -35,43 +35,49 @@ ModuleHeader MOD_HEADER = {
  * disabling it in the entire file for now...
  */
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Waddress"
+ #pragma GCC diagnostic ignored "-Waddress"
 #endif
 
 #define WARN_WRITE_ERROR(fname) \
-	do { \
+	do \
+	{ \
 		unreal_log(ULOG_ERROR, "whowasdb", "WHOWASDB_FILE_WRITE_ERROR", NULL, \
-			   "[whowasdb] Error writing to temporary database file $filename: $system_error", \
-			   log_data_string("filename", fname), \
-			   log_data_string("system_error", unrealdb_get_error_string())); \
-	} while(0)
+		           "[whowasdb] Error writing to temporary database file $filename: $system_error", \
+		           log_data_string("filename", fname), \
+		           log_data_string("system_error", unrealdb_get_error_string())); \
+	} while (0)
 
 #define W_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			WARN_WRITE_ERROR(tmpfname); \
 			unrealdb_close(db); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 #define W_SAFE_PROPERTY(db, x, y) \
-	do { \
+	do \
+	{ \
 		if (x && y && (!unrealdb_write_str(db, x) || !unrealdb_write_str(db, y))) \
 		{ \
 			WARN_WRITE_ERROR(tmpfname); \
 			unrealdb_close(db); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 #define IsMDErr(x, y, z) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER.name, ModuleGetErrorStr((z)->handle)); \
 			return MOD_FAILED; \
 		} \
-	} while(0)
+	} while (0)
 
 /* Structs */
 struct cfgstruct {
@@ -197,13 +203,11 @@ int whowasdb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			config_error("%s:%i: blank set::whowasdb::%s without value", cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "database"))
+		} else if (!strcmp(cep->name, "database"))
 		{
 			convert_to_absolute_path(&cep->value, PERMDATADIR);
 			safe_strdup(test.database, cep->value);
-		} else
-		if (!strcmp(cep->name, "db-secret"))
+		} else if (!strcmp(cep->name, "db-secret"))
 		{
 			const char *err;
 			if ((err = unrealdb_test_secret(cep->value)))
@@ -274,16 +278,15 @@ int count_whowas_and_user_entries(void)
 	int cnt = 0;
 	Client *client;
 
-	for (i=0; i < NICKNAMEHISTORYLENGTH; i++)
+	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
 		WhoWas *e = &WHOWAS[i];
 		if (e->name)
 			cnt++;
 	}
 
-	list_for_each_entry(client, &client_list, client_node)
-		if (IsUser(client))
-			cnt++;
+	list_for_each_entry(client, &client_list, client_node) if (IsUser(client))
+	    cnt++;
 
 	return cnt;
 }
@@ -316,7 +319,7 @@ int write_whowasdb(void)
 	cnt = count_whowas_and_user_entries();
 	W_SAFE(unrealdb_write_int64(db, cnt));
 
-	for (i=0; i < NICKNAMEHISTORYLENGTH; i++)
+	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
 		WhoWas *e = &WHOWAS[i];
 		if (e->name)
@@ -364,7 +367,7 @@ int write_whowasdb(void)
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
 	config_status("[whowasdb] Benchmark: SAVE DB: %ld microseconds",
-		((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
+	              ((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec));
 #endif
 	return 1;
 }
@@ -400,7 +403,8 @@ int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e)
 }
 
 #define FreeWhowasEntry() \
- 	do { \
+	do \
+	{ \
 		/* Some of these might be NULL */ \
 		safe_free(key); \
 		safe_free(value); \
@@ -414,17 +418,19 @@ int write_whowas_entry(UnrealDB *db, const char *tmpfname, WhoWas *e)
 		safe_free(server); \
 		safe_free(virthost); \
 		safe_free(account); \
-	} while(0)
+	} while (0)
 
 #define R_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_warn("[whowasdb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
 			unrealdb_close(db); \
 			FreeWhowasEntry(); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 int read_whowasdb(void)
 {
@@ -462,8 +468,7 @@ int read_whowasdb(void)
 			/* Database does not exist. Could be first boot */
 			config_warn("[whowasdb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
-		} else
-		if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
+		} else if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
 		{
 			/* Re-open as unencrypted */
 			db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, NULL);
@@ -497,7 +502,7 @@ int read_whowasdb(void)
 
 	R_SAFE(unrealdb_read_int64(db, &count));
 
-	for (i=1; i <= count; i++)
+	for (i = 1; i <= count; i++)
 	{
 		// Variables
 		key = value = NULL;
@@ -511,65 +516,53 @@ int read_whowasdb(void)
 			config_error("[whowasdb] Corrupt database (%s) - whowasdb magic start is 0x%x. Further reading aborted.", cfg.database, magic);
 			break;
 		}
-		while(1)
+		while (1)
 		{
 			R_SAFE(unrealdb_read_str(db, &key));
 			R_SAFE(unrealdb_read_str(db, &value));
 			if (!strcmp(key, "nick"))
 			{
 				safe_strdup(nick, value);
-			} else
-			if (!strcmp(key, "username"))
+			} else if (!strcmp(key, "username"))
 			{
 				safe_strdup(username, value);
-			} else
-			if (!strcmp(key, "hostname"))
+			} else if (!strcmp(key, "hostname"))
 			{
 				safe_strdup(hostname, value);
-			} else
-			if (!strcmp(key, "ip"))
+			} else if (!strcmp(key, "ip"))
 			{
 				safe_strdup(ip, value);
-			} else
-			if (!strcmp(key, "realname"))
+			} else if (!strcmp(key, "realname"))
 			{
 				safe_strdup(realname, value);
-			} else
-			if (!strcmp(key, "connected_since"))
+			} else if (!strcmp(key, "connected_since"))
 			{
 				connected_since = atoll(value);
 				safe_free(value);
-			} else
-			if (!strcmp(key, "logontime"))
+			} else if (!strcmp(key, "logontime"))
 			{
 				logontime = atoll(value);
 				safe_free(value);
-			} else
-			if (!strcmp(key, "logofftime"))
+			} else if (!strcmp(key, "logofftime"))
 			{
 				logofftime = atoll(value);
 				safe_free(value);
-			} else
-			if (!strcmp(key, "event"))
+			} else if (!strcmp(key, "event"))
 			{
 				event = atoi(value);
 				if ((event < WHOWAS_LOWEST_EVENT) || (event > WHOWAS_HIGHEST_EVENT))
 					event = WHOWAS_EVENT_QUIT; /* safety */
 				safe_free(value);
-			} else
-			if (!strcmp(key, "server"))
+			} else if (!strcmp(key, "server"))
 			{
 				safe_strdup(server, value);
-			} else
-			if (!strcmp(key, "virthost"))
+			} else if (!strcmp(key, "virthost"))
 			{
 				safe_strdup(virthost, value);
-			} else
-			if (!strcmp(key, "account"))
+			} else if (!strcmp(key, "account"))
 			{
 				safe_strdup(account, value);
-			} else
-			if (!strcmp(key, "end"))
+			} else if (!strcmp(key, "end"))
 			{
 				safe_free(key);
 				safe_free(value);

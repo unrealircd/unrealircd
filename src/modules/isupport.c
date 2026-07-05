@@ -29,13 +29,12 @@
 void _send_isupport(Client *client);
 void _isupport_check_for_changes(void);
 
-ModuleHeader MOD_HEADER
-={
-	"isupport", /* Name of module */
-	"5.0", /* Version */
-	"Implement ISUPPORT (numeric 005) sending", /* Short description of module */
-	"UnrealIRCd Team", /* Author */
-	"unrealircd-6", /* Version of UnrealIRCd */
+ModuleHeader MOD_HEADER = {
+    "isupport", /* Name of module */
+    "5.0", /* Version */
+    "Implement ISUPPORT (numeric 005) sending", /* Short description of module */
+    "UnrealIRCd Team", /* Author */
+    "unrealircd-6", /* Version of UnrealIRCd */
 };
 
 MOD_TEST()
@@ -76,7 +75,7 @@ MOD_UNLOAD()
  */
 void _send_isupport(Client *client)
 {
-	char batch[BATCHLEN+1];
+	char batch[BATCHLEN + 1];
 	int i;
 	MessageTag *mtags = NULL, *m;
 
@@ -130,7 +129,8 @@ void isupport_check_for_changes_send(const char *addstr, char *buf, size_t bufle
 		if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
 		{
 			sendtaggednumericfmt(acptr, mtags, RPL_ISUPPORT, "%s :are supported by this server", buf);
-		} else {
+		} else
+		{
 			sendnumeric(acptr, RPL_ISUPPORT, buf);
 		}
 	}
@@ -145,9 +145,8 @@ void isupport_check_for_changes_one(const char *addstr, char *buf, size_t buflen
 	if (*changes == 0)
 	{
 		/* First change, need to start the batch */
-		list_for_each_entry(acptr, &lclient_list, lclient_node)
-			if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
-				sendto_one(acptr, NULL, ":%s BATCH +%s draft/isupport", me.name, batch);
+		list_for_each_entry(acptr, &lclient_list, lclient_node) if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+		    sendto_one(acptr, NULL, ":%s BATCH +%s draft/isupport", me.name, batch);
 	}
 
 	*changes = *changes + 1;
@@ -166,7 +165,7 @@ void _isupport_check_for_changes(void)
 {
 	Client *acptr;
 	MessageTag *mtags = NULL;
-	char batch[BATCHLEN+1];
+	char batch[BATCHLEN + 1];
 	ISupport *n; // iterator for "new isupports"
 	ISupport *o; // iterator for "old isupports"
 	char buf[512], addstr[512];
@@ -196,7 +195,8 @@ void _isupport_check_for_changes(void)
 			{
 				snprintf(addstr, sizeof(addstr), "%s=%s",
 				         n->token, n->value);
-			} else {
+			} else
+			{
 				strlcpy(addstr, n->token, sizeof(addstr));
 			}
 			isupport_check_for_changes_one(addstr, buf, sizeof(buf), batch, mtags, &changes, &bc);
@@ -221,9 +221,8 @@ void _isupport_check_for_changes(void)
 	if (changes)
 	{
 		/* End the batch (for those clients who received a batch, that is) */
-		list_for_each_entry(acptr, &lclient_list, lclient_node)
-			if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
-				sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
+		list_for_each_entry(acptr, &lclient_list, lclient_node) if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+		    sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
 	}
 
 	safe_free_message_tags(mtags);

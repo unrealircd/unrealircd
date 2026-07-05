@@ -24,17 +24,16 @@
 CMD_FUNC(cmd_svsnolag);
 CMD_FUNC(cmd_svs2nolag);
 
-#define MSG_SVSNOLAG 	"SVSNOLAG"	
-#define MSG_SVS2NOLAG 	"SVS2NOLAG"	
+#define MSG_SVSNOLAG  "SVSNOLAG"
+#define MSG_SVS2NOLAG "SVS2NOLAG"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svsnolag",
-	"5.0",
-	"commands /svsnolag and /svs2nolag", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svsnolag",
+    "5.0",
+    "commands /svsnolag and /svs2nolag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {

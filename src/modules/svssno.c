@@ -25,22 +25,21 @@
 CMD_FUNC(cmd_svssno);
 CMD_FUNC(cmd_svs2sno);
 
-#define MSG_SVSSNO 	"SVSSNO"	
-#define MSG_SVS2SNO 	"SVS2SNO"	
+#define MSG_SVSSNO  "SVSSNO"
+#define MSG_SVS2SNO "SVS2SNO"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svssno",
-	"5.0",
-	"command /svssno", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svssno",
+    "5.0",
+    "command /svssno",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSSNO, cmd_svssno, MAXPARA, CMD_USER|CMD_SERVER);
-	CommandAdd(modinfo->handle, MSG_SVS2SNO, cmd_svs2sno, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSSNO, cmd_svssno, MAXPARA, CMD_USER | CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVS2SNO, cmd_svs2sno, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -73,7 +72,7 @@ void do_svssno(Client *client, MessageTag *recv_mtags, int parc, const char *par
 	if (parc < 2)
 		return;
 
-	if (parv[1][0] == '#') 
+	if (parv[1][0] == '#')
 		return;
 
 	if (!(target = find_user(parv[1], NULL)))

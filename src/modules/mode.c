@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"mode",
-	"5.0",
-	"command /mode",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "mode",
+    "5.0",
+    "command /mode",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int list_mode_request(Client *client, Channel *channel, const char *req);
@@ -37,7 +36,7 @@ CMD_FUNC(cmd_mode);
 CMD_FUNC(cmd_mlock);
 void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], time_t sendts, int samode);
 MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
-                       char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+                         char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void _set_channel_mode(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 CMD_FUNC(_cmd_umode);
 
@@ -48,7 +47,7 @@ int do_mode_char(Channel *channel, long modetype, char modechar, const char *par
 int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int what,
                     Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *param, u_int what,
-                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+                                  Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, int pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 
 static char *mode_cutoff(const char *s);
@@ -68,7 +67,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "MODE", cmd_mode, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "MODE", cmd_mode, MAXPARA, CMD_USER | CMD_SERVER);
 	CommandAdd(modinfo->handle, MSG_MLOCK, cmd_mlock, MAXPARA, CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
@@ -147,7 +146,7 @@ CMD_FUNC(cmd_mode)
 
 #ifndef NO_OPEROVERRIDE
 	if (IsUser(client) && !IsULine(client) && !check_channel_access(client, channel, "oaq") &&
-	    !check_channel_access(client, channel, "h") && ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
+	    !check_channel_access(client, channel, "h") && ValidatePermissionsForPath("channel:override:mode", client, NULL, channel, NULL))
 	{
 		sendts = 0;
 		opermode = 1;
@@ -155,7 +154,7 @@ CMD_FUNC(cmd_mode)
 	}
 
 	if (IsUser(client) && !IsULine(client) && !check_channel_access(client, channel, "oaq") &&
-	    check_channel_access(client, channel, "h") && ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
+	    check_channel_access(client, channel, "h") && ValidatePermissionsForPath("channel:override:mode", client, NULL, channel, NULL))
 	{
 		opermode = 2;
 		goto aftercheck;
@@ -164,7 +163,7 @@ CMD_FUNC(cmd_mode)
 
 	/* User does not have permission to use the MODE command */
 	if (MyUser(client) && !IsULine(client) && !check_channel_access(client, channel, "hoaq") &&
-	    !ValidatePermissionsForPath("channel:override:mode",client,NULL,channel,NULL))
+	    !ValidatePermissionsForPath("channel:override:mode", client, NULL, channel, NULL))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return;
@@ -189,7 +188,7 @@ CMD_FUNC(cmd_mode)
 	if (IsServer(client) && !sendts && *parv[parc - 1] != '0')
 		sendts = -1;
 	if (IsServer(client) && sendts != -1)
-		parc--;		/* server supplied a time stamp, remove it now */
+		parc--;  /* server supplied a time stamp, remove it now */
 
 aftercheck:
 
@@ -235,7 +234,7 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 {
 	Client *orig_client = client; /* (needed for samode replacement in a loop) */
 	char pvar[MAXMODEPARAMS][MODEBUFLEN + 3];
-	int  pcount;
+	int pcount;
 	int i;
 	char tschange = 0;
 	MultiLineMode *m;
@@ -256,27 +255,25 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				           "Buffer: $modebuf $parabuf",
 				           log_data_channel("channel", channel),
 				           log_data_integer("send_timestamp", sendts),
-				           log_data_string("modebuf", m?m->modeline[0]:""),
-				           log_data_string("parabuf", m?m->modeline[0]:""));
+				           log_data_string("modebuf", m ? m->modeline[0] : ""),
+				           log_data_string("parabuf", m ? m->modeline[0] : ""));
 				/* Yeah, so what to do in this case?
 				 * Don't set channel->creationtime
 				 * and assume merging.
 				 */
 				sendts = channel->creationtime;
-			} else
-			if (sendts < channel->creationtime)
+			} else if (sendts < channel->creationtime)
 			{
 				/* Our timestamp is wrong or this is a new channel */
 				tschange = 1;
 				channel->creationtime = sendts;
-
 			}
 			if (sendts > channel->creationtime && channel->creationtime)
 			{
 				/* Their timestamp is wrong */
 				sendts = channel->creationtime;
 				sendto_one(client, NULL, ":%s MODE %s + %lld", me.name,
-				    channel->name, (long long)channel->creationtime);
+				           channel->name, (long long)channel->creationtime);
 			}
 		}
 		if (sendts == -1)
@@ -295,8 +292,8 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 			 * (all except from where it came from, client).
 			 */
 			sendto_server(client, 0, 0, NULL, ":%s MODE %s + %lld",
-				      me.id, channel->name,
-				      (long long)channel->creationtime);
+			              me.id, channel->name,
+			              (long long)channel->creationtime);
 		}
 		/* Nothing to send */
 		safe_free_multilinemode(m);
@@ -319,9 +316,9 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 				char buf[512];
 				snprintf(buf, sizeof(buf), "%s%s%s", modebuf, *parabuf ? " " : "", parabuf);
 				unreal_log(ULOG_INFO, "samode", "SAMODE_COMMAND", orig_client,
-					   "Client $client used SAMODE $channel ($mode)",
-					   log_data_channel("channel", channel),
-					   log_data_string("mode", buf));
+				           "Client $client used SAMODE $channel ($mode)",
+				           log_data_channel("channel", channel),
+				           log_data_string("mode", buf));
 			}
 
 			client = &me;
@@ -332,7 +329,8 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 		{
 			/* Single mode lines are easy: retain original msgid etc */
 			new_message(client, recv_mtags, &mtags);
-		} else {
+		} else
+		{
 			/* We have a multi-mode line:
 			 * This only happens when the input was a single mode line
 			 * that got expanded into a multi mode line due to expansion
@@ -367,22 +365,22 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 #endif
 
 		sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
-			       ":%s MODE %s %s %s",
-			       client->name, channel->name, modebuf, parabuf);
+		               ":%s MODE %s %s %s",
+		               client->name, channel->name, modebuf, parabuf);
 
 		if (IsServer(client) || IsMe(client))
 		{
 			sendto_server(client, 0, 0, mtags,
-				      ":%s MODE %s %s %s %lld",
-				      client->id, channel->name,
-				      modebuf, parabuf,
-				      (sendts != -1) ? (long long)sendts : 0LL);
+			              ":%s MODE %s %s %s %lld",
+			              client->id, channel->name,
+			              modebuf, parabuf,
+			              (sendts != -1) ? (long long)sendts : 0LL);
 		} else
 		{
 			sendto_server(client, 0, 0, mtags,
-				      ":%s MODE %s %s %s",
-				      client->id, channel->name,
-				      modebuf, parabuf);
+			              ":%s MODE %s %s %s",
+			              client->id, channel->name,
+			              modebuf, parabuf);
 		}
 
 		if (MyConnect(client))
@@ -421,7 +419,7 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 	curr = 0;
 	m->modeline[curr] = safe_alloc(BUFSIZE);
 	m->paramline[curr] = safe_alloc(BUFSIZE);
-	m->numlines = curr+1;
+	m->numlines = curr + 1;
 	what = 0;
 
 	/* The first element will be filled with all paramless modes.
@@ -430,7 +428,7 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 	 */
 
 	/* Which paramless modes got set? Eg +snt */
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 	{
 		if (!cm->letter || cm->paracount)
 			continue;
@@ -448,7 +446,7 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 	}
 
 	/* Which paramless modes got unset? Eg -r */
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 	{
 		if (!cm->letter || cm->unset_with_param)
 			continue;
@@ -482,7 +480,7 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 			curr++;
 			m->modeline[curr] = safe_alloc(BUFSIZE);
 			m->paramline[curr] = safe_alloc(BUFSIZE);
-			m->numlines = curr+1;
+			m->numlines = curr + 1;
 			what = 0;
 		}
 		if ((*(pvar[cnt]) == '+') && what != MODE_ADD)
@@ -570,10 +568,11 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 				b->banstr = nextbanstr;
 				if (!extban->is_ok(b))
 				{
-					if (ValidatePermissionsForPath("channel:override:mode:extban",client,NULL,channel,NULL))
+					if (ValidatePermissionsForPath("channel:override:mode:extban", client, NULL, channel, NULL))
 					{
 						/* TODO: send operoverride notice */
-					} else {
+					} else
+					{
 						b->banstr = nextbanstr;
 						b->is_ok_check = EXBCHK_ACCESS_ERR;
 						extban->is_ok(b);
@@ -593,10 +592,10 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 		}
 	}
 
-	if ( (what == MODE_ADD && (add_listmode(banlist, client, channel, tmpstr) != 1)) ||
-	     (what == MODE_DEL && del_listmode(banlist, channel, tmpstr)))
+	if ((what == MODE_ADD && (add_listmode(banlist, client, channel, tmpstr) != 1)) ||
+	    (what == MODE_DEL && del_listmode(banlist, channel, tmpstr)))
 	{
-		return NULL;	/* ban to be added already exists, or ban to be deleted does not exist */
+		return NULL; /* ban to be added already exists, or ban to be deleted does not exist */
 	}
 
 	return tmpstr;
@@ -683,16 +682,17 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 	{
 		x = handler->is_ok(client, channel, mode, param, EXCHK_ACCESS, what);
 		if ((x == EX_ALWAYS_DENY) ||
-		    ((x == EX_DENY) && !op_can_override("channel:override:mode:del",client,channel,handler) && !samode_in_progress))
+		    ((x == EX_DENY) && !op_can_override("channel:override:mode:del", client, channel, handler) && !samode_in_progress))
 		{
 			handler->is_ok(client, channel, mode, param, EXCHK_ACCESS_ERR, what);
 			return paracnt; /* Denied & error msg sent */
 		}
 		if ((x == EX_DENY) && !samode_in_progress)
 			opermode = 1; /* override in progress... */
-	} else {
+	} else
+	{
 		/* remote user: we only need to check if we need to generate an operoverride msg */
-		if (!IsULine(client) && IsUser(client) && op_can_override("channel:override:mode:del",client,channel,handler) &&
+		if (!IsULine(client) && IsUser(client) && op_can_override("channel:override:mode:del", client, channel, handler) &&
 		    (handler->is_ok(client, channel, mode, param, EXCHK_ACCESS, what) != EX_ALLOW))
 		{
 			opermode = 1; /* override in progress... */
@@ -731,12 +731,14 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 				 * Any provided parameter is ok, the current one (that is set) will be used.
 				 */
 				do_mode_char_write(pvar, pcount, what, handler->letter, cm_getparameter(channel, handler->letter));
-			} else {
+			} else
+			{
 				/* Normal extended channel mode: deleting is just -X, no parameter.
 				 * Nothing needs to be done here.
 				 */
 			}
-		} else {
+		} else
+		{
 			/* add: is the parameter ok? */
 			if (handler->is_ok(client, channel, mode, param, EXCHK_PARAM, what) == FALSE)
 				return paracnt; /* rejected by is_ok */
@@ -761,13 +763,13 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 	}
 
 	if (what == MODE_ADD)
-	{	/* + */
+	{ /* + */
 		channel->mode.mode |= handler->mode;
 		if (handler->paracount)
 			cm_putparameter(channel, handler->letter, param);
 		RunHook(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
 	} else
-	{	/* - */
+	{ /* - */
 		channel->mode.mode &= ~(handler->mode);
 		RunHook(HOOKTYPE_MODECHAR_DEL, channel, (int)mode);
 		if (handler->paracount)
@@ -778,7 +780,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 
 /** Set or unset a mode on a member (eg +vhoaq/-vhoaq) */
 void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *param, u_int what,
-                    Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
+                                  Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	Member *member = NULL;
 	Membership *membership = NULL;
@@ -829,8 +831,7 @@ void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *
 			if (n == EX_DENY)
 			{
 				ret = n;
-			} else
-			if (n == EX_ALWAYS_DENY)
+			} else if (n == EX_ALWAYS_DENY)
 			{
 				ret = n;
 				break;
@@ -849,12 +850,13 @@ void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *
 		/* This probably should work but is completely untested (the operoverride stuff, I mean): */
 		if (ret == EX_DENY)
 		{
-			if (!op_can_override("channel:override:mode:del",client,channel,handler))
+			if (!op_can_override("channel:override:mode:del", client, channel, handler))
 			{
 				if (badmode)
 					sendto_one(client, NULL, "%s", badmode); /* send error message, if any */
 				return; /* stop processing this mode */
-			} else {
+			} else
+			{
 				opermode = 1;
 			}
 		}
@@ -866,7 +868,8 @@ void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *
 			return; /* already set */
 		/* Set the mode */
 		add_member_mode_fast(member, membership, modechar);
-	} else {
+	} else
+	{
 		if (!strchr(member->member_modes, modechar))
 			return; /* already unset */
 		del_member_mode_fast(member, membership, modechar);
@@ -949,13 +952,13 @@ int paracount_for_chanmode(u_int what, char mode)
 }
 
 MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char *parv[], u_int *pcount,
-                        char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
+                         char pvar[MAXMODEPARAMS][MODEBUFLEN + 3])
 {
 	Cmode *cm = NULL;
 	MultiLineMode *mlm = NULL;
 	const char *curchr;
 	const char *argument;
-	char argumentbuf[MODEBUFLEN+1];
+	char argumentbuf[MODEBUFLEN + 1];
 	u_int what = MODE_ADD;
 	long modetype = 0;
 	int paracount = 1;
@@ -972,7 +975,7 @@ MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char 
 	*pcount = 0;
 
 	oldem = channel->mode.mode;
-	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes",client,NULL,channel,NULL)) /* "cache" this */
+	if (RESTRICT_CHANNELMODES && !ValidatePermissionsForPath("immune:restrict-channelmodes", client, NULL, channel, NULL)) /* "cache" this */
 		checkrestr = 1;
 
 	for (curchr = parv[0]; *curchr; curchr++)
@@ -989,7 +992,7 @@ MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char 
 				if (MyUser(client) && channel->mode_lock && strchr(channel->mode_lock, *curchr) != NULL)
 				{
 					if (!IsOper(client) || find_server(SERVICES_NAME, NULL) ||
-					    !ValidatePermissionsForPath("channel:override:mlock",client,NULL,channel,NULL))
+					    !ValidatePermissionsForPath("channel:override:mlock", client, NULL, channel, NULL))
 					{
 						if (!sent_mlock_warning)
 						{
@@ -1013,9 +1016,10 @@ MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char 
 				if (found == 1)
 				{
 					modetype = foundat.mode;
-				} else {
+				} else
+				{
 					/* Maybe in extmodes */
-					for (cm=channelmodes; cm; cm = cm->next)
+					for (cm = channelmodes; cm; cm = cm->next)
 					{
 						if (cm->letter == *curchr)
 						{
@@ -1038,7 +1042,7 @@ MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char 
 					if (warnrestr)
 					{
 						sendnotice(client, "Setting/removing of channelmode(s) '%s' has been disabled.",
-							RESTRICT_CHANNELMODES);
+						           RESTRICT_CHANNELMODES);
 						warnrestr = 0;
 					}
 					paracount += paracount_for_chanmode(what, *curchr);
@@ -1049,7 +1053,8 @@ MultiLineMode *_set_mode(Channel *channel, Client *client, int parc, const char 
 				{
 					strlcpy(argumentbuf, parv[paracount], sizeof(argumentbuf));
 					argument = argumentbuf;
-				} else {
+				} else
+				{
 					argument = NULL;
 				}
 
@@ -1123,7 +1128,7 @@ CMD_FUNC(_cmd_umode)
 
 	oldumodes = client->umodes;
 
-	if (MyUser(client) && !ValidatePermissionsForPath("immune:restrict-usermodes",client,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("immune:restrict-usermodes", client, NULL, NULL, NULL))
 		restrict_usermodes = get_setting_for_user_string(client, SET_RESTRICT_USERMODES);
 
 	if (client->user->snomask)
@@ -1139,7 +1144,7 @@ CMD_FUNC(_cmd_umode)
 			if (!umode_restrict_err)
 			{
 				sendnotice(client, "Setting/removing of usermode(s) '%s' has been disabled.",
-					restrict_usermodes);
+				           restrict_usermodes);
 				umode_restrict_err = 1;
 			}
 			continue;
@@ -1167,7 +1172,8 @@ CMD_FUNC(_cmd_umode)
 						if (client->user->snomask == NULL)
 							goto def;
 						break;
-					} else {
+					} else
+					{
 						set_snomask(client, NULL);
 						goto def;
 					}
@@ -1204,8 +1210,8 @@ CMD_FUNC(_cmd_umode)
 				/* set::anti-flood::vhost-flood */
 				if (MyUser(client))
 				{
-					if ((what == MODE_DEL) && !ValidatePermissionsForPath("immune:vhost-flood",client,NULL,NULL,NULL) &&
-							flood_limit_exceeded(client, FLD_VHOST))
+					if ((what == MODE_DEL) && !ValidatePermissionsForPath("immune:vhost-flood", client, NULL, NULL, NULL) &&
+					    flood_limit_exceeded(client, FLD_VHOST))
 					{
 						/* Throttle... */
 						if (!modex_err)
@@ -1219,35 +1225,35 @@ CMD_FUNC(_cmd_umode)
 
 				switch (UHOST_ALLOWED)
 				{
-				case UHALLOW_ALWAYS:
-					goto def;
-				case UHALLOW_NEVER:
-					if (MyUser(client))
-					{
-						if (!modex_err)
+					case UHALLOW_ALWAYS:
+						goto def;
+					case UHALLOW_NEVER:
+						if (MyUser(client))
 						{
-							sendnotice(client, "*** Setting %c%c is disabled",
-								what == MODE_ADD ? '+' : '-', *m);
-							modex_err = 1;
+							if (!modex_err)
+							{
+								sendnotice(client, "*** Setting %c%c is disabled",
+								           what == MODE_ADD ? '+' : '-', *m);
+								modex_err = 1;
+							}
+							break;
 						}
-						break;
-					}
-					goto def;
-				case UHALLOW_NOCHANS:
-					if (MyUser(client) && client->user->joined)
-					{
-						if (!modex_err)
+						goto def;
+					case UHALLOW_NOCHANS:
+						if (MyUser(client) && client->user->joined)
 						{
-							sendnotice(client, "*** Setting %c%c can not be done while you are on channels",
-								what == MODE_ADD ? '+' : '-', *m);
-							modex_err = 1;
+							if (!modex_err)
+							{
+								sendnotice(client, "*** Setting %c%c can not be done while you are on channels",
+								           what == MODE_ADD ? '+' : '-', *m);
+								modex_err = 1;
+							}
+							break;
 						}
-						break;
-					}
-					goto def;
-				case UHALLOW_REJOIN:
-					/* Handled later */
-					goto def;
+						goto def;
+					case UHALLOW_REJOIN:
+                                        /* Handled later */
+						goto def;
 				}
 				break;
 			default:
@@ -1256,7 +1262,7 @@ CMD_FUNC(_cmd_umode)
 				{
 					if (um->letter == *m)
 					{
-						if (um->allowed && !um->allowed(client,what))
+						if (um->allowed && !um->allowed(client, what))
 							break;
 						if (what == MODE_ADD)
 							client->umodes |= um->mode;
@@ -1275,7 +1281,7 @@ CMD_FUNC(_cmd_umode)
 	} /* for */
 
 	/* Don't let non-ircops set ircop-only modes or snomasks */
-	if (!ValidatePermissionsForPath("self:opermodes",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("self:opermodes", client, NULL, NULL, NULL))
 	{
 		if ((oldumodes & UMODE_OPER) && IsOper(client))
 		{
@@ -1303,7 +1309,8 @@ CMD_FUNC(_cmd_umode)
 			if (client->user->snomask)
 			{
 				char rerun;
-				do {
+				do
+				{
 					char *p;
 
 					rerun = 0;
@@ -1320,12 +1327,13 @@ CMD_FUNC(_cmd_umode)
 							break;
 						}
 					}
-				} while(rerun);
+				} while (rerun);
 				/* And make sure an empty snomask ("") becomes a NULL pointer */
 				if (client->user->snomask && !*client->user->snomask)
 					remove_all_snomasks(client);
 			}
-		} else {
+		} else
+		{
 			/* User isn't an ircop at all. The solution is simple: */
 			remove_oper_privileges(client, 0);
 		}
@@ -1350,7 +1358,7 @@ CMD_FUNC(_cmd_umode)
 	{
 		if (!dontspread)
 			sendto_server(client, PROTO_VHP, 0, NULL, ":%s SETHOST :%s",
-				client->name, client->user->virthost);
+			              client->name, client->user->virthost);
 
 		/* Set the vhost */
 		safe_strdup(client->user->virthost, client->user->cloakedhost);
@@ -1397,11 +1405,11 @@ CMD_FUNC(_cmd_umode)
 		irccounts.operators--;
 		VERIFY_OPERCOUNT(client, "umode1");
 	} else /* YES this 'else' must be here, otherwise we can decrease twice. fixes opercount bug. */
-	if (!(oldumodes & UMODE_HIDEOPER) && IsHideOper(client))
-	{
-		irccounts.operators--;
-		VERIFY_OPERCOUNT(client, "umode2");
-	}
+		if (!(oldumodes & UMODE_HIDEOPER) && IsHideOper(client))
+		{
+			irccounts.operators--;
+			VERIFY_OPERCOUNT(client, "umode2");
+		}
 	/* end of dealing with opercounts */
 
 	if ((oldumodes & UMODE_HIDEOPER) && !IsHideOper(client))
@@ -1437,7 +1445,7 @@ CMD_FUNC(cmd_mlock)
 	if ((parc < 3) || BadPtr(parv[2]))
 		return;
 
-	t = (time_t) atol(parv[1]);
+	t = (time_t)atol(parv[1]);
 
 	/* Now, try to find the channel in question */
 	channel = find_channel(parv[2]);
@@ -1465,10 +1473,10 @@ void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char
 	snprintf(buf, sizeof(buf), "%s %s", modebuf, parabuf);
 
 	unreal_log(ULOG_INFO, "operoverride", "OPEROVERRIDE_MODE", client,
-		   "OperOverride: $client.details changed channel mode of $channel to: $channel_mode",
-		   log_data_string("override_type", "mode"),
-		   log_data_string("channel_mode", buf),
-		   log_data_channel("channel", channel));
+	           "OperOverride: $client.details changed channel mode of $channel to: $channel_mode",
+	           log_data_string("override_type", "mode"),
+	           log_data_string("channel_mode", buf),
+	           log_data_channel("channel", channel));
 }
 
 /* Deal with information requests from local users, such as:
@@ -1496,20 +1504,21 @@ int list_mode_request(Client *client, Channel *channel, const char *req)
 	/* First, check access */
 	if (strchr("beI", *p))
 	{
-		if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist",client,NULL,channel,NULL))
+		if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remotebanlist", client, NULL, channel, NULL))
 		{
 			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
 			return 1; /* handled */
 		}
-	} else {
-		if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist",client,NULL,channel,NULL))
+	} else
+	{
+		if (!IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:mode:remoteownerlist", client, NULL, channel, NULL))
 		{
 			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
 			return 1; /* handled */
 		}
 	}
 
-	switch(*p)
+	switch (*p)
 	{
 		case 'b':
 			for (ban = channel->banlist; ban; ban = ban->next)

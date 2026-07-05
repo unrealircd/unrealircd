@@ -26,14 +26,13 @@
 #define SERVER_TAG_SIZE_LIMIT 8191
 #define CLIENT_TAG_SIZE_LIMIT 4094
 
-ModuleHeader MOD_HEADER
-  = {
-	"message-tags",
-	"5.0",
-	"Message tags CAP", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "message-tags",
+    "5.0",
+    "Message tags CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 long CAP_MESSAGE_TAGS = 0L;
 const char *_mtags_to_string(MessageTag *m, Client *client);
@@ -134,7 +133,8 @@ void message_tag_escape(char *in, char *out, size_t outsize)
 				*o++ = 'r';
 			else
 				*o++ = 'n';
-		} else {
+		} else
+		{
 			if (end - o < 2) /* 1 byte + NUL */
 				break;
 			*o++ = *in;
@@ -169,7 +169,7 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 
 	char *remainder;
 	char *element, *p, *x;
-	static char name[SERVER_TAG_SIZE_LIMIT+1], value[SERVER_TAG_SIZE_LIMIT+1];
+	static char name[SERVER_TAG_SIZE_LIMIT + 1], value[SERVER_TAG_SIZE_LIMIT + 1];
 	MessageTag *m;
 	int lenstr;
 
@@ -193,12 +193,13 @@ void _parse_message_tags(Client *client, char **str, MessageTag **mtag_list)
 		 * This is also used by a line-length-check above to force the
 		 * same error condition ("don't parse this").
 		 */
-		for (; **str; *str += 1);
+		for (; **str; *str += 1)
+			;
 		return;
 	}
 
 	/* Now actually parse the tags: */
-	for (element = strtoken(&p, *str+1, ";"); element; element = strtoken(&p, NULL, ";"))
+	for (element = strtoken(&p, *str + 1, ";"); element; element = strtoken(&p, NULL, ";"))
 	{
 		*name = *value = '\0';
 
@@ -300,7 +301,8 @@ const char *_mtags_to_string(MessageTag *m, Client *client)
 			message_tag_escape(m->name, name, sizeof(name));
 			message_tag_escape(m->value, value, sizeof(value));
 			snprintf(tbuf, sizeof(tbuf), "%s=%s;", name, value);
-		} else {
+		} else
+		{
 			message_tag_escape(m->name, name, sizeof(name));
 			snprintf(tbuf, sizeof(tbuf), "%s;", name);
 		}
@@ -311,7 +313,7 @@ const char *_mtags_to_string(MessageTag *m, Client *client)
 		return NULL;
 
 	/* Strip off the final semicolon */
-	buf[strlen(buf)-1] = '\0';
+	buf[strlen(buf) - 1] = '\0';
 
 	return buf;
 }

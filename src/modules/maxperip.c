@@ -19,22 +19,20 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"maxperip",
-	"2.0.0",
-	"Limit user connections based on ip address",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "maxperip",
+    "2.0.0",
+    "Limit user connections based on ip address",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Defines and macros */
 #define IPUSERS_HASH_TABLE_SIZE 8192
 
 /* Structs */
 typedef struct IpUsersBucket IpUsersBucket;
-struct IpUsersBucket
-{
+struct IpUsersBucket {
 	IpUsersBucket *prev, *next;
 	char rawip[16];
 	int local_clients;
@@ -53,12 +51,12 @@ static int known_cloud_services = 1; /* default: enabled */
  * See https://www.irccloud.com/networks and https://www.irccloud.com/static/hosts.json
  */
 static const char *irccloud_cidrs[] = {
-	"5.254.36.56/29",
-	"5.254.36.104/29",
-	"2a03:5180:f::/62",
-	"2a03:5180:f:4::/63",
-	"2a03:5180:f:6::/64",
-	NULL,
+    "5.254.36.56/29",
+    "5.254.36.104/29",
+    "2a03:5180:f::/62",
+    "2a03:5180:f:4::/63",
+    "2a03:5180:f:6::/64",
+    NULL,
 };
 
 /* Forward declarations */
@@ -139,16 +137,18 @@ int maxperip_config_test_allow(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		{
 			config_error("%s:%i: missing parameter", ce->file->filename, ce->line_number);
 			errors++;
-		} else {
+		} else
+		{
 			int v = atoi(ce->value);
 			if ((v <= 0) || (v > 1000000))
 			{
 				config_error("%s:%i: allow::%s with illegal value (must be 1-1000000)",
-					ce->file->filename, ce->line_number, ce->name);
+				             ce->file->filename, ce->line_number, ce->name);
 				errors++;
 			}
 		}
-	} else {
+	} else
+	{
 		return 0; /* Unknown option for us */
 	}
 
@@ -167,8 +167,7 @@ int maxperip_config_run_allow(ConfigFile *cf, ConfigEntry *ce, int type, void *p
 	if (!strcmp(ce->name, "maxperip"))
 	{
 		allow->maxperip = atoi(ce->value);
-	} else
-	if (!strcmp(ce->name, "global-maxperip"))
+	} else if (!strcmp(ce->name, "global-maxperip"))
 	{
 		allow->global_maxperip = atoi(ce->value);
 	} else
@@ -186,7 +185,7 @@ void maxperip_postconf(void)
 	{
 		/* Default: global-maxperip = maxperip+1 */
 		if (allow->global_maxperip == 0)
-			allow->global_maxperip = allow->maxperip+1;
+			allow->global_maxperip = allow->maxperip + 1;
 
 		/* global-maxperip < maxperip makes no sense */
 		if (allow->global_maxperip < allow->maxperip)
@@ -233,7 +232,8 @@ IpUsersBucket *find_ipusers_bucket(Client *client)
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
 			if (memcmp(p->rawip, rawip, 16) == 0)
 				return p;
-	} else {
+	} else
+	{
 		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
 			if (memcmp(p->rawip, rawip, 4) == 0)
 				return p;
@@ -263,7 +263,8 @@ IpUsersBucket *add_ipusers_bucket(Client *client)
 	{
 		memcpy(n->rawip, rawip, 16);
 		AddListItem(n, IpUsersHash_ipv6[hash]);
-	} else {
+	} else
+	{
 		memcpy(n->rawip, rawip, 4);
 		AddListItem(n, IpUsersHash_ipv4[hash]);
 	}
@@ -289,7 +290,8 @@ void decrease_ipusers_bucket(Client *client)
 		for (p = IpUsersHash_ipv6[hash]; p; p = p->next)
 			if (memcmp(p->rawip, rawip, 16) == 0)
 				break;
-	} else {
+	} else
+	{
 		for (p = IpUsersHash_ipv4[hash]; p; p = p->next)
 			if (memcmp(p->rawip, rawip, 4) == 0)
 				break;
@@ -389,7 +391,7 @@ int maxperip_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 		if (!ce->value)
 		{
 			config_error("%s:%i: set::known-cloud-services: no value specified",
-				ce->file->filename, ce->line_number);
+			             ce->file->filename, ce->line_number);
 			errors++;
 		}
 		*errs = errors;
@@ -451,14 +453,14 @@ int stats_maxperip(Client *client, const char *para)
 	if (strcmp(para, "8") && strcasecmp(para, "maxperip"))
 		return 0;
 
-	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return 0;
 	}
 
 	sendtxtnumeric(client, "MaxPerIp IPv4 hash table:");
-	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	for (i = 0; i < IPUSERS_HASH_TABLE_SIZE; i++)
 	{
 		for (e = IpUsersHash_ipv4[i]; e; e = e->next)
 		{
@@ -466,12 +468,12 @@ int stats_maxperip(Client *client, const char *para)
 			if (!ip)
 				ip = "<invalid>";
 			sendtxtnumeric(client, "IPv4 #%d %s: %d local / %d global",
-				       i, ip, e->local_clients, e->global_clients);
+			               i, ip, e->local_clients, e->global_clients);
 		}
 	}
 
 	sendtxtnumeric(client, "MaxPerIp IPv6 hash table:");
-	for (i=0; i < IPUSERS_HASH_TABLE_SIZE; i++)
+	for (i = 0; i < IPUSERS_HASH_TABLE_SIZE; i++)
 	{
 		for (e = IpUsersHash_ipv6[i]; e; e = e->next)
 		{
@@ -479,8 +481,8 @@ int stats_maxperip(Client *client, const char *para)
 			if (!ip)
 				ip = "<invalid>";
 			sendtxtnumeric(client, "IPv6 #%d %s/%d: %d local / %d global",
-				       i, ip, iConf.default_ipv6_clone_mask,
-				       e->local_clients, e->global_clients);
+			               i, ip, iConf.default_ipv6_clone_mask,
+			               e->local_clients, e->global_clients);
 		}
 	}
 
@@ -554,32 +556,32 @@ const char *maxperip_allow_client(Client *client, ConfigItem_allow *aconf)
 			mask_ipv6_rawip(client->rawip, iConf.default_ipv6_clone_mask, masked);
 			if (bucket && bucket->local_clients > aconf->maxperip)
 				unreal_log(ULOG_INFO, "maxperip", "MAXPERIP_LIMIT", client,
-				    "Client $client.name with IP $client.ip rejected: maxperip limit exceeded for $prefix_addr/$prefix_len ($count local, max $max)",
-				    log_data_string("prefix_addr", format_ipv6_addr(masked)),
-				    log_data_integer("prefix_len", iConf.default_ipv6_clone_mask),
-				    log_data_integer("count", bucket->local_clients),
-				    log_data_integer("max", aconf->maxperip));
+				           "Client $client.name with IP $client.ip rejected: maxperip limit exceeded for $prefix_addr/$prefix_len ($count local, max $max)",
+				           log_data_string("prefix_addr", format_ipv6_addr(masked)),
+				           log_data_integer("prefix_len", iConf.default_ipv6_clone_mask),
+				           log_data_integer("count", bucket->local_clients),
+				           log_data_integer("max", aconf->maxperip));
 			else
 				unreal_log(ULOG_INFO, "maxperip", "MAXPERIP_LIMIT", client,
-				    "Client $client.name with IP $client.ip rejected: maxperip limit exceeded for $prefix_addr/$prefix_len ($count global, max $max)",
-				    log_data_string("prefix_addr", format_ipv6_addr(masked)),
-				    log_data_integer("prefix_len", iConf.default_ipv6_clone_mask),
-				    log_data_integer("count", bucket ? bucket->global_clients : 0),
-				    log_data_integer("max", aconf->global_maxperip));
+				           "Client $client.name with IP $client.ip rejected: maxperip limit exceeded for $prefix_addr/$prefix_len ($count global, max $max)",
+				           log_data_string("prefix_addr", format_ipv6_addr(masked)),
+				           log_data_integer("prefix_len", iConf.default_ipv6_clone_mask),
+				           log_data_integer("count", bucket ? bucket->global_clients : 0),
+				           log_data_integer("max", aconf->global_maxperip));
 			return format_ipv6_prefix_reject_message(
 			    iConf.reject_message_too_many_connections_ipv6_range,
 			    masked, iConf.default_ipv6_clone_mask);
 		}
 		if (bucket && bucket->local_clients > aconf->maxperip)
 			unreal_log(ULOG_INFO, "maxperip", "MAXPERIP_LIMIT", client,
-			    "Client $client.name with IP $client.ip rejected: maxperip limit exceeded ($count local, max $max)",
-			    log_data_integer("count", bucket->local_clients),
-			    log_data_integer("max", aconf->maxperip));
+			           "Client $client.name with IP $client.ip rejected: maxperip limit exceeded ($count local, max $max)",
+			           log_data_integer("count", bucket->local_clients),
+			           log_data_integer("max", aconf->maxperip));
 		else
 			unreal_log(ULOG_INFO, "maxperip", "MAXPERIP_LIMIT", client,
-			    "Client $client.name with IP $client.ip rejected: maxperip limit exceeded ($count global, max $max)",
-			    log_data_integer("count", bucket ? bucket->global_clients : 0),
-			    log_data_integer("max", aconf->global_maxperip));
+			           "Client $client.name with IP $client.ip rejected: maxperip limit exceeded ($count global, max $max)",
+			           log_data_integer("count", bucket ? bucket->global_clients : 0),
+			           log_data_integer("max", aconf->global_maxperip));
 		return iConf.reject_message_too_many_connections;
 	}
 	return NULL;

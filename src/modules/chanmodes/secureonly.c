@@ -19,21 +19,20 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/secureonly",
-	"4.2",
-	"Channel Mode +z",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/secureonly",
+    "4.2",
+    "Channel Mode +z",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_SECUREONLY;
 
-#define IsSecureOnly(channel)    (channel->mode.mode & EXTCMODE_SECUREONLY)
+#define IsSecureOnly(channel) (channel->mode.mode & EXTCMODE_SECUREONLY)
 
 int secureonly_check_join(Client *client, Channel *channel, const char *key, char **errmsg);
-int secureonly_channel_sync (Channel *channel, int merge, int removetheirs, int nomode);
+int secureonly_channel_sync(Channel *channel, int merge, int removetheirs, int nomode);
 int secureonly_check_secure(Channel *channel);
 int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester);
 int secureonly_pre_local_join(Client *client, Channel *channel, const char *key);
@@ -109,10 +108,10 @@ static int secureonly_kick_insecure_users(Channel *channel)
 			RunHook(HOOKTYPE_LOCAL_KICK, &me, &me, client, channel, mtags, comment);
 
 			sendto_channel(channel, &me, client,
-				       prefix, 0,
-				       SEND_LOCAL, mtags,
-				       ":%s KICK %s %s :%s",
-				       me.name, channel->name, client->name, comment);
+			               prefix, 0,
+			               SEND_LOCAL, mtags,
+			               ":%s KICK %s %s :%s",
+			               me.name, channel->name, client->name, comment);
 
 			sendto_prefix_one(client, &me, mtags, ":%s KICK %s %s :%s", me.name, channel->name, client->name, comment);
 
@@ -133,7 +132,7 @@ int secureonly_check_join(Client *client, Channel *channel, const char *key, cha
 
 	if (IsSecureOnly(channel) && !(client->umodes & UMODE_SECURE))
 	{
-		if (ValidatePermissionsForPath("channel:override:secureonly",client,NULL,channel,NULL))
+		if (ValidatePermissionsForPath("channel:override:secureonly", client, NULL, channel, NULL))
 		{
 			/* if the channel is +z we still allow an ircop to bypass it
 			 * if they are invited.
@@ -169,7 +168,7 @@ int secureonly_check_sajoin(Client *target, Channel *channel, Client *requester)
 	if (IsSecureOnly(channel) && !IsSecure(target))
 	{
 		sendnotice(requester, "You cannot SAJOIN %s to %s because the channel is +z and the user is not connected via TLS",
-			target->name, channel->name);
+		           target->name, channel->name);
 		return HOOK_DENY;
 	}
 

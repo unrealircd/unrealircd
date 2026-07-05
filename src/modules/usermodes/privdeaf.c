@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"usermodes/privdeaf",
-	"1.2",
-	"Private Messages Deaf (+D) -- by Syzop",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "usermodes/privdeaf",
+    "1.2",
+    "Private Messages Deaf (+D) -- by Syzop",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 static long UMODE_PRIVDEAF = 0;
@@ -31,8 +30,8 @@ MOD_INIT()
 		config_error("privdeaf: Could not add usermode 'D': %s", ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
-	
-	 HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, privdeaf_can_send_to_user);
+
+	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, privdeaf_can_send_to_user);
 
 	return MOD_SUCCESS;
 }

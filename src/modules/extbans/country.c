@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/country",
-	"6.0",
-	"ExtBan ~country - Ban/exempt by country (geoip)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/country",
+    "6.0",
+    "ExtBan ~country - Ban/exempt by country (geoip)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -42,8 +41,8 @@ Extban *register_country_extban(ModuleInfo *modinfo)
 	req.is_ok = extban_country_is_ok;
 	req.conv_param = extban_country_conv_param;
 	req.is_banned = extban_country_is_banned;
-	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
-	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
+	req.is_banned_events = BANCHK_ALL | BANCHK_TKL;
+	req.options = EXTBOPT_INVEX | EXTBOPT_TKL;
 	return ExtbanAdd(modinfo->handle, req);
 }
 
@@ -90,7 +89,7 @@ int extban_country_usage(Client *client)
 	if (client)
 	{
 		sendnotice(client, "ERROR: ExtBan ~country expects a two letter country code, or * to ban unknown countries. "
-						 "For example: +b ~country:UK");
+		                   "For example: +b ~country:UK");
 	}
 	return EX_DENY;
 }

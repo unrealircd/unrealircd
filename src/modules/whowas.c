@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_whowas);
 
-#define MSG_WHOWAS 	"WHOWAS"	
+#define MSG_WHOWAS "WHOWAS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"whowas",
-	"5.0",
-	"command /whowas", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "whowas",
+    "5.0",
+    "command /whowas",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -64,8 +63,8 @@ CMD_FUNC(cmd_whowas)
 {
 	char request[BUFSIZE];
 	WhoWas *temp;
-	int  cur = 0;
-	int  max = -1, found = 0;
+	int cur = 0;
+	int max = -1, found = 0;
 	char *p, *nick;
 
 	if (parc < 2)
@@ -99,32 +98,32 @@ CMD_FUNC(cmd_whowas)
 		if (!mycmp(nick, temp->name))
 		{
 			sendnumeric(client, RPL_WHOWASUSER, temp->name,
-			    temp->username,
-			    BadPtr(temp->virthost) ? temp->hostname : temp->virthost,
-			    temp->realname);
-			if (!BadPtr(temp->ip) && ValidatePermissionsForPath("client:see:ip",client,NULL,NULL,NULL))
+			            temp->username,
+			            BadPtr(temp->virthost) ? temp->hostname : temp->virthost,
+			            temp->realname);
+			if (!BadPtr(temp->ip) && ValidatePermissionsForPath("client:see:ip", client, NULL, NULL, NULL))
 			{
 				GeoIPResult *geo = geoip_lookup(temp->ip);
 				sendnumericfmt(client, RPL_WHOISHOST, "%s :was connecting from %s@%s %s",
-					temp->name,
-					temp->username, temp->hostname,
-					temp->ip ? temp->ip : "");
+				               temp->name,
+				               temp->username, temp->hostname,
+				               temp->ip ? temp->ip : "");
 				if (geo)
 				{
 					if (geo->country_code && geo->country_name)
 					{
 						sendnumericfmt(client, RPL_WHOISCOUNTRY, "%s %s :was connecting from %s",
-							       temp->name,
-							       geo->country_code,
-							       geo->country_name);
+						               temp->name,
+						               geo->country_code,
+						               geo->country_name);
 					}
 					if (geo->asn)
 					{
 						sendnumericfmt(client, RPL_WHOISASN, "%s %u :was connecting from AS%u [%s]",
-							       temp->name,
-							       geo->asn,
-							       geo->asn,
-							       geo->asname ? geo->asname : "UNKNOWN");
+						               temp->name,
+						               geo->asn,
+						               geo->asn,
+						               geo->asname ? geo->asname : "UNKNOWN");
 					}
 					free_geoip_result(geo);
 				}
@@ -132,8 +131,8 @@ CMD_FUNC(cmd_whowas)
 			if (IsOper(client) && !BadPtr(temp->account))
 			{
 				sendnumericfmt(client, RPL_WHOISLOGGEDIN, "%s %s :was logged in as",
-					temp->name,
-					temp->account);
+				               temp->name,
+				               temp->account);
 			}
 			if (!((find_uline(temp->servername)) && !IsOper(client) && HIDE_ULINES))
 			{

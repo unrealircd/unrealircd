@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"sinfo",
-	"5.0",
-	"Server information",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sinfo",
+    "5.0",
+    "Server information",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 CMD_FUNC(cmd_sinfo);
@@ -21,7 +20,7 @@ CMD_FUNC(cmd_sinfo);
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, "SINFO", cmd_sinfo, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "SINFO", cmd_sinfo, MAXPARA, CMD_USER | CMD_SERVER);
 
 	return MOD_SUCCESS;
 }
@@ -87,7 +86,8 @@ CMD_FUNC(sinfo_server)
 		safe_free(client->server->features.chanmodes[1]);
 		safe_free(client->server->features.chanmodes[2]);
 		safe_free(client->server->features.chanmodes[3]);
-	} else {
+	} else
+	{
 		parse_chanmodes_protoctl(client, parv[4]);
 	}
 
@@ -99,10 +99,10 @@ CMD_FUNC(sinfo_server)
 	/* Software is always the last parameter. It is currently parv[6]
 	 * but may change later. So always use parv[parc-1].
 	 */
-	if (!strcmp(parv[parc-1], "*"))
+	if (!strcmp(parv[parc - 1], "*"))
 		safe_free(client->server->features.software);
 	else
-		safe_strdup(client->server->features.software, parv[parc-1]);
+		safe_strdup(client->server->features.software, parv[parc - 1]);
 
 	if (is_services_but_not_ulined(client))
 	{
@@ -117,7 +117,7 @@ CMD_FUNC(sinfo_server)
 	sendto_server(client, 0, 0, NULL, ":%s SINFO %s", client->id, buf);
 }
 
-#define SafeDisplayStr(x)  ((x && *(x)) ? (x) : "-")
+#define SafeDisplayStr(x) ((x && *(x)) ? (x) : "-")
 CMD_FUNC(sinfo_user)
 {
 	Client *acptr;
@@ -139,7 +139,8 @@ CMD_FUNC(sinfo_user)
 		{
 			sendtxtnumeric(client, "Up since: -");
 			sendtxtnumeric(client, "Uptime: -");
-		} else {
+		} else
+		{
 			sendtxtnumeric(client, "Up since: %s",
 			               pretty_date(acptr->server->boottime));
 			sendtxtnumeric(client, "Uptime: %s",
@@ -150,7 +151,8 @@ CMD_FUNC(sinfo_user)
 		if (!acptr->server->features.chanmodes[0])
 		{
 			sendtxtnumeric(client, "Channel modes: -");
-		} else {
+		} else
+		{
 			sendtxtnumeric(client, "Channel modes: %s,%s,%s,%s",
 			               SafeDisplayStr(acptr->server->features.chanmodes[0]),
 			               SafeDisplayStr(acptr->server->features.chanmodes[1]),

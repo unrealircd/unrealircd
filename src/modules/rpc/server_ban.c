@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/server_ban",
-	"1.0.3",
-	"server_ban.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/server_ban",
+    "1.0.3",
+    "server_ban.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -242,7 +241,8 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 		 */
 		snprintf(usermask_mess, sizeof(usermask_mess), "%%%s", usermask);
 		tkllayer[3] = usermask_mess;
-	} else {
+	} else
+	{
 		tkllayer[3] = usermask;
 	}
 	tkllayer[4] = hostmask;
@@ -253,7 +253,8 @@ RPC_CALL_FUNC(rpc_server_ban_del)
 	if (!find_tkl_serverban(tkl_type_int, usermask, hostmask, soft))
 	{
 		rpc_response(client, request, result);
-	} else {
+	} else
+	{
 		/* Actually this may not be an internal error, it could be an
 		 * incorrect request, such as asking to remove a config-based ban.
 		 */
@@ -297,8 +298,7 @@ RPC_CALL_FUNC(rpc_server_ban_add)
 		tkl_expire_at = config_checkval(str, CFG_TIME);
 		if (tkl_expire_at > 0)
 			tkl_expire_at = TStime() + tkl_expire_at;
-	} else
-	if ((str = json_object_get_string(params, "expire_at")))
+	} else if ((str = json_object_get_string(params, "expire_at")))
 	{
 		tkl_expire_at = server_time_to_unix_time(str);
 	} else

@@ -22,16 +22,15 @@
 CMD_FUNC(cmd_svswatch);
 
 /* Place includes here */
-#define MSG_SVSWATCH       "SVSWATCH"
+#define MSG_SVSWATCH "SVSWATCH"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svswatch",	/* Name of module */
-	"5.0", /* Version */
-	"command /svswatch", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svswatch", /* Name of module */
+    "5.0", /* Version */
+    "command /svswatch", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
@@ -45,13 +44,12 @@ MOD_INIT()
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
-	
 }
 
 /* Called when module is unloaded */
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /* cmd_svswatch() - written by Syzop, suggested by Griever.
@@ -74,7 +72,6 @@ CMD_FUNC(cmd_svswatch)
 		parv[1] = parv[2];
 		parv[2] = NULL;
 		do_cmd(target, NULL, "WATCH", 2, parv);
-	}
-	else
+	} else
 		sendto_one(target, NULL, ":%s SVSWATCH %s :%s", client->name, parv[1], parv[2]);
 }

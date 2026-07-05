@@ -6,14 +6,13 @@
 #include "unrealircd.h"
 #include <GeoIP.h>
 
-ModuleHeader MOD_HEADER
-  = {
-	"geoip_classic",
-	"5.0",
-	"GEOIP using classic databases", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "geoip_classic",
+    "5.0",
+    "GEOIP using classic databases",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 struct geoip_classic_config_s {
 	char *v4_db_file;
@@ -48,7 +47,7 @@ int geoip_classic_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 	ConfigEntry *cep;
 	int errors = 0;
 	int i;
-	
+
 	if (type != CONFIG_SET)
 		return 0;
 
@@ -128,7 +127,7 @@ int geoip_classic_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 		}
 		config_warn("%s:%i: unknown item set::geoip-classic::%s", cep->file->filename, cep->line_number, cep->name);
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -189,7 +188,8 @@ int geoip_classic_configposttest(int *errs)
 		if (!geoip_classic_config.have_ipv4_database && !geoip_classic_config.have_ipv6_database)
 		{
 			config_error("[geoip_classic] couldn't read any database! Either put these in %s location "
-					"or specify another in set::geoip-classic config block", PERMDATADIR);
+			             "or specify another in set::geoip-classic config block",
+			             PERMDATADIR);
 			errors++;
 		}
 		/* The ASN ones are optional */
@@ -269,9 +269,9 @@ MOD_LOAD()
 		{
 			int save_err = errno;
 			unreal_log(ULOG_WARNING, "geoip_classic", "GEOIP_CANNOT_OPEN_DB", NULL,
-				       "[IPv4] Could not open '$filename': $system_error",
-				       log_data_string("filename", geoip_classic_config.v4_db_file),
-				       log_data_string("system_error", strerror(save_err)));
+			           "[IPv4] Could not open '$filename': $system_error",
+			           log_data_string("filename", geoip_classic_config.v4_db_file),
+			           log_data_string("system_error", strerror(save_err)));
 		}
 	}
 	if (geoip_classic_config.v6_db_file)
@@ -285,9 +285,9 @@ MOD_LOAD()
 		{
 			int save_err = errno;
 			unreal_log(ULOG_WARNING, "geoip_classic", "GEOIP_CANNOT_OPEN_DB", NULL,
-				       "[IPv6] Could not open '$filename': $system_error",
-				       log_data_string("filename", geoip_classic_config.v6_db_file),
-				       log_data_string("system_error", strerror(save_err)));
+			           "[IPv6] Could not open '$filename': $system_error",
+			           log_data_string("filename", geoip_classic_config.v6_db_file),
+			           log_data_string("system_error", strerror(save_err)));
 		}
 		convert_to_absolute_path(&geoip_classic_config.v6_db_file, PERMDATADIR);
 	}
@@ -295,7 +295,7 @@ MOD_LOAD()
 	if (!found_good_file)
 	{
 		unreal_log(ULOG_ERROR, "geoip_classic", "GEOIP_CANNOT_OPEN_DB", NULL,
-					"could not open any database!");
+		           "could not open any database!");
 		return MOD_FAILED;
 	}
 
@@ -308,9 +308,9 @@ MOD_LOAD()
 		{
 			int save_err = errno;
 			unreal_log(ULOG_WARNING, "geoip_classic", "GEOIP_CANNOT_OPEN_DB", NULL,
-				       "[ASN IPv4] Could not open '$filename': $system_error",
-				       log_data_string("filename", geoip_classic_config.asn_v4_db_file),
-				       log_data_string("system_error", strerror(save_err)));
+			           "[ASN IPv4] Could not open '$filename': $system_error",
+			           log_data_string("filename", geoip_classic_config.asn_v4_db_file),
+			           log_data_string("system_error", strerror(save_err)));
 		}
 	}
 
@@ -322,9 +322,9 @@ MOD_LOAD()
 		{
 			int save_err = errno;
 			unreal_log(ULOG_WARNING, "geoip_classic", "GEOIP_CANNOT_OPEN_DB", NULL,
-				       "[ASN IPv6] Could not open '$filename': $system_error",
-				       log_data_string("filename", geoip_classic_config.asn_v6_db_file),
-				       log_data_string("system_error", strerror(save_err)));
+			           "[ASN IPv6] Could not open '$filename': $system_error",
+			           log_data_string("filename", geoip_classic_config.asn_v6_db_file),
+			           log_data_string("system_error", strerror(save_err)));
 		}
 	}
 
@@ -359,7 +359,7 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 {
 	static char buf[256];
 	const char *country_code, *country_name;
-	char *isp=NULL;
+	char *isp = NULL;
 	GeoIPLookup gl, asn_gl;
 	GeoIP *gi;
 	int geoid;
@@ -414,7 +414,7 @@ GeoIPResult *geoip_lookup_classic(char *ip)
 		if ((isp[0] == 'A') && (isp[1] == 'S') && isdigit(isp[2]))
 		{
 			char *p;
-			r->asn = strtoul(isp+2, NULL, 10);
+			r->asn = strtoul(isp + 2, NULL, 10);
 			p = strchr(isp, ' ');
 			if (p)
 			{

@@ -28,7 +28,7 @@ ISupport *ISupports = NULL; /* List of ISUPPORT (005) tokens */
 ISupport *ISupports_old = NULL; /* see isupport_snapshot() and isupport_check_for_changes() */
 #define MAXISUPPORTLINES 10
 
-MODVAR char *ISupportStrings[MAXISUPPORTLINES+1];
+MODVAR char *ISupportStrings[MAXISUPPORTLINES + 1];
 
 void isupport_add_sorted(ISupport *is);
 void make_isupportstrings(void);
@@ -125,7 +125,7 @@ void isupport_init(void)
 		ISupportSet(NULL, "draft/ICON", iConf.network_icon);
 	else
 		ISupportDelByName("draft/ICON");
-	
+
 	set_isupport_extban(); /* EXTBAN=xyz */
 	set_isupport_targmax(); /* TARGMAX=... */
 }
@@ -201,7 +201,7 @@ ISupport *ISupportAdd(Module *module, const char *token, const char *value)
 			return NULL;
 		}
 	}
-	if (!token || !*token || c-token > 20)
+	if (!token || !*token || c - token > 20)
 	{
 		if (module)
 			module->errorcode = MODERR_INVALID;
@@ -279,7 +279,7 @@ void make_isupportstrings(void)
 		safe_free(ISupportStrings[i]);
 
 	i = 0;
-	ISupportStrings[i] = safe_alloc(bufsize+1);
+	ISupportStrings[i] = safe_alloc(bufsize + 1);
 
 	for (isupport = ISupports; isupport; isupport = isupport->next)
 	{
@@ -292,7 +292,7 @@ void make_isupportstrings(void)
 		if ((strlen(ISupportStrings[i]) + strlen(tmp) + 1 >= ISUPPORTLEN) || (tokcnt == 13))
 		{
 			/* No room or max tokens reached: start a new buffer */
-			ISupportStrings[++i] = safe_alloc(bufsize+1);
+			ISupportStrings[++i] = safe_alloc(bufsize + 1);
 			tokcnt = 1;
 			if (i == MAXISUPPORTLINES)
 				abort(); /* should never happen anyway */

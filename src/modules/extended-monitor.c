@@ -38,20 +38,19 @@ int extended_monitor_userhost_change(Client *client, const char *olduser, const 
 int extended_monitor_realname_change(Client *client, const char *oldinfo);
 int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data);
 
-ModuleHeader MOD_HEADER
-  = {
-	"extended-monitor",
-	"5.0",
-	"extended functionality for /monitor", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "extended-monitor",
+    "5.0",
+    "extended functionality for /monitor",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
 	ClientCapabilityInfo cap;
 	ClientCapability *c;
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	ModDataInfo mreq;
@@ -159,7 +158,6 @@ int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int ev
 		default:
 			break;
 	}
-	
+
 	return 0;
 }
-

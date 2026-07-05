@@ -6,14 +6,13 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/censor",
-	"4.2",
-	"Channel Mode +G",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/censor",
+    "4.2",
+    "Channel Mode +G",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 
 Cmode_t EXTMODE_CENSOR = 0L;
@@ -37,7 +36,7 @@ MOD_TEST()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, censor_config_test);
 	return MOD_SUCCESS;
 }
-	
+
 MOD_INIT()
 {
 	CmodeInfo req;
@@ -87,24 +86,24 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type != CONFIG_MAIN)
 		return 0;
-	
+
 	if (!ce || !ce->name || strcmp(ce->name, "badword"))
 		return 0; /* not interested */
 
 	if (!ce->value)
 	{
 		config_error("%s:%i: badword without type",
-			ce->file->filename, ce->line_number);
+		             ce->file->filename, ce->line_number);
 		*errs = 1;
 		return -1;
-	}
-	else if (strcmp(ce->value, "channel") && 
-	         strcmp(ce->value, "quit") && strcmp(ce->value, "all")) {
+	} else if (strcmp(ce->value, "channel") &&
+	           strcmp(ce->value, "quit") && strcmp(ce->value, "all"))
+	{
 /*			config_error("%s:%i: badword with unknown type",
 				ce->file->filename, ce->line_number); -- can't do that.. */
 		return 0; /* unhandled */
 	}
-	
+
 	if (!strcmp(ce->value, "quit"))
 	{
 		config_error("%s:%i: badword quit has been removed. We just use the bad words from "
@@ -125,36 +124,34 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			const char *errbuf;
 			if (has_word)
 			{
-				config_warn_duplicate(cep->file->filename, 
-					cep->line_number, "badword::word");
+				config_warn_duplicate(cep->file->filename,
+				                      cep->line_number, "badword::word");
 				continue;
 			}
 			has_word = 1;
-			if ((errbuf = badword_config_check_regex(cep->value,1,1)))
+			if ((errbuf = badword_config_check_regex(cep->value, 1, 1)))
 			{
 				config_error("%s:%i: badword::%s contains an invalid regex: %s",
-					cep->file->filename,
-					cep->line_number,
-					cep->name, errbuf);
+				             cep->file->filename,
+				             cep->line_number,
+				             cep->name, errbuf);
 				errors++;
 			}
-		}
-		else if (!strcmp(cep->name, "replace"))
+		} else if (!strcmp(cep->name, "replace"))
 		{
 			if (has_replace)
 			{
-				config_warn_duplicate(cep->file->filename, 
-					cep->line_number, "badword::replace");
+				config_warn_duplicate(cep->file->filename,
+				                      cep->line_number, "badword::replace");
 				continue;
 			}
 			has_replace = 1;
-		}
-		else if (!strcmp(cep->name, "action"))
+		} else if (!strcmp(cep->name, "action"))
 		{
 			if (has_action)
 			{
-				config_warn_duplicate(cep->file->filename, 
-					cep->line_number, "badword::action");
+				config_warn_duplicate(cep->file->filename,
+				                      cep->line_number, "badword::action");
 				continue;
 			}
 			has_action = 1;
@@ -165,16 +162,15 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			else
 			{
 				config_error("%s:%d: Unknown badword::action '%s'",
-					cep->file->filename, cep->line_number,
-					cep->value);
+				             cep->file->filename, cep->line_number,
+				             cep->value);
 				errors++;
 			}
-				
-		}
-		else
+
+		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
-				"badword", cep->name);
+			                     "badword", cep->name);
 			errors++;
 		}
 	}
@@ -182,7 +178,7 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!has_word)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"badword::word");
+		                     "badword::word");
 		errors++;
 	}
 	if (has_action)
@@ -190,11 +186,11 @@ int censor_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (has_replace && action == 'b')
 		{
 			config_error("%s:%i: badword::action is block but badword::replace exists",
-				ce->file->filename, ce->line_number);
+			             ce->file->filename, ce->line_number);
 			errors++;
 		}
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -207,12 +203,12 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_MAIN)
 		return 0;
-	
+
 	if (!ce || !ce->name || strcmp(ce->name, "badword"))
 		return 0; /* not interested */
 
 	if (strcmp(ce->value, "channel") && strcmp(ce->value, "all"))
-	        return 0; /* not for us */
+		return 0; /* not for us */
 
 	ca = safe_alloc(sizeof(ConfigItem_badword));
 	ca->action = BADWORD_REPLACE;
@@ -225,12 +221,10 @@ int censor_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 			{
 				ca->action = BADWORD_BLOCK;
 			}
-		}
-		else if (!strcmp(cep->name, "replace"))
+		} else if (!strcmp(cep->name, "replace"))
 		{
 			safe_strdup(ca->replace, cep->value);
-		} else
-		if (!strcmp(cep->name, "word"))
+		} else if (!strcmp(cep->name, "word"))
 		{
 			word = cep;
 		}
@@ -330,9 +324,9 @@ int censor_stats_badwords_channel(Client *client, const char *para)
 	for (words = conf_badword_channel; words; words = words->next)
 	{
 		sendtxtnumeric(client, "c %c %s%s%s %s", words->type & BADW_TYPE_REGEX ? 'R' : 'F',
-		           (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
-		           (words->type & BADW_TYPE_FAST_R) ? "*" : "",
-		           words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");
+		               (words->type & BADW_TYPE_FAST_L) ? "*" : "", words->word,
+		               (words->type & BADW_TYPE_FAST_R) ? "*" : "",
+		               words->action == BADWORD_REPLACE ? (words->replace ? words->replace : "<censored>") : "");
 	}
 	return 1;
 }

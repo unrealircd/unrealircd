@@ -53,13 +53,13 @@ typedef struct {
  * since we use strncmp for matching.
  */
 static IfFunction if_functions[] = {
-	{ "module-loaded",    IF_MODULE_LOADED,    0 },
-	{ "module-exists",    IF_MODULE_EXISTS,    0 },
-	{ "minimum-version",  IF_MINIMUM_VERSION,  0 },
-	{ "file-exists",      IF_FILE_EXISTS,      0 },
-	{ "module-version",   IF_MODULE_VERSION,    1 },
-	{ "environment",      IF_ENVIRONMENT,      1 },
-	{ "defined",          IF_DEFINED,          0 },
+    {"module-loaded", IF_MODULE_LOADED, 0},
+    {"module-exists", IF_MODULE_EXISTS, 0},
+    {"minimum-version", IF_MINIMUM_VERSION, 0},
+    {"file-exists", IF_FILE_EXISTS, 0},
+    {"module-version", IF_MODULE_VERSION, 1},
+    {"environment", IF_ENVIRONMENT, 1},
+    {"defined", IF_DEFINED, 0},
 };
 
 static inline int ValidVarCharacter(char x)
@@ -89,35 +89,30 @@ static int parse_compare_op_and_value(char **p, char *statement,
 	{
 		*compare_op_out = COMPARE_EQ;
 		op_len = 2;
-	} else
-	if (!strncmp(*p, "!=", 2))
+	} else if (!strncmp(*p, "!=", 2))
 	{
 		*compare_op_out = COMPARE_NE;
 		op_len = 2;
-	} else
-	if (!strncmp(*p, ">=", 2))
+	} else if (!strncmp(*p, ">=", 2))
 	{
 		*compare_op_out = COMPARE_GE;
 		op_len = 2;
-	} else
-	if (!strncmp(*p, "<=", 2))
+	} else if (!strncmp(*p, "<=", 2))
 	{
 		*compare_op_out = COMPARE_LE;
 		op_len = 2;
-	} else
-	if (**p == '>')
+	} else if (**p == '>')
 	{
 		*compare_op_out = COMPARE_GT;
 		op_len = 1;
-	} else
-	if (**p == '<')
+	} else if (**p == '<')
 	{
 		*compare_op_out = COMPARE_LT;
 		op_len = 1;
 	} else
 	{
 		config_error("%s:%i: @if: expected comparison operator (==, !=, >, >=, <, <=): %s",
-			filename, linenumber, statement);
+		             filename, linenumber, statement);
 		return 0;
 	}
 	*p += op_len;
@@ -130,7 +125,7 @@ static int parse_compare_op_and_value(char **p, char *statement,
 		if (!**p)
 		{
 			config_error("%s:%i: invalid @if statement, missing \" at end perhaps?",
-				filename, linenumber);
+			             filename, linenumber);
 			return 0;
 		}
 		**p = '\0';
@@ -169,7 +164,7 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 	if (*p != '(')
 	{
 		config_error("%s:%i: expected '(' for %s(...",
-			filename, linenumber, funcname);
+		             filename, linenumber, funcname);
 		return PREPROCESSOR_ERROR;
 	}
 	p++;
@@ -181,7 +176,7 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 	if (!*p)
 	{
 		config_error("%s:%i: invalid if statement (termination error): %s",
-			filename, linenumber, statement);
+		             filename, linenumber, statement);
 		return PREPROCESSOR_ERROR;
 	}
 	*p = '\0';
@@ -204,7 +199,7 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 			if (negative)
 			{
 				config_error("%s:%i: @if: the '!' prefix cannot be used with %s() comparisons, use != instead: %s",
-					filename, linenumber, funcname, statement);
+				             filename, linenumber, funcname, statement);
 				preprocessor_cc_free_entry(cc);
 				return PREPROCESSOR_ERROR;
 			}
@@ -224,7 +219,7 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 
 PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename, int linenumber, ConditionalConfig **cc_out)
 {
-	char *p=statement;
+	char *p = statement;
 	int i, negative = 0;
 	ConditionalConfig *cc;
 
@@ -277,13 +272,13 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 		if (*p != '$')
 		{
 			config_error("%s:%i: invalid @if statement. Either an unknown function, or did you mean $VARNAME?: %s",
-				filename, linenumber, statement);
+			             filename, linenumber, statement);
 			return PREPROCESSOR_ERROR;
 		}
 		if (negative)
 		{
 			config_error("%s:%i: @if: the '!' prefix cannot be used with variable comparisons, use != instead: %s",
-				filename, linenumber, statement);
+			             filename, linenumber, statement);
 			return PREPROCESSOR_ERROR;
 		}
 		p++;
@@ -293,7 +288,7 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 		if (!*p)
 		{
 			config_error("%s:%i: invalid if statement (termination error): %s",
-				filename, linenumber, statement);
+			             filename, linenumber, statement);
 			return PREPROCESSOR_ERROR;
 		}
 		name_terminate = p;
@@ -310,7 +305,7 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	}
 
 	config_error("%s:%i: Error while evaluating '@if' statement '%s'",
-		filename, linenumber, statement);
+	             filename, linenumber, statement);
 	return PREPROCESSOR_ERROR;
 }
 
@@ -337,7 +332,7 @@ static const char *resolve_define_function(char *p, char *statement,
 		if (!if_functions[i].returns_value)
 		{
 			config_error("%s:%i: @define: function '%s' does not return a value",
-				filename, linenumber, if_functions[i].keyword);
+			             filename, linenumber, if_functions[i].keyword);
 			return NULL;
 		}
 
@@ -347,7 +342,7 @@ static const char *resolve_define_function(char *p, char *statement,
 		if (*p != '(')
 		{
 			config_error("%s:%i: @define: expected '(' for %s(...",
-				filename, linenumber, if_functions[i].keyword);
+			             filename, linenumber, if_functions[i].keyword);
 			return NULL;
 		}
 		p++;
@@ -359,7 +354,7 @@ static const char *resolve_define_function(char *p, char *statement,
 		if (!*p)
 		{
 			config_error("%s:%i: @define: invalid function call (termination error): %s",
-				filename, linenumber, statement);
+			             filename, linenumber, statement);
 			return NULL;
 		}
 		*p = '\0';
@@ -371,7 +366,7 @@ static const char *resolve_define_function(char *p, char *statement,
 			if (!env)
 			{
 				config_error("%s:%i: @define: environment variable '%s' is not set",
-					filename, linenumber, arg);
+				             filename, linenumber, arg);
 				return NULL;
 			}
 			return env;
@@ -383,13 +378,13 @@ static const char *resolve_define_function(char *p, char *statement,
 			if (!mod)
 			{
 				config_error("%s:%i: @define: module '%s' is not loaded",
-					filename, linenumber, arg);
+				             filename, linenumber, arg);
 				return NULL;
 			}
 			if (!mod->header->version)
 			{
 				config_error("%s:%i: @define: module '%s' has no version information",
-					filename, linenumber, arg);
+				             filename, linenumber, arg);
 				return NULL;
 			}
 			return mod->header->version;
@@ -397,16 +392,16 @@ static const char *resolve_define_function(char *p, char *statement,
 
 		/* Future value-returning functions go here */
 		config_error("%s:%i: @define: [BUG] unhandled value-returning function '%s'",
-			filename, linenumber, if_functions[i].keyword);
+		             filename, linenumber, if_functions[i].keyword);
 		return NULL;
 	}
 
 	config_error("%s:%i: @define: expected a quoted string or a value-returning function like environment(): %s",
-		filename, linenumber, statement);
+	             filename, linenumber, statement);
 	return NULL;
 }
 
-PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *filename, int linenumber)
+PreprocessorItem evaluate_preprocessor_define(char *statement, const char *filename, int linenumber)
 {
 	char *p = statement;
 	char *name, *name_terminator;
@@ -418,7 +413,7 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *file
 	if (!*p)
 	{
 		config_error("%s:%i: invalid @define statement",
-			filename, linenumber);
+		             filename, linenumber);
 		return PREPROCESSOR_ERROR;
 	}
 	name_terminator = p;
@@ -433,7 +428,7 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *file
 		if (!*p)
 		{
 			config_error("%s:%i: invalid @define statement, missing \" at end perhaps?",
-				filename, linenumber);
+			             filename, linenumber);
 			return PREPROCESSOR_ERROR;
 		}
 		*p = '\0';
@@ -484,7 +479,7 @@ PreprocessorItem  evaluate_preprocessor_define(char *statement, const char *file
  * @returns PREPROCESSOR_USER_ERROR or PREPROCESSOR_USER_WARNING
  */
 static PreprocessorItem evaluate_preprocessor_error_or_warning(char *statement,
-	int is_error, const char *filename, int linenumber)
+                                                               int is_error, const char *filename, int linenumber)
 {
 	char *p = statement;
 
@@ -508,7 +503,7 @@ static PreprocessorItem evaluate_preprocessor_error_or_warning(char *statement,
 	return PREPROCESSOR_USER_WARNING;
 }
 
-PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *filename, int linenumber, ConditionalConfig **cc)
+PreprocessorItem parse_preprocessor_item(char *start, char *end, const char *filename, int linenumber, ConditionalConfig **cc)
 {
 	char buf[512];
 	int max;
@@ -521,17 +516,17 @@ PreprocessorItem  parse_preprocessor_item(char *start, char *end, const char *fi
 	strlcpy(buf, start, max);
 
 	if (!strncmp(buf, "@define", 7))
-		return evaluate_preprocessor_define(buf+7, filename, linenumber);
+		return evaluate_preprocessor_define(buf + 7, filename, linenumber);
 	else if (!strncmp(buf, "@if ", 4))
-		return evaluate_preprocessor_if(buf+4, filename, linenumber, cc);
+		return evaluate_preprocessor_if(buf + 4, filename, linenumber, cc);
 	else if (!strncmp(buf, "@else", 5))
 		return PREPROCESSOR_ELSE;
 	else if (!strncmp(buf, "@endif", 6))
 		return PREPROCESSOR_ENDIF;
 	else if (!strncmp(buf, "@error ", 7))
-		return evaluate_preprocessor_error_or_warning(buf+7, 1, filename, linenumber);
+		return evaluate_preprocessor_error_or_warning(buf + 7, 1, filename, linenumber);
 	else if (!strncmp(buf, "@warning ", 9))
-		return evaluate_preprocessor_error_or_warning(buf+9, 0, filename, linenumber);
+		return evaluate_preprocessor_error_or_warning(buf + 9, 0, filename, linenumber);
 
 	config_error("%s:%i: Unknown preprocessor directive: %s", filename, linenumber, buf);
 	return PREPROCESSOR_ERROR; /* ??? */
@@ -612,19 +607,16 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 			{
 				/* We cannot handle @if module-loaded() yet.. */
 				result = 1;
-			} else
-			if (phase == PREPROCESSOR_PHASE_SECONDARY)
+			} else if (phase == PREPROCESSOR_PHASE_SECONDARY)
 			{
 				/* We can only handle blacklisted modules at this point, so: */
 				if (!is_blacklisted_module(cc->name))
 					result = 1;
-			} else
-			if (is_module_loaded(cc->name))
+			} else if (is_module_loaded(cc->name))
 			{
 				result = 1;
 			}
-		} else
-		if (cc->condition == IF_MODULE_VERSION)
+		} else if (cc->condition == IF_MODULE_VERSION)
 		{
 			if (phase == PREPROCESSOR_PHASE_INITIAL || phase == PREPROCESSOR_PHASE_SECONDARY)
 			{
@@ -640,12 +632,24 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 						int cmp = strnatcasecmp(mod->header->version, cc->opt);
 						switch (cc->compare_op)
 						{
-							case COMPARE_EQ: result = (cmp == 0); break;
-							case COMPARE_NE: result = (cmp != 0); break;
-							case COMPARE_GT: result = (cmp > 0);  break;
-							case COMPARE_GE: result = (cmp >= 0); break;
-							case COMPARE_LT: result = (cmp < 0);  break;
-							case COMPARE_LE: result = (cmp <= 0); break;
+							case COMPARE_EQ:
+								result = (cmp == 0);
+								break;
+							case COMPARE_NE:
+								result = (cmp != 0);
+								break;
+							case COMPARE_GT:
+								result = (cmp > 0);
+								break;
+							case COMPARE_GE:
+								result = (cmp >= 0);
+								break;
+							case COMPARE_LT:
+								result = (cmp < 0);
+								break;
+							case COMPARE_LE:
+								result = (cmp <= 0);
+								break;
 						}
 					} else
 					{
@@ -654,34 +658,29 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 					}
 				}
 			}
-		} else
-		if (cc->condition == IF_MODULE_EXISTS)
+		} else if (cc->condition == IF_MODULE_EXISTS)
 		{
 			const char *fullpath = Module_TransformPath(cc->name);
 			if (file_exists(fullpath))
 				result = 1;
-		} else
-		if (cc->condition == IF_MINIMUM_VERSION)
+		} else if (cc->condition == IF_MINIMUM_VERSION)
 		{
 			if (strnatcasecmp(VERSIONONLY, cc->name) >= 0)
 				result = 1;
-		} else
-		if (cc->condition == IF_FILE_EXISTS)
+		} else if (cc->condition == IF_FILE_EXISTS)
 		{
 			char *fullpath = convert_to_absolute_path_duplicate(cc->name, CONFDIR);
 			if (file_exists(fullpath))
 				result = 1;
 			safe_free(fullpath);
-		} else
-		if (cc->condition == IF_DEFINED)
+		} else if (cc->condition == IF_DEFINED)
 		{
 			NameValuePrioList *d = find_config_define(cc->name);
 			if (d)
 			{
 				result = 1;
 			}
-		} else
-		if (cc->condition == IF_ENVIRONMENT)
+		} else if (cc->condition == IF_ENVIRONMENT)
 		{
 			const char *env = getenv(cc->name);
 			if (env)
@@ -691,12 +690,24 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 					int cmp = strnatcasecmp(env, cc->opt);
 					switch (cc->compare_op)
 					{
-						case COMPARE_EQ: result = (cmp == 0); break;
-						case COMPARE_NE: result = (cmp != 0); break;
-						case COMPARE_GT: result = (cmp > 0);  break;
-						case COMPARE_GE: result = (cmp >= 0); break;
-						case COMPARE_LT: result = (cmp < 0);  break;
-						case COMPARE_LE: result = (cmp <= 0); break;
+						case COMPARE_EQ:
+							result = (cmp == 0);
+							break;
+						case COMPARE_NE:
+							result = (cmp != 0);
+							break;
+						case COMPARE_GT:
+							result = (cmp > 0);
+							break;
+						case COMPARE_GE:
+							result = (cmp >= 0);
+							break;
+						case COMPARE_LT:
+							result = (cmp < 0);
+							break;
+						case COMPARE_LE:
+							result = (cmp <= 0);
+							break;
 					}
 				} else
 				{
@@ -704,8 +715,7 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 					result = 1;
 				}
 			}
-		} else
-		if (cc->condition == IF_VALUE)
+		} else if (cc->condition == IF_VALUE)
 		{
 			NameValuePrioList *d = find_config_define(cc->name);
 			if (d)
@@ -713,12 +723,24 @@ int preprocessor_resolve_if(ConditionalConfig *cc, PreprocessorPhase phase)
 				int cmp = strnatcasecmp(d->value, cc->opt);
 				switch (cc->compare_op)
 				{
-					case COMPARE_EQ: result = (cmp == 0); break;
-					case COMPARE_NE: result = (cmp != 0); break;
-					case COMPARE_GT: result = (cmp > 0);  break;
-					case COMPARE_GE: result = (cmp >= 0); break;
-					case COMPARE_LT: result = (cmp < 0);  break;
-					case COMPARE_LE: result = (cmp <= 0); break;
+					case COMPARE_EQ:
+						result = (cmp == 0);
+						break;
+					case COMPARE_NE:
+						result = (cmp != 0);
+						break;
+					case COMPARE_GT:
+						result = (cmp > 0);
+						break;
+					case COMPARE_GE:
+						result = (cmp >= 0);
+						break;
+					case COMPARE_LT:
+						result = (cmp < 0);
+						break;
+					case COMPARE_LE:
+						result = (cmp <= 0);
+						break;
 				}
 			}
 		} else
@@ -754,7 +776,8 @@ void preprocessor_resolve_conditionals_ce(ConfigEntry **ce_list, PreprocessorPha
 			{
 				/* we are head, so new head */
 				*ce_list = ce->next; /* can be NULL now */
-			} else {
+			} else
+			{
 				/* non-head */
 				ce_prev->next = ce->next; /* can be NULL now */
 			}
@@ -822,7 +845,7 @@ void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 	char varname[512];
 	const char *i, *varstart, *varend;
 	char *o;
-	int n = sizeof(buf)-2;
+	int n = sizeof(buf) - 2;
 	int limit;
 	char *value;
 
@@ -843,7 +866,8 @@ void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 		/* $ encountered: */
 		varstart = i;
 		i++;
-		for (; *i && ValidVarCharacter(*i); i++);
+		for (; *i && ValidVarCharacter(*i); i++)
+			;
 		varend = i;
 		i--;
 		limit = varend - varstart + 1;
@@ -862,7 +886,7 @@ void preprocessor_replace_defines(char **item, ConfigEntry *ce)
 			i++; /* skip extra $ in input */
 		} else
 		{
-			value = get_config_define(varname+1);
+			value = get_config_define(varname + 1);
 			if (!value)
 			{
 #if 0

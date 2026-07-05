@@ -9,13 +9,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"utf8functions",
-	"1.0.1",
-	"UTF8 helper functions",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "utf8functions",
+    "1.0.1",
+    "UTF8 helper functions",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 typedef struct UnicodeBlocks {
@@ -5578,7 +5577,7 @@ ConfusablesConversionTable confusables_table[] =
 };
 /* clang-format on */
 
-#define IS_IN_RANGE(c, f, l)    (((c) >= (f)) && ((c) <= (l)))
+#define IS_IN_RANGE(c, f, l) (((c) >= (f)) && ((c) <= (l)))
 
 #define SCRIPT_UNDEFINED -1
 
@@ -5640,24 +5639,21 @@ uint32_t utf8_to_utf32(const char *t, int *bytes)
 	*bytes = 1;
 
 	c1 = ptr[0];
-	if( (c1 & 0x80) == 0 )
+	if ((c1 & 0x80) == 0)
 	{
-		uc = (u_long) (c1 & 0x7F);
+		uc = (u_long)(c1 & 0x7F);
 		seqlen = 1;
-	}
-	else if( (c1 & 0xE0) == 0xC0 )
+	} else if ((c1 & 0xE0) == 0xC0)
 	{
-		uc = (u_long) (c1 & 0x1F);
+		uc = (u_long)(c1 & 0x1F);
 		seqlen = 2;
-	}
-	else if( (c1 & 0xF0) == 0xE0 )
+	} else if ((c1 & 0xF0) == 0xE0)
 	{
-		uc = (u_long) (c1 & 0x0F);
+		uc = (u_long)(c1 & 0x0F);
 		seqlen = 3;
-	}
-	else if( (c1 & 0xF8) == 0xF0 )
+	} else if ((c1 & 0xF8) == 0xF0)
 	{
-		uc = (u_long) (c1 & 0x07);
+		uc = (u_long)(c1 & 0x07);
 		seqlen = 4;
 	} else
 		return -1; /* should be impossible */
@@ -5666,17 +5662,17 @@ uint32_t utf8_to_utf32(const char *t, int *bytes)
 	{
 		c1 = ptr[i];
 
-		if( (c1 & 0xC0) != 0x80 )
+		if ((c1 & 0xC0) != 0x80)
 			return 0; /* Invalid UTF8 */
 	}
 
-	switch( seqlen )
+	switch (seqlen)
 	{
 		case 2:
 		{
 			c1 = ptr[0];
 
-			if( !IS_IN_RANGE(c1, 0xC2, 0xDF) )
+			if (!IS_IN_RANGE(c1, 0xC2, 0xDF))
 				return 0; /* Invalid UTF8 */
 
 			break;
@@ -5745,26 +5741,30 @@ uint32_t utf8_to_utf32(const char *t, int *bytes)
 
 int utf32_to_utf8(char *buf, uint32_t code)
 {
-	if (code <= 0x7F) {
+	if (code <= 0x7F)
+	{
 		buf[0] = code;
 		return 1;
 	}
-	if (code <= 0x7FF) {
-		buf[0] = 0xC0 | (code >> 6);		/* 110xxxxx */
-		buf[1] = 0x80 | (code & 0x3F);		/* 10xxxxxx */
+	if (code <= 0x7FF)
+	{
+		buf[0] = 0xC0 | (code >> 6);  /* 110xxxxx */
+		buf[1] = 0x80 | (code & 0x3F);  /* 10xxxxxx */
 		return 2;
 	}
-	if (code <= 0xFFFF) {
-		buf[0] = 0xE0 | (code >> 12);		/* 1110xxxx */
+	if (code <= 0xFFFF)
+	{
+		buf[0] = 0xE0 | (code >> 12);  /* 1110xxxx */
 		buf[1] = 0x80 | ((code >> 6) & 0x3F);   /* 10xxxxxx */
-		buf[2] = 0x80 | (code & 0x3F);		/* 10xxxxxx */
+		buf[2] = 0x80 | (code & 0x3F);  /* 10xxxxxx */
 		return 3;
 	}
-	if (code <= 0x10FFFF) {
-		buf[0] = 0xF0 | (code >> 18);		/* 11110xxx */
+	if (code <= 0x10FFFF)
+	{
+		buf[0] = 0xF0 | (code >> 18);  /* 11110xxx */
 		buf[1] = 0x80 | ((code >> 12) & 0x3F);  /* 10xxxxxx */
 		buf[2] = 0x80 | ((code >> 6) & 0x3F);   /* 10xxxxxx */
-		buf[3] = 0x80 | (code & 0x3F);		/* 10xxxxxx */
+		buf[3] = 0x80 | (code & 0x3F);  /* 10xxxxxx */
 		return 4;
 	}
 	return 0;
@@ -5795,7 +5795,7 @@ int detect_script(uint32_t utfchar)
 		return SCRIPT_UNDEFINED;
 	}
 
-	for (i=0; i < elementsof(unicode_blocks); i++)
+	for (i = 0; i < elementsof(unicode_blocks); i++)
 	{
 		if ((utfchar >= unicode_blocks[i].start) &&
 		    (utfchar <= unicode_blocks[i].end))
@@ -5906,8 +5906,11 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
  */
 static int utf8_charlen(const char *str)
 {
-	struct { char mask; char val; } t[4] =
-	{ { 0x80, 0x00 }, { 0xE0, 0xC0 }, { 0xF0, 0xE0 }, { 0xF8, 0xF0 } };
+	struct {
+		char mask;
+		char val;
+	} t[4] =
+	    {{0x80, 0x00}, {0xE0, 0xC0}, {0xF0, 0xE0}, {0xF8, 0xF0}};
 	unsigned k, j;
 
 	for (k = 0; k < 4; k++)
@@ -5928,17 +5931,18 @@ static int utf8_charlen(const char *str)
 uint32_t utf8_lookup_confusable(uint32_t c)
 {
 	int start = 0;
-	int stop = ARRAY_SIZEOF(confusables_table)-1;
+	int stop = ARRAY_SIZEOF(confusables_table) - 1;
 	int mid;
 
-	while (start <= stop) {
-		mid = (start+stop)/2;
+	while (start <= stop)
+	{
+		mid = (start + stop) / 2;
 		if (c < confusables_table[mid].from)
-			stop = mid-1;
+			stop = mid - 1;
 		else if (c == confusables_table[mid].from)
 			return confusables_table[mid].to;
 		else
-			start = mid+1;
+			start = mid + 1;
 	}
 	return 0;
 }
@@ -5969,10 +5973,11 @@ char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 			/* use as-is */
 			if (olen < utf8charlen)
 				break; /* cut off */
-			for (x=0; x < utf8charlen; x++)
+			for (x = 0; x < utf8charlen; x++)
 				*o++ = i[x];
 			olen -= utf8charlen;
-		} else {
+		} else
+		{
 			/* convert */
 			int replacelen;
 			if (olen < 4) // yeah too lazy to lookup replacelen in advance :D
@@ -5990,7 +5995,7 @@ char *_utf8_convert_confusables(const char *i, char *obuf, int olen)
 /** Get UTF8 name for a block number (eg 0 returns "Basic Latin") */
 const char *_utf8_get_block_name(int i)
 {
-	if ((i < 0) || (i > ARRAY_SIZEOF(unicode_blocks)-1))
+	if ((i < 0) || (i > ARRAY_SIZEOF(unicode_blocks) - 1))
 		return NULL;
 	return unicode_blocks[i].name;
 }

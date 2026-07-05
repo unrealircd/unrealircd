@@ -20,19 +20,18 @@
 
 #include "unrealircd.h"
 
-#define MSG_IRCOPS        "IRCOPS"
-#define IsAway(x)         (x)->user->away
+#define MSG_IRCOPS "IRCOPS"
+#define IsAway(x)  (x)->user->away
 
 CMD_FUNC(cmd_ircops);
 
-ModuleHeader MOD_HEADER
-  = {
-	"ircops",
-	"3.71",
-	"/IRCOPS command that lists IRC Operators",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "ircops",
+    "3.71",
+    "/IRCOPS command that lists IRC Operators",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -47,7 +46,7 @@ MOD_INIT()
 	if (ModuleGetError(modinfo->handle) != MODERR_NOERROR)
 	{
 		config_error("Error adding command " MSG_IRCOPS ": %s",
-			ModuleGetErrorStr(modinfo->handle));
+		             ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
 
@@ -114,27 +113,27 @@ CMD_FUNC(cmd_ircops)
 		if (!IsOper(client) && IsHideOper(acptr))
 			continue;
 
-		sendto_one(client, NULL, ":%s %d %s :\2%s\2 is %s on %s" "%s",
-			me.name, RPL_TEXT, client->name,
-			acptr->name,
-			"an IRC Operator", /* find_otype(acptr->umodes), */
-			acptr->user->server,
-			(IsAway(acptr) ? " [Away]" : ""));
+		sendto_one(client, NULL, ":%s %d %s :\2%s\2 is %s on %s"
+		                         "%s",
+		           me.name, RPL_TEXT, client->name,
+		           acptr->name,
+		           "an IRC Operator", /* find_otype(acptr->umodes), */
+		           acptr->user->server,
+		           (IsAway(acptr) ? " [Away]" : ""));
 
 		if (IsAway(acptr))
 			aways++;
 		else
 			opers++;
-
 	}
 
 	total = opers + aways;
 
 	snprintf(buf, sizeof(buf),
-		"Total: \2%d\2 IRCOP%s online - \2%d\2 Oper%s available and \2%d\2 Away",
-		total, (total) != 1 ? "s" : "",
-		opers, opers != 1 ? "s" : "",
-		aways);
+	         "Total: \2%d\2 IRCOP%s online - \2%d\2 Oper%s available and \2%d\2 Away",
+	         total, (total) != 1 ? "s" : "",
+	         opers, opers != 1 ? "s" : "",
+	         aways);
 
 	sendnumericfmt(client, RPL_TEXT, ":%s", buf);
 	sendnumericfmt(client, RPL_TEXT, ":End of /IRCOPS list");

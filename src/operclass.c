@@ -8,23 +8,20 @@
 typedef struct OperClassPathNode OperClassPathNode;
 typedef struct OperClassCallbackNode OperClassCallbackNode;
 
-struct OperClassPathNode
-{
-	OperClassPathNode *prev,*next;
+struct OperClassPathNode {
+	OperClassPathNode *prev, *next;
 	OperClassPathNode *children;
 	char *identifier;
 	OperClassCallbackNode *callbacks;
 };
 
-struct OperClassCallbackNode
-{
+struct OperClassCallbackNode {
 	OperClassCallbackNode *prev, *next;
 	OperClassPathNode *parent;
 	OperClassEntryEvalCallback callback;
 };
 
-struct OperClassValidator
-{
+struct OperClassValidator {
 	Module *owner;
 	OperClassCallbackNode *node;
 };
@@ -37,9 +34,9 @@ OperClassPathNode *rootEvalNode = NULL;
 
 OperClassValidator *OperClassAddValidator(Module *module, char *pathStr, OperClassEntryEvalCallback callback)
 {
-	OperClassPathNode *node,*nextNode;
+	OperClassPathNode *node, *nextNode;
 	OperClassCallbackNode *callbackNode;
-	OperClassValidator *validator; 
+	OperClassValidator *validator;
 	OperClassACLPath *path = OperClass_parsePath(pathStr);
 
 	if (!rootEvalNode)
@@ -51,12 +48,12 @@ OperClassValidator *OperClassAddValidator(Module *module, char *pathStr, OperCla
 
 	while (path)
 	{
-		nextNode = OperClass_findPathNodeForIdentifier(path->identifier,node->children);
+		nextNode = OperClass_findPathNodeForIdentifier(path->identifier, node->children);
 		if (!nextNode)
 		{
 			nextNode = safe_alloc(sizeof(OperClassPathNode));
 			safe_strdup(nextNode->identifier, path->identifier);
-			AddListItem(nextNode,node->children);
+			AddListItem(nextNode, node->children);
 		}
 		node = nextNode;
 		path = path->next;
@@ -64,11 +61,11 @@ OperClassValidator *OperClassAddValidator(Module *module, char *pathStr, OperCla
 
 	callbackNode = safe_alloc(sizeof(OperClassCallbackNode));
 	callbackNode->callback = callback;
-	callbackNode->parent = node;	
-	AddListItem(callbackNode,node->callbacks);
+	callbackNode->parent = node;
+	AddListItem(callbackNode, node->callbacks);
 
 	validator = safe_alloc(sizeof(OperClassValidator));
-	validator->node = callbackNode;	
+	validator->node = callbackNode;
 	validator->owner = module;
 
 	if (module)
@@ -101,14 +98,14 @@ void OperClassValidatorDel(OperClassValidator *validator)
 		}
 		validator->owner = NULL;
 	}
-	
+
 	/* Technically, the below leaks memory if you don't re-register
 	 * another validator at same path, but it is cheaper than walking
 	 * back up and doing cleanup in practice, since this tree is very small
 	 */
-	DelListItem(validator->node,validator->node->parent->callbacks);
+	DelListItem(validator->node, validator->node->parent->callbacks);
 	safe_free(validator->node);
-	safe_free(validator);	
+	safe_free(validator);
 }
 
 OperClassACLPath *OperClass_parsePath(const char *path)
@@ -116,13 +113,13 @@ OperClassACLPath *OperClass_parsePath(const char *path)
 	char *pathCopy = raw_strdup(path);
 	OperClassACLPath *pathHead = NULL;
 	OperClassACLPath *tmpPath;
-	char *str = strtok(pathCopy,":");
+	char *str = strtok(pathCopy, ":");
 	while (str)
 	{
 		tmpPath = safe_alloc(sizeof(OperClassACLPath));
 		safe_strdup(tmpPath->identifier, str);
-		AddListItem(tmpPath,pathHead);
-		str = strtok(NULL,":");
+		AddListItem(tmpPath, pathHead);
+		str = strtok(NULL, ":");
 	}
 
 	while (pathHead->next)
@@ -133,7 +130,7 @@ OperClassACLPath *OperClass_parsePath(const char *path)
 		pathHead = tmpPath;
 	}
 	pathHead->next = pathHead->prev;
-	pathHead->prev = NULL;	
+	pathHead->prev = NULL;
 
 	safe_free(pathCopy);
 	return pathHead;
@@ -148,15 +145,15 @@ void OperClass_freePath(OperClassACLPath *path)
 		safe_free(path->identifier);
 		safe_free(path);
 		path = next;
-	}	
+	}
 }
 
 OperClassACL *OperClass_FindACL(OperClassACL *acl, char *name)
 {
-	for (;acl;acl = acl->next)
+	for (; acl; acl = acl->next)
 	{
-		if (!strcmp(acl->name,name))
-		{ 
+		if (!strcmp(acl->name, name))
+		{
 			return acl;
 		}
 	}
@@ -167,7 +164,7 @@ OperClassPathNode *OperClass_findPathNodeForIdentifier(char *identifier, OperCla
 {
 	for (; head; head = head->next)
 	{
-		if (!strcmp(head->identifier,identifier))
+		if (!strcmp(head->identifier, identifier))
 		{
 			return head;
 		}
@@ -177,7 +174,7 @@ OperClassPathNode *OperClass_findPathNodeForIdentifier(char *identifier, OperCla
 
 unsigned char OperClass_evaluateACLEntry(OperClassACLEntry *entry, OperClassACLPath *path, OperClassCheckParams *params)
 {
-	OperClassPathNode *node = rootEvalNode;	
+	OperClassPathNode *node = rootEvalNode;
 	OperClassCallbackNode *callbackNode = NULL;
 	unsigned char eval = 0;
 
@@ -190,7 +187,7 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry *entry, OperClassACLP
 	/* Go as deep as possible */
 	while (path->next && node)
 	{
-		node = OperClass_findPathNodeForIdentifier(path->identifier,node);	
+		node = OperClass_findPathNodeForIdentifier(path->identifier, node);
 		/* If we can't find a node we need, and we have vars, no match */
 		if (!node)
 		{
@@ -210,10 +207,10 @@ unsigned char OperClass_evaluateACLEntry(OperClassACLEntry *entry, OperClassACLP
 	/* We have a valid node, execute all callback nodes */
 	for (callbackNode = node->callbacks; callbackNode; callbackNode = callbackNode->next)
 	{
-		eval = callbackNode->callback(entry->variables,params);
+		eval = callbackNode->callback(entry->variables, params);
 	}
 
-	return eval;	
+	return eval;
 }
 
 OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath *path, OperClassCheckParams *params)
@@ -229,7 +226,7 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath 
 	path = path->next; /* Avoid first level since we have resolved it */
 	while (path && acl->acls)
 	{
-		tmp = OperClass_FindACL(acl->acls,path->identifier);
+		tmp = OperClass_FindACL(acl->acls, path->identifier);
 		if (!tmp)
 		{
 			aclNotFound = 1;
@@ -259,12 +256,11 @@ OperPermission ValidatePermissionsForPathEx(OperClassACL *acl, OperClassACLPath 
 		if (entry->type == OPERCLASSENTRY_DENY && deny)
 			continue;
 
-		result = OperClass_evaluateACLEntry(entry,basePath,params);
+		result = OperClass_evaluateACLEntry(entry, basePath, params);
 		if (entry->type == OPERCLASSENTRY_ALLOW)
 		{
 			allow = result;
-		}
-		else
+		} else
 		{
 			deny = result;
 		}
@@ -317,7 +313,7 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 	operPath = OperClass_parsePath(path);
 	while (oc && operPath)
 	{
-		OperClassACL *acl = OperClass_FindACL(oc->acls,operPath->identifier);
+		OperClassACL *acl = OperClass_FindACL(oc->acls, operPath->identifier);
 		if (looping++ > 10)
 		{
 			unreal_log(ULOG_ERROR, "operclass", "OPERCLASS_LOOPING", client,
@@ -333,7 +329,7 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 			params->victim = victim;
 			params->channel = channel;
 			params->extra = extra;
-			
+
 			perm = ValidatePermissionsForPathEx(acl, operPath, params);
 			OperClass_freePath(operPath);
 			safe_free(params);
@@ -347,7 +343,8 @@ OperPermission ValidatePermissionsForPath(const char *path, Client *client, Clie
 		if (ce_operClass)
 		{
 			oc = ce_operClass->classStruct;
-		} else {
+		} else
+		{
 			break; /* parent not found */
 		}
 	}

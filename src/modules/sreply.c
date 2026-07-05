@@ -24,14 +24,13 @@
 
 CMD_FUNC(cmd_sreply);
 
-ModuleHeader MOD_HEADER
-  = {
-	"sreply",	/* Name of module */
-	"1.0", /* Version */
-	"Server command SREPLY", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sreply", /* Name of module */
+    "1.0", /* Version */
+    "Server command SREPLY", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
@@ -50,7 +49,7 @@ MOD_LOAD()
 /* Called when module is unloaded */
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /**
@@ -78,10 +77,10 @@ CMD_FUNC(cmd_sreply)
 	}
 
 	/* For a locally connected user... */
-	if (!strcmp(parv[2],"F"))
+	if (!strcmp(parv[2], "F"))
 		sendto_one(target, recv_mtags, ":%s FAIL %s", client->name, parv[3]);
-	else if (!strcmp(parv[2],"W"))
+	else if (!strcmp(parv[2], "W"))
 		sendto_one(target, recv_mtags, ":%s WARN %s", client->name, parv[3]);
-	else if (!strcmp(parv[2],"N"))
+	else if (!strcmp(parv[2], "N"))
 		sendto_one(target, recv_mtags, ":%s NOTE %s", client->name, parv[3]);
 }

@@ -40,7 +40,7 @@
 #define TOR_MEMPOOL_H
 
 #ifdef _WIN32
-  #define uint64_t unsigned __int64
+ #define uint64_t unsigned __int64
 #endif
 
 /** A memory pool is a context in which a large number of fixed-sized
@@ -61,44 +61,44 @@ extern void mp_pool_garbage_collect(void *);
 #define MEMPOOL_STATS
 
 struct mp_pool_t {
-  /** Next pool. A pool is usually linked into the mp_allocated_pools list. */
-  mp_pool_t *next;
+	/** Next pool. A pool is usually linked into the mp_allocated_pools list. */
+	mp_pool_t *next;
 
-  /** Doubly-linked list of chunks in which no items have been allocated.
+	/** Doubly-linked list of chunks in which no items have been allocated.
    * The front of the list is the most recently emptied chunk. */
-  struct mp_chunk_t *empty_chunks;
+	struct mp_chunk_t *empty_chunks;
 
-  /** Doubly-linked list of chunks in which some items have been allocated,
+	/** Doubly-linked list of chunks in which some items have been allocated,
    * but which are not yet full. The front of the list is the chunk that has
    * most recently been modified. */
-  struct mp_chunk_t *used_chunks;
+	struct mp_chunk_t *used_chunks;
 
-  /** Doubly-linked list of chunks in which no more items can be allocated.
+	/** Doubly-linked list of chunks in which no more items can be allocated.
    * The front of the list is the chunk that has most recently become full. */
-  struct mp_chunk_t *full_chunks;
+	struct mp_chunk_t *full_chunks;
 
-  /** Length of <b>empty_chunks</b>. */
-  int n_empty_chunks;
+	/** Length of <b>empty_chunks</b>. */
+	int n_empty_chunks;
 
-  /** Lowest value of <b>empty_chunks</b> since last call to
+	/** Lowest value of <b>empty_chunks</b> since last call to
    * mp_pool_clean(-1). */
-  int min_empty_chunks;
+	int min_empty_chunks;
 
-  /** Size of each chunk (in items). */
-  int new_chunk_capacity;
+	/** Size of each chunk (in items). */
+	int new_chunk_capacity;
 
-  /** Size to allocate for each item, including overhead and alignment
+	/** Size to allocate for each item, including overhead and alignment
    * padding. */
-  size_t item_alloc_size;
+	size_t item_alloc_size;
 #ifdef MEMPOOL_STATS
-  /** Total number of items allocated ever. */
-  uint64_t total_items_allocated;
+	/** Total number of items allocated ever. */
+	uint64_t total_items_allocated;
 
-  /** Total number of chunks allocated ever. */
-  uint64_t total_chunks_allocated;
+	/** Total number of chunks allocated ever. */
+	uint64_t total_chunks_allocated;
 
-  /** Total number of chunks freed ever. */
-  uint64_t total_chunks_freed;
+	/** Total number of chunks freed ever. */
+	uint64_t total_chunks_freed;
 #endif
 };
 

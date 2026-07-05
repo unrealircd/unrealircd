@@ -28,18 +28,17 @@
 
 CMD_FUNC(issecure);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/issecure",
-	"4.2",
-	"Channel Mode +Z", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/issecure",
+    "4.2",
+    "Channel Mode +Z",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_ISSECURE;
 
-#define IsSecureChanIndicated(channel)	(channel->mode.mode & EXTCMODE_ISSECURE)
+#define IsSecureChanIndicated(channel) (channel->mode.mode & EXTCMODE_ISSECURE)
 
 int IsSecureJoin(Channel *channel);
 int modeZ_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what);
@@ -48,8 +47,8 @@ int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const cha
 int issecure_quit(Client *client, MessageTag *mtags, const char *comment);
 int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *mtags, const char *comment);
 int issecure_chanmode(Client *client, Channel *channel, MessageTag *mtags,
-                             const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel);
-                             
+                      const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel);
+
 
 MOD_TEST()
 {
@@ -58,7 +57,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	/* Channel mode */
 	memset(&req, 0, sizeof(req));
@@ -67,7 +66,7 @@ CmodeInfo req;
 	req.letter = 'Z';
 	req.local = 1; /* local channel mode */
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_ISSECURE);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, issecure_join);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, issecure_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PART, 0, issecure_part);
@@ -78,7 +77,7 @@ CmodeInfo req;
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_KICK, 0, issecure_kick);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_CHANMODE, 0, issecure_chanmode);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CHANMODE, 0, issecure_chanmode);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -116,7 +115,7 @@ int modeZ_is_ok(Client *client, Channel *channel, char mode, const char *para, i
 
 int channel_has_insecure_users_butone(Channel *channel, Client *skip)
 {
-Member *member;
+	Member *member;
 
 	for (member = channel->members; member; member = member->next)
 	{
@@ -149,7 +148,7 @@ void issecure_unset(Channel *channel, Client *client, MessageTag *recv_mtags, in
 		               me.name, channel->name, client->name);
 		free_message_tags(mtags);
 	}
-		
+
 	channel->mode.mode &= ~EXTCMODE_ISSECURE;
 	mtags = NULL;
 	new_message_special(&me, recv_mtags, &mtags, "MODE %s -Z", channel->name);
@@ -224,14 +223,14 @@ int issecure_part(Client *client, Channel *channel, MessageTag *mtags, const cha
 
 int issecure_quit(Client *client, MessageTag *mtags, const char *comment)
 {
-Membership *membership;
-Channel *channel;
+	Membership *membership;
+	Channel *channel;
 
-	for (membership = client->user->channel; membership; membership=membership->next)
+	for (membership = client->user->channel; membership; membership = membership->next)
 	{
 		channel = membership->channel;
 		/* Identical to part */
-		if (IsSecureJoin(channel) && !IsSecureChanIndicated(channel) && 
+		if (IsSecureJoin(channel) && !IsSecureChanIndicated(channel) &&
 		    !IsSecureConnect(client) && !channel_has_insecure_users_butone(channel, client))
 			issecure_set(channel, client, mtags, 1);
 	}
@@ -248,7 +247,7 @@ int issecure_kick(Client *client, Client *victim, Channel *channel, MessageTag *
 }
 
 int issecure_chanmode(Client *client, Channel *channel, MessageTag *mtags,
-                             const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel)
+                      const char *modebuf, const char *parabuf, time_t sendts, int samode, int *destroy_channel)
 {
 	if (!strchr(modebuf, 'z'))
 		return 0; /* don't care */
@@ -264,12 +263,14 @@ int issecure_chanmode(Client *client, Channel *channel, MessageTag *mtags,
 			/* Should be -Z, if not already */
 			if (IsSecureChanIndicated(channel))
 				issecure_unset(channel, NULL, mtags, 0); /* would be odd if we got here ;) */
-		} else {
+		} else
+		{
 			/* Should be +Z, but check if it isn't already.. */
 			if (!IsSecureChanIndicated(channel))
 				issecure_set(channel, NULL, mtags, 0);
 		}
-	} else {
+	} else
+	{
 		/* there was a -z, check if the channel is currently +Z and if so, set it -Z */
 		if (IsSecureChanIndicated(channel))
 			issecure_unset(channel, NULL, mtags, 0);

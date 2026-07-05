@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"json-log-tag",
-	"5.0",
-	"unrealircd.org/json-log tag for S2S and ircops",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "json-log-tag",
+    "5.0",
+    "unrealircd.org/json-log tag for S2S and ircops",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_JSON_LOG = 0L;

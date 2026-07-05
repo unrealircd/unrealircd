@@ -22,18 +22,17 @@
 
 #include "unrealircd.h"
 
-#define MSG_SETIDENT 	"SETIDENT"	/* set ident */
+#define MSG_SETIDENT "SETIDENT" /* set ident */
 
 CMD_FUNC(cmd_setident);
 
-ModuleHeader MOD_HEADER
-  = {
-	"setident",	/* Name of module */
-	"5.0", /* Version */
-	"/setident", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "setident", /* Name of module */
+    "5.0", /* Version */
+    "/setident", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -126,6 +125,6 @@ CMD_FUNC(cmd_setident)
 	if (MyConnect(client))
 	{
 		sendnotice(client, "Your nick!user@host-mask is now (%s!%s@%s)",
-		                 client->name, client->user->username, GetHost(client));
+		           client->name, client->user->username, GetHost(client));
 	}
 }

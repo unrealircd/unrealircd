@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/join",
-	"4.2",
-	"Extban ~join - prevent join only",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/join",
+    "4.2",
+    "Extban ~join - prevent join only",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -34,7 +33,7 @@ int extban_modej_is_banned(BanContext *b);
 MOD_INIT()
 {
 	ExtbanInfo req;
-	
+
 	memset(&req, 0, sizeof(req));
 	req.letter = 'j';
 	req.name = "join";
@@ -50,7 +49,7 @@ MOD_INIT()
 	}
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	return MOD_SUCCESS;
 }
 

@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_motd);
 
-#define MSG_MOTD 	"MOTD"	
+#define MSG_MOTD "MOTD"
 
-ModuleHeader MOD_HEADER
-  = {
-	"motd",
-	"5.0",
-	"command /motd", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "motd",
+    "5.0",
+    "command /motd",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_MOTD, cmd_motd, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_MOTD, cmd_motd, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -61,7 +60,7 @@ CMD_FUNC(cmd_motd)
 	ConfigItem_tld *tld;
 	MOTDFile *themotd;
 	MOTDLine *motdline;
-	int  svsnofile = 0;
+	int svsnofile = 0;
 
 	if (IsServer(client))
 		return;
@@ -93,11 +92,11 @@ CMD_FUNC(cmd_motd)
 	if (themotd && themotd->lines && themotd->last_modified.tm_year)
 	{
 		sendnumericfmt(client, RPL_MOTD, ":- %.04d-%.02d-%.02d %.02d:%02d",
-			themotd->last_modified.tm_year + 1900,
-			themotd->last_modified.tm_mon + 1,
-			themotd->last_modified.tm_mday,
-			themotd->last_modified.tm_hour,
-			themotd->last_modified.tm_min);
+		               themotd->last_modified.tm_year + 1900,
+		               themotd->last_modified.tm_mon + 1,
+		               themotd->last_modified.tm_mday,
+		               themotd->last_modified.tm_hour,
+		               themotd->last_modified.tm_min);
 	}
 
 	motdline = NULL;
@@ -106,16 +105,16 @@ CMD_FUNC(cmd_motd)
 	while (motdline)
 	{
 		sendnumeric(client, RPL_MOTD,
-			motdline->line);
+		            motdline->line);
 		motdline = motdline->next;
 	}
-	svsmotd:
+svsmotd:
 
 	motdline = svsmotd.lines;
 	while (motdline)
 	{
 		sendnumeric(client, RPL_MOTD,
-			motdline->line);
+		            motdline->line);
 		motdline = motdline->next;
 	}
 

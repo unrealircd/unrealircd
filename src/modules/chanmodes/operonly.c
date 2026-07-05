@@ -21,14 +21,13 @@
 
 CMD_FUNC(operonly);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/operonly",
-	"4.2",
-	"Channel Mode +O",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/operonly",
+    "4.2",
+    "Channel Mode +O",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_OPERONLY;
 
@@ -44,19 +43,19 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.letter = 'O';
 	req.is_ok = operonly_require_oper;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_OPERONLY);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, operonly_can_join);
 	HookAdd(modinfo->handle, HOOKTYPE_INVITE_BYPASS, 0, operonly_invite_bypass);
 	HookAdd(modinfo->handle, HOOKTYPE_VIEW_TOPIC_OUTSIDE_CHANNEL, 0, operonly_view_topic_outside_channel);
 
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -73,7 +72,7 @@ MOD_UNLOAD()
 
 int operonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
-	if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join",client,NULL,channel,NULL))
+	if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:join", client, NULL, channel, NULL))
 	{
 		*errmsg = STR_ERR_OPERONLY;
 		return ERR_OPERONLY;
@@ -83,15 +82,15 @@ int operonly_can_join(Client *client, Channel *channel, const char *key, char **
 
 int operonly_invite_bypass(Client *client, Channel *channel)
 {
-	 if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:ban",client,NULL,NULL,NULL))
-		 return HOOK_DENY;
+	if ((channel->mode.mode & EXTCMODE_OPERONLY) && !ValidatePermissionsForPath("channel:operonly:ban", client, NULL, NULL, NULL))
+		return HOOK_DENY;
 
-	 return HOOK_CONTINUE;
+	return HOOK_CONTINUE;
 }
 
 int operonly_view_topic_outside_channel(Client *client, Channel *channel)
 {
-	if (channel->mode.mode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic",client,NULL,channel,NULL))
+	if (channel->mode.mode & EXTCMODE_OPERONLY && !ValidatePermissionsForPath("channel:operonly:topic", client, NULL, channel, NULL))
 		return HOOK_DENY;
 
 	return HOOK_CONTINUE;
@@ -99,7 +98,7 @@ int operonly_view_topic_outside_channel(Client *client, Channel *channel)
 
 int operonly_require_oper(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
 {
-	if (!MyUser(client) || ValidatePermissionsForPath("channel:operonly:set",client,NULL,channel,NULL))
+	if (!MyUser(client) || ValidatePermissionsForPath("channel:operonly:set", client, NULL, channel, NULL))
 		return EX_ALLOW;
 
 	if (checkt == EXCHK_ACCESS_ERR)
@@ -107,4 +106,3 @@ int operonly_require_oper(Client *client, Channel *channel, char mode, const cha
 
 	return EX_DENY;
 }
-

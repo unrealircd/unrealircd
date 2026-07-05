@@ -21,18 +21,17 @@
 
 CMD_FUNC(stripcolor);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/stripcolor",
-	"4.2",
-	"Channel Mode +S",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/stripcolor",
+    "4.2",
+    "Channel Mode +S",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_STRIPCOLOR;
 
-#define IsStripColor(channel)    (channel->mode.mode & EXTCMODE_STRIPCOLOR)
+#define IsStripColor(channel) (channel->mode.mode & EXTCMODE_STRIPCOLOR)
 
 int stripcolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 const char *stripcolor_prelocalpart(Client *client, Channel *channel, const char *comment);
@@ -45,7 +44,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	/* Channel mode */
 	memset(&req, 0, sizeof(req));
@@ -53,12 +52,12 @@ CmodeInfo req;
 	req.letter = 'S';
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_STRIPCOLOR);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, stripcolor_can_send_to_channel);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, stripcolor_prelocalpart);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT_CHAN, 0, stripcolor_prelocalpart);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, stripcolor_prelocalquit);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -125,7 +124,6 @@ const char *stripcolor_prelocalquit(Client *client, const char *comment)
 
 	if (MyUser(client) && !BadPtr(comment) && IsAnyChannelStripColor(client))
 		comment = StripColors(comment);
-        
+
 	return comment;
 }
-

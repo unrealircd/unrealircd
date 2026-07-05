@@ -19,17 +19,16 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"no-implicit-names",
-	"1.0",
-	"Opt out of receiving an implicit NAMES list on JOIN", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "no-implicit-names",
+    "1.0",
+    "Opt out of receiving an implicit NAMES list on JOIN",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 #define NO_IMPLICIT_NAMES_CAP_DRAFT "draft/no-implicit-names"
-#define NO_IMPLICIT_NAMES_CAP "no-implicit-names"
+#define NO_IMPLICIT_NAMES_CAP       "no-implicit-names"
 
 long CAP_NO_IMPLICIT_NAMES_DRAFT = 0L;
 long CAP_NO_IMPLICIT_NAMES = 0L;
@@ -62,4 +61,3 @@ MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
-

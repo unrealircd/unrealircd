@@ -23,20 +23,20 @@
 
 /* Do we even support this, poll on Windows? */
 #ifdef BACKEND_POLL
-#ifndef _WIN32
-# include <poll.h>
-#else
-# define poll WSAPoll
-# define POLLRDHUP POLLHUP
-#endif
+ #ifndef _WIN32
+  #include <poll.h>
+ #else
+  #define poll      WSAPoll
+  #define POLLRDHUP POLLHUP
+ #endif
 #endif
 
 #ifdef _WIN32
-#include <WinSock2.h>
+ #include <WinSock2.h>
 #endif
 #ifndef _WIN32
-#include <sys/file.h>
-#include <sys/ioctl.h>
+ #include <sys/file.h>
+ #include <sys/ioctl.h>
 #endif
 
 /* Not sure if this is suitable for production,
@@ -101,9 +101,9 @@ void fd_setselect_real(int fd, int flags, IOCallbackFunc iocb, void *data)
  ***************************************************************************************/
 #ifdef BACKEND_SELECT
 
-#ifndef _WIN32
-# include <sys/select.h>
-#endif
+ #ifndef _WIN32
+  #include <sys/select.h>
+ #endif
 
 static int highest_fd = -1;
 static fd_set read_fds, write_fds;
@@ -118,8 +118,7 @@ void fd_refresh(int fd)
 		flags |= FD_SELECT_READ;
 
 		FD_SET(fd, &read_fds);
-	}
-	else
+	} else
 		FD_CLR(fd, &read_fds);
 
 	if (fde->write_callback)
@@ -127,15 +126,14 @@ void fd_refresh(int fd)
 		flags |= FD_SELECT_WRITE;
 
 		FD_SET(fd, &write_fds);
-	}
-	else
+	} else
 		FD_CLR(fd, &write_fds);
 
 	if (flags && highest_fd < fd)
 		highest_fd = fd;
 
 	while (highest_fd > 0 &&
-		!(FD_ISSET(highest_fd, &read_fds) || FD_ISSET(highest_fd, &write_fds)))
+	       !(FD_ISSET(highest_fd, &read_fds) || FD_ISSET(highest_fd, &write_fds)))
 		highest_fd--;
 
 	fde->backend_flags = flags;
@@ -154,8 +152,8 @@ void fd_debug(fd_set *f, int highest, char *name)
 			if (ioctlsocket(i, FIONBIO, &nonb) < 0)
 			{
 				unreal_log(ULOG_ERROR, "io", "FD_DEBUG", NULL,
-					   "[BUG] fd_debug: fd $fd is invalid!!!",
-					   log_data_integer("fd", i));
+				           "[BUG] fd_debug: fd $fd is invalid!!!",
+				           log_data_integer("fd", i));
 			}
 		}
 	}
@@ -166,26 +164,26 @@ void fd_select(int delay)
 	int num, fd;
 	fd_set work_read_fds;
 	fd_set work_write_fds;
-#ifdef _WIN32
+ #ifdef _WIN32
 	fd_set work_except_fds; /* only needed on windows as it may indicate a failed connect() */
-#endif
+ #endif
 
 	/* copy the FD sets so that our master sets are untouched */
 	memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 	memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
-#ifdef _WIN32
+ #ifdef _WIN32
 	memcpy(&work_except_fds, &write_fds, sizeof(fd_set));
-#endif
+ #endif
 
 	memset(&to, 0, sizeof(to));
 	to.tv_sec = delay / 1000;
 	to.tv_usec = (delay % 1000) * 1000;
 
-#ifdef _WIN32
+ #ifdef _WIN32
 	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, &work_except_fds, &to);
-#else
+ #else
 	num = select(highest_fd + 1, &work_read_fds, &work_write_fds, NULL, &to);
-#endif
+ #endif
 	if (num < 0)
 	{
 		unreal_log(ULOG_FATAL, "io", "SELECT_ERROR", NULL,
@@ -194,11 +192,11 @@ void fd_select(int delay)
 		/* DEBUG the actual problem: */
 		memcpy(&work_read_fds, &read_fds, sizeof(fd_set));
 		memcpy(&work_write_fds, &write_fds, sizeof(fd_set));
-		fd_debug(&work_read_fds, highest_fd+1, "read");
-		fd_debug(&work_write_fds, highest_fd+1, "write");
-#ifdef _WIN32
+		fd_debug(&work_read_fds, highest_fd + 1, "read");
+		fd_debug(&work_write_fds, highest_fd + 1, "write");
+ #ifdef _WIN32
 		Sleep(500);
-#endif
+ #endif
 	}
 
 	if (num <= 0)
@@ -220,11 +218,11 @@ void fd_select(int delay)
 		if (FD_ISSET(fd, &work_write_fds))
 			evflags |= FD_SELECT_WRITE;
 
-#ifdef _WIN32
+ #ifdef _WIN32
 		/* Exception may happen due to failed connect. Translate to write event, like on *NIX. */
 		if (FD_ISSET(fd, &work_except_fds))
 			evflags |= FD_SELECT_WRITE;
-#endif
+ #endif
 
 		if (!evflags)
 			continue;
@@ -260,7 +258,7 @@ void fd_fork()
  ***************************************************************************************/
 #ifdef BACKEND_KQUEUE
 
-#include <sys/event.h>
+ #include <sys/event.h>
 
 static int kqueue_fd = -1;
 static struct kevent kqueue_events[MAXCONNECTIONS * 2];
@@ -272,20 +270,20 @@ void fd_fork()
 	kqueue_fd = kqueue();
 	int p;
 
-	for (p=0; p < MAXCONNECTIONS * 2; ++p)
+	for (p = 0; p < MAXCONNECTIONS * 2; ++p)
 	{
 		if (kqueue_enabled[p])
 		{
-			if (kevent(kqueue_fd, &kqueue_prepared[p], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+			if (kevent(kqueue_fd, &kqueue_prepared[p], 1, NULL, 0, &(const struct timespec){.tv_sec = 0, .tv_nsec = 0}) != 0)
 			{
 				if (ERRNO == P_EWOULDBLOCK || ERRNO == P_EAGAIN)
 					continue;
-					
-#ifdef DEBUGMODE
+
+ #ifdef DEBUGMODE
 				unreal_log(ULOG_ERROR, "io", "KEVENT_FAILED", NULL,
 				           "[io] fd_fork(): kevent returned error: $system_error",
 				           log_data_string("system_error", strerror(errno)));
-#endif
+ #endif
 			}
 		}
 	}
@@ -298,18 +296,18 @@ void fd_refresh(int fd)
 	if (kqueue_fd == -1)
 	{
 		kqueue_fd = kqueue();
-		memset(kqueue_enabled,0,MAXCONNECTIONS*2);
+		memset(kqueue_enabled, 0, MAXCONNECTIONS * 2);
 	}
 
 	kqueue_enabled[fd] = 0;
-	kqueue_enabled[fd+MAXCONNECTIONS] = 0;
+	kqueue_enabled[fd + MAXCONNECTIONS] = 0;
 
 	if (fde->read_callback != NULL || fde->backend_flags & EVFILT_READ)
 	{
-		EV_SET(&kqueue_prepared[fd], (uintptr_t) fd, (short) EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
-		if (kevent(kqueue_fd, &kqueue_prepared[fd], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+		EV_SET(&kqueue_prepared[fd], (uintptr_t)fd, (short)EVFILT_READ, fde->read_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
+		if (kevent(kqueue_fd, &kqueue_prepared[fd], 1, NULL, 0, &(const struct timespec){.tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
-#ifdef DEBUGMODE
+ #ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN)
 			{
 				int save_err = errno;
@@ -320,16 +318,16 @@ void fd_refresh(int fd)
 				           log_data_string("fd_action", (fde->read_callback ? "add" : "delete")),
 				           log_data_string("callback", "read_callback"));
 			}
-#endif
+ #endif
 		}
 	}
 
 	if (fde->write_callback != NULL || fde->backend_flags & EVFILT_WRITE)
 	{
-		EV_SET(&kqueue_prepared[fd+MAXCONNECTIONS], (uintptr_t) fd, (short) EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
-		if (kevent(kqueue_fd, &kqueue_prepared[fd+MAXCONNECTIONS], 1, NULL, 0, &(const struct timespec){ .tv_sec = 0, .tv_nsec = 0}) != 0)
+		EV_SET(&kqueue_prepared[fd + MAXCONNECTIONS], (uintptr_t)fd, (short)EVFILT_WRITE, fde->write_callback != NULL ? EV_ADD : EV_DELETE, 0, 0, fde);
+		if (kevent(kqueue_fd, &kqueue_prepared[fd + MAXCONNECTIONS], 1, NULL, 0, &(const struct timespec){.tv_sec = 0, .tv_nsec = 0}) != 0)
 		{
-#ifdef DEBUGMODE
+ #ifdef DEBUGMODE
 			if (ERRNO != P_EWOULDBLOCK && ERRNO != P_EAGAIN && fde->write_callback)
 			{
 				int save_err = errno;
@@ -340,7 +338,7 @@ void fd_refresh(int fd)
 				           log_data_string("fd_action", "add"),
 				           log_data_string("callback", "write_callback"));
 			}
-#endif
+ #endif
 		}
 	}
 
@@ -350,13 +348,12 @@ void fd_refresh(int fd)
 	{
 		fde->backend_flags |= EVFILT_READ;
 		kqueue_enabled[fd] = 1;
-
 	}
 
 	if (fde->write_callback != NULL)
 	{
 		fde->backend_flags |= EVFILT_WRITE;
-		kqueue_enabled[fd+MAXCONNECTIONS] = 1;
+		kqueue_enabled[fd + MAXCONNECTIONS] = 1;
 	}
 }
 
@@ -369,7 +366,7 @@ void fd_select(int delay)
 	if (kqueue_fd == -1)
 	{
 		kqueue_fd = kqueue();
-		memset(kqueue_enabled,0,MAXCONNECTIONS*2);
+		memset(kqueue_enabled, 0, MAXCONNECTIONS * 2);
 	}
 
 	memset(&ts, 0, sizeof(ts));
@@ -415,7 +412,7 @@ void fd_select(int delay)
  ***************************************************************************************/
 #ifdef BACKEND_EPOLL
 
-#include <sys/epoll.h>
+ #include <sys/epoll.h>
 
 static int epoll_fd = -1;
 static struct epoll_event epfds[MAXCONNECTIONS + 1];
@@ -459,10 +456,10 @@ void fd_refresh(int fd)
 			return;
 
 		unreal_log(ULOG_ERROR, "io", "EPOLL_CTL_FAILED", NULL,
-			   "[io] fd_refresh(): epoll_ctl returned error for fd $fd ($fd_description): $system_error",
-			   log_data_string("system_error", strerror(save_errno)),
-			   log_data_integer("fd", fd),
-			   log_data_string("fd_description", fde->desc));
+		           "[io] fd_refresh(): epoll_ctl returned error for fd $fd ($fd_description): $system_error",
+		           log_data_string("system_error", strerror(save_errno)),
+		           log_data_integer("fd", fd),
+		           log_data_string("fd_description", fde->desc));
 		return;
 	}
 
@@ -473,11 +470,11 @@ void fd_select(int delay)
 {
 	int num, p, revents, fd;
 	struct epoll_event *epfd;
-#ifdef DETECT_HIGH_CPU
+ #ifdef DETECT_HIGH_CPU
 	int read_callbacks = 0, write_callbacks = 0;
 	struct timeval oldt, t;
 	long long tdiff;
-#endif
+ #endif
 	if (epoll_fd == -1)
 		epoll_fd = epoll_create(MAXCONNECTIONS);
 
@@ -485,9 +482,9 @@ void fd_select(int delay)
 	if (num <= 0)
 		return;
 
-#ifdef DETECT_HIGH_CPU
+ #ifdef DETECT_HIGH_CPU
 	gettimeofday(&oldt, NULL);
-#endif
+ #endif
 
 	for (p = 0; p < num; p++)
 	{
@@ -517,9 +514,9 @@ void fd_select(int delay)
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
 
-#ifdef DETECT_HIGH_CPU
+ #ifdef DETECT_HIGH_CPU
 			read_callbacks++;
-#endif
+ #endif
 		}
 
 		if (evflags & FD_SELECT_WRITE)
@@ -529,20 +526,20 @@ void fd_select(int delay)
 			if (iocb != NULL)
 				iocb(fd, evflags, fde->data);
 
-#ifdef DETECT_HIGH_CPU
+ #ifdef DETECT_HIGH_CPU
 			write_callbacks++;
-#endif
+ #endif
 		}
-#if 0
+ #if 0
 		if (((read_callbacks + write_callbacks) % 100) == 0)
 		{
 			/* every 100 events.. set the internal clock so we don't screw up under extreme load */
 			timeofday = time(NULL);
 		}
-#endif
+ #endif
 	}
 
-#ifdef DETECT_HIGH_CPU
+ #ifdef DETECT_HIGH_CPU
 	gettimeofday(&t, NULL);
 	tdiff = ((t.tv_sec - oldt.tv_sec) * 1000000) + (t.tv_usec - oldt.tv_usec);
 
@@ -551,11 +548,11 @@ void fd_select(int delay)
 		unreal_log(ULOG_WARNING, "io", "HIGH_LOAD", NULL,
 		           "HIGH CPU LOAD! fd_select() took $time_msec msec "
 		           "(read: $num_read_callbacks, write: $num_write_callbacks)",
-		           log_data_integer("time_msec", tdiff/1000),
+		           log_data_integer("time_msec", tdiff / 1000),
 		           log_data_integer("num_read_callbacks", read_callbacks),
 		           log_data_integer("num_write_callbacks", write_callbacks));
 	}
-#endif
+ #endif
 }
 
 
@@ -570,12 +567,12 @@ void fd_fork()
  ***************************************************************************************/
 #ifdef BACKEND_POLL
 
-#ifndef POLLRDNORM
-# define POLLRDNORM POLLIN
-#endif
-#ifndef POLLWRNORM
-# define POLLWRNORM POLLOUT
-#endif
+ #ifndef POLLRDNORM
+  #define POLLRDNORM POLLIN
+ #endif
+ #ifndef POLLWRNORM
+  #define POLLWRNORM POLLOUT
+ #endif
 
 static struct pollfd pollfds[FD_SETSIZE];
 static nfds_t nfds = 0;

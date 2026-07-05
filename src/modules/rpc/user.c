@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/user",
-	"1.0.7",
-	"user.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/user",
+    "1.0.7",
+    "user.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -245,7 +244,7 @@ RPC_CALL_FUNC(rpc_user_set_nick)
 	const char *args[5];
 	const char *nick, *newnick_requested, *str;
 	int force = 0;
-	char newnick[NICKLEN+1];
+	char newnick[NICKLEN + 1];
 	char tsbuf[32];
 	Client *acptr;
 
@@ -523,7 +522,7 @@ RPC_CALL_FUNC(rpc_user_set_oper)
 	json_t *result, *list, *item;
 	const char *args[9];
 	const char *nick, *oper_account, *oper_class;
-	const char *class=NULL, *modes=NULL, *snomask=NULL, *vhost=NULL;
+	const char *class = NULL, *modes = NULL, *snomask = NULL, *vhost = NULL;
 	MessageTag *mtags = NULL;
 	Client *acptr;
 	char default_modes[64];
@@ -639,7 +638,7 @@ RPC_CALL_FUNC(rpc_user_join)
 {
 	json_t *result, *list, *item;
 	const char *args[5];
-	const char *nick, *channel, *key=NULL;
+	const char *nick, *channel, *key = NULL;
 	Client *acptr;
 	MessageTag *mtags = NULL;
 	int force = 0;
@@ -666,7 +665,8 @@ RPC_CALL_FUNC(rpc_user_join)
 		args[3] = key;
 		args[4] = NULL;
 		do_cmd(&me, mtags, "SVSJOIN", key ? 4 : 3, args);
-	} else {
+	} else
+	{
 		args[3] = NULL;
 		do_cmd(&me, mtags, "SAJOIN", 3, args);
 	}
@@ -687,7 +687,7 @@ RPC_CALL_FUNC(rpc_user_part)
 {
 	json_t *result, *list, *item;
 	const char *args[5];
-	const char *nick, *channel, *reason=NULL;
+	const char *nick, *channel, *reason = NULL;
 	Client *acptr;
 	MessageTag *mtags = NULL;
 	int force = 0;

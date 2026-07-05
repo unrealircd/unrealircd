@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"message-ids",
-	"5.0",
-	"msgid CAP",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "message-ids",
+    "5.0",
+    "msgid CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
@@ -97,7 +96,7 @@ MessageTag *mtag_generate_msgid(void)
 {
 	MessageTag *m = safe_alloc(sizeof(MessageTag));
 	safe_strdup(m->name, "msgid");
-	m->value = safe_alloc(MSGIDLEN+1);
+	m->value = safe_alloc(MSGIDLEN + 1);
 	gen_random_alnum(m->value, MSGIDLEN);
 	return m;
 }
@@ -124,7 +123,7 @@ void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTa
 		 * The hash is the first half of a SHA256 hash, then
 		 * base64'd, and with the == suffix removed.
 		 */
-		char prefix[MSGIDLEN+1], *p;
+		char prefix[MSGIDLEN + 1], *p;
 		strlcpy(prefix, m->value, sizeof(prefix));
 		p = strchr(prefix, '-');
 		if (p)
@@ -142,12 +141,12 @@ void mtag_add_or_inherit_msgid(Client *sender, MessageTag *recv_mtags, MessageTa
 		}
 		SHA256_CTX hash;
 		char binaryhash[SHA256_DIGEST_LENGTH];
-		char b64hash[SHA256_DIGEST_LENGTH*2+1];
+		char b64hash[SHA256_DIGEST_LENGTH * 2 + 1];
 		char newbuf[256];
 		memset(&binaryhash, 0, sizeof(binaryhash));
 		memset(&b64hash, 0, sizeof(b64hash));
 		sha256hash_binary(binaryhash, signature, strlen(signature));
-		b64_encode(binaryhash, sizeof(binaryhash)/2, b64hash, sizeof(b64hash));
+		b64_encode(binaryhash, sizeof(binaryhash) / 2, b64hash, sizeof(b64hash));
 		b64hash[22] = '\0'; /* cut off at '=' */
 		snprintf(newbuf, sizeof(newbuf), "%s-%s", prefix, b64hash);
 		safe_strdup(m->value, newbuf);

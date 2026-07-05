@@ -19,13 +19,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/flood",
-	"1.0",
-	"Extban ~flood - exempt from +f/+F checks",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/flood",
+    "1.0",
+    "Extban ~flood - exempt from +f/+F checks",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /** Maximum length of the ~flood ban exemption */
@@ -90,9 +89,9 @@ static int flood_type_ok(char *str)
 
 const char *flood_extban_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[MAX_FLOODBAN_LENGTH+1];
-	char para[MAX_FLOODBAN_LENGTH+1];
-	char tmpmask[MAX_FLOODBAN_LENGTH+1];
+	static char retbuf[MAX_FLOODBAN_LENGTH + 1];
+	char para[MAX_FLOODBAN_LENGTH + 1];
+	char tmpmask[MAX_FLOODBAN_LENGTH + 1];
 	char *type; /**< Type(s), such as 'j' */
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	const char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
@@ -140,7 +139,7 @@ int flood_extban_syntax(Client *client, int checkt, char *reason)
 
 int flood_extban_is_ok(BanContext *b)
 {
-	static char para[MAX_FLOODBAN_LENGTH+1];
+	static char para[MAX_FLOODBAN_LENGTH + 1];
 	char *type; /**< Type(s), such as 'j' */
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */

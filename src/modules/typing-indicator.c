@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"typing-indicator",
-	"5.0",
-	"+typing client tag",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "typing-indicator",
+    "5.0",
+    "+typing client tag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 int ti_mtag_is_ok(Client *client, const char *name, const char *value);
 void mtag_add_ti(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);

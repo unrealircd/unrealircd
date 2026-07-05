@@ -47,13 +47,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"antimixedutf8",
-	"1.0",
-	"Mixed UTF8 character filter (look-alike character spam) - by Syzop",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "antimixedutf8",
+    "1.0",
+    "Mixed UTF8 character filter (look-alike character spam) - by Syzop",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 struct {
@@ -84,14 +83,13 @@ int antimixedutf8_check(Client *client, TextAnalysis *txa, const char **errmsg)
 		unreal_log(ULOG_INFO, "antimixedutf8", "ANTIMIXEDUTF8_HIT", client,
 		           "[antimixedutf8] Client $client.details hit score $score -- taking action",
 		           log_data_integer("score", txa->antimixedutf8_points),
-		           log_data_textanalysis("text_analysis",txa));
+		           log_data_textanalysis("text_analysis", txa));
 		/* Take the action */
 		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0, NULL);
 		if ((retval == BAN_ACT_WARN) || (retval == BAN_ACT_SOFT_WARN))
 		{
 			/* no action */
-		} else
-		if ((retval == BAN_ACT_BLOCK) || (retval == BAN_ACT_SOFT_BLOCK))
+		} else if ((retval == BAN_ACT_BLOCK) || (retval == BAN_ACT_SOFT_BLOCK))
 		{
 			*errmsg = cfg.ban_reason;
 			return HOOK_DENY;
@@ -182,36 +180,31 @@ int antimixedutf8_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 		if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
-		} else
-		if (!cep->value)
+		} else if (!cep->value)
 		{
 			config_error("%s:%i: set::antimixedutf8::%s with no value",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "score"))
+		} else if (!strcmp(cep->name, "score"))
 		{
 			int v = atoi(cep->value);
 			if ((v < 1) || (v > 99))
 			{
 				config_error("%s:%i: set::antimixedutf8::score: must be between 1 - 99 (got: %d)",
-					cep->file->filename, cep->line_number, v);
+				             cep->file->filename, cep->line_number, v);
 				errors++;
 			}
-		} else
-		if (!strcmp(cep->name, "ban-action"))
+		} else if (!strcmp(cep->name, "ban-action"))
 		{
 			errors += test_ban_action_config(cep);
-		} else
-		if (!strcmp(cep->name, "ban-reason"))
+		} else if (!strcmp(cep->name, "ban-reason"))
 		{
-		} else
-		if (!strcmp(cep->name, "ban-time"))
+		} else if (!strcmp(cep->name, "ban-time"))
 		{
 		} else
 		{
 			config_error("%s:%i: unknown directive set::antimixedutf8::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -235,20 +228,16 @@ int antimixedutf8_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "score"))
 		{
 			cfg.score = atoi(cep->value);
-		} else
-		if (!strcmp(cep->name, "ban-action"))
+		} else if (!strcmp(cep->name, "ban-action"))
 		{
 			parse_ban_action_config(cep, &cfg.ban_action);
-		} else
-		if (!strcmp(cep->name, "ban-reason"))
+		} else if (!strcmp(cep->name, "ban-reason"))
 		{
 			safe_strdup(cfg.ban_reason, cep->value);
-		} else
-		if (!strcmp(cep->name, "ban-time"))
+		} else if (!strcmp(cep->name, "ban-time"))
 		{
 			cfg.ban_time = config_checkval(cep->value, CFG_TIME);
-		} else
-		if (!strcmp(cep->name, "except"))
+		} else if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &cfg.except);
 		}

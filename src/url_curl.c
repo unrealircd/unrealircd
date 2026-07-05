@@ -29,13 +29,12 @@ extern char *TLSKeyPasswd;
  */
 typedef struct Download Download;
 
-struct Download
-{
+struct Download {
 	Download *prev, *next;
 	OutgoingWebRequest *request;
 	struct curl_slist *request_headers_curl;
 	char errorbuf[CURL_ERROR_SIZE];
-	FILE *file_fd;		/**< File open for writing (otherwise NULL) */
+	FILE *file_fd;  /**< File open for writing (otherwise NULL) */
 	char *filename;
 	char *memory_data; /**< Memory for writing response (otherwise NULL) */
 	long long memory_data_len; /**< Size of memory_data */
@@ -203,7 +202,7 @@ static size_t do_download_memory(void *ptr, size_t size, size_t nmemb, void *str
 
 	if (size_required >= handle->memory_data_allocated - 1) // the -1 is for zero termination, even though it is binary..
 	{
-		long long newsize = ((size_required / URL_MEMORY_BACKED_CHUNK_SIZE)+1)*URL_MEMORY_BACKED_CHUNK_SIZE;
+		long long newsize = ((size_required / URL_MEMORY_BACKED_CHUNK_SIZE) + 1) * URL_MEMORY_BACKED_CHUNK_SIZE;
 		char *newptr = realloc(handle->memory_data, newsize);
 		if (!newptr)
 		{
@@ -249,7 +248,7 @@ static void url_check_multi_handles(void)
 			CURL *easyhand = msg->easy_handle;
 
 			curl_easy_getinfo(easyhand, CURLINFO_RESPONSE_CODE, &code);
-			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char **) &handle);
+			curl_easy_getinfo(easyhand, CURLINFO_PRIVATE, (char **)&handle);
 			curl_easy_getinfo(easyhand, CURLINFO_FILETIME, &last_mod);
 			if (handle->file_fd)
 			{
@@ -262,16 +261,14 @@ static void url_check_multi_handles(void)
 				if (code == 304 || (last_mod != -1 && last_mod <= handle->request->cachetime))
 				{
 					url_callback(handle->request, NULL, handle->memory_data, handle->memory_data_len, NULL, 1, handle->request->callback_data);
-				}
-				else
+				} else
 				{
 					if ((last_mod != -1) && handle->filename)
 						unreal_setfilemodtime(handle->filename, last_mod);
 
 					url_callback(handle->request, handle->filename, handle->memory_data, handle->memory_data_len, NULL, 0, handle->request->callback_data);
 				}
-			}
-			else
+			} else
 			{
 				char capbuf[128];
 				const char *err = handle->errorbuf;
@@ -319,8 +316,7 @@ static int url_socket_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *so
 	if (what == CURL_POLL_REMOVE)
 	{
 		fd_close(s);
-	}
-	else
+	} else
 	{
 		FDEntry *fde = &fd_table[s];
 		int flags = 0;
@@ -426,11 +422,12 @@ void url_start_async(OutgoingWebRequest *request)
 	{
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_file);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle);
-	} else {
+	} else
+	{
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, do_download_memory);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)handle);
 		handle->memory_data_allocated = URL_MEMORY_BACKED_CHUNK_SIZE;
-		handle->memory_data = safe_alloc(URL_MEMORY_BACKED_CHUNK_SIZE+1);
+		handle->memory_data = safe_alloc(URL_MEMORY_BACKED_CHUNK_SIZE + 1);
 	}
 	if (handle->request->http_method == HTTP_METHOD_POST)
 	{

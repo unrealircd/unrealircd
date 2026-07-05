@@ -113,13 +113,14 @@ static int listener_accept_wrapper(ConfigItem_listen *listener)
 			if (listener->file)
 			{
 				unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR", NULL, "Cannot accept incoming connection on file $file: $socket_error",
-					   log_data_socket_error(listener->fd),
-					   log_data_string("file", listener->file));
-			} else {
+				           log_data_socket_error(listener->fd),
+				           log_data_string("file", listener->file));
+			} else
+			{
 				unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: $socket_error",
-					   log_data_socket_error(listener->fd),
-					   log_data_string("listen_ip", listener->ip),
-					   log_data_integer("listen_port", listener->port));
+				           log_data_socket_error(listener->fd),
+				           log_data_string("listen_ip", listener->ip),
+				           log_data_integer("listen_port", listener->port));
 			}
 			close_listener(listener);
 			start_listeners();
@@ -135,13 +136,13 @@ static int listener_accept_wrapper(ConfigItem_listen *listener)
 	if (listener->options & LISTENER_CONTROL)
 	{
 		/* ... but not unlimited ;) */
-		if ((++OpenFiles >= maxclients+(reserved_fds/2)) || (cli_fd >= maxclients+(reserved_fds/2)))
+		if ((++OpenFiles >= maxclients + (reserved_fds / 2)) || (cli_fd >= maxclients + (reserved_fds / 2)))
 		{
 			ircstats.is_ref++;
 			if (last_allinuse < TStime() - 15)
 			{
 				unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on file $file: All connections in use",
-					   log_data_string("file", listener->file));
+				           log_data_string("file", listener->file));
 				last_allinuse = TStime();
 			}
 			fd_close(cli_fd);
@@ -158,11 +159,12 @@ static int listener_accept_wrapper(ConfigItem_listen *listener)
 				if (listener->file)
 				{
 					unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on file $file: All connections in use",
-						   log_data_string("file", listener->file));
-				} else {
+					           log_data_string("file", listener->file));
+				} else
+				{
 					unreal_log(ULOG_FATAL, "listen", "ACCEPT_ERROR_MAXCLIENTS", NULL, "Cannot accept incoming connection on IP \"$listen_ip\" port $listen_port: All connections in use",
-						   log_data_string("listen_ip", listener->ip),
-						   log_data_integer("listen_port", listener->port));
+					           log_data_string("listen_ip", listener->ip),
+					           log_data_integer("listen_port", listener->port));
 				}
 				last_allinuse = TStime();
 			}
@@ -193,7 +195,7 @@ static void listener_accept(int listener_fd, int revents, void *data)
 	 * Better refuse or lag a few new clients than become
 	 * unresponse to existing clients.
 	 */
-	for (i=0; i < 100; i++)
+	for (i = 0; i < 100; i++)
 		if (!listener_accept_wrapper((ConfigItem_listen *)data))
 			break;
 }
@@ -226,9 +228,9 @@ int unreal_listen_inet(ConfigItem_listen *listener)
 	{
 		unreal_log(ULOG_FATAL, "listen", "LISTEN_SOCKET_ERROR", NULL,
 		           "Could not listen on IP \"$listen_ip\" on port $listen_port: $socket_error",
-			   log_data_socket_error(-1),
-			   log_data_string("listen_ip", ip),
-			   log_data_integer("listen_port", port));
+		           log_data_socket_error(-1),
+		           log_data_string("listen_ip", ip),
+		           log_data_integer("listen_port", port));
 		return -1;
 	}
 
@@ -311,8 +313,8 @@ int unreal_listen_unix(ConfigItem_listen *listener)
 	{
 		unreal_log(ULOG_FATAL, "listen", "LISTEN_SOCKET_ERROR", NULL,
 		           "Could not create UNIX domain socket for $file: $socket_error",
-			   log_data_socket_error(-1),
-			   log_data_string("file", listener->file));
+		           log_data_socket_error(-1),
+		           log_data_string("file", listener->file));
 		return -1;
 	}
 
@@ -382,8 +384,7 @@ int add_listener(ConfigItem_listen *listener)
 	{
 		listener->options |= LISTENER_BOUND;
 		return 1;
-	}
-	else
+	} else
 	{
 		listener->fd = -1;
 		return -1;
@@ -403,15 +404,16 @@ void close_listener(ConfigItem_listen *listener)
 		if (listener->socket_type == SOCKET_TYPE_UNIX)
 		{
 			unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
-				   "UnrealIRCd is now no longer listening on $listen_file [$protocol]",
-				   log_data_string("listen_file", listener->file),
-				   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
-		} else {
+			           "UnrealIRCd is now no longer listening on $listen_file [$protocol]",
+			           log_data_string("listen_file", listener->file),
+			           log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
+		} else
+		{
 			unreal_log(ULOG_INFO, "listen", "LISTEN_REMOVED", NULL,
-				   "UnrealIRCd is now no longer listening on $listen_ip:$listen_port [$protocol]",
-				   log_data_string("listen_ip", listener->ip),
-				   log_data_integer("listen_port", listener->port),
-				   log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
+			           "UnrealIRCd is now no longer listening on $listen_ip:$listen_port [$protocol]",
+			           log_data_string("listen_ip", listener->ip),
+			           log_data_integer("listen_port", listener->port),
+			           log_data_string("protocol", socket_type_valtostr(listener->socket_type)));
 		}
 		fd_close(listener->fd);
 		--OpenFiles;
@@ -471,11 +473,11 @@ void check_user_limit(void)
 			if (setrlimit(RLIMIT_FD_MAX, &limit) == -1)
 			{
 				/* HACK: if it's mac os X then don't error... */
-#ifndef OSXTIGER
+ #ifndef OSXTIGER
 				fprintf(stderr, "error setting maximum number of open files to %ld\n",
-					(long)limit.rlim_cur);
+				        (long)limit.rlim_cur);
 				exit(-1);
-#endif // OSXTIGER
+ #endif // OSXTIGER
 			}
 		}
 		/* This can only happen if it is due to resource limits (./Config already rejects <100) */
@@ -487,7 +489,7 @@ void check_user_limit(void)
 			                "The recommended ulimit -n setting is at least 1024 and "
 			                "preferably 4096.\n"
 			                "Note that this error is often seen on small web shells that are not meant for running IRC servers.\n",
-			                m);
+			        m);
 			exit(-1);
 		}
 		maxclients = m;
@@ -495,7 +497,7 @@ void check_user_limit(void)
 #endif // RLIMIT_FD_MAX
 
 #ifndef _WIN32
-#ifdef BACKEND_SELECT
+ #ifdef BACKEND_SELECT
 	if (MAXCONNECTIONS > FD_SETSIZE)
 	{
 		fprintf(stderr, "MAXCONNECTIONS (%d) is higher than FD_SETSIZE (%d)\n", MAXCONNECTIONS, FD_SETSIZE);
@@ -503,7 +505,7 @@ void check_user_limit(void)
 		fprintf(stderr, "You might need to recompile the IRCd and answer a lower value to the MAXCONNECTIONS question in ./Config\n");
 		exit(-1);
 	}
-#endif
+ #endif
 #endif
 #ifdef _WIN32
 	maxclients = MAXCONNECTIONS;
@@ -649,13 +651,11 @@ void close_connection(Client *client)
 	{
 		ircstats.is_sv++;
 		ircstats.is_sti += TStime() - client->local->creationtime;
-	}
-	else if (IsUser(client))
+	} else if (IsUser(client))
 	{
 		ircstats.is_cl++;
 		ircstats.is_cti += TStime() - client->local->creationtime;
-	}
-	else
+	} else
 		ircstats.is_ni++;
 
 	/*
@@ -673,7 +673,8 @@ void close_connection(Client *client)
 	if (client->local->fd >= 0)
 	{
 		send_queued(client);
-		if (IsTLS(client) && client->local->ssl) {
+		if (IsTLS(client) && client->local->ssl)
+		{
 			SSL_set_shutdown(client->local->ssl, SSL_RECEIVED_SHUTDOWN);
 			SSL_smart_shutdown(client->local->ssl);
 			SSL_free(client->local->ssl);
@@ -728,8 +729,8 @@ void set_sock_opts(int fd, Client *client, SocketType socket_type)
 		if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof(opt)) < 0)
 		{
 			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
-				   "Could not setsockopt(SO_REUSEADDR): $socket_error",
-				   log_data_socket_error(-1));
+			           "Could not setsockopt(SO_REUSEADDR): $socket_error",
+			           log_data_socket_error(-1));
 		}
 #endif
 
@@ -738,11 +739,10 @@ void set_sock_opts(int fd, Client *client, SocketType socket_type)
 		if (setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (void *)&opt, sizeof(opt)) < 0)
 		{
 			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
-				   "Could not setsockopt(SO_USELOOPBACK): $socket_error",
-				   log_data_socket_error(-1));
+			           "Could not setsockopt(SO_USELOOPBACK): $socket_error",
+			           log_data_socket_error(-1));
 		}
 #endif
-
 	}
 
 	/* The following code applies to all socket types: IPv4, IPv6, UNIX domain sockets */
@@ -754,17 +754,16 @@ void set_sock_opts(int fd, Client *client, SocketType socket_type)
 		if (client)
 		{
 			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
-				   "Could not get socket options (F_GETFL): $socket_error",
-				   log_data_socket_error(-1));
+			           "Could not get socket options (F_GETFL): $socket_error",
+			           log_data_socket_error(-1));
 		}
-	}
-	else if (fcntl(fd, F_SETFL, opt | O_NONBLOCK) == -1)
+	} else if (fcntl(fd, F_SETFL, opt | O_NONBLOCK) == -1)
 	{
 		if (client)
 		{
 			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
-				   "Could not get socket options (F_SETFL): $socket_error",
-				   log_data_socket_error(-1));
+			           "Could not get socket options (F_SETFL): $socket_error",
+			           log_data_socket_error(-1));
 		}
 	}
 #else
@@ -774,8 +773,8 @@ void set_sock_opts(int fd, Client *client, SocketType socket_type)
 		if (client)
 		{
 			unreal_log(ULOG_WARNING, "socket", "SOCKET_ERROR_SETSOCKOPTS", client,
-				   "Could not ioctlsocket FIONBIO: $socket_error",
-				   log_data_socket_error(-1));
+			           "Could not ioctlsocket FIONBIO: $socket_error",
+			           log_data_socket_error(-1));
 		}
 	}
 #endif
@@ -810,7 +809,7 @@ int is_loopback_ip(char *ip)
  */
 const char *getpeerip(Client *client, int fd, SocketType socket_type, int *port)
 {
-	static char ret[HOSTLEN+1];
+	static char ret[HOSTLEN + 1];
 
 	if (socket_type == SOCKET_TYPE_IPV6)
 	{
@@ -870,21 +869,21 @@ Client *add_connection(ConfigItem_listen *listener, int fd)
 		{
 			unreal_log(ULOG_ERROR, "listen", "ACCEPT_ERROR", NULL,
 			           "Failed to accept new client: unable to get IP address: $socket_error",
-				   log_data_socket_error(fd),
-				   log_data_string("listen_ip", listener->ip),
-				   log_data_integer("listen_port", listener->port));
+			           log_data_socket_error(fd),
+			           log_data_string("listen_ip", listener->ip),
+			           log_data_integer("listen_port", listener->port));
 		}
-refuse_client:
-			ircstats.is_ref++;
-			client->local->fd = -2;
-			if (!list_empty(&client->client_node))
-				list_del(&client->client_node);
-			if (!list_empty(&client->lclient_node))
-				list_del(&client->lclient_node);
-			free_client(client);
-			fd_close(fd);
-			--OpenFiles;
-			return NULL;
+	refuse_client:
+		ircstats.is_ref++;
+		client->local->fd = -2;
+		if (!list_empty(&client->client_node))
+			list_del(&client->client_node);
+		if (!list_empty(&client->lclient_node))
+			list_del(&client->lclient_node);
+		free_client(client);
+		fd_close(fd);
+		--OpenFiles;
+		return NULL;
 	}
 
 	/* Fill in sockhost & ip ASAP */
@@ -916,8 +915,7 @@ refuse_client:
 			deadsocket_exit(client, 1);
 			irccounts.unknown--;
 			goto refuse_client;
-		} else
-		if (value == HOOK_DENY)
+		} else if (value == HOOK_DENY)
 		{
 			if (quick_close || !(listener->options & LISTENER_TLS))
 			{
@@ -928,7 +926,8 @@ refuse_client:
 				deadsocket_exit(client, 1);
 				irccounts.unknown--;
 				goto refuse_client;
-			} else {
+			} else
+			{
 				/* continue, and even do the SSL/TLS handshake */
 			}
 		}
@@ -1000,7 +999,7 @@ int dead_socket(Client *to, const char *notice)
 	 */
 	if (to->local->error_str)
 		return -1; /* don't overwrite & don't send multiple times */
-	
+
 	if (!IsUser(to) && !IsUnknown(to) && !IsRPC(to) && !IsControl(to) && !IsClosing(to))
 	{
 		/* Looks like a duplicate error message to me?
@@ -1031,25 +1030,26 @@ void deadsocket_exit(Client *client, int special)
 	if (special)
 	{
 		sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)", get_client_name(client, FALSE),
-			client->local->error_str ? client->local->error_str : "Dead socket");
+		           client->local->error_str ? client->local->error_str : "Dead socket");
 		send_queued(client);
 		/* Caller takes care of freeing 'client' - only used by HOOKTYPE_ACCEPT */
 		return;
-	} else {
+	} else
+	{
 		exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
 	}
 }
 
 typedef enum DNSFinishedType {
-	DNS_FINISHED_NONE=0,            /**< We finished because DNS lookups are disabled */
-	DNS_FINISHED_FAIL=1,            /**< DNS lookup failed (cached or uncached) */
-	DNS_FINISHED_SUCCESS=2,         /**< DNS lookup succeeded (uncached) */
-	DNS_FINISHED_SUCCESS_CACHED=3   /**< DNS lookup succeeded (cached DNS entry) */
+	DNS_FINISHED_NONE = 0,            /**< We finished because DNS lookups are disabled */
+	DNS_FINISHED_FAIL = 1,            /**< DNS lookup failed (cached or uncached) */
+	DNS_FINISHED_SUCCESS = 2,         /**< DNS lookup succeeded (uncached) */
+	DNS_FINISHED_SUCCESS_CACHED = 3   /**< DNS lookup succeeded (cached DNS entry) */
 } DNSFinishedType;
 
 void dns_finished(Client *client, DNSFinishedType type)
 {
-	switch(type)
+	switch (type)
 	{
 		case DNS_FINISHED_FAIL:
 			if (should_show_connect_info(client))
@@ -1069,7 +1069,7 @@ void dns_finished(Client *client, DNSFinishedType type)
 
 	/* Set sockhost to resolved hostname already */
 	if (client->local->hostp)
-	        set_sockhost(client, client->local->hostp->h_name);
+		set_sockhost(client, client->local->hostp->h_name);
 
 	RunHook(HOOKTYPE_DNS_FINISHED, client);
 }
@@ -1118,8 +1118,7 @@ void start_dns_and_ident_lookup(Client *client)
 		{
 			/* Resolving in progress */
 			SetDNSLookup(client);
-		} else
-		if (he->h_name == NULL)
+		} else if (he->h_name == NULL)
 		{
 			/* Host was negatively cached */
 			unreal_free_hostent(he);
@@ -1130,7 +1129,8 @@ void start_dns_and_ident_lookup(Client *client)
 			client->local->hostp = he;
 			dns_finished(client, DNS_FINISHED_SUCCESS_CACHED);
 		}
-	} else {
+	} else
+	{
 		/* Still need to call this, so our hooks get called */
 		dns_finished(client, DNS_FINISHED_NONE);
 	}
@@ -1218,32 +1218,31 @@ void read_packet(int fd, int revents, void *data)
 
 				switch (err)
 				{
-				case SSL_ERROR_WANT_WRITE:
-					fd_setselect(fd, FD_SELECT_READ, NULL, client);
-					fd_setselect(fd, FD_SELECT_WRITE, read_packet, client);
-					length = -1;
-					SET_ERRNO(P_EWOULDBLOCK);
-					break;
-				case SSL_ERROR_WANT_READ:
-					fd_setselect(fd, FD_SELECT_READ, read_packet, client);
-					length = -1;
-					SET_ERRNO(P_EWOULDBLOCK);
-					break;
-				case SSL_ERROR_SYSCALL:
-					break;
-				case SSL_ERROR_SSL:
-					if (ERRNO == P_EAGAIN)
+					case SSL_ERROR_WANT_WRITE:
+						fd_setselect(fd, FD_SELECT_READ, NULL, client);
+						fd_setselect(fd, FD_SELECT_WRITE, read_packet, client);
+						length = -1;
+						SET_ERRNO(P_EWOULDBLOCK);
 						break;
-				default:
-					/*length = 0;
+					case SSL_ERROR_WANT_READ:
+						fd_setselect(fd, FD_SELECT_READ, read_packet, client);
+						length = -1;
+						SET_ERRNO(P_EWOULDBLOCK);
+						break;
+					case SSL_ERROR_SYSCALL:
+						break;
+					case SSL_ERROR_SSL:
+						if (ERRNO == P_EAGAIN)
+							break;
+					default:
+                                        /*length = 0;
 					SET_ERRNO(0);
 					^^ why this? we should error. -- todo: is errno correct?
 					*/
-					break;
+						break;
 				}
 			}
-		}
-		else
+		} else
 			length = recv(client->local->fd, readbuf, sizeof(readbuf), 0);
 
 		if (length <= 0)
@@ -1289,7 +1288,7 @@ void read_packet(int fd, int revents, void *data)
 void process_clients(void)
 {
 	Client *client;
-        
+
 	/* Problem:
 	 * When processing a client, that current client may exit due to eg QUIT.
 	 * Similarly, current->next may be killed due to /KILL.
@@ -1310,7 +1309,8 @@ void process_clients(void)
 	 * I think the chosen solution is best, though it remains silly. -- Syzop
 	 */
 
-	do {
+	do
+	{
 		list_for_each_entry(client, &lclient_list, lclient_node)
 		{
 			if ((client->local->fd >= 0) && DBufLength(&client->local->recvQ) && !IsDead(client))
@@ -1320,9 +1320,10 @@ void process_clients(void)
 					break;
 			}
 		}
-	} while(&client->lclient_node != &lclient_list);
+	} while (&client->lclient_node != &lclient_list);
 
-	do {
+	do
+	{
 		list_for_each_entry(client, &unknown_list, lclient_node)
 		{
 			if ((client->local->fd >= 0) && DBufLength(&client->local->recvQ) && !IsDead(client))
@@ -1332,9 +1333,10 @@ void process_clients(void)
 					break;
 			}
 		}
-	} while(&client->lclient_node != &unknown_list);
+	} while (&client->lclient_node != &unknown_list);
 
-	do {
+	do
+	{
 		list_for_each_entry(client, &control_list, lclient_node)
 		{
 			if ((client->local->fd >= 0) && DBufLength(&client->local->recvQ) && !IsDead(client))
@@ -1344,9 +1346,7 @@ void process_clients(void)
 					break;
 			}
 		}
-	} while(&client->lclient_node != &control_list);
-
-
+	} while (&client->lclient_node != &control_list);
 }
 
 /** Check if 'ip' is a valid IP address, and if so what type.
@@ -1417,7 +1417,7 @@ int unix_sockets_capable(void)
  */
 int deliver_it(Client *client, char *str, int len, int *want_read)
 {
-	int  retval;
+	int retval;
 
 	*want_read = 0;
 
@@ -1437,25 +1437,24 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 		{
 			switch (SSL_get_error(client->local->ssl, retval))
 			{
-			case SSL_ERROR_WANT_READ:
-				SET_ERRNO(P_EWOULDBLOCK);
-				*want_read = 1;
-				return 0;
-			case SSL_ERROR_WANT_WRITE:
-				SET_ERRNO(P_EWOULDBLOCK);
-				break;
-			case SSL_ERROR_SYSCALL:
-				break;
-			case SSL_ERROR_SSL:
-				if (ERRNO == P_EAGAIN)
+				case SSL_ERROR_WANT_READ:
+					SET_ERRNO(P_EWOULDBLOCK);
+					*want_read = 1;
+					return 0;
+				case SSL_ERROR_WANT_WRITE:
+					SET_ERRNO(P_EWOULDBLOCK);
 					break;
+				case SSL_ERROR_SYSCALL:
+					break;
+				case SSL_ERROR_SSL:
+					if (ERRNO == P_EAGAIN)
+						break;
 				/* FALLTHROUGH */
-			default:
-				return -1; /* hm.. why was this 0?? we have an error! */
+				default:
+					return -1; /* hm.. why was this 0?? we have an error! */
 			}
 		}
-	}
-	else
+	} else
 		retval = send(client->local->fd, str, len, 0);
 	/*
 	   ** Convert WOULDBLOCK to a return of "0 bytes moved". This
@@ -1465,14 +1464,14 @@ int deliver_it(Client *client, char *str, int len, int *want_read)
 	   **
 	   ** ...now, would this work on VMS too? --msa
 	 */
-# ifndef _WIN32
+#ifndef _WIN32
 	if (retval < 0 && (errno == EWOULDBLOCK || errno == EAGAIN ||
-	    errno == ENOBUFS))
-# else
-		if (retval < 0 && (WSAGetLastError() == WSAEWOULDBLOCK ||
-		    WSAGetLastError() == WSAENOBUFS))
-# endif
-			retval = 0;
+	                   errno == ENOBUFS))
+#else
+	if (retval < 0 && (WSAGetLastError() == WSAEWOULDBLOCK ||
+	                   WSAGetLastError() == WSAENOBUFS))
+#endif
+		retval = 0;
 
 	if (retval > 0)
 	{
@@ -1496,8 +1495,7 @@ int unreal_connect(int fd, const char *ip, int port, SocketType socket_type)
 		inet_pton(AF_INET6, ip, &server.sin6_addr);
 		server.sin6_port = htons(port);
 		n = connect(fd, (struct sockaddr *)&server, sizeof(server));
-	}
-	else if (socket_type == SOCKET_TYPE_IPV4)
+	} else if (socket_type == SOCKET_TYPE_IPV4)
 	{
 		struct sockaddr_in server;
 		memset(&server, 0, sizeof(server));
@@ -1540,8 +1538,7 @@ int unreal_bind(int fd, const char *ip, int port, SocketType socket_type)
 		if (inet_pton(AF_INET, ip, &server.sin_addr.s_addr) != 1)
 			return 0;
 		return !bind(fd, (struct sockaddr *)&server, sizeof(server));
-	}
-	else if (socket_type == SOCKET_TYPE_IPV6)
+	} else if (socket_type == SOCKET_TYPE_IPV6)
 	{
 		struct sockaddr_in6 server;
 		memset(&server, 0, sizeof(server));
@@ -1589,7 +1586,7 @@ void init_winsock(void)
 
 const char *socket_type_valtostr(SocketType t)
 {
-	switch(t)
+	switch (t)
 	{
 		case SOCKET_TYPE_IPV4:
 			return "IPv4";
@@ -1694,7 +1691,8 @@ int set_client_ip(Client *client, const char *ip)
 	{
 		if (!update_known_user_cache(client))
 			return 0; /* rejected */
-	} else {
+	} else
+	{
 		/* Initial set */
 		client->known_user_cached = user_allowed_by_security_group_name(client, "known-users") ? 1 : 0;
 	}

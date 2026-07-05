@@ -22,16 +22,15 @@
 
 CMD_FUNC(cmd_unsqline);
 
-#define MSG_UNSQLINE    "UNSQLINE"      /* UNSQLINE */
+#define MSG_UNSQLINE "UNSQLINE"      /* UNSQLINE */
 
-ModuleHeader MOD_HEADER
-  = {
-	"unsqline",	/* Name of module */
-	"5.0", /* Version */
-	"command /unsqline", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "unsqline", /* Name of module */
+    "5.0", /* Version */
+    "command /unsqline", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
@@ -59,12 +58,12 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_unsqline)
 {
 	const char *tkllayer[6] = {
-		me.name,           /*0  server.name */
-		"-",               /*1  - */
-		"Q",               /*2  Q   */
-		"*",               /*3  unused */
-		parv[1],           /*4  host */
-		client->name,      /*5  whoremoved */
+	    me.name,           /*0  server.name */
+	    "-",               /*1  - */
+	    "Q",               /*2  Q   */
+	    "*",               /*3  unused */
+	    parv[1],           /*4  host */
+	    client->name,      /*5  whoremoved */
 	};
 
 	if (parc < 2)

@@ -22,16 +22,15 @@
 
 CMD_FUNC(cmd_sendsno);
 
-#define MSG_SENDSNO   "SENDSNO"
+#define MSG_SENDSNO "SENDSNO"
 
-ModuleHeader MOD_HEADER
-  = {
-	"sendsno",	/* Name of module */
-	"5.0", /* Version */
-	"command /sendsno", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sendsno", /* Name of module */
+    "5.0", /* Version */
+    "command /sendsno", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()

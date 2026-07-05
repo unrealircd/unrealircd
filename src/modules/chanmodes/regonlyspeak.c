@@ -20,22 +20,21 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/regonlyspeak",
-	"4.2",
-	"Channel Mode +M",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/regonlyspeak",
+    "4.2",
+    "Channel Mode +M",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_REGONLYSPEAK;
 static char errMsg[2048];
 
-#define IsRegOnlySpeak(channel)    (channel->mode.mode & EXTCMODE_REGONLYSPEAK)
+#define IsRegOnlySpeak(channel) (channel->mode.mode & EXTCMODE_REGONLYSPEAK)
 
 int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
-const char *regonlyspeak_part_message (Client *client, Channel *channel, const char *comment);
+const char *regonlyspeak_part_message(Client *client, Channel *channel, const char *comment);
 
 MOD_TEST()
 {
@@ -51,11 +50,11 @@ MOD_INIT()
 	req.letter = 'M';
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_REGONLYSPEAK);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, regonlyspeak_can_send_to_channel);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, regonlyspeak_part_message);
 
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -70,12 +69,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-const char *regonlyspeak_part_message (Client *client, Channel *channel, const char *comment)
+const char *regonlyspeak_part_message(Client *client, Channel *channel, const char *comment)
 {
 	if (!comment)
 		return NULL;
 
-	if (IsRegOnlySpeak(channel) && !IsLoggedIn(client) && !ValidatePermissionsForPath("channel:override:message:regonlyspeak",client,NULL,NULL,NULL))
+	if (IsRegOnlySpeak(channel) && !IsLoggedIn(client) && !ValidatePermissionsForPath("channel:override:message:regonlyspeak", client, NULL, NULL, NULL))
 		return NULL;
 
 	return comment;
@@ -87,7 +86,7 @@ int regonlyspeak_can_send_to_channel(Client *client, Channel *channel, Membershi
 	int i;
 
 	if (IsRegOnlySpeak(channel) &&
-	    !op_can_override("channel:override:message:regonlyspeak",client,channel,NULL) &&
+	    !op_can_override("channel:override:message:regonlyspeak", client, channel, NULL) &&
 	    !IsLoggedIn(client) &&
 	    !check_channel_access_membership(lp, "vhoaq"))
 	{

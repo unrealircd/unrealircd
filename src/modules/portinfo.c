@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"portinfo",
-	"1.0.0",
-	"Store port info in ModData",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "portinfo",
+    "1.0.0",
+    "Store port info in ModData",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 void portinfo_free(ModData *m);

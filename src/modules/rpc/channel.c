@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/channel",
-	"1.0.5",
-	"channel.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/channel",
+    "1.0.5",
+    "channel.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -100,7 +99,7 @@ void rpc_channel_list(Client *client, json_t *request, json_t *params)
 	list = json_array();
 	json_object_set_new(result, "list", list);
 
-	for (channel = channels; channel; channel=channel->nextch)
+	for (channel = channels; channel; channel = channel->nextch)
 	{
 		item = json_object();
 		json_expand_channel(item, NULL, channel, details);
@@ -163,7 +162,7 @@ void rpc_channel_set_mode(Client *client, json_t *request, json_t *params)
 void rpc_channel_set_topic(Client *client, json_t *request, json_t *params)
 {
 	json_t *result, *item;
-	const char *channelname, *topic, *set_by=NULL, *str;
+	const char *channelname, *topic, *set_by = NULL, *str;
 	Channel *channel;
 	time_t set_at = 0;
 	MessageTag *mtags = NULL;

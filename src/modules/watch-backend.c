@@ -25,7 +25,7 @@
 #define WATCH_HASH_TABLE_SIZE 32768
 
 #define WATCHES(client) (moddata_local_client(client, watchCounterMD).i)
-#define WATCH(client) (moddata_local_client(client, watchListMD).ptr)
+#define WATCH(client)   (moddata_local_client(client, watchListMD).ptr)
 
 ModDataInfo *watchCounterMD;
 ModDataInfo *watchListMD;
@@ -44,13 +44,12 @@ int _watch_del(const char *nick, Client *client, int flags);
 int _watch_del_list(Client *client, int flags);
 uint64_t hash_watch_nick_name(const char *name);
 
-ModuleHeader MOD_HEADER
-= {
-	"watch-backend",
-	"6.0.3",
-	"backend for /WATCH",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "watch-backend",
+    "6.0.3",
+    "backend for /WATCH",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 MOD_TEST()
@@ -71,7 +70,7 @@ void watch_generic_free(ModData *m)
 }
 
 MOD_INIT()
-{	
+{
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
@@ -87,7 +86,7 @@ MOD_INIT()
 	if (watchTable == NULL)
 		watchTable = safe_alloc(sizeof(Watch *) * WATCH_HASH_TABLE_SIZE);
 
-	memset(&mreq, 0 , sizeof(mreq));
+	memset(&mreq, 0, sizeof(mreq));
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.name = "watchCount",
 	mreq.free = dummy_free;
@@ -98,7 +97,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
-	memset(&mreq, 0 , sizeof(mreq));
+	memset(&mreq, 0, sizeof(mreq));
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.name = "watchList",
 	mreq.free = watch_free;
@@ -152,50 +151,53 @@ int _watch_add(const char *nick, Client *client, int flags)
 	unsigned int hashv;
 	Watch *watch;
 	Link *lp;
-	
-	
+
+
 	/* Get the right bucket... */
 	hashv = hash_watch_nick_name(nick);
-	
+
 	/* Find the right nick (header) in the bucket, or NULL... */
 	if ((watch = watchTable[hashv]))
 		while (watch && mycmp(watch->nick, nick))
-		 watch = watch->hnext;
-	
+			watch = watch->hnext;
+
 	/* If found NULL (no header for this nick), make one... */
-	if (!watch) {
-		watch = safe_alloc(sizeof(Watch)+strlen(nick)+1);
+	if (!watch)
+	{
+		watch = safe_alloc(sizeof(Watch) + strlen(nick) + 1);
 		watch->lasttime = timeofday;
 		strcpy(watch->nick, nick);
-		
+
 		watch->watch = NULL;
-		
+
 		watch->hnext = watchTable[hashv];
 		watchTable[hashv] = watch;
 	}
 	/* Is this client already on the watch-list? */
 	if ((lp = watch->watch))
 		while (lp && (lp->value.client != client))
-		 lp = lp->next;
-	
+			lp = lp->next;
+
 	/* No it isn't, so add it in the bucket and client addint it */
-	if (!lp) {
+	if (!lp)
+	{
 		lp = watch->watch;
 		watch->watch = make_link();
 		watch->watch->value.client = client;
 		watch->watch->flags = flags;
 		watch->watch->next = lp;
-		
+
 		lp = make_link();
 		lp->next = WATCH(client);
 		lp->value.wptr = watch;
 		lp->flags = flags;
 		WATCH(client) = lp;
-		WATCHES(client)++;
-		
+		WATCHES(client)
+		++;
+
 		RunHook(HOOKTYPE_WATCH_ADD, nick, client, flags);
 	}
-	
+
 	return 0;
 }
 
@@ -207,23 +209,23 @@ int _watch_check(Client *client, int event, void *data, int (*watch_notify)(Clie
 
 	/* Get us the right bucket */
 	hashv = hash_watch_nick_name(client->name);
-	
+
 	/* Find the right header in this bucket */
 	if ((watch = watchTable[hashv]))
 		while (watch && mycmp(watch->nick, client->name))
-		 watch = watch->hnext;
+			watch = watch->hnext;
 	if (!watch)
-		return 0;	 /* This nick isn't on watch */
-	
+		return 0;  /* This nick isn't on watch */
+
 	/* Update the time of last change to item */
 	watch->lasttime = TStime();
-	
+
 	/* Send notifies out to everybody on the list in header */
 	for (lp = watch->watch; lp; lp = lp->next)
 	{
 		watch_notify(client, watch, lp, event, data);
 	}
-	
+
 	return 0;
 }
 
@@ -231,13 +233,13 @@ Watch *_watch_get(const char *nick)
 {
 	unsigned int hashv;
 	Watch *watch;
-	
+
 	hashv = hash_watch_nick_name(nick);
-	
+
 	if ((watch = watchTable[hashv]))
 		while (watch && mycmp(watch->nick, nick))
-		 watch = watch->hnext;
-	
+			watch = watch->hnext;
+
 	return watch;
 }
 
@@ -249,14 +251,14 @@ int _watch_del(const char *nick, Client *client, int flags)
 
 	/* Get the bucket for this nick... */
 	hashv = hash_watch_nick_name(nick);
-	
+
 	/* Find the right header, maintaining last-link pointer... */
 	watch = (Watch **)&watchTable[hashv];
 	while (*watch && mycmp((*watch)->nick, nick))
 		watch = &(*watch)->hnext;
 	if (!*watch)
-		return 0;	 /* No such watch */
-	
+		return 0;  /* No such watch */
+
 	/* Find this client from the list of notifies... with last-ptr. */
 	lp = &(*watch)->watch;
 	while (*lp)
@@ -266,18 +268,18 @@ int _watch_del(const char *nick, Client *client, int flags)
 		lp = &(*lp)->next;
 	}
 	if (!*lp)
-		return 0;	 /* No such client to watch */
-	
+		return 0;  /* No such client to watch */
+
 	/* Fix the linked list under header, then remove the watch entry */
 	prev = *lp;
 	*lp = prev->next;
 	free_link(prev);
-	
+
 	/* Do the same regarding the links in client-record... */
 	lp = (Link **)&WATCH(client);
 	while (*lp && ((*lp)->value.wptr != *watch))
 		lp = &(*lp)->next;
-	
+
 	/*
 	 * Give error on the odd case... probobly not even neccessary
 	 * No error checking in ircd is unneccessary ;) -Cabal95
@@ -288,23 +290,26 @@ int _watch_del(const char *nick, Client *client, int flags)
 		           "[BUG] watch_del found a watch entry with no client counterpoint, "
 		           "while processing nick $nick on client $client.details",
 		           log_data_string("nick", nick));
-	} else {
+	} else
+	{
 		prev = *lp;
 		*lp = prev->next;
 		free_link(prev);
 	}
 	/* In case this header is now empty of notices, remove it */
-	if (!(*watch)->watch) {
+	if (!(*watch)->watch)
+	{
 		wprev = *watch;
 		*watch = wprev->hnext;
 		safe_free(wprev);
 	}
-	
+
 	/* Update count of notifies on nick */
-	WATCHES(client)--;
-	
+	WATCHES(client)
+	--;
+
 	RunHook(HOOKTYPE_WATCH_DEL, nick, client, flags);
-	
+
 	return 0;
 }
 
@@ -313,19 +318,21 @@ int _watch_del_list(Client *client, int flags)
 	unsigned int hashv;
 	Watch *watch;
 	Link **np, **lp, *prev;
-	
+
 	np = (Link **)&WATCH(client);
-	
-	while (*np) {
+
+	while (*np)
+	{
 		if (((*np)->flags & flags) != flags)
 		{
 			/* this entry is not fitting requested flags */
 			np = &(*np)->next;
 			continue;
 		}
-		
-		WATCHES(client)--;
-		
+
+		WATCHES(client)
+		--;
+
 		/* Find the watch-record from hash-table... */
 		watch = (*np)->value.wptr;
 		lp = &(watch->watch);
@@ -336,23 +343,25 @@ int _watch_del_list(Client *client, int flags)
 		if (!*lp)
 		{
 			unreal_log(ULOG_WARNING, "watch", "BUG_WATCH_DEL_LIST", client,
-				   "[BUG] watch_del_list found a watch entry with no table counterpoint, "
-				   "while processing client $client.details");
-		} else {
+			           "[BUG] watch_del_list found a watch entry with no table counterpoint, "
+			           "while processing client $client.details");
+		} else
+		{
 			/* Fix the watch-list and remove entry */
 			Link *prev = *lp;
 			*lp = prev->next;
 			free_link(prev);
-			
+
 			/*
 			 * If this leaves a header without notifies,
 			 * remove it. Need to find the last-pointer!
 			 */
-			if (!watch->watch) {
+			if (!watch->watch)
+			{
 				Watch **np2, *wprev;
-				
+
 				hashv = hash_watch_nick_name(watch->nick);
-				
+
 				np2 = &watchTable[hashv];
 				while (*np2 && *np2 != watch)
 					np2 = &(*np2)->hnext;
@@ -362,15 +371,15 @@ int _watch_del_list(Client *client, int flags)
 				safe_free(watch);
 			}
 		}
-		
+
 		prev = *np; /* Save last pointer processed */
 		*np = prev->next; /* Jump to the next pointer */
 		free_link(prev); /* Free the previous */
 	}
-	
+
 	if (!flags)
 		WATCHES(client) = 0;
-	
+
 	return 0;
 }
 
@@ -378,4 +387,3 @@ uint64_t hash_watch_nick_name(const char *name)
 {
 	return siphash_nocase(name, siphashkey_watch) % WATCH_HASH_TABLE_SIZE;
 }
-

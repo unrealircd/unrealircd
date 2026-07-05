@@ -43,7 +43,7 @@ void clear_scache_hash_table(void)
 
 static int hash(char *string)
 {
-	int  hash_value;
+	int hash_value;
 
 	hash_value = 0;
 	while (*string)
@@ -63,7 +63,7 @@ static int hash(char *string)
  */
 char *find_or_add(char *name)
 {
-	int  hash_index;
+	int hash_index;
 	SCACHE *ptr, *newptr;
 
 	ptr = scache_hash[hash_index = hash(name)];
@@ -72,8 +72,7 @@ char *find_or_add(char *name)
 		if (!mycmp(ptr->name, name))
 		{
 			return (ptr->name);
-		}
-		else
+		} else
 		{
 			ptr = ptr->next;
 		}
@@ -88,12 +87,11 @@ char *find_or_add(char *name)
 		strlcpy(newptr->name, name, sizeof(newptr->name));
 		newptr->next = ptr;
 		return (newptr->name);
-	}
-	else
+	} else
 	{
 		ptr = scache_hash[hash_index] = safe_alloc(sizeof(SCACHE));
 		strlcpy(ptr->name, name, sizeof(newptr->name));
-		ptr->next = (SCACHE *) NULL;
+		ptr->next = (SCACHE *)NULL;
 		return (ptr->name);
 	}
 }

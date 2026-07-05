@@ -40,7 +40,7 @@ int procio_client_connect(const char *file)
 #else
 		fprintf(stderr, "Cannot communicate to UnrealIRCd: %s\n"
 		                "Perhaps your operating system does not support UNIX Sockets?\n",
-				strerror(ERRNO));
+		        strerror(ERRNO));
 #endif
 		return -1;
 	}
@@ -52,7 +52,7 @@ int procio_client_connect(const char *file)
 	if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		fprintf(stderr, "Could not connect to '%s': %s\n",
-			CONTROLFILE, strerror(errno));
+		        CONTROLFILE, strerror(errno));
 		fprintf(stderr, "The IRC server does not appear to be running.\n");
 		close(fd);
 		return -1;
@@ -142,7 +142,7 @@ int procio_client(const char *command, int auto_color_logs)
 	{
 		fprintf(stderr, "Error while communicating to IRCd via '%s': %s\n"
 		                "Maybe the IRC server is not running?\n",
-		                CONTROLFILE, strerror(errno));
+		        CONTROLFILE, strerror(errno));
 		close(fd);
 		return -1;
 	}
@@ -150,16 +150,16 @@ int procio_client(const char *command, int auto_color_logs)
 	if (!procio_send(fd, command))
 	{
 		fprintf(stderr, "Error while sending command to IRCd via '%s'. Strange!\n",
-		                CONTROLFILE);
+		        CONTROLFILE);
 		close(fd);
 		return -1;
 	}
 
 	*buf = '\0';
 	dbuf_queue_init(&queue);
-	while(1)
+	while (1)
 	{
-		n = recv(fd, buf, sizeof(buf)-1, 0);
+		n = recv(fd, buf, sizeof(buf) - 1, 0);
 		if (n <= 0)
 			break;
 		buf[n] = '\0'; /* terminate the string */
@@ -173,22 +173,21 @@ int procio_client(const char *command, int auto_color_logs)
 			{
 				if (!strncmp(buf, "REPLY ", 6))
 				{
-					char *reply = buf+6;
+					char *reply = buf + 6;
 					if (auto_color_logs == 0)
 						printf("%s\n", reply);
 					else if (auto_color_logs == 1)
 						printf("%s\n", recolor_logs(reply));
 					else
 						printf("%s\n", recolor_split(reply));
-				} else
-				if (!strncmp(buf, "END ", 4))
+				} else if (!strncmp(buf, "END ", 4))
 				{
-					int exitcode = atoi(buf+4);
+					int exitcode = atoi(buf + 4);
 					close(fd);
 					return exitcode;
 				}
 			}
-		} while(n > 0);
+		} while (n > 0);
 	}
 
 	/* IRCd hung up without saying goodbye, possibly problematic,

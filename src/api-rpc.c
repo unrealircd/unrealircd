@@ -38,9 +38,9 @@ RPCHandler *RPCHandlerAdd(Module *module, RPCHandlerInfo *mreq)
 	if (!mreq->method || !mreq->call)
 	{
 		unreal_log(ULOG_ERROR, "module", "RPCHANDLERADD_API_ERROR", NULL,
-			   "RPCHandlerAdd() from module $module_name: "
-			   "Missing required fields.",
-			   log_data_string("module_name", module->header->name));
+		           "RPCHandlerAdd() from module $module_name: "
+		           "Missing required fields.",
+		           log_data_string("module_name", module->header->name));
 		abort();
 	}
 
@@ -50,12 +50,14 @@ RPCHandler *RPCHandlerAdd(Module *module, RPCHandlerInfo *mreq)
 		if (m->unloaded)
 		{
 			m->unloaded = 0;
-		} else {
+		} else
+		{
 			if (module)
 				module->errorcode = MODERR_EXISTS;
 			return NULL;
 		}
-	} else {
+	} else
+	{
 		/* New RPC handler */
 		m = safe_alloc(sizeof(RPCHandler));
 		safe_strdup(m->method, mreq->method);
@@ -106,7 +108,8 @@ void RPCHandlerDel(RPCHandler *m)
 	if (m->owner)
 	{
 		ModuleObject *mobj;
-		for (mobj = m->owner->objects; mobj; mobj = mobj->next) {
+		for (mobj = m->owner->objects; mobj; mobj = mobj->next)
+		{
 			if (mobj->type == MOBJ_RPC && mobj->object.rpc == m)
 			{
 				DelListItem(mobj, m->owner->objects);

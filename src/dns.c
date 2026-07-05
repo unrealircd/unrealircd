@@ -47,7 +47,7 @@
  * and perhaps by then it is long enough that we don't need the fallback to older
  * functions.
  */
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+ #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
 /* Forward declerations */
@@ -73,8 +73,8 @@ ares_channel resolver_channel_https; /**< The resolver channel for HTTPS request
 ares_channel resolver_channel_dnsbl; /**< The resolver channel for DNSBLs. */
 
 #define RESOLVER_CHANNEL_CLIENT (void *)0x1
-#define RESOLVER_CHANNEL_HTTPS (void *)0x2
-#define RESOLVER_CHANNEL_DNSBL (void *)0x3
+#define RESOLVER_CHANNEL_HTTPS  (void *)0x2
+#define RESOLVER_CHANNEL_DNSBL  (void *)0x3
 
 DNSStats dnsstats;
 
@@ -124,7 +124,7 @@ static void unrealdns_sock_state_cb(void *data, ares_socket_t fd, int read, int 
 		fd_close(fd);
 		return;
 	}
-	
+
 	if (read)
 		selflags |= FD_SELECT_READ;
 
@@ -175,7 +175,7 @@ void init_resolver(int firsttime)
 
 	if (requests)
 		abort(); /* should never happen */
-		
+
 	if (firsttime)
 	{
 		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
@@ -185,14 +185,14 @@ void init_resolver(int firsttime)
 	}
 
 	memset(&options, 0, sizeof(options));
-	options.flags |= ARES_FLAG_NOALIASES|ARES_FLAG_IGNTC;
+	options.flags |= ARES_FLAG_NOALIASES | ARES_FLAG_IGNTC;
 	options.sock_state_cb = unrealdns_sock_state_cb;
 	/* Don't search domains or you'll get lookups for like
 	 * 1.1.168.192.dnsbl.dronebl.org.mydomain.org which is a waste.
 	 */
 	options.domains = NULL;
 	options.ndomains = 0;
-	optmask = ARES_OPT_TIMEOUTMS|ARES_OPT_TRIES|ARES_OPT_FLAGS|ARES_OPT_SOCK_STATE_CB|ARES_OPT_DOMAINS;
+	optmask = ARES_OPT_TIMEOUTMS | ARES_OPT_TRIES | ARES_OPT_FLAGS | ARES_OPT_SOCK_STATE_CB | ARES_OPT_DOMAINS;
 #ifndef _WIN32
 	/* on *NIX don't use the hosts file, since it causes countless useless reads.
 	 * on Windows we use it for now, this could be changed in the future.
@@ -352,7 +352,8 @@ struct hostent *unrealdns_doclient(Client *client)
 		memset(&addr, 0, sizeof(addr));
 		inet_pton(AF_INET6, client->ip, &addr);
 		ares_gethostbyaddr(resolver_channel_client, &addr, 16, AF_INET6, unrealdns_cb_iptoname, r);
-	} else {
+	} else
+	{
 		struct in_addr addr;
 		memset(&addr, 0, sizeof(addr));
 		inet_pton(AF_INET, client->ip, &addr);
@@ -394,8 +395,8 @@ void unrealdns_cb_iptoname(void *arg, int status, int timeouts, struct hostent *
 	unrealdns_freeandremovereq(r);
 
 	if (!client)
-		return; 
-	
+		return;
+
 	/* Check for status and null name (yes, we must) */
 	if ((status != 0) || !he->h_name || !*he->h_name)
 	{
@@ -444,7 +445,8 @@ void unrealdns_cb_nametoip_verify(void *arg, int status, int timeouts, struct ho
 				continue; /* something fucked */
 			if (!memcmp(he->h_addr_list[i], &addr, 16))
 				break; /* MATCH */
-		} else {
+		} else
+		{
 			struct in_addr addr;
 			if (inet_pton(AF_INET, client->ip, &addr) != 1)
 				continue; /* something fucked */
@@ -486,7 +488,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 	DNSReq *r = (DNSReq *)arg;
 	int n;
 	struct hostent *he2;
-	char ipbuf[HOSTLEN+1];
+	char ipbuf[HOSTLEN + 1];
 	const char *ip = NULL;
 
 	if (!r->linkblock)
@@ -509,8 +511,8 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 
 		/* fatal error while resolving */
 		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_RESOLVING", NULL,
-			   "Unable to resolve hostname $link_block.hostname, when trying to connect to server $link_block.",
-			   log_data_link_block(r->linkblock));
+		           "Unable to resolve hostname $link_block.hostname, when trying to connect to server $link_block.",
+		           log_data_link_block(r->linkblock));
 		r->linkblock->refcount--;
 		unrealdns_freeandremovereq(r);
 		return;
@@ -527,7 +529,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 		unrealdns_freeandremovereq(r);
 		return;
 	}
-	
+
 	/* Ok, since we got here, it seems things were actually succesfull */
 
 	/* Fill in [linkblockstruct]->ipnum */
@@ -543,7 +545,7 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 
 static uint64_t unrealdns_hash_ip(const char *ip)
 {
-        return siphash(ip, siphashkey_dns_ip) % DNS_HASH_SIZE;
+	return siphash(ip, siphashkey_dns_ip) % DNS_HASH_SIZE;
 }
 
 static void unrealdns_addtocache(const char *name, const char *ip)
@@ -557,7 +559,7 @@ static void unrealdns_addtocache(const char *name, const char *ip)
 
 	/* Check first if it is already present in the cache.
 	 * This is possible, when 2 clients connect at the same time.
-	 */	
+	 */
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
 		if (!strcmp(ip, c->ip))
 			return; /* already present in cache */
@@ -565,7 +567,8 @@ static void unrealdns_addtocache(const char *name, const char *ip)
 	/* Remove last item, if we got too many entries.. */
 	if (unrealdns_num_cache >= DNS_MAX_ENTRIES)
 	{
-		for (c = cache_list; c->next; c = c->next);
+		for (c = cache_list; c->next; c = c->next)
+			;
 		unrealdns_removecacherecord(c);
 	}
 
@@ -577,7 +580,7 @@ static void unrealdns_addtocache(const char *name, const char *ip)
 		c->expires = TStime() + DNS_NEGCACHE_TTL;
 	else
 		c->expires = TStime() + DNS_CACHE_TTL;
-	
+
 	/* Add to hash table */
 	if (cache_hashtbl[hashv])
 	{
@@ -585,7 +588,7 @@ static void unrealdns_addtocache(const char *name, const char *ip)
 		c->hnext = cache_hashtbl[hashv];
 	}
 	cache_hashtbl[hashv] = c;
-	
+
 	/* Add to linked list */
 	if (cache_list)
 	{
@@ -607,7 +610,7 @@ static const char *unrealdns_findcache_ip(const char *ip, int *found)
 	DNSCache *c;
 
 	hashv = unrealdns_hash_ip(ip);
-	
+
 	for (c = cache_hashtbl[hashv]; c; c = c->hnext)
 	{
 		if (!strcmp(ip, c->ip))
@@ -617,7 +620,7 @@ static const char *unrealdns_findcache_ip(const char *ip, int *found)
 			return c->name;
 		}
 	}
-	
+
 	dnsstats.cache_misses++;
 	*found = 0;
 	return NULL;
@@ -627,7 +630,7 @@ static const char *unrealdns_findcache_ip(const char *ip, int *found)
  */
 void unrealdns_removecacherecord(DNSCache *c)
 {
-unsigned int hashv;
+	unsigned int hashv;
 
 	/* We basically got 4 pointers to update:
 	 * <previous listitem>->next
@@ -640,23 +643,24 @@ unsigned int hashv;
 		c->prev->next = c->next;
 	else
 		cache_list = c->next; /* new list HEAD */
-	
+
 	if (c->next)
 		c->next->prev = c->prev;
-	
+
 	if (c->hprev)
 		c->hprev->hnext = c->hnext;
-	else {
+	else
+	{
 		/* new hash HEAD */
 		hashv = unrealdns_hash_ip(c->ip);
 		if (cache_hashtbl[hashv] != c)
 			abort(); /* impossible */
 		cache_hashtbl[hashv] = c->hnext;
 	}
-	
+
 	if (c->hnext)
 		c->hnext->hprev = c->hprev;
-	
+
 	safe_free(c->name);
 	safe_free(c->ip);
 	safe_free(c);
@@ -667,7 +671,7 @@ unsigned int hashv;
 /** This regulary removes old dns records from the cache */
 EVENT(unrealdns_removeoldrecords)
 {
-DNSCache *c, *next;
+	DNSCache *c, *next;
 
 	for (c = cache_list; c; c = next)
 	{
@@ -679,7 +683,7 @@ DNSCache *c, *next;
 
 struct hostent *unreal_create_hostent(const char *name, const char *ip)
 {
-struct hostent *he;
+	struct hostent *he;
 
 	/* Create a hostent structure (I HATE HOSTENTS) and return it.. */
 	he = safe_alloc(sizeof(struct hostent));
@@ -692,7 +696,8 @@ struct hostent *he;
 		he->h_addr_list = safe_alloc(sizeof(char *) * 2); /* alocate an array of 2 pointers */
 		he->h_addr_list[0] = safe_alloc(sizeof(struct in6_addr));
 		inet_pton(AF_INET6, ip, he->h_addr_list[0]);
-	} else {
+	} else
+	{
 		he->h_addrtype = AF_INET;
 		he->h_length = sizeof(struct in_addr);
 		he->h_addr_list = safe_alloc(sizeof(char *) * 2); /* alocate an array of 2 pointers */
@@ -717,7 +722,7 @@ static void unrealdns_freeandremovereq(DNSReq *r)
 		r->prev->next = r->next;
 	else
 		requests = r->next; /* new HEAD */
-	
+
 	if (r->next)
 		r->next->prev = r->prev;
 
@@ -744,7 +749,6 @@ void unrealdns_delasyncconnects(void)
 	for (r = requests; r; r = r->next)
 		if (r->type == DNSREQ_CONNECT)
 			r->linkblock = NULL;
-	
 }
 
 void dns_check_for_changes(void)
@@ -788,7 +792,7 @@ CMD_FUNC(cmd_dns)
 	DNSReq *r;
 	const char *param;
 
-	if (!ValidatePermissionsForPath("server:dns",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:dns", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -810,18 +814,16 @@ CMD_FUNC(cmd_dns)
 		for (c = cache_list; c; c = c->next)
 			if (!c->name)
 				sendtxtnumeric(client, " %s", c->ip);
-	} else
-	if (*param == 'r') /* LIST REQUESTS */
+	} else if (*param == 'r') /* LIST REQUESTS */
 	{
 		sendtxtnumeric(client, "DNS Request List:");
 		for (r = requests; r; r = r->next)
 			sendtxtnumeric(client, " %s", r->client ? r->client->ip : "<client lost>");
-	} else
-	if (*param == 'c') /* CLEAR CACHE */
+	} else if (*param == 'c') /* CLEAR CACHE */
 	{
 		unreal_log(ULOG_INFO, "dns", "DNS_CACHE_CLEARED", client,
-		            "DNS cache cleared by $client");
-		
+		           "DNS cache cleared by $client");
+
 		while (cache_list)
 		{
 			c = cache_list->next;
@@ -833,8 +835,7 @@ CMD_FUNC(cmd_dns)
 		memset(&cache_hashtbl, 0, sizeof(cache_hashtbl));
 		unrealdns_num_cache = 0;
 		sendnotice(client, "DNS Cache has been cleared");
-	} else
-	if (*param == 'i') /* INFORMATION */
+	} else if (*param == 'i') /* INFORMATION */
 	{
 		struct ares_options inf;
 		struct ares_addr_node *serverlist = NULL, *ns;
@@ -842,7 +843,7 @@ CMD_FUNC(cmd_dns)
 		int optmask;
 
 		sendtxtnumeric(client, "****** DNS Configuration Information ******");
-		sendtxtnumeric(client, " c-ares version: %s",ares_version(NULL));
+		sendtxtnumeric(client, " c-ares version: %s", ares_version(NULL));
 
 		// Duplicate code follows, because.. yeah.. we use a struct? :D
 
@@ -918,8 +919,7 @@ CMD_FUNC(cmd_dns)
 }
 
 typedef struct ApiCallbackWrappedArg ApiCallbackWrappedArg;
-struct ApiCallbackWrappedArg
-{
+struct ApiCallbackWrappedArg {
 	char *callback_name;
 	void *callback_arg;
 };

@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_trace);
 
-#define MSG_TRACE 	"TRACE"	
+#define MSG_TRACE "TRACE"
 
-ModuleHeader MOD_HEADER
-  = {
-	"trace",
-	"5.0",
-	"command /trace", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "trace",
+    "5.0",
+    "command /trace",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -58,12 +57,12 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_trace)
 {
-	int  i;
+	int i;
 	Client *acptr;
 	ConfigItem_class *cltmp;
 	const char *tname;
-	int  doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
-	int  cnt = 0, wilds, dow;
+	int doall, link_s[MAXCONNECTIONS], link_u[MAXCONNECTIONS];
+	int cnt = 0, wilds, dow;
 	time_t now;
 
 	/* This is one of the (few) commands that cannot be handled
@@ -81,9 +80,9 @@ CMD_FUNC(cmd_trace)
 	else
 		tname = me.name;
 
-	if (!ValidatePermissionsForPath("client:see:trace:global",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("client:see:trace:global", client, NULL, NULL, NULL))
 	{
-		if (ValidatePermissionsForPath("client:see:trace:local",client,NULL,NULL,NULL))
+		if (ValidatePermissionsForPath("client:see:trace:local", client, NULL, NULL, NULL))
 		{
 			/* local opers may not /TRACE remote servers! */
 			if (strcasecmp(tname, me.name))
@@ -92,7 +91,8 @@ CMD_FUNC(cmd_trace)
 				sendnumeric(client, ERR_NOPRIVILEGES);
 				return;
 			}
-		} else {
+		} else
+		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
 		}
@@ -100,19 +100,19 @@ CMD_FUNC(cmd_trace)
 
 	switch (hunt_server(client, NULL, "TRACE", 1, parc, parv))
 	{
-	  case HUNTED_PASS:	/* note: gets here only if parv[1] exists */
-	  {
-		  Client *ac2ptr;
+		case HUNTED_PASS: /* note: gets here only if parv[1] exists */
+		{
+			Client *ac2ptr;
 
-		  ac2ptr = find_client(tname, NULL);
-		  sendnumeric(client, RPL_TRACELINK,
-		      version, debugmode, tname, ac2ptr->direction->name);
-		  return;
-	  }
-	  case HUNTED_ISME:
-		  break;
-	  default:
-		  return;
+			ac2ptr = find_client(tname, NULL);
+			sendnumeric(client, RPL_TRACELINK,
+			            version, debugmode, tname, ac2ptr->direction->name);
+			return;
+		}
+		case HUNTED_ISME:
+			break;
+		default:
+			return;
 	}
 
 	doall = (parv[1] && (parc > 1)) ? match_simple(tname, me.name) : TRUE;
@@ -123,7 +123,8 @@ CMD_FUNC(cmd_trace)
 		link_s[i] = 0, link_u[i] = 0;
 
 
-	if (doall) {
+	if (doall)
+	{
 		list_for_each_entry(acptr, &client_list, client_node)
 		{
 			if (acptr->direction->local->fd < 0)
@@ -143,7 +144,7 @@ CMD_FUNC(cmd_trace)
 		const char *name;
 		const char *class;
 
-		if (!ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL) && (acptr != client))
+		if (!ValidatePermissionsForPath("client:see:trace:invisible-users", client, acptr, NULL, NULL) && (acptr != client))
 			continue;
 		if (!doall && wilds && !match_simple(tname, acptr->name))
 			continue;
@@ -175,28 +176,27 @@ CMD_FUNC(cmd_trace)
 				/* Only opers see users if there is a wildcard
 				 * but anyone can see all the opers.
 				 */
-				if (ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL) ||
-				    (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace",client,acptr,NULL,NULL)))
+				if (ValidatePermissionsForPath("client:see:trace:invisible-users", client, acptr, NULL, NULL) ||
+				    (!IsInvisible(acptr) && ValidatePermissionsForPath("client:see:trace", client, acptr, NULL, NULL)))
 				{
-					if (ValidatePermissionsForPath("client:see:trace",client,acptr,NULL,NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users",client,acptr,NULL,NULL))
+					if (ValidatePermissionsForPath("client:see:trace", client, acptr, NULL, NULL) || ValidatePermissionsForPath("client:see:trace:invisible-users", client, acptr, NULL, NULL))
 						sendnumeric(client, RPL_TRACEOPERATOR,
-						    class, acptr->name,
-						    GetHost(acptr),
-						    (long long)(now - acptr->local->last_msg_received));
+						            class, acptr->name,
+						            GetHost(acptr),
+						            (long long)(now - acptr->local->last_msg_received));
 					else
 						sendnumeric(client, RPL_TRACEUSER,
-						    class, acptr->name,
-						    acptr->user->realhost,
-						    (long long)(now - acptr->local->last_msg_received));
+						            class, acptr->name,
+						            acptr->user->realhost,
+						            (long long)(now - acptr->local->last_msg_received));
 					cnt++;
 				}
 				break;
 
 			case CLIENT_STATUS_SERVER:
 				sendnumeric(client, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
-				    acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->server->by) ?
-				    acptr->server->by : "*", "*", me.name,
-				    (long long)(now - acptr->local->last_msg_received));
+				            acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->server->by) ? acptr->server->by : "*", "*", me.name,
+				            (long long)(now - acptr->local->last_msg_received));
 				cnt++;
 				break;
 
@@ -215,7 +215,7 @@ CMD_FUNC(cmd_trace)
 				cnt++;
 				break;
 
-			default:	/* ...we actually shouldn't come here... --msa */
+			default: /* ...we actually shouldn't come here... --msa */
 				sendnumeric(client, RPL_TRACENEWTYPE, "<newtype>", name);
 				cnt++;
 				break;
@@ -225,10 +225,10 @@ CMD_FUNC(cmd_trace)
 	 * Add these lines to summarize the above which can get rather long
 	 * and messy when done remotely - Avalon
 	 */
-	if (!ValidatePermissionsForPath("client:see:trace",client,acptr,NULL,NULL) || !cnt)
+	if (!ValidatePermissionsForPath("client:see:trace", client, acptr, NULL, NULL) || !cnt)
 		return;
 
 	for (cltmp = conf_class; doall && cltmp; cltmp = cltmp->next)
-	/*	if (cltmp->clients > 0) */
-			sendnumeric(client, RPL_TRACECLASS, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
+        /*	if (cltmp->clients > 0) */
+		sendnumeric(client, RPL_TRACECLASS, cltmp->name ? cltmp->name : "[noname]", cltmp->clients);
 }

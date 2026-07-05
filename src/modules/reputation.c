@@ -43,29 +43,28 @@
  * 3MB, so not big, which likely means the timing will be similar
  * for a broad number of (storage) systems.
  */
- 
+
 #ifndef TEST
- #define BUMP_SCORE_EVERY	300
- #define DELETE_OLD_EVERY	605
- #define SAVE_DB_EVERY		902
+ #define BUMP_SCORE_EVERY 300
+ #define DELETE_OLD_EVERY 605
+ #define SAVE_DB_EVERY    902
 #else
- #define BUMP_SCORE_EVERY 	3
- #define DELETE_OLD_EVERY	3
- #define SAVE_DB_EVERY		3
+ #define BUMP_SCORE_EVERY 3
+ #define DELETE_OLD_EVERY 3
+ #define SAVE_DB_EVERY    3
 #endif
 
 #ifndef CALLBACKTYPE_REPUTATION_STARTTIME
  #define CALLBACKTYPE_REPUTATION_STARTTIME 5
 #endif
 
-ModuleHeader MOD_HEADER
-  = {
-	"reputation",
-	REPUTATION_VERSION,
-	"Known IP's scoring system",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "reputation",
+    REPUTATION_VERSION,
+    "Known IP's scoring system",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Defines */
 
@@ -77,24 +76,27 @@ ModuleHeader MOD_HEADER
 
 #define REPUTATION_HASH_TABLE_SIZE 2048
 
-#define Reputation(client)	moddata_client(client, reputation_md).l
+#define Reputation(client) moddata_client(client, reputation_md).l
 
 #define WARN_WRITE_ERROR(fname) \
-	do { \
+	do \
+	{ \
 		unreal_log(ULOG_ERROR, "reputation", "REPUTATION_FILE_WRITE_ERROR", NULL, \
-			   "[reputation] Error writing to temporary database file $filename: $system_error", \
-			   log_data_string("filename", fname), \
-			   log_data_string("system_error", unrealdb_get_error_string())); \
-	} while(0)
+		           "[reputation] Error writing to temporary database file $filename: $system_error", \
+		           log_data_string("filename", fname), \
+		           log_data_string("system_error", unrealdb_get_error_string())); \
+	} while (0)
 
 #define W_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			WARN_WRITE_ERROR(tmpfname); \
 			unrealdb_close(db); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 
 /* Definitions (structs, etc.) */
@@ -202,8 +204,8 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 2000000000, reputation_pre_lconnect); /* (prio: last) */
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_CONNECT, -1000000000, reputation_set_on_connect); /* (prio: near-first) */
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 0, reputation_connect_extinfo); /* (prio: near-first) */
-	CommandAdd(ModInf.handle, "REPUTATION", reputation_cmd, MAXPARA, CMD_USER|CMD_SERVER);
-	CommandAdd(ModInf.handle, "REPUTATIONUNPERM", reputationunperm, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(ModInf.handle, "REPUTATION", reputation_cmd, MAXPARA, CMD_USER | CMD_SERVER);
+	CommandAdd(ModInf.handle, "REPUTATIONUNPERM", reputationunperm, MAXPARA, CMD_USER | CMD_SERVER);
 	return MOD_SUCCESS;
 }
 
@@ -219,8 +221,8 @@ void reputation_benchmark(int entries)
 	for (i = 0; i < entries; i++)
 	{
 		ReputationEntry *e = safe_alloc(sizeof(ReputationEntry) + 64);
-		snprintf(e->ip, 63, "%d.%d.%d.%d", rand()%255, rand()%255, rand()%255, rand()%255);
-		e->score = rand()%255 + 1;
+		snprintf(e->ip, 63, "%d.%d.%d.%d", rand() % 255, rand() % 255, rand() % 255, rand() % 255);
+		e->score = rand() % 255 + 1;
 		e->last_seen = TStime();
 		if (find_reputation_entry(e->ip))
 		{
@@ -236,9 +238,9 @@ MOD_LOAD()
 	reputation_load_db();
 	if (reputation_starttime == 0)
 		reputation_starttime = TStime();
-	EventAdd(ModInf.handle, "delete_old_records", delete_old_records, NULL, DELETE_OLD_EVERY*1000, 0);
-	EventAdd(ModInf.handle, "add_scores", add_scores, NULL, BUMP_SCORE_EVERY*1000, 0);
-	EventAdd(ModInf.handle, "reputation_save_db", reputation_save_db_evt, NULL, SAVE_DB_EVERY*1000, 0);
+	EventAdd(ModInf.handle, "delete_old_records", delete_old_records, NULL, DELETE_OLD_EVERY * 1000, 0);
+	EventAdd(ModInf.handle, "add_scores", add_scores, NULL, BUMP_SCORE_EVERY * 1000, 0);
+	EventAdd(ModInf.handle, "reputation_save_db", reputation_save_db_evt, NULL, SAVE_DB_EVERY * 1000, 0);
 #ifdef BENCHMARK
 	reputation_benchmark(10000);
 #endif
@@ -264,19 +266,19 @@ void reputation_config_setdefaults(struct cfgstruct *cfg)
 	/* <=2 points after 1 hour */
 	cfg->expire_score[0] = 2;
 #ifndef TEST
-	cfg->expire_time[0]  = 3600;
+	cfg->expire_time[0] = 3600;
 #else
-	cfg->expire_time[0]  = 36;
+	cfg->expire_time[0] = 36;
 #endif
 	/* <=6 points after 7 days */
 	cfg->expire_score[1] = 6;
-	cfg->expire_time[1]  = 86400*7;
+	cfg->expire_time[1] = 86400 * 7;
 	/* <=12 points after 30 days */
 	cfg->expire_score[2] = 12;
-	cfg->expire_time[2]  = 86400*30;
+	cfg->expire_time[2] = 86400 * 30;
 	/* ANY result that has not been seen for 90 days */
 	cfg->expire_score[3] = -1;
-	cfg->expire_time[3]  = 86400*90;
+	cfg->expire_time[3] = 86400 * 90;
 
 	/* The 'require' settings */
 	cfg->require_minimum_channel_members = 3;
@@ -305,24 +307,20 @@ int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!strcmp(cep->name, "score-bump-timer") || !strcmp(cep->name, "target"))
 		{
 			config_error("%s:%i: this feature is not implemented yet in this UnrealIRCd version",
-				cep->file->filename, cep->line_number);
+			             cep->file->filename, cep->line_number);
 			errors++;
-		} else
-		if (!cep->value)
+		} else if (!cep->value)
 		{
 			config_error("%s:%i: blank set::reputation::%s without value",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "score-bump-timer-minimum-channel-members"))
+		} else if (!strcmp(cep->name, "score-bump-timer-minimum-channel-members"))
 		{
-		} else
-		if (!strcmp(cep->name, "database"))
+		} else if (!strcmp(cep->name, "database"))
 		{
 			convert_to_absolute_path(&cep->value, PERMDATADIR);
 			safe_strdup(test.database, cep->value);
-		} else
-		if (!strcmp(cep->name, "db-secret"))
+		} else if (!strcmp(cep->name, "db-secret"))
 		{
 			const char *err;
 			if ((err = unrealdb_test_secret(cep->value)))
@@ -335,7 +333,7 @@ int reputation_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		{
 			config_error("%s:%i: unknown directive set::reputation::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -361,12 +359,10 @@ int reputation_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "score-bump-timer-minimum-channel-members"))
 		{
 			cfg.require_minimum_channel_members = atoi(cep->value);
-		} else
-		if (!strcmp(cep->name, "database"))
+		} else if (!strcmp(cep->name, "database"))
 		{
 			safe_strdup(cfg.database, cep->value);
-		} else
-		if (!strcmp(cep->name, "db-secret"))
+		} else if (!strcmp(cep->name, "db-secret"))
 		{
 			safe_strdup(cfg.db_secret, cep->value);
 		}
@@ -392,8 +388,8 @@ int reputation_config_posttest(int *errs)
 /** Parse database header and set variables appropriately */
 int parse_db_header_old(char *buf)
 {
-	char *header=NULL, *version=NULL, *starttime=NULL, *writtentime=NULL;
-	char *p=NULL;
+	char *header = NULL, *version = NULL, *starttime = NULL, *writtentime = NULL;
+	char *p = NULL;
 
 	if (strncmp(buf, "REPDB", 5))
 		return 0;
@@ -463,7 +459,7 @@ void reputation_load_db_old(void)
 		return;
 	}
 
-	while(fgets(buf, 512, fd) != NULL)
+	while (fgets(buf, 512, fd) != NULL)
 	{
 		char *ip = NULL, *score = NULL, *last_seen = NULL;
 		ReputationEntry *e;
@@ -480,7 +476,7 @@ void reputation_load_db_old(void)
 		if (!last_seen)
 			continue;
 
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
+		e = safe_alloc(sizeof(ReputationEntry) + strlen(ip) + 1);
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = atoi(score);
 		e->last_seen = atol(last_seen);
@@ -498,14 +494,16 @@ void reputation_load_db_old(void)
 }
 
 #define R_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_warn("[reputation] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
 			unrealdb_close(db); \
 			safe_free(ip); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 int reputation_load_db_new(UnrealDB *db)
 {
@@ -540,13 +538,13 @@ int reputation_load_db_new(UnrealDB *db)
 	reputation_starttime = l_starttime;
 	reputation_writtentime = l_writtentime;
 
-	for (i=0; i < count; i++)
+	for (i = 0; i < count; i++)
 	{
 		R_SAFE(unrealdb_read_str(db, &ip));
 		R_SAFE(unrealdb_read_int16(db, &score));
 		R_SAFE(unrealdb_read_int64(db, &last_seen));
 
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
+		e = safe_alloc(sizeof(ReputationEntry) + strlen(ip) + 1);
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = score;
 		e->last_seen = last_seen;
@@ -607,8 +605,7 @@ int reputation_load_db(void)
 			/* Database does not exist. Could be first boot */
 			config_warn("[reputation] No database present at '%s', will start a new one", cfg.database);
 			return 1;
-		} else
-		if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
+		} else if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
 		{
 			db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, NULL);
 		}
@@ -652,7 +649,7 @@ int reputation_save_db_old(void)
 		{
 			if (fprintf(fd, "%s %d %lld\n", e->ip, (int)e->score, (long long)e->last_seen) < 0)
 			{
-write_fail:
+			write_fail:
 				config_error("ERROR writing to '%s': %s -- DATABASE *NOT* SAVED!!!", tmpfname, strerror(ERRNO));
 				fclose(fd);
 				return 0;
@@ -676,7 +673,7 @@ write_fail:
 	if (rename(tmpfname, cfg.database) < 0)
 	{
 		config_error("ERROR renaming '%s' to '%s': %s -- DATABASE *NOT* SAVED!!!",
-			tmpfname, cfg.database, strerror(ERRNO));
+		             tmpfname, cfg.database, strerror(ERRNO));
 		return 0;
 	}
 
@@ -762,7 +759,7 @@ int reputation_save_db(void)
 	if (rename(tmpfname, cfg.database) < 0)
 	{
 		config_error("ERROR renaming '%s' to '%s': %s -- DATABASE *NOT* SAVED!!!",
-			tmpfname, cfg.database, strerror(ERRNO));
+		             tmpfname, cfg.database, strerror(ERRNO));
 		return 0;
 	}
 
@@ -871,8 +868,8 @@ EVENT(add_scores)
 	/* These macros make the code below easier to read. Also,
 	 * this explains why we just did marker+=2 and not marker++.
 	 */
-	#define MARKER_UNREGISTERED_USER (marker)
-	#define MARKER_REGISTERED_USER (marker+1)
+#define MARKER_UNREGISTERED_USER (marker)
+#define MARKER_REGISTERED_USER   (marker + 1)
 
 	list_for_each_entry(client, &client_list, client_node)
 	{
@@ -896,7 +893,7 @@ EVENT(add_scores)
 		if (!e)
 		{
 			/* Create */
-			e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
+			e = safe_alloc(sizeof(ReputationEntry) + strlen(ip) + 1);
 			strcpy(e->ip, ip); /* safe, allocated above */
 			add_reputation_entry(e);
 		}
@@ -916,8 +913,7 @@ EVENT(add_scores)
 					e->marker = MARKER_REGISTERED_USER;
 				}
 			}
-		} else
-		if ((e->marker == MARKER_UNREGISTERED_USER) && IsLoggedIn(client) && (e->score < REPUTATION_SCORE_CAP))
+		} else if ((e->marker == MARKER_UNREGISTERED_USER) && IsLoggedIn(client) && (e->score < REPUTATION_SCORE_CAP))
 		{
 			/* This is to catch a special case:
 			 * If there are 2 or more users with the same IP
@@ -942,7 +938,7 @@ EVENT(add_scores)
 		 * Ah well, it is a cache, not some precise thingy.
 		 */
 		if (!IsLoggedIn(client) && known_users &&
-		    ((e->score == known_users->reputation_score) || (e->score == known_users->reputation_score+1)))
+		    ((e->score == known_users->reputation_score) || (e->score == known_users->reputation_score + 1)))
 		{
 			update_known_user_cache(client);
 		}
@@ -962,7 +958,8 @@ static inline int is_reputation_expired(ReputationEntry *e)
 			/* For -1 it means ANY score will expire after this time.. */
 			if (TStime() - e->last_seen > cfg.expire_time[i])
 				return 1;
-		} else {
+		} else
+		{
 			/* Otherwise we only expire if the score is less than <X> */
 			if ((e->score <= cfg.expire_score[i]) && (TStime() - e->last_seen > cfg.expire_time[i]))
 				return 1;
@@ -1081,8 +1078,8 @@ void reputation_channel_query(Client *client, Channel *channel)
 	sendtxtnumeric(client, "Users and reputation scores for %s:", channel->name);
 
 	/* Step 1: build a list of nicks and their reputation */
-	nicks = safe_alloc((channel->users+1) * sizeof(char *));
-	scores = safe_alloc((channel->users+1) * sizeof(int));
+	nicks = safe_alloc((channel->users + 1) * sizeof(char *));
+	scores = safe_alloc((channel->users + 1) * sizeof(int));
 	for (m = channel->members; m; m = m->next)
 	{
 		nicks[cnt] = m->client->name;
@@ -1095,10 +1092,10 @@ void reputation_channel_query(Client *client, Channel *channel)
 		if (++cnt > channel->users)
 		{
 			unreal_log(ULOG_WARNING, "bug", "REPUTATION_CHANNEL_QUERY_BUG", client,
-				   "[BUG] reputation_channel_query() expected $expected_users users, but $found_users (or more) users were present in $channel",
-				   log_data_integer("expected_users", channel->users),
-				   log_data_integer("found_users", cnt),
-				   log_data_string("channel", channel->name));
+			           "[BUG] reputation_channel_query() expected $expected_users users, but $found_users (or more) users were present in $channel",
+			           log_data_integer("expected_users", channel->users),
+			           log_data_integer("found_users", cnt),
+			           log_data_string("channel", channel->name));
 #ifdef DEBUGMODE
 			abort();
 #endif
@@ -1109,7 +1106,7 @@ void reputation_channel_query(Client *client, Channel *channel)
 	/* Step 2: lazy selection sort */
 	for (i = 0; i < cnt && nicks[i]; i++)
 	{
-		for (j = i+1; j < cnt && nicks[j]; j++)
+		for (j = i + 1; j < cnt && nicks[j]; j++)
 		{
 			if (scores[i] < scores[j])
 			{
@@ -1130,11 +1127,12 @@ void reputation_channel_query(Client *client, Channel *channel)
 	for (i = 0; i < cnt && nicks[i]; i++)
 	{
 		snprintf(tbuf, sizeof(tbuf), "%s\00314(%d)\003 ", nicks[i], scores[i]);
-		if ((strlen(tbuf)+strlen(buf) > 400) || !nicks[i+1])
+		if ((strlen(tbuf) + strlen(buf) > 400) || !nicks[i + 1])
 		{
 			sendtxtnumeric(client, "%s%s", buf, tbuf);
 			*buf = '\0';
-		} else {
+		} else
+		{
 			strlcat(buf, tbuf, sizeof(buf));
 		}
 	}
@@ -1163,11 +1161,11 @@ void reputation_list_query(Client *client, int maxscore)
 		if (score >= maxscore)
 			continue;
 		sendtxtnumeric(client, "%s!%s@%s [%s] \017(score: %d)",
-			target->name,
-			target->user->username,
-			target->user->realhost,
-			target->ip,
-			score);
+		               target->name,
+		               target->user->username,
+		               target->user->realhost,
+		               target->ip,
+		               score);
 	}
 	sendtxtnumeric(client, "End of list.");
 }
@@ -1187,14 +1185,15 @@ CMD_FUNC(reputation_user_cmd)
 	{
 		sendnotice(client, "Reputation module statistics:");
 		sendnotice(client, "Recording for: %lld seconds (since unixtime %lld)",
-			(long long)(TStime() - reputation_starttime),
-			(long long)reputation_starttime);
+		           (long long)(TStime() - reputation_starttime),
+		           (long long)reputation_starttime);
 		if (reputation_writtentime)
 		{
 			sendnotice(client, "Last successful db write: %lld seconds ago (unixtime %lld)",
-				(long long)(TStime() - reputation_writtentime),
-				(long long)reputation_writtentime);
-		} else {
+			           (long long)(TStime() - reputation_writtentime),
+			           (long long)reputation_writtentime);
+		} else
+		{
 			sendnotice(client, "Last successful db write: never");
 		}
 		sendnotice(client, "Current number of records (IP's): %d", count_reputation_records());
@@ -1212,8 +1211,7 @@ CMD_FUNC(reputation_user_cmd)
 	if (strchr(parv[1], '.') || strchr(parv[1], ':'))
 	{
 		ip = parv[1];
-	} else
-	if (parv[1][0] == '#')
+	} else if (parv[1][0] == '#')
 	{
 		Channel *channel = find_channel(parv[1]);
 		if (!channel)
@@ -1222,15 +1220,14 @@ CMD_FUNC(reputation_user_cmd)
 			return;
 		}
 		/* corner case: ircop without proper permissions and not in channel */
-		if (!ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,NULL,NULL) && !IsMember(client,channel))
+		if (!ValidatePermissionsForPath("channel:see:names:invisible", client, NULL, NULL, NULL) && !IsMember(client, channel))
 		{
 			sendnumeric(client, ERR_NOTONCHANNEL, channel->name);
 			return;
 		}
 		reputation_channel_query(client, channel);
 		return;
-	} else
-	if (parv[1][0] == '<')
+	} else if (parv[1][0] == '<')
 	{
 		int max = atoi(parv[1] + 1);
 		if (max < 1)
@@ -1240,7 +1237,8 @@ CMD_FUNC(reputation_user_cmd)
 		}
 		reputation_list_query(client, max);
 		return;
-	} else {
+	} else
+	{
 		Client *target = find_user(parv[1], NULL);
 		if (!target)
 		{
@@ -1265,7 +1263,7 @@ CMD_FUNC(reputation_user_cmd)
 	if ((parc > 2) && !BadPtr(parv[2]))
 	{
 		/* Request to change value */
-		if (!ValidatePermissionsForPath("client:set:reputation",client,NULL,NULL,NULL))
+		if (!ValidatePermissionsForPath("client:set:reputation", client, NULL, NULL, NULL))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
@@ -1278,10 +1276,10 @@ CMD_FUNC(reputation_user_cmd)
 		e->score = v;
 		reputation_changed_update_users(e);
 		sendto_server(&me, 0, 0, NULL,
-			      ":%s REPUTATION %s *%d*",
-			      me.id,
-			      e->ip,
-			      e->score);
+		              ":%s REPUTATION %s *%d*",
+		              me.id,
+		              e->ip,
+		              e->score);
 		sendnotice(client, "Reputation of IP %s set to %hd", e->ip, e->score);
 		return;
 	}
@@ -1290,8 +1288,8 @@ CMD_FUNC(reputation_user_cmd)
 	sendnotice(client, "Reputation record for IP %s:", ip);
 	sendnotice(client, "    Score: %hd", e->score);
 	sendnotice(client, "Last seen: %lld seconds ago (unixtime: %lld)",
-		(long long)(TStime() - e->last_seen),
-		(long long)e->last_seen);
+	           (long long)(TStime() - e->last_seen),
+	           (long long)e->last_seen);
 	sendnotice(client, "****************************************************");
 }
 
@@ -1349,10 +1347,11 @@ CMD_FUNC(reputation_server_cmd)
 	if (parv[2][0] == '*')
 	{
 		allow_reply = 0;
-		score = atoi(parv[2]+1);
-		if (parv[2][1] && (parv[2][strlen(parv[2])-1] == '*'))
+		score = atoi(parv[2] + 1);
+		if (parv[2][1] && (parv[2][strlen(parv[2]) - 1] == '*'))
 			forced = 1;
-	} else {
+	} else
+	{
 		allow_reply = 1;
 		score = atoi(parv[2]);
 	}
@@ -1371,10 +1370,10 @@ CMD_FUNC(reputation_server_cmd)
 		sendto_one(client, NULL, ":%s REPUTATION %s *%d", me.id, parv[1], e->score);
 #ifdef DEBUGMODE
 		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DIFFERS", client,
-			   "Reputation score for for $ip from $client is $their_score, but we have $score, sending back $score",
-			   log_data_string("ip", ip),
-			   log_data_integer("their_score", score),
-			   log_data_integer("score", e->score));
+		           "Reputation score for for $ip from $client is $their_score, but we have $score, sending back $score",
+		           log_data_string("ip", ip),
+		           log_data_integer("their_score", score),
+		           log_data_integer("score", e->score));
 #endif
 		score = e->score; /* Update for propagation in the non-client direction */
 	}
@@ -1384,22 +1383,21 @@ CMD_FUNC(reputation_server_cmd)
 	{
 #ifdef DEBUGMODE
 		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DIFFERS", client,
-			   "Reputation score for for $ip from $client is $their_score, but we have $score, updating our score to $score",
-			   log_data_string("ip", ip),
-			   log_data_integer("their_score", score),
-			   log_data_integer("score", e->score));
+		           "Reputation score for for $ip from $client is $their_score, but we have $score, updating our score to $score",
+		           log_data_string("ip", ip),
+		           log_data_integer("their_score", score),
+		           log_data_integer("score", e->score));
 #endif
 		e->score = score;
 		reputation_changed_update_users(e);
-	} else
-	if (e && forced)
+	} else if (e && forced)
 	{
 #ifdef DEBUGMODE
 		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_DECREASE", client,
-			   "Reputation score for for $ip from $client is $score, force-setting to $their_score.",
-			   log_data_string("ip", ip),
-			   log_data_integer("their_score", score),
-			   log_data_integer("score", e->score));
+		           "Reputation score for for $ip from $client is $score, force-setting to $their_score.",
+		           log_data_string("ip", ip),
+		           log_data_integer("their_score", score),
+		           log_data_integer("score", e->score));
 #endif
 		e->score = score;
 		reputation_changed_update_users(e);
@@ -1410,12 +1408,12 @@ CMD_FUNC(reputation_server_cmd)
 	{
 #ifdef DEBUGMODE
 		unreal_log(ULOG_DEBUG, "reputation", "REPUTATION_NEW", client,
-			   "Reputation score for for $ip from $client is $their_score, we had no entry, adding it",
-			   log_data_string("ip", ip),
-			   log_data_integer("their_score", score),
-			   log_data_integer("score", 0));
+		           "Reputation score for for $ip from $client is $their_score, we had no entry, adding it",
+		           log_data_string("ip", ip),
+		           log_data_integer("their_score", score),
+		           log_data_integer("score", 0));
 #endif
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(ip)+1);
+		e = safe_alloc(sizeof(ReputationEntry) + strlen(ip) + 1);
 		strcpy(e->ip, ip); /* safe, see alloc above */
 		e->score = score;
 		e->last_seen = TStime();
@@ -1514,7 +1512,7 @@ void _ban_act_set_reputation(Client *client, BanAction *action)
 	if (!e)
 	{
 		/* Create */
-		e = safe_alloc(sizeof(ReputationEntry)+strlen(client->ip)+1);
+		e = safe_alloc(sizeof(ReputationEntry) + strlen(client->ip) + 1);
 		strcpy(e->ip, client->ip); /* safe, allocated above */
 		add_reputation_entry(e);
 	}

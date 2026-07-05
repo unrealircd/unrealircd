@@ -19,14 +19,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/halfop",
-	"6.0",
-	"Channel Mode +h",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/halfop",
+    "6.0",
+    "Channel Mode +h",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int cmode_halfop_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);

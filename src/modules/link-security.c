@@ -23,14 +23,13 @@
 #include "unrealircd.h"
 
 /* Module header */
-ModuleHeader MOD_HEADER
-  = {
-	"link-security",
-	"5.0",
-	"Link Security CAP",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "link-security",
+    "5.0",
+    "Link Security CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 const char *link_security_md_serialize(ModData *m);
@@ -52,7 +51,7 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM_RELOADABLE, 1);
-	
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "link-security";
 	mreq.type = MODDATATYPE_CLIENT;
@@ -66,7 +65,7 @@ MOD_INIT()
 		config_error("Unable to ModDataAdd() -- too many 3rd party modules loaded perhaps?");
 		abort();
 	}
-	
+
 	CommandAdd(modinfo->handle, "LINKSECURITY", cmd_linksecurity, MAXPARA, CMD_USER);
 
 	return MOD_SUCCESS;
@@ -119,14 +118,14 @@ void link_security_md_unserialize(const char *str, ModData *m)
 int certificate_verification_active(Client *client)
 {
 	ConfigItem_link *conf;
-	
+
 	if (!client->server || !client->server->conf)
 		return 0; /* wtf? */
 	conf = client->server->conf;
-	
+
 	if (conf->verify_certificate)
 		return 1; /* yes, verify-certificate is 'yes' */
-	
+
 	if ((conf->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
 	    (conf->auth->type == AUTHTYPE_TLS_CLIENTCERTFP) ||
 	    (conf->auth->type == AUTHTYPE_SPKIFP))
@@ -134,7 +133,7 @@ int certificate_verification_active(Client *client)
 		/* yes, verified by link::password being a
 		 * certificate fingerprint or certificate file.
 		 */
-	    return 1;
+		return 1;
 	}
 
 	return 0; /* no, certificate is not verified in any way */
@@ -150,7 +149,7 @@ int our_link_security(void)
 {
 	Client *client;
 	int level = 2; /* safest */
-	
+
 	list_for_each_entry(client, &server_list, special_node)
 	{
 		if (IsLocalhost(client))
@@ -160,7 +159,7 @@ int our_link_security(void)
 		if (!certificate_verification_active(client))
 			level = 1; /* downgrade to level 1 */
 	}
-	
+
 	return level;
 }
 
@@ -181,7 +180,7 @@ EVENT(checklinksec)
 	Client *client;
 	int v;
 	int warning_sent = 0;
-	
+
 	local_link_security = our_link_security();
 	if (local_link_security != last_local_link_security)
 	{
@@ -207,7 +206,7 @@ EVENT(checklinksec)
 				global_link_security = 1;
 		}
 	}
-	
+
 	if (local_link_security < last_local_link_security)
 	{
 		unreal_log(ULOG_INFO, "link-security", "LOCAL_LINK_SECURITY_DOWNGRADED", NULL,
@@ -216,7 +215,7 @@ EVENT(checklinksec)
 		           log_data_integer("new_level", local_link_security));
 		warning_sent = 1;
 	}
-	
+
 	if (global_link_security < last_global_link_security)
 	{
 		unreal_log(ULOG_INFO, "link-security", "GLOBAL_LINK_SECURITY_DOWNGRADED", NULL,
@@ -225,7 +224,7 @@ EVENT(checklinksec)
 		           log_data_integer("new_level", global_link_security));
 		warning_sent = 1;
 	}
-	
+
 	effective_link_security = MIN(local_link_security, global_link_security);
 
 	if (warning_sent)
@@ -246,15 +245,15 @@ const char *link_security_capability_parameter(Client *client)
 CMD_FUNC(cmd_linksecurity)
 {
 	Client *acptr;
-	
+
 	if (!IsOper(client))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	
+
 	sendtxtnumeric(client, "== Link Security Report ==");
-	
+
 	sendtxtnumeric(client, "= By server =");
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -264,7 +263,7 @@ CMD_FUNC(cmd_linksecurity)
 		else
 			sendtxtnumeric(client, "%s: level UNKNOWN", acptr->name);
 	}
-	
+
 	sendtxtnumeric(client, "-");
 	sendtxtnumeric(client, "= Network =");
 	sendtxtnumeric(client, "This results in an effective (network-wide) link-security of level %d", effective_link_security);

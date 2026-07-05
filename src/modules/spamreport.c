@@ -4,13 +4,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"spamreport",
-	"1.0.1",
-	"Send spam reports via SPAMREPORT and spamreport { } blocks",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "spamreport",
+    "1.0.1",
+    "Send spam reports via SPAMREPORT and spamreport { } blocks",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /** For rate limiting the rate limit message :D */
@@ -98,8 +97,8 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
-	char has_url=0, has_type=0, has_type_dronebl=0, has_http_method=0;
-	char has_dronebl_type=0, has_dronebl_rpckey=0;
+	char has_url = 0, has_type = 0, has_type_dronebl = 0, has_http_method = 0;
+	char has_dronebl_type = 0, has_dronebl_rpckey = 0;
 
 	/* We are only interested in spamreport { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamreport"))
@@ -108,7 +107,7 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	if (!ce->value)
 	{
 		config_error("%s:%i: spamreport block has no name, should be like: spamfilter <name> { }",
-			ce->file->filename, ce->line_number);
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -117,91 +116,82 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
-		} else
-		if (!strcmp(cep->name, "parameters"))
+		} else if (!strcmp(cep->name, "parameters"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				if (!cepp->value)
 				{
 					config_error_empty(cepp->file->filename, cepp->line_number,
-						"spamreport::parameters", cepp->name);
+					                   "spamreport::parameters", cepp->name);
 					errors++;
-				}
-				else if (!strcmp(cepp->name, "rpckey"))
+				} else if (!strcmp(cepp->name, "rpckey"))
 					has_dronebl_rpckey = 1;
 				else if (!strcmp(cepp->name, "type"))
 					has_dronebl_type = 1;
 				else if (!strcmp(cepp->name, "staging"))
 					;
 			}
-		}
-		else if (!cep->value)
+		} else if (!cep->value)
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
-				"spamreport", cep->name);
+			                   "spamreport", cep->name);
 			errors++;
 			continue;
-		} else
-		if (!strcmp(cep->name, "url"))
+		} else if (!strcmp(cep->name, "url"))
 		{
 			if (has_url)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "spamreport::url");
+				                      cep->line_number, "spamreport::url");
 				continue;
 			}
 			has_url = 1;
-		}
-		else if (!strcmp(cep->name, "type"))
+		} else if (!strcmp(cep->name, "type"))
 		{
 			if (has_type)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "spamreport::type");
+				                      cep->line_number, "spamreport::type");
 				continue;
 			}
 			has_type = parse_spamreport_type(cep->value);
 			if (!has_type)
 			{
 				config_error("%s:%i: spamreport::type: unknown type '%s', supported types are: simple, dronebl, central-spamreport.",
-					cep->file->filename, cep->line_number, cep->value);
+				             cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
-		}
-		else if (!strcmp(cep->name, "http-method"))
+		} else if (!strcmp(cep->name, "http-method"))
 		{
 			if (has_http_method)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "spamreport::http-method");
+				                      cep->line_number, "spamreport::http-method");
 				continue;
 			}
 			has_http_method = 1;
 			if (strcmp(cep->value, "get") && strcmp(cep->value, "post"))
 			{
 				config_error("%s:%i: spamreport::http-method: only 'get' and 'post' are supported",
-					cep->file->filename, cep->line_number);
+				             cep->file->filename, cep->line_number);
 				errors++;
 			}
-		}
-		else if (!strcmp(cep->name, "rate-limit"))
+		} else if (!strcmp(cep->name, "rate-limit"))
 		{
 			int count = 0, period = 0;
 			if (!config_parse_flood(cep->value, &count, &period))
 			{
 				config_error("%s:%i: spamreport::rate-limit: invalid format, must be count:time.",
-					cep->file->filename, cep->line_number);
+				             cep->file->filename, cep->line_number);
 				errors++;
 			}
-		}
-		else if (!strcmp(cep->name, "on-server-ban"))
+		} else if (!strcmp(cep->name, "on-server-ban"))
 		{
-		}
-		else
+		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
-				"spamreport", cep->name);
+			                     "spamreport", cep->name);
 			errors++;
 			continue;
 		}
@@ -216,8 +206,7 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	if (has_type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
 	{
 		/* Nothing required */
-	} else
-	if (has_type == SPAMREPORT_TYPE_DRONEBL)
+	} else if (has_type == SPAMREPORT_TYPE_DRONEBL)
 	{
 		if (!has_dronebl_rpckey || !has_dronebl_type)
 		{
@@ -270,8 +259,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "url"))
 		{
 			safe_strdup(s->url, cep->value);
-		}
-		else if (!strcmp(cep->name, "type"))
+		} else if (!strcmp(cep->name, "type"))
 		{
 			s->type = parse_spamreport_type(cep->value);
 
@@ -279,37 +267,32 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 			    !is_module_loaded("central-blocklist"))
 			{
 				config_warn("%s:%d: blacklist block with type 'central-spamreport' but the 'central-blocklist' module is not loaded.",
-					ce->file->filename, ce->line_number);
+				            ce->file->filename, ce->line_number);
 			}
-		}
-		else if (!strcmp(cep->name, "http-method"))
+		} else if (!strcmp(cep->name, "http-method"))
 		{
 			if (!strcmp(cep->value, "get"))
 				s->http_method = HTTP_METHOD_GET;
 			else if (!strcmp(cep->value, "post"))
 				s->http_method = HTTP_METHOD_POST;
-		}
-		else if (!strcmp(cep->name, "rate-limit"))
+		} else if (!strcmp(cep->name, "rate-limit"))
 		{
 			config_parse_flood(cep->value, &s->rate_limit_count, &s->rate_limit_period);
-		}
-		else if (!strcmp(cep->name, "parameters"))
+		} else if (!strcmp(cep->name, "parameters"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
 				if (!strcmp(cepp->name, "staging"))
 				{
-					if (cepp->value && config_checkval(cepp->value, CFG_YESNO)==0)
+					if (cepp->value && config_checkval(cepp->value, CFG_YESNO) == 0)
 						continue; /* skip on 'staging no;' */
 				}
 				add_nvplist(&s->parameters, 0, cepp->name, cepp->value);
 			}
-		}
-		else if (!strcmp(cep->name, "except"))
+		} else if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &s->except);
-		}
-		else if (!strcmp(cep->name, "on-server-ban"))
+		} else if (!strcmp(cep->name, "on-server-ban"))
 		{
 			s->on_server_ban = config_checkval(cep->value, CFG_YESNO);
 		}
@@ -399,11 +382,11 @@ int spamfilter_block_rate_limited(Spamreport *spamreport)
 		if (s->last_warning_sent + SPAMREPORT_RATE_LIMIT_WARNING_EVERY < TStime())
 		{
 			unreal_log(ULOG_WARNING, "spamreport", "SPAMREPORT_RATE_LIMIT", NULL,
-				   "[spamreport] Rate limit of $rate_limit_count:$rate_limit_period hit "
-				   "for block $spamreport_block -- further requests dropped (throttled).",
-				   log_data_integer("rate_limit_count", spamreport->rate_limit_count),
-				   log_data_integer("rate_limit_period", spamreport->rate_limit_period),
-				   log_data_string("spamreport_block", spamreport->name));
+			           "[spamreport] Rate limit of $rate_limit_count:$rate_limit_period hit "
+			           "for block $spamreport_block -- further requests dropped (throttled).",
+			           log_data_integer("rate_limit_count", spamreport->rate_limit_count),
+			           log_data_integer("rate_limit_period", spamreport->rate_limit_period),
+			           log_data_string("spamreport_block", spamreport->name));
 			s->last_warning_sent = TStime();
 		}
 		return 1; /* Limit exceeded */
@@ -466,7 +449,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		NameValuePrioList *list = NULL;
 		list = duplicate_nvplist(details);
 		add_nvplist(&list, -1, "ip", ip);
-		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY|BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
+		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE | BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY | BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
 		url = urlbuf;
 		safe_free_nvplist(list);
 		if (s->http_method == HTTP_METHOD_POST)
@@ -475,8 +458,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 			if (body)
 				*body++ = '\0';
 		}
-	} else
-	if (s->type == SPAMREPORT_TYPE_DRONEBL)
+	} else if (s->type == SPAMREPORT_TYPE_DRONEBL)
 	{
 		NameValuePrioList *list = NULL;
 		NameValuePrioList *list2 = NULL;
@@ -491,12 +473,11 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		         " <add ip='$ip' type='$type' comment='$comment'>\n"
 		         "</request>\n",
 		         find_nvplist(s->parameters, "staging") ? " staging='1'" : "");
-		buildvarstring_nvp(fmtstring, bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_XML|BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY|BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
+		buildvarstring_nvp(fmtstring, bodybuf, sizeof(bodybuf), list, BUILDVARSTRING_XML | BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY | BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
 		body = bodybuf;
 		safe_free_nvplist(list); // frees all the duplicated lists
 		add_nvplist(&headers, 0, "Content-Type", "text/xml");
-	} else
-	if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
+	} else if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
 	{
 		return central_spamreport(client, by, s->url);
 	} else
@@ -529,7 +510,7 @@ CMD_FUNC(cmd_spamreport)
 	const char *ip;
 	int n;
 
-	if (!ValidatePermissionsForPath("server-ban:spamreport",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server-ban:spamreport", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -551,10 +532,11 @@ CMD_FUNC(cmd_spamreport)
 			if (parc > 2)
 			{
 				sendto_one(target, NULL, ":%s SPAMREPORT %s %s",
-					   client->id, parv[1], parv[2]);
-			} else {
+				           client->id, parv[1], parv[2]);
+			} else
+			{
 				sendto_one(target, NULL, ":%s SPAMREPORT %s",
-					   client->id, parv[1]);
+				           client->id, parv[1]);
 			}
 			return;
 		}

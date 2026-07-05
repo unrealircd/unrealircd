@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/inchannel",
-	"4.2",
-	"ExtBan ~channel - banned when in specified channel",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/inchannel",
+    "4.2",
+    "ExtBan ~channel - banned when in specified channel",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -42,8 +41,8 @@ Extban *register_channel_extban(ModuleInfo *modinfo)
 	req.is_ok = extban_inchannel_is_ok;
 	req.conv_param = extban_inchannel_conv_param;
 	req.is_banned = extban_inchannel_is_banned;
-	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
-	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
+	req.is_banned_events = BANCHK_ALL | BANCHK_TKL;
+	req.options = EXTBOPT_INVEX | EXTBOPT_TKL;
 	return ExtbanAdd(modinfo->handle, req);
 }
 
@@ -83,15 +82,15 @@ MOD_UNLOAD()
 
 const char *extban_inchannel_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[CHANNELLEN+6];
-	char *chan, *p, symbol='\0';
+	static char retbuf[CHANNELLEN + 6];
+	char *chan, *p, symbol = '\0';
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
 	chan = retbuf;
 
 	if ((*chan == '+') || (*chan == '%') || (*chan == '%') ||
 	    (*chan == '@') || (*chan == '&') || (*chan == '~'))
-	    chan++;
+		chan++;
 
 	if ((*chan != '#') && (*chan != '*') && (*chan != '?'))
 		return NULL;
@@ -116,7 +115,7 @@ int extban_inchannel_is_ok(BanContext *b)
 	{
 		if ((*p == '+') || (*p == '%') || (*p == '%') ||
 		    (*p == '@') || (*p == '&') || (*p == '~'))
-		    p++;
+			p++;
 
 		if (*p != '#')
 		{
@@ -159,4 +158,3 @@ int extban_inchannel_is_banned(BanContext *b)
 
 	return 0;
 }
-

@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_connect);
 
-#define MSG_CONNECT 	"CONNECT"	
+#define MSG_CONNECT "CONNECT"
 
-ModuleHeader MOD_HEADER
-  = {
-	"connect",
-	"5.0",
-	"command /connect", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "connect",
+    "5.0",
+    "command /connect",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_CONNECT, cmd_connect, MAXPARA, CMD_USER|CMD_SERVER); /* hmm.. server.. really? */
+	CommandAdd(modinfo->handle, MSG_CONNECT, cmd_connect, MAXPARA, CMD_USER | CMD_SERVER); /* hmm.. server.. really? */
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -54,24 +53,25 @@ MOD_UNLOAD()
 
 /***********************************************************************
  * cmd_connect() - Added by Jto 11 Feb 1989
- ***********************************************************************//*
+ ***********************************************************************/
+                                                                         /*
    ** cmd_connect
    **  parv[1] = servername
  */
 CMD_FUNC(cmd_connect)
 {
-	int  retval;
-	ConfigItem_link	*aconf;
+	int retval;
+	ConfigItem_link *aconf;
 	Client *server;
 	const char *str;
 
-	if (!IsServer(client) && MyConnect(client) && !ValidatePermissionsForPath("route:global",client,NULL,NULL,NULL) && parc > 3)
-	{			/* Only allow LocOps to make */
+	if (!IsServer(client) && MyConnect(client) && !ValidatePermissionsForPath("route:global", client, NULL, NULL, NULL) && parc > 3)
+	{   /* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	if (!IsServer(client) && MyUser(client) && !ValidatePermissionsForPath("route:local",client,NULL,NULL,NULL) && parc <= 3)
+	if (!IsServer(client) && MyUser(client) && !ValidatePermissionsForPath("route:local", client, NULL, NULL, NULL) && parc <= 3)
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -88,7 +88,7 @@ CMD_FUNC(cmd_connect)
 	if ((server = find_server_quick(parv[1])))
 	{
 		sendnotice(client, "*** Connect: Server %s already exists from %s.",
-		    parv[1], server->direction->name);
+		           parv[1], server->direction->name);
 		return;
 	}
 
@@ -96,16 +96,16 @@ CMD_FUNC(cmd_connect)
 	if (!aconf)
 	{
 		sendnotice(client,
-		    "*** Connect: Server %s is not configured for linking",
-		    parv[1]);
+		           "*** Connect: Server %s is not configured for linking",
+		           parv[1]);
 		return;
 	}
 
 	if (!aconf->outgoing.hostname && !aconf->outgoing.file)
 	{
 		sendnotice(client,
-		    "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname or link::outgoing::file)",
-		    parv[1]);
+		           "*** Connect: Server %s is not configured to be an outgoing link (has a link block, but no link::outgoing::hostname or link::outgoing::file)",
+		           parv[1]);
 		return;
 	}
 
@@ -116,8 +116,8 @@ CMD_FUNC(cmd_connect)
 	}
 
 	unreal_log(ULOG_INFO, "link", "LINK_REQUEST", client,
-		   "CONNECT: Link to $link_block requested by $client",
-		   log_data_link_block(aconf));
+	           "CONNECT: Link to $link_block requested by $client",
+	           log_data_link_block(aconf));
 
 	connect_server(aconf, client, NULL);
 }

@@ -108,7 +108,8 @@ void add_history(Client *client, int online, WhoWasEvent event)
 	{
 		new->online = client;
 		add_whowas_to_clist(&(client->user->whowas), new);
-	} else {
+	} else
+	{
 		new->online = NULL;
 	}
 	add_whowas_to_list(&WHOWASHASH[new->hashv], new);
@@ -132,7 +133,7 @@ void off_history(Client *client)
 Client *get_history(const char *nick, time_t timelimit)
 {
 	WhoWas *temp;
-	int  blah;
+	int blah;
 
 	timelimit = TStime() - timelimit;
 	blah = hash_whowas_name(nick);
@@ -151,8 +152,8 @@ Client *get_history(const char *nick, time_t timelimit)
 void count_whowas_memory(int *wwu, u_long *wwum)
 {
 	WhoWas *tmp;
-	int  i;
-	int  u = 0;
+	int i;
+	int u = 0;
 	u_long um = 0;
 	/* count the number of used whowas structs in 'u' */
 	/* count up the memory used of whowas structs in um */
@@ -170,7 +171,7 @@ void count_whowas_memory(int *wwu, u_long *wwum)
 
 void initwhowas()
 {
-	int  i;
+	int i;
 
 	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
@@ -181,7 +182,7 @@ void initwhowas()
 		WHOWASHASH[i] = NULL;
 }
 
-void add_whowas_to_clist(WhoWas ** bucket, WhoWas * whowas)
+void add_whowas_to_clist(WhoWas **bucket, WhoWas *whowas)
 {
 	whowas->cprev = NULL;
 	if ((whowas->cnext = *bucket) != NULL)
@@ -189,7 +190,7 @@ void add_whowas_to_clist(WhoWas ** bucket, WhoWas * whowas)
 	*bucket = whowas;
 }
 
-void del_whowas_from_clist(WhoWas ** bucket, WhoWas * whowas)
+void del_whowas_from_clist(WhoWas **bucket, WhoWas *whowas)
 {
 	if (whowas->cprev)
 		whowas->cprev->cnext = whowas->cnext;
@@ -199,7 +200,7 @@ void del_whowas_from_clist(WhoWas ** bucket, WhoWas * whowas)
 		whowas->cnext->cprev = whowas->cprev;
 }
 
-void add_whowas_to_list(WhoWas ** bucket, WhoWas * whowas)
+void add_whowas_to_list(WhoWas **bucket, WhoWas *whowas)
 {
 	whowas->prev = NULL;
 	if ((whowas->next = *bucket) != NULL)
@@ -207,7 +208,7 @@ void add_whowas_to_list(WhoWas ** bucket, WhoWas * whowas)
 	*bucket = whowas;
 }
 
-void del_whowas_from_list(WhoWas ** bucket, WhoWas * whowas)
+void del_whowas_from_list(WhoWas **bucket, WhoWas *whowas)
 {
 	if (whowas->prev)
 		whowas->prev->next = whowas->next;

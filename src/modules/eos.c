@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_eos);
 
-#define MSG_EOS 	"EOS"	
+#define MSG_EOS "EOS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"eos",
-	"5.0",
-	"command /eos", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "eos",
+    "5.0",
+    "command /eos",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {

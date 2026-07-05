@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/securitygroup",
-	"4.2",
-	"ExtBan ~G - Ban based on security-group",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/securitygroup",
+    "4.2",
+    "ExtBan ~G - Ban based on security-group",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -42,8 +41,8 @@ Extban *register_securitygroup_extban(ModuleInfo *modinfo)
 	req.conv_param = extban_securitygroup_conv_param;
 	req.is_ok = extban_securitygroup_is_ok;
 	req.is_banned = extban_securitygroup_is_banned;
-	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
-	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
+	req.is_banned_events = BANCHK_ALL | BANCHK_TKL;
+	req.options = EXTBOPT_INVEX | EXTBOPT_TKL;
 	return ExtbanAdd(modinfo->handle, req);
 }
 
@@ -69,7 +68,7 @@ MOD_INIT()
 	}
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	return MOD_SUCCESS;
 }
 
@@ -99,7 +98,8 @@ int extban_securitygroup_generic(char *mask, int strict)
 	{
 		if (!security_group_exists(mask))
 			return 0; /* security group does not exist */
-	} else {
+	} else
+	{
 		if (!security_group_valid_name(mask))
 			return 0; /* invalid characters or too long */
 	}
@@ -114,7 +114,7 @@ int extban_securitygroup_is_ok(BanContext *b)
 {
 	if (b->client && MyUser(b->client) && (b->what == MODE_ADD) && (b->is_ok_check == EXBCHK_PARAM))
 	{
-		char banbuf[SECURITYGROUPLEN+8];
+		char banbuf[SECURITYGROUPLEN + 8];
 		strlcpy(banbuf, b->banstr, sizeof(banbuf));
 		if (!extban_securitygroup_generic(banbuf, 1))
 		{
@@ -148,6 +148,6 @@ const char *extban_securitygroup_conv_param(BanContext *b, Extban *extban)
 int extban_securitygroup_is_banned(BanContext *b)
 {
 	if (*b->banstr == '!')
-		return !user_allowed_by_security_group_name(b->client, b->banstr+1);
+		return !user_allowed_by_security_group_name(b->client, b->banstr + 1);
 	return user_allowed_by_security_group_name(b->client, b->banstr);
 }

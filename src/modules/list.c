@@ -25,16 +25,15 @@
 CMD_FUNC(cmd_list);
 int send_list(Client *client);
 
-#define MSG_LIST 	"LIST"	
+#define MSG_LIST "LIST"
 
-ModuleHeader MOD_HEADER
-  = {
-	"list",
-	"5.0",
-	"command /LIST",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "list",
+    "5.0",
+    "command /LIST",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 typedef struct ChannelListOptions ChannelListOptions;
 struct ChannelListOptions {
@@ -43,7 +42,7 @@ struct ChannelListOptions {
 	unsigned int starthash;
 	short int showall;
 	unsigned short usermin;
-	int  usermax;
+	int usermax;
 	time_t currenttime;
 	time_t chantimemin;
 	time_t chantimemax;
@@ -57,12 +56,16 @@ ModDataInfo *list_md = NULL;
 char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 /* Macros */
-#define CHANNELLISTOPTIONS(x)       ((ChannelListOptions *)moddata_local_client(x, list_md).ptr)
-#define ALLOCATE_CHANNELLISTOPTIONS(client)	do { moddata_local_client(client, list_md).ptr = safe_alloc(sizeof(ChannelListOptions)); } while(0)
-#define free_list_options(client)		list_md_free(&moddata_local_client(client, list_md))
+#define CHANNELLISTOPTIONS(x) ((ChannelListOptions *)moddata_local_client(x, list_md).ptr)
+#define ALLOCATE_CHANNELLISTOPTIONS(client) \
+	do \
+	{ \
+		moddata_local_client(client, list_md).ptr = safe_alloc(sizeof(ChannelListOptions)); \
+	} while (0)
+#define free_list_options(client) list_md_free(&moddata_local_client(client, list_md))
 
-#define DoList(x)               (MyUser((x)) && CHANNELLISTOPTIONS((x)))
-#define IsSendable(x)		(DBufLength(&x->local->sendQ) < 2048)
+#define DoList(x)     (MyUser((x)) && CHANNELLISTOPTIONS((x)))
+#define IsSendable(x) (DBufLength(&x->local->sendQ) < 2048)
 
 /* Forward declarations */
 EVENT(send_queued_list_data);
@@ -129,21 +132,21 @@ CMD_FUNC(cmd_list)
 	char request[BUFSIZE];
 
 	static char *usage[] = {
-		"   Usage: /LIST <options>",
-		"",
-		"If you don't include any options, the default is to send you the",
-		"entire unfiltered list of channels. Below are the options you can",
-		"use, and what channels LIST will return when you use them.",
-		">number  List channels with more than <number> people.",
-		"<number  List channels with less than <number> people.",
-		"C>number List channels created more than <number> minutes ago.",
-		"C<number List channels created less than <number> minutes ago.",
-		"T>number List channels whose topics are older than <number> minutes",
-		"         (Ie, they have not changed in the last <number> minutes.",
-		"T<number List channels whose topics are not older than <number> minutes.",
-		"*mask*   List channels that match *mask*",
-		"!*mask*  List channels that do not match *mask*",
-		NULL,
+	    "   Usage: /LIST <options>",
+	    "",
+	    "If you don't include any options, the default is to send you the",
+	    "entire unfiltered list of channels. Below are the options you can",
+	    "use, and what channels LIST will return when you use them.",
+	    ">number  List channels with more than <number> people.",
+	    "<number  List channels with less than <number> people.",
+	    "C>number List channels created more than <number> minutes ago.",
+	    "C<number List channels created less than <number> minutes ago.",
+	    "T>number List channels whose topics are older than <number> minutes",
+	    "         (Ie, they have not changed in the last <number> minutes.",
+	    "T<number List channels whose topics are not older than <number> minutes.",
+	    "*mask*   List channels that match *mask*",
+	    "!*mask*  List channels that do not match *mask*",
+	    NULL,
 	};
 
 	/* Remote /LIST is not supported */
@@ -186,8 +189,8 @@ CMD_FUNC(cmd_list)
 
 	chantimemax = topictimemax = currenttime + 86400;
 	chantimemin = topictimemin = 0;
-	usermin = 0;		/* Minimum of 0 */
-	usermax = -1;		/* No maximum */
+	usermin = 0;  /* Minimum of 0 */
+	usermax = -1;  /* No maximum */
 
 	strlcpy(request, parv[1], sizeof(request));
 	for (name = strtoken(&p, request, ","); name && !error; name = strtoken(&p, NULL, ","))
@@ -208,7 +211,7 @@ CMD_FUNC(cmd_list)
 				doall = 1;
 				break;
 			case 'C':
-			case 'c':	/* Channel time -- creation time? */
+			case 'c': /* Channel time -- creation time? */
 				++name;
 				switch (*name++)
 				{
@@ -260,21 +263,19 @@ CMD_FUNC(cmd_list)
 					/* Negative matching by name */
 					doall = 1;
 					add_name_list(nolist, name + 1);
-				}
-				else if (strchr(name, '*') || strchr(name, '?'))
+				} else if (strchr(name, '*') || strchr(name, '?'))
 				{
 					/* Channel with wildcards */
 					doall = 1;
 					add_name_list(yeslist, name);
-				}
-				else
+				} else
 				{
 					/* A specific channel name without wildcards */
 					channel = find_channel(name);
-					if (channel && (ShowChannel(client, channel) || ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL)))
+					if (channel && (ShowChannel(client, channel) || ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel, NULL)))
 					{
 						modebuf[0] = '[';
-						channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel, 0);
+						channel_modes(client, modebuf + 1, parabuf, sizeof(modebuf) - 1, sizeof(parabuf), channel, 0);
 
 						if (modebuf[2] == '\0')
 							modebuf[0] = '\0';
@@ -282,7 +283,7 @@ CMD_FUNC(cmd_list)
 							strlcat(modebuf, "]", sizeof modebuf);
 
 						sendnumeric(client, RPL_LIST, name, channel->users, modebuf,
-							    channel->topic ? channel->topic : "");
+						            channel->topic ? channel->topic : "");
 					}
 				}
 		} /* switch */
@@ -322,7 +323,7 @@ int send_list(Client *client)
 {
 	Channel *channel;
 	ChannelListOptions *lopt = CHANNELLISTOPTIONS(client);
-	unsigned int  hashnum;
+	unsigned int hashnum;
 	int numsend = (get_sendq(client) / 768) + 1; /* (was previously hard-coded) */
 	/* ^
 	 * numsend = Number (roughly) of lines to send back. Once this number has
@@ -332,7 +333,7 @@ int send_list(Client *client)
 	 * back more lines than specified by numsend (though not by much,
 	 * assuming the hashing algorithm works well). Be conservative in your
 	 * choice of numsend. -Rak
-	 */	
+	 */
 
 	/* Begin of /LIST? then send official channels first. */
 	if ((lopt->starthash == 0) && conf_offchans)
@@ -352,9 +353,7 @@ int send_list(Client *client)
 		if (numsend > 0)
 			for (channel = hash_get_chan_bucket(hashnum); channel; channel = channel->hnextch)
 			{
-				if (SecretChannel(channel)
-				    && !IsMember(client, channel)
-				    && !ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))
+				if (SecretChannel(channel) && !IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel, NULL))
 					continue;
 
 				/* set::hide-list { deny-channel } */
@@ -392,26 +391,28 @@ int send_list(Client *client)
 						continue;
 				}
 				modebuf[0] = '[';
-				channel_modes(client, modebuf+1, parabuf, sizeof(modebuf)-1, sizeof(parabuf), channel, 0);
+				channel_modes(client, modebuf + 1, parabuf, sizeof(modebuf) - 1, sizeof(parabuf), channel, 0);
 				if (modebuf[2] == '\0')
 					modebuf[0] = '\0';
 				else
 					strlcat(modebuf, "]", sizeof modebuf);
-				if (!ValidatePermissionsForPath("channel:see:list:secret",client,NULL,channel,NULL))
+				if (!ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel, NULL))
 					sendnumeric(client, RPL_LIST,
-					    ShowChannel(client,
-					    channel) ? channel->name :
-					    "*", channel->users,
-					    ShowChannel(client, channel) ?
-					    modebuf : "",
-					    ShowChannel(client,
-					    channel) ? (channel->topic ?
-					    channel->topic : "") : "");
+					            ShowChannel(client,
+					                        channel)
+					                ? channel->name
+					                : "*",
+					            channel->users,
+					            ShowChannel(client, channel) ? modebuf : "",
+					            ShowChannel(client,
+					                        channel)
+					                ? (channel->topic ? channel->topic : "")
+					                : "");
 				else
 					sendnumeric(client, RPL_LIST, channel->name,
-					    channel->users,
-					    modebuf,
-					    (channel->topic ? channel->topic : ""));
+					            channel->users,
+					            modebuf,
+					            (channel->topic ? channel->topic : ""));
 				numsend--;
 			}
 		else

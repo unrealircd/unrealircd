@@ -7,14 +7,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"issued-by-tag",
-	"6.0",
-	"unrealircd.org/issued-by message tag",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "issued-by-tag",
+    "6.0",
+    "unrealircd.org/issued-by message tag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int issued_by_mtag_is_ok(Client *client, const char *name, const char *value);
@@ -125,18 +124,17 @@ void _mtag_add_issued_by(MessageTag **mtags, Client *client, MessageTag *recv_mt
 		if (client->rpc->issuer)
 		{
 			snprintf(buf, sizeof(buf), "RPC:%s@%s:%s", client->rpc->rpc_user, client->uplink->name, client->rpc->issuer);
-		} else {
+		} else
+		{
 			snprintf(buf, sizeof(buf), "RPC:%s@%s", client->rpc->rpc_user, client->uplink->name);
 		}
-	} else
-	if (IsULine(client))
+	} else if (IsULine(client))
 	{
 		if (IsUser(client))
 			snprintf(buf, sizeof(buf), "SERVICES:%s@%s", client->name, client->uplink->name);
 		else
 			snprintf(buf, sizeof(buf), "SERVICES:%s", client->name);
-	} else
-	if (IsOper(client))
+	} else if (IsOper(client))
 	{
 		const char *operlogin = moddata_client_get(client, "operlogin");
 		if (operlogin)

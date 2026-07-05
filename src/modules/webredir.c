@@ -23,14 +23,13 @@
 
 CMD_FUNC(webredir);
 
-ModuleHeader MOD_HEADER
-  = {
-	"webredir",
-	"1.0",
-	"Do 301 redirect for HEAD/GET/POST/PUT commands", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "webredir",
+    "1.0",
+    "Do 301 redirect for HEAD/GET/POST/PUT commands",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 struct {
 	char *url;
@@ -68,7 +67,7 @@ MOD_LOAD()
 	if (SHOWCONNECTINFO)
 	{
 		config_warn("I'm disabling set::options::show-connect-info for you "
-			    "as this setting is incompatible with the webredir module.");
+		            "as this setting is incompatible with the webredir module.");
 		SHOWCONNECTINFO = 0;
 	}
 	return MOD_SUCCESS;
@@ -125,35 +124,33 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!cep->value)
 		{
 			config_error("%s:%i: set::webredir::%s with no value",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		}
-		else if (!strcmp(cep->name, "url"))
+		} else if (!strcmp(cep->name, "url"))
 		{
 			if (!*cep->value || strchr(cep->value, ' '))
 			{
 				config_error("%s:%i: set::webredir::%s with empty value",
-					cep->file->filename, cep->line_number, cep->name);
+				             cep->file->filename, cep->line_number, cep->name);
 				errors++;
 			}
 			if (!strstr(cep->value, "://") || !strcmp(cep->value, "https://..."))
 			{
 				config_error("%s:%i: set::webredir::url needs to be a valid URL",
-					cep->file->filename, cep->line_number);
+				             cep->file->filename, cep->line_number);
 				errors++;
 			}
 			if (has_url)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "set::webredir::url");
+				                      cep->line_number, "set::webredir::url");
 				continue;
 			}
 			has_url = 1;
-		}
-		else
+		} else
 		{
 			config_error("%s:%i: unknown directive set::webredir::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -161,7 +158,7 @@ int webredir_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!has_url)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"set::webredir::url");
+		                     "set::webredir::url");
 		errors++;
 	}
 
@@ -175,11 +172,11 @@ int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::webredir... */
 	if (!ce || !ce->name || strcmp(ce->name, "webredir"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "url"))

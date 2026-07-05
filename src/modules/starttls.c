@@ -24,23 +24,22 @@
 
 CMD_FUNC(cmd_starttls);
 
-#define MSG_STARTTLS 	"STARTTLS"	
+#define MSG_STARTTLS "STARTTLS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"starttls",
-	"5.0",
-	"command /starttls", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "starttls",
+    "5.0",
+    "command /starttls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 long CLICAP_STARTTLS;
 
 MOD_INIT()
 {
 	ClientCapabilityInfo cap;
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, MSG_STARTTLS, cmd_starttls, MAXPARA, CMD_UNREGISTERED);
 	memset(&cap, 0, sizeof(cap));

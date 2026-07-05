@@ -37,12 +37,13 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 {
 	char *str_begin = str;
 	char c;
-	const char *end = str+size-1; /* for comparison, not dereferencing.  It is the last position a null can go. */
+	const char *end = str + size - 1; /* for comparison, not dereferencing.  It is the last position a null can go. */
 	char scratch_buffer[32]; /* large enough for 64 bit integer as a string */
 
-	if (!size) return str;
+	if (!size)
+		return str;
 
-	while (str!=end && (c = *format++))
+	while (str != end && (c = *format++))
 	{
 		if (c == '%')
 		{
@@ -51,52 +52,53 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 			{
 				/* %s - string */
 				const char *p1 = va_arg(vl, const char *);
-				while (str!=end && *p1) *str++ = *p1++;
+				while (str != end && *p1)
+					*str++ = *p1++;
 				continue;
-			}
-			else if (c == 'c')
+			} else if (c == 'c')
 			{
 				/* %c - single character */
 				*str++ = (char)va_arg(vl, int);
 				continue;
-			}
-			else if (c == 'd' || c == 'i')
+			} else if (c == 'd' || c == 'i')
 			{
 				/* %d and %i - integer */
 				char *t;
 				int v = va_arg(vl, int);
 				int i = 0;
 				size_t len;
-				if (v==0)
+				if (v == 0)
 				{
 					*str++ = '0';
 					continue;
 				}
 				t = scratch_buffer + sizeof(scratch_buffer);
-				if (v<0)
+				if (v < 0)
 				{
 					*str++ = '-';
-					if (str==end) break;
+					if (str == end)
+						break;
 					while (v)
 					{
-						*--t = '0' - (v%10);
-						v/=10;
+						*--t = '0' - (v % 10);
+						v /= 10;
 					}
-				} else {
+				} else
+				{
 					while (v)
 					{
-						*--t = (v%10) + '0';
-						v/=10;
+						*--t = (v % 10) + '0';
+						v /= 10;
 					}
 				}
 
-				len = sizeof(scratch_buffer)-(t-scratch_buffer);
-				if ((str+len)>end) break;
+				len = sizeof(scratch_buffer) - (t - scratch_buffer);
+				if ((str + len) > end)
+					break;
 				for (i = 0; i < len; i++)
-					*str++=t[i];
+					*str++ = t[i];
 				continue;
-			}
-			else if (c == 'l')
+			} else if (c == 'l')
 			{
 				if (format[0] == 'l' && format[1] == 'd')
 				{
@@ -108,33 +110,36 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 
 					format += 2;
 
-					if (v==0)
+					if (v == 0)
 					{
 						*str++ = '0';
 						continue;
 					}
 					t = scratch_buffer + sizeof(scratch_buffer);
-					if (v<0)
+					if (v < 0)
 					{
 						*str++ = '-';
-						if (str==end) break;
+						if (str == end)
+							break;
 						while (v)
 						{
-							*--t = '0' - (v%10);
-							v/=10;
+							*--t = '0' - (v % 10);
+							v /= 10;
 						}
-					} else {
+					} else
+					{
 						while (v)
 						{
-							*--t = (v%10) + '0';
-							v/=10;
+							*--t = (v % 10) + '0';
+							v /= 10;
 						}
 					}
 
-					len = sizeof(scratch_buffer)-(t-scratch_buffer);
-					if ((str+len)>end) break;
+					len = sizeof(scratch_buffer) - (t - scratch_buffer);
+					if ((str + len) > end)
+						break;
 					for (i = 0; i < len; i++)
-						*str++=t[i];
+						*str++ = t[i];
 					continue;
 				}
 				if (*format == 'u')
@@ -146,7 +151,7 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 					size_t len;
 
 					format++;
-					if (v==0)
+					if (v == 0)
 					{
 						*str++ = '0';
 						continue;
@@ -155,25 +160,25 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 					t = scratch_buffer + sizeof(scratch_buffer);
 					while (v)
 					{
-						*--t = (v%10) + '0';
-						v/=10;
+						*--t = (v % 10) + '0';
+						v /= 10;
 					}
 
-					len = sizeof(scratch_buffer)-(t-scratch_buffer);
-					if ((str+len)>end) break;
+					len = sizeof(scratch_buffer) - (t - scratch_buffer);
+					if ((str + len) > end)
+						break;
 					for (i = 0; i < len; i++)
-						*str++=t[i];
+						*str++ = t[i];
 					continue;
 				}
-			}
-			else if (c == 'u')
+			} else if (c == 'u')
 			{
 				/* %u - unsigned integer */
 				char *t;
 				unsigned int v = va_arg(vl, unsigned int);
 				int i = 0;
 				size_t len;
-				if (v==0)
+				if (v == 0)
 				{
 					*str++ = '0';
 					continue;
@@ -182,30 +187,29 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 				t = scratch_buffer + sizeof(scratch_buffer);
 				while (v)
 				{
-					*--t = (v%10) + '0';
-					v/=10;
+					*--t = (v % 10) + '0';
+					v /= 10;
 				}
 
-				len = sizeof(scratch_buffer)-(t-scratch_buffer);
-				if ((str+len)>end) break;
+				len = sizeof(scratch_buffer) - (t - scratch_buffer);
+				if ((str + len) > end)
+					break;
 				for (i = 0; i < len; i++)
-					*str++=t[i];
+					*str++ = t[i];
 				continue;
-			}
-			else if (c == '%')
+			} else if (c == '%')
 			{
 				/* %% - literal percent character */
 				*str++ = '%';
 				continue;
-			}
-			else if (!c)
+			} else if (!c)
 				break; /* A % at the end of the format string (illegal, skipped) */
-			
+
 			/* The default case, when we cannot handle the % format:
 			 * Stop what we are doing and pass control to the real vsnprintf()
 			 */
 			format -= 2;
-			vsnprintf(str, (size_t)(end-str+1), format, vl);
+			vsnprintf(str, (size_t)(end - str + 1), format, vl);
 			return str_begin;
 		}
 		*str++ = c;
@@ -214,7 +218,8 @@ char *ircvsnprintf(char *str, size_t size, const char *format, va_list vl)
 	return str_begin;
 }
 
-char *ircsnprintf(char *str, size_t size, const char *format, ...) {
+char *ircsnprintf(char *str, size_t size, const char *format, ...)
+{
 	va_list vl;
 	char *ret;
 	va_start(vl, format);

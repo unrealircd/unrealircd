@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_links);
 
-#define MSG_LINKS 	"LINKS"	
+#define MSG_LINKS "LINKS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"links",
-	"5.0",
-	"command /links", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "links",
+    "5.0",
+    "command /links",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -63,14 +62,14 @@ CMD_FUNC(cmd_links)
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
+		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL))
 			continue;
 		if (flat)
 			sendnumeric(client, RPL_LINKS, acptr->name, me.name,
-			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
+			            1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
 			sendnumeric(client, RPL_LINKS, acptr->name, acptr->uplink ? acptr->uplink->name : me.name,
-			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
+			            acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
 	sendnumeric(client, RPL_ENDOFLINKS, "*");

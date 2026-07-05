@@ -32,7 +32,8 @@ static void open_debugfile(), setup_signals();
 
 EVENT(loop_event)
 {
-	if (loop.do_garbage_collect == 1) {
+	if (loop.do_garbage_collect == 1)
+	{
 		garbage_collect(NULL);
 	}
 }
@@ -42,19 +43,22 @@ EVENT(garbage_collect)
 	extern int freelinks;
 	extern Link *freelink;
 	Link p;
-	int  ii;
+	int ii;
 
 	if (loop.do_garbage_collect == 1)
 		unreal_log(ULOG_INFO, "main", "GARBAGE_COLLECT_STARTED", NULL, "Doing garbage collection...");
-	if (freelinks > HOW_MANY_FREELINKS_ALLOWED) {
+	if (freelinks > HOW_MANY_FREELINKS_ALLOWED)
+	{
 		ii = freelinks;
-		while (freelink && (freelinks > HOW_MANY_FREELINKS_ALLOWED)) {
+		while (freelink && (freelinks > HOW_MANY_FREELINKS_ALLOWED))
+		{
 			freelinks--;
 			p.next = freelink;
 			freelink = freelink->next;
 			safe_free(p.next);
 		}
-		if (loop.do_garbage_collect == 1) {
+		if (loop.do_garbage_collect == 1)
+		{
 			loop.do_garbage_collect = 0;
 			unreal_log(ULOG_INFO, "main", "GARBAGE_COLLECT_STARTED", NULL, "Cleaned up $count garbage blocks",
 			           log_data_integer("count", (ii - freelinks)));
@@ -79,19 +83,21 @@ int match_tkls(Client *client)
 	if (IsUser(client))
 	{
 		/* Check ban realname { } */
-		if (!ValidatePermissionsForPath("immune",client,NULL,NULL,NULL) && (bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
+		if (!ValidatePermissionsForPath("immune", client, NULL, NULL, NULL) && (bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME)))
 		{
 			unreal_log(ULOG_INFO, "tkl", "BAN_REALNAME", client,
 			           "Banned client $client.details due to realname ban: $reason",
 			           log_data_string("reason", bconf->reason ? bconf->reason : "no reason"));
 
-			if (bconf->reason) {
+			if (bconf->reason)
+			{
 				if (IsUser(client))
 					snprintf(banbuf, sizeof(banbuf), "User has been banned (%s)", bconf->reason);
 				else
 					snprintf(banbuf, sizeof(banbuf), "Banned (%s)", bconf->reason);
 				exit_client(client, NULL, banbuf);
-			} else {
+			} else
+			{
 				if (IsUser(client))
 					exit_client(client, NULL, "User has been banned");
 				else
@@ -165,14 +171,12 @@ void check_ping(Client *client)
 		return; /* some recent command was executed */
 
 	if (
-		/* If we have sent a ping */
-		(IsPingSent(client)
-		/* And they had 2x ping frequency to respond */
-		&& ((TStime() - client->local->last_msg_received) >= (2 * ping)))
-		||
-		/* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
-		(!IsRegistered(client) && (TStime() - client->local->fake_lag >= ping))
-		)
+	        /* If we have sent a ping */
+	    (IsPingSent(client)
+	        /* And they had 2x ping frequency to respond */
+	     && ((TStime() - client->local->last_msg_received) >= (2 * ping))) ||
+	        /* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
+	    (!IsRegistered(client) && (TStime() - client->local->fake_lag >= ping)))
 	{
 		if (IsServer(client) || IsConnecting(client) ||
 		    IsHandshake(client) || IsTLSConnectHandshake(client))
@@ -183,11 +187,10 @@ void check_ping(Client *client)
 			SetServerDisconnectLogged(client);
 		}
 		ircsnprintf(scratch, sizeof(scratch), "Ping timeout: %lld seconds",
-			(long long) (TStime() - client->local->last_msg_received));
+		            (long long)(TStime() - client->local->last_msg_received));
 		exit_client(client, NULL, scratch);
 		return;
-	}
-	else if (IsRegistered(client) && !IsPingSent(client))
+	} else if (IsRegistered(client) && !IsPingSent(client))
 	{
 		/* Time to send a PING */
 		SetPingSent(client);
@@ -195,17 +198,16 @@ void check_ping(Client *client)
 		/* not nice but does the job */
 		client->local->last_msg_received = TStime() - ping;
 		sendto_one(client, NULL, "PING :%s", me.name);
-	}
-	else if (!IsPingWarning(client) && PINGWARNING > 0 &&
-		(IsServer(client) || IsHandshake(client) || IsConnecting(client) ||
-		IsTLSConnectHandshake(client)) &&
-		(TStime() - client->local->last_msg_received) >= (ping + PINGWARNING))
+	} else if (!IsPingWarning(client) && PINGWARNING > 0 &&
+	           (IsServer(client) || IsHandshake(client) || IsConnecting(client) ||
+	            IsTLSConnectHandshake(client)) &&
+	           (TStime() - client->local->last_msg_received) >= (ping + PINGWARNING))
 	{
 		SetPingWarning(client);
 		unreal_log(ULOG_WARNING, "link", "LINK_UNRELIABLE", client,
-			   "Warning, no response from $client for $time_delta seconds",
-			   log_data_integer("time_delta", PINGWARNING),
-			   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
+		           "Warning, no response from $client for $time_delta seconds",
+		           log_data_integer("time_delta", PINGWARNING),
+		           client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 	}
 
 	return;
@@ -290,13 +292,15 @@ static int bad_command(const char *argv0)
 
 	printf("ERROR: Incorrect command line argument encountered (if you are looking for foreground mode, it is -F).\n"
 	       "IMPORTANT: This is the unrealircd BINARY. End-users should NOT call this binary directly.\n"
-	       "Please run the SCRIPT instead: %s/unrealircd\n", SCRIPTDIR);
+	       "Please run the SCRIPT instead: %s/unrealircd\n",
+	       SCRIPTDIR);
 	printf("Server not started\n\n");
 #else
-	if (!IsService) {
+	if (!IsService)
+	{
 		MessageBox(NULL,
-		    "Usage: UnrealIRCd [-f configfile]\n",
-		    "UnrealIRCD/32", MB_OK);
+		           "Usage: UnrealIRCd [-f configfile]\n",
+		           "UnrealIRCD/32", MB_OK);
 	}
 #endif
 	return (-1);
@@ -345,7 +349,7 @@ void fix_timers(void)
 	{
 		if (e->last_run.tv_sec > TStime())
 		{
-			e->last_run.tv_sec = TStime()-1;
+			e->last_run.tv_sec = TStime() - 1;
 			e->last_run.tv_usec = 0;
 		}
 	}
@@ -369,14 +373,14 @@ void fix_timers(void)
  * This should work until 2038, and very likely after that as well
  * because 'long' should be 64 bit on all systems by then... -- Syzop
  */
-#define mytdiff(a, b)   ((long)a - (long)b)
+#define mytdiff(a, b) ((long)a - (long)b)
 
-#define NEGATIVE_SHIFT_WARN	-15
-#define POSITIVE_SHIFT_WARN	20
+#define NEGATIVE_SHIFT_WARN -15
+#define POSITIVE_SHIFT_WARN 20
 
 void detect_timeshift_and_warn(void)
 {
-	static time_t highesttimeofday=0, oldtimeofday=0, lasthighwarn=0;
+	static time_t highesttimeofday = 0, oldtimeofday = 0, lasthighwarn = 0;
 
 	if (oldtimeofday == 0)
 		oldtimeofday = timeofday; /* pretend everything is ok the first time.. */
@@ -396,8 +400,7 @@ void detect_timeshift_and_warn(void)
 		           log_data_timestamp("time_from", oldtimeofday),
 		           log_data_timestamp("time_to", timeofday));
 		fix_timers();
-	} else
-	if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
+	} else if (mytdiff(timeofday, oldtimeofday) > POSITIVE_SHIFT_WARN) /* do not set too low or you get false positives */
 	{
 		/* tdiff = # of seconds of time set forward (eg: 60) */
 		time_t tdiff = timeofday - oldtimeofday;
@@ -413,27 +416,28 @@ void detect_timeshift_and_warn(void)
 		fix_timers();
 	}
 
-	if (highesttimeofday+NEGATIVE_SHIFT_WARN > timeofday)
+	if (highesttimeofday + NEGATIVE_SHIFT_WARN > timeofday)
 	{
 		if (lasthighwarn > timeofday)
 			lasthighwarn = timeofday;
 		if (timeofday - lasthighwarn > 300)
 		{
 			unreal_log(ULOG_WARNING, "system", "SYSTEM_CLOCK_JUMP_BACKWARDS_PREVIOUSLY", NULL,
-				   "The system clock previously went backwards. Waiting for time to be OK again. This will be in $time_delta seconds.",
-				   log_data_integer("time_delta", highesttimeofday - timeofday),
-				   log_data_timestamp("time_from", highesttimeofday),
-				   log_data_timestamp("time_to", timeofday));
+			           "The system clock previously went backwards. Waiting for time to be OK again. This will be in $time_delta seconds.",
+			           log_data_integer("time_delta", highesttimeofday - timeofday),
+			           log_data_timestamp("time_from", highesttimeofday),
+			           log_data_timestamp("time_to", timeofday));
 			lasthighwarn = timeofday;
 		}
-	} else {
+	} else
+	{
 		highesttimeofday = timeofday;
 	}
 
 	oldtimeofday = timeofday;
 }
 
-#define DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME	5
+#define DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME 5
 
 EVENT(detect_high_connection_rate)
 {
@@ -443,65 +447,67 @@ EVENT(detect_high_connection_rate)
 	if (iConf.high_connection_rate == 0)
 	{
 		quick_close = 0;
-		connections_past_period=0; /* reset */
+		connections_past_period = 0; /* reset */
 		return;
 	}
 
-	if (connections_past_period > iConf.high_connection_rate*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME)
+	if (connections_past_period > iConf.high_connection_rate * DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME)
 	{
 		quick_close = 1;
-	} else {
+	} else
+	{
 		quick_close = 0;
 	}
 
-	if (OpenFiles >= maxclients-10)
+	if (OpenFiles >= maxclients - 10)
 		quick_close = 1;
 
 	/* Send a warning to IRCOps every XYZ time */
 	if (quick_close && (TStime() - last_detect_high_connection_rate_warning > 600) && connections_past_period)
 	{
-		if (connections_past_period >= iConf.high_connection_rate*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME)
+		if (connections_past_period >= iConf.high_connection_rate * DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME)
 		{
 			unreal_log(ULOG_WARNING, "htm", "HIGH_CONNECTION_RATE", NULL,
-				   "High rate of connection attempts detected: $connects_per_second/sec exceeds $limit/sec: some minor functionality is now disabled. "
-				   "This could be an attack, or lots of genuine users connecting after a network outage.\n"
-				   "This message will appear every 10 minutes for as long as this is the case. "
-				   "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
-				   "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
-				   log_data_integer("connects_per_second", connections_past_period/DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME),
-				   log_data_integer("limit", iConf.high_connection_rate),
-				   log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
-		} else {
+			           "High rate of connection attempts detected: $connects_per_second/sec exceeds $limit/sec: some minor functionality is now disabled. "
+			           "This could be an attack, or lots of genuine users connecting after a network outage.\n"
+			           "This message will appear every 10 minutes for as long as this is the case. "
+			           "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
+			           "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
+			           log_data_integer("connects_per_second", connections_past_period / DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME),
+			           log_data_integer("limit", iConf.high_connection_rate),
+			           log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
+		} else
+		{
 			unreal_log(ULOG_WARNING, "htm", "HIGH_CONNECTION_RATE", NULL,
-				   "High amount of connections in use ($connections is near limit of $maxclients maximum clients). Some minor functionality is now disabled. "
-				   "This could be an attack, or lots of genuine users connecting.\n"
-				   "This message will appear every 10 minutes for as long as this is the case. "
-				   "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
-				   "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
-				   log_data_integer("connections", OpenFiles),
-				   log_data_integer("maxclients", maxclients),
-				   log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
+			           "High amount of connections in use ($connections is near limit of $maxclients maximum clients). Some minor functionality is now disabled. "
+			           "This could be an attack, or lots of genuine users connecting.\n"
+			           "This message will appear every 10 minutes for as long as this is the case. "
+			           "You will NOT get a notification if all is normal again (which is evaluated every $sample_time seconds). "
+			           "See https://www.unrealircd.org/docs/FAQ#hi-conn-rate",
+			           log_data_integer("connections", OpenFiles),
+			           log_data_integer("maxclients", maxclients),
+			           log_data_integer("sample_time", DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME));
 		}
 		last_detect_high_connection_rate_warning = TStime();
 	}
 
-	connections_past_period=0; /* reset */
+	connections_past_period = 0; /* reset */
 }
 
 void SetupEvents(void)
 {
 	/* Start events */
-	EventAdd(NULL, "tunefile", save_tunefile, NULL, 300*1000, 0);
-	EventAdd(NULL, "garbage", garbage_collect, NULL, GARBAGE_COLLECT_EVERY*1000, 0);
+	EventAdd(NULL, "tunefile", save_tunefile, NULL, 300 * 1000, 0);
+	EventAdd(NULL, "garbage", garbage_collect, NULL, GARBAGE_COLLECT_EVERY * 1000, 0);
 	EventAdd(NULL, "loop", loop_event, NULL, 1000, 0);
 	EventAdd(NULL, "unrealdns_removeoldrecords", unrealdns_removeoldrecords, NULL, 15000, 0);
 	EventAdd(NULL, "check_pings", check_pings, NULL, 1000, 0);
 	EventAdd(NULL, "check_deadsockets", check_deadsockets, NULL, 1000, 0);
 	EventAdd(NULL, "handshake_timeout", handshake_timeout, NULL, 1000, 0);
-	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400/2)*1000, 0);
+	EventAdd(NULL, "tls_check_expiry", tls_check_expiry, NULL, (86400 / 2) * 1000, 0);
 	EventAdd(NULL, "unrealdb_expire_secret_cache", unrealdb_expire_secret_cache, NULL, 61000, 0);
 	EventAdd(NULL, "memory_log_cleaner", memory_log_cleaner, NULL, 61500, 0);
-	EventAdd(NULL, "detect_high_connection_rate", detect_high_connection_rate, NULL, 1000*DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME, 0);
+	EventAdd(NULL, "detect_high_connection_rate", detect_high_connection_rate, NULL, 1000 * DETECT_HIGH_CONNECTION_RATE_SAMPLE_TIME, 0);
 	EventAdd(NULL, "central_spamfilter_download_evt", central_spamfilter_download_evt, NULL, 5000, 0);
 	EventAdd(NULL, "update_known_user_cache_timer", update_known_user_cache_timer, NULL, 5000, 0);
 	EventAdd(NULL, "log_throttle_flush", log_throttle_flush, NULL, 5000, 0);
@@ -566,15 +572,15 @@ int InitUnrealIRCd(int argc, char *argv[])
 	if (euid == 0)
 	{
 		fprintf(stderr,
-			"** ERROR **\n"
-			"You attempted to run UnrealIRCd as root. This is VERY DANGEROUS\n"
-			"as any compromise of your UnrealIRCd will result in full\n"
-			"privileges to the attacker on the entire machine.\n"
-			"You MUST start UnrealIRCd as a different user!\n"
-			"\n"
-			"For more information, see:\n"
-			"https://www.unrealircd.org/docs/Do_not_run_as_root\n"
-			"\n");
+		        "** ERROR **\n"
+		        "You attempted to run UnrealIRCd as root. This is VERY DANGEROUS\n"
+		        "as any compromise of your UnrealIRCd will result in full\n"
+		        "privileges to the attacker on the entire machine.\n"
+		        "You MUST start UnrealIRCd as a different user!\n"
+		        "\n"
+		        "For more information, see:\n"
+		        "https://www.unrealircd.org/docs/Do_not_run_as_root\n"
+		        "\n");
 		exit(1);
 	}
 #endif
@@ -584,7 +590,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	cmdLine = GetCommandLine();
 #endif
 #ifndef _WIN32
-	(void)umask(077);	/* better safe than sorry --SRB */
+	(void)umask(077); /* better safe than sorry --SRB */
 #else
 	init_winsock();
 #endif
@@ -613,23 +619,25 @@ int InitUnrealIRCd(int argc, char *argv[])
 	init_sys();
 
 #if !defined(_WIN32)
-#ifndef _WIN32
-	mkdir(TMPDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the tmp dir, if it doesn't exist */
- 	mkdir(CACHEDIR, S_IRUSR|S_IWUSR|S_IXUSR); /* Create the cache dir, if it doesn't exist */
-#else
+ #ifndef _WIN32
+	mkdir(TMPDIR, S_IRUSR | S_IWUSR | S_IXUSR); /* Create the tmp dir, if it doesn't exist */
+	mkdir(CACHEDIR, S_IRUSR | S_IWUSR | S_IXUSR); /* Create the cache dir, if it doesn't exist */
+ #else
 	mkdir(TMPDIR);
 	mkdir(CACHEDIR);
-#endif
-	if (chdir(TMPDIR)) {
-# ifndef _WIN32
+ #endif
+	if (chdir(TMPDIR))
+	{
+ #ifndef _WIN32
 		perror("chdir");
 		fprintf(stderr, "ERROR: Unable to change to directory '%s'\n", TMPDIR);
-# else
-		if (!IsService) {
+ #else
+		if (!IsService)
+		{
 			MessageBox(NULL, strerror(GetLastError()),
-			    "UnrealIRCD/32: chdir()", MB_OK);
+			           "UnrealIRCD/32: chdir()", MB_OK);
 		}
-# endif
+ #endif
 		exit(-1);
 	}
 #endif
@@ -640,11 +648,14 @@ int InitUnrealIRCd(int argc, char *argv[])
 	 * ** be empty. Flag characters cannot be concatenated (like
 	 * ** "-fxyz"), it would conflict with the form "-fstring".
 	 */
-	while (--argc > 0 && (*++argv)[0] == '-') {
+	while (--argc > 0 && (*++argv)[0] == '-')
+	{
 		char *p = argv[0] + 1;
-		int  flag = *p++;
-		if (flag == '\0' || *p == '\0') {
-			if (argc > 1 && argv[1][0] != '-') {
+		int flag = *p++;
+		if (flag == '\0' || *p == '\0')
+		{
+			if (argc > 1 && argv[1][0] != '-')
+			{
 				p = *++argv;
 				argc -= 1;
 			} else
@@ -672,79 +683,81 @@ int InitUnrealIRCd(int argc, char *argv[])
 			//unrealdb_test();
 #endif
 #ifndef _WIN32
-		  case 't':
-			  bootopt |= BOOT_TTY;
-			  break;
-		  case 'v':
-			  (void)printf("%s\n", version);
+			case 't':
+				bootopt |= BOOT_TTY;
+				break;
+			case 'v':
+				(void)printf("%s\n", version);
 #else
-		  case 'v':
-			  if (!IsService) {
-				  MessageBox(NULL, version,
-				      "UnrealIRCD/Win32 version", MB_OK);
-			  }
+			case 'v':
+				if (!IsService)
+				{
+					MessageBox(NULL, version,
+					           "UnrealIRCD/Win32 version", MB_OK);
+				}
 #endif
-			  exit(0);
-		  case 'C':
-			  config_verbose = atoi(p);
-			  break;
-		  case 'c':
-			  loop.config_test = 1;
-			  break;
-		  case 'x':
-#ifdef	DEBUGMODE
-			  debuglevel = atoi(p);
-			  debugmode = *p ? p : "0";
-			  bootopt |= BOOT_DEBUG;
-			  break;
+				exit(0);
+			case 'C':
+				config_verbose = atoi(p);
+				break;
+			case 'c':
+				loop.config_test = 1;
+				break;
+			case 'x':
+#ifdef DEBUGMODE
+				debuglevel = atoi(p);
+				debugmode = *p ? p : "0";
+				bootopt |= BOOT_DEBUG;
+				break;
 #else
-# ifndef _WIN32
-			  (void)fprintf(stderr,
-			      "%s: DEBUGMODE must be defined for -x y\n",
-			      myargv[0]);
-# else
-			  if (!IsService) {
-				  MessageBox(NULL,
-				      "DEBUGMODE must be defined for -x option",
-				      "UnrealIRCD/32", MB_OK);
-			  }
-# endif
-			  exit(0);
+ #ifndef _WIN32
+				(void)fprintf(stderr,
+				              "%s: DEBUGMODE must be defined for -x y\n",
+				              myargv[0]);
+ #else
+				if (!IsService)
+				{
+					MessageBox(NULL,
+					           "DEBUGMODE must be defined for -x option",
+					           "UnrealIRCD/32", MB_OK);
+				}
+ #endif
+				exit(0);
 #endif
-		  case 'K':
-			  {
-			  	char *p = NULL;
-			  	if (chdir(TMPDIR) < 0)
-			  	{
-			  		fprintf(stderr, "Could not change to directory '%s'\n", TMPDIR);
-			  		exit(1);
-			  	}
-			  	fprintf(stderr, "Starting crash test!\n");
-			  	*p = 'a';
-			  	fprintf(stderr, "It is impossible to get here\n");
-			  	exit(0);
-			  }
-		  case 'R':
-		      report_crash();
-		      exit(0);
+			case 'K':
+			{
+				char *p = NULL;
+				if (chdir(TMPDIR) < 0)
+				{
+					fprintf(stderr, "Could not change to directory '%s'\n", TMPDIR);
+					exit(1);
+				}
+				fprintf(stderr, "Starting crash test!\n");
+				*p = 'a';
+				fprintf(stderr, "It is impossible to get here\n");
+				exit(0);
+			}
+			case 'R':
+				report_crash();
+				exit(0);
 #ifndef _WIN32
-		  case 'm':
-		      modulemanager(argc, argv);
-		      exit(0);
+			case 'm':
+				modulemanager(argc, argv);
+				exit(0);
 #endif
-		  case '8':
-		      utf8_test();
-		      exit(0);
-		  case 'L':
-		      loop.boot_function = link_generator;
-		      break;
-		  default:
+			case '8':
+				utf8_test();
+				exit(0);
+			case 'L':
+				loop.boot_function = link_generator;
+				break;
+			default:
 #ifndef _WIN32
-			  return bad_command(myargv[0]);
+				return bad_command(myargv[0]);
 #else
-			  return bad_command(NULL);
+				return bad_command(NULL);
 #endif
-			  break;
+				break;
 		}
 	}
 
@@ -755,9 +768,10 @@ int InitUnrealIRCd(int argc, char *argv[])
 	/*
 	 * but asked for debugging output to tty
 	 */
-	if ((debuglevel < 0) && (bootopt & BOOT_TTY)) {
+	if ((debuglevel < 0) && (bootopt & BOOT_TTY))
+	{
 		(void)fprintf(stderr,
-		    "you specified -t without -x. use -x <n>\n");
+		              "you specified -t without -x. use -x <n>\n");
 		exit(-1);
 	}
 #endif
@@ -767,7 +781,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 	 */
 #ifndef _WIN32
 	if (argc > 0)
-		return bad_command(myargv[0]);	/* This should exit out */
+		return bad_command(myargv[0]); /* This should exit out */
 #endif
 #ifndef _WIN32
 	fprintf(stderr, "%s", unreallogo);
@@ -783,9 +797,9 @@ int InitUnrealIRCd(int argc, char *argv[])
 	fprintf(stderr, "UnrealIRCd is using the following libraries:\n");
 	fprintf(stderr, "* %s\n", SSLeay_version(SSLEAY_VERSION));
 	fprintf(stderr, "* libsodium %s\n", sodium_version_string());
-#ifdef USE_LIBCURL
+ #ifdef USE_LIBCURL
 	fprintf(stderr, "* %s\n", curl_version());
-#endif
+ #endif
 	fprintf(stderr, "* c-ares %s\n", ares_version(NULL));
 	fprintf(stderr, "* %s\n", pcre2_version());
 #endif
@@ -796,7 +810,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 #ifndef _WIN32
 	fprintf(stderr, "\n");
 	fprintf(stderr, "This server can handle %d concurrent sockets (%d clients + %d reserve)\n\n",
-		maxclients+reserved_fds, maxclients, reserved_fds);
+	        maxclients + reserved_fds, maxclients, reserved_fds);
 #endif
 	init_CommandHash();
 	initwhowas();
@@ -892,7 +906,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 		if (p < 0)
 		{
 			fprintf(stderr, "Could not create background job. Call to fork() failed: %s\n",
-				strerror(errno));
+			        strerror(errno));
 			exit(-1);
 		}
 		if (p > 0)
@@ -1002,40 +1016,42 @@ void SocketLoop(void *dummy)
  */
 static void open_debugfile(void)
 {
-#ifdef	DEBUGMODE
-	int  fd;
+#ifdef DEBUGMODE
+	int fd;
 	Client *client;
-	if (debuglevel >= 0) {
+	if (debuglevel >= 0)
+	{
 		client = make_client(NULL, NULL);
 		client->local->fd = 2;
 		SetLog(client);
 		client->flags = 0;
 
 		strlcpy(client->local->sockhost, me.local->sockhost, sizeof client->local->sockhost);
-# ifndef _WIN32
+ #ifndef _WIN32
 		/*(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2)); */
-		if (!(bootopt & BOOT_TTY)) {	/* leave debugging output on fd 2 */
+		if (!(bootopt & BOOT_TTY))
+		{ /* leave debugging output on fd 2 */
 			if (truncate(LOGFILE, 0) < 0)
 				fprintf(stderr, "WARNING: could not truncate log file '%s'\n", LOGFILE);
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)
 				if ((fd = open("/dev/null", O_WRONLY)) < 0)
 					exit(-1);
 
-#if 1
+  #if 1
 			client->local->fd = fd;
 			debugfd = fd;
-#else
-			/* if (fd != 2) {
+  #else
+                        /* if (fd != 2) {
 				(void)dup2(fd, 2);
 				(void)close(fd);
 			} -- hands off stderr! */
-#endif
+  #endif
 			strlcpy(client->name, LOGFILE, sizeof(client->name));
 		} else if (isatty(2) && ttyname(2))
 			strlcpy(client->name, ttyname(2), sizeof(client->name));
 		else
-# endif
+ #endif
 			strlcpy(client->name, "FD2-Pipe", sizeof(client->name));
 	}
 #endif
@@ -1050,10 +1066,10 @@ static void setup_signals()
 	(void)sigemptyset(&act.sa_mask);
 	(void)sigaddset(&act.sa_mask, SIGPIPE);
 	(void)sigaddset(&act.sa_mask, SIGALRM);
-#ifdef SIGWINCH
+ #ifdef SIGWINCH
 	(void)sigaddset(&act.sa_mask, SIGWINCH);
 	(void)sigaction(SIGWINCH, &act, NULL);
-#endif
+ #endif
 	(void)sigaction(SIGPIPE, &act, NULL);
 	act.sa_handler = ignore_this_signal;
 	(void)sigaction(SIGALRM, &act, NULL);

@@ -24,32 +24,31 @@
 
 CMD_FUNC(cmd_map);
 
-#define MSG_MAP 	"MAP"	
+#define MSG_MAP "MAP"
 
 static int lmax = 0;
 static int umax = 0;
 
 static int dcount(int n)
 {
-   int cnt = 0;
+	int cnt = 0;
 
-   while (n != 0)
-   {
-	   n = n/10;
-	   cnt++;
-   }
+	while (n != 0)
+	{
+		n = n / 10;
+		cnt++;
+	}
 
-   return cnt;
+	return cnt;
 }
 
-ModuleHeader MOD_HEADER
-  = {
-	"map",
-	"5.0",
-	"command /map", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "map",
+    "5.0",
+    "command /map",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -77,7 +76,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
-	int  cnt = 0;
+	int cnt = 0;
 	Client *acptr;
 
 	*p = '\0';
@@ -101,9 +100,10 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 		if (IsOper(client))
 			snprintf(sid, sizeof(sid), " [%s]", server->id);
 		sendnumeric(client, RPL_MAP, prompt, server->name, tbuf, umax,
-			server->server->users, (double)(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-			(server->server->users * 100.0 / irccounts.clients),
-			IsOper(client) ? sid : "");
+		            server->server->users, (double)(lmax < 10) ? 4 : (lmax == 100) ? 6
+		                                                                           : 5,
+		            (server->server->users * 100.0 / irccounts.clients),
+		            IsOper(client) ? sid : "");
 		cnt = 0;
 	}
 
@@ -121,7 +121,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		if (acptr->uplink != server ||
- 		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)))
+		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL)))
 			continue;
 		SetMap(acptr);
 		cnt++;
@@ -129,7 +129,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
+		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL))
 			continue;
 		if (acptr->uplink != server)
 			continue;
@@ -151,7 +151,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 	Client *acptr;
 	int cnt = 0, len = 0, hide_ulines;
 
-	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
+	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL)) ? 1 : 0;
 
 	len = length - strlen(server->name) + 3;
 	if (len < 0)
@@ -164,8 +164,9 @@ void dump_flat_map(Client *client, Client *server, int length)
 		tbuf[len--] = '-';
 
 	sendnumeric(client, RPL_MAP, "", server->name, tbuf, umax, server->server->users,
-		(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-		(server->server->users * 100.0 / irccounts.clients), "");
+	            (lmax < 10) ? 4 : (lmax == 100) ? 6
+	                                            : 5,
+	            (server->server->users * 100.0 / irccounts.clients), "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -193,8 +194,9 @@ void dump_flat_map(Client *client, Client *server, int length)
 			tbuf[len--] = '-';
 
 		sendnumeric(client, RPL_MAP, buf, acptr->name, tbuf, umax, acptr->server->users,
-			(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-			(acptr->server->users * 100.0 / irccounts.clients), "");
+		            (lmax < 10) ? 4 : (lmax == 100) ? 6
+		                                            : 5,
+		            (acptr->server->users * 100.0 / irccounts.clients), "");
 	}
 }
 
@@ -207,7 +209,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 CMD_FUNC(cmd_map)
 {
 	Client *acptr;
-	int  longest = strlen(me.name);
+	int longest = strlen(me.name);
 	float avg_users;
 
 	umax = 0;
@@ -231,13 +233,13 @@ CMD_FUNC(cmd_map)
 		longest = 60;
 	longest += 2;
 
-	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map",client,NULL,NULL,NULL))
+	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map", client, NULL, NULL, NULL))
 		dump_flat_map(client, &me, longest);
 	else
 		dump_map(client, &me, "*", 0, longest);
 
 	avg_users = irccounts.clients * 1.0 / irccounts.servers;
 	sendnumeric(client, RPL_MAPUSERS, irccounts.servers, (irccounts.servers > 1 ? "s" : ""), irccounts.clients,
-		(irccounts.clients > 1 ? "s" : ""), avg_users);
+	            (irccounts.clients > 1 ? "s" : ""), avg_users);
 	sendnumeric(client, RPL_MAPEND);
 }

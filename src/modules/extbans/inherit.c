@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/inherit",
-	"1.0",
-	"ExtBan ~inherit - inherit bans from another channel",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/inherit",
+    "1.0",
+    "ExtBan ~inherit - inherit bans from another channel",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -56,7 +55,7 @@ Extban *register_channel_extban(ModuleInfo *modinfo)
 	 * We don't allow things like ~nick:~inherit, as we only work
 	 * on JOINs (option EXTBOPT_NOSTACKCHILD).
 	 */
-	req.options = EXTBOPT_INVEX|EXTBOPT_NOSTACKCHILD;
+	req.options = EXTBOPT_INVEX | EXTBOPT_NOSTACKCHILD;
 	return ExtbanAdd(modinfo->handle, req);
 }
 
@@ -120,11 +119,12 @@ static int inherit_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			if (v < 0)
 			{
 				config_error("%s:%i: set::max-inherit-extended-bans::%s item has a value, which is unexpected. Check your syntax!",
-					cep->file->filename, cep->line_number, cep->name);
-					errors++;
+				             cep->file->filename, cep->line_number, cep->name);
+				errors++;
 				continue;
 			}
-		} else {
+		} else
+		{
 			config_error_unknown(cep->file->filename, cep->line_number,
 			                     "set::max-inherit-extended-bans", cep->name);
 			errors++;
@@ -213,14 +213,13 @@ static int exceeds_inherit_ban_count(BanContext *b)
 		/* Pretend time does not exist... */
 		if (!strncmp(banstr, "~t:", 3))
 		{
-			banstr = strchr(banstr+3, ':');
+			banstr = strchr(banstr + 3, ':');
 			if (!banstr)
 				continue;
 			banstr++;
-		}
-		else if (!strncmp(banstr, "~time:", 6))
+		} else if (!strncmp(banstr, "~time:", 6))
 		{
-			banstr = strchr(banstr+6, ':');
+			banstr = strchr(banstr + 6, ':');
 			if (!banstr)
 				continue;
 			banstr++;
@@ -229,7 +228,7 @@ static int exceeds_inherit_ban_count(BanContext *b)
 		/* Now check against ~inherit */
 		if ((!strncasecmp(banstr, "~inherit:", 9) ||
 		     !strncmp(banstr, "~i:", 3)) &&
-		     ++cnt >= limit)
+		    ++cnt >= limit)
 		{
 			return 1;
 		}
@@ -240,7 +239,7 @@ static int exceeds_inherit_ban_count(BanContext *b)
 
 const char *extban_inherit_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[CHANNELLEN+1];
+	static char retbuf[CHANNELLEN + 1];
 
 	strlcpy(retbuf, b->banstr, sizeof(retbuf));
 
@@ -258,7 +257,7 @@ const char *extban_inherit_conv_param(BanContext *b, Extban *extban)
 
 int extban_inherit_is_ok(BanContext *b)
 {
-	char retbuf[CHANNELLEN+1];
+	char retbuf[CHANNELLEN + 1];
 
 	if (b->is_ok_check != EXBCHK_PARAM)
 		return 1;
@@ -286,10 +285,10 @@ int extban_inherit_is_ok(BanContext *b)
 		if (exceeds_inherit_ban_count(b))
 		{
 			sendnotice(b->client, "Your ExtBan ~inherit:%s was not accepted because "
-					      "this channel already contains the maximum "
-					      "amount of ~inherit entries (%d).",
-					      b->banstr,
-					      maximum_ban_inherit_limit(b->ban_type));
+			                      "this channel already contains the maximum "
+			                      "amount of ~inherit entries (%d).",
+			           b->banstr,
+			           maximum_ban_inherit_limit(b->ban_type));
 			return 0;
 		}
 	}

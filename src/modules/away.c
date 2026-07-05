@@ -29,16 +29,15 @@ int away_join(Client *client, Channel *channel, MessageTag *mtags);
 
 long CAP_AWAY_NOTIFY = 0L;
 
-#define MSG_AWAY 	"AWAY"	
+#define MSG_AWAY "AWAY"
 
-ModuleHeader MOD_HEADER
-  = {
-	"away",
-	"5.0",
-	"command /away", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "away",
+    "5.0",
+    "command /away",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -46,7 +45,7 @@ MOD_INIT()
 	memset(&c, 0, sizeof(c));
 	c.name = "away-notify";
 	ClientCapabilityAdd(modinfo->handle, &c, &CAP_AWAY_NOTIFY);
-	CommandAdd(modinfo->handle, MSG_AWAY, cmd_away, 1, CMD_USER|CMD_TEXTANALYSIS);
+	CommandAdd(modinfo->handle, MSG_AWAY, cmd_away, 1, CMD_USER | CMD_TEXTANALYSIS);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, away_join);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_JOIN, 0, away_join);
 
@@ -137,7 +136,7 @@ CMD_FUNC(cmd_away)
 
 	/* Check away-flood */
 	if (MyUser(client) &&
-	    !ValidatePermissionsForPath("immune:away-flood",client,NULL,NULL,NULL) &&
+	    !ValidatePermissionsForPath("immune:away-flood", client, NULL, NULL, NULL) &&
 	    flood_limit_exceeded(client, FLD_AWAY))
 	{
 		sendnumeric(client, ERR_TOOMANYAWAY);
@@ -153,7 +152,7 @@ CMD_FUNC(cmd_away)
 		client->user->away_since = t;
 	else
 		client->user->away_since = TStime();
-	
+
 	new_message(client, recv_mtags, &mtags);
 
 	sendto_server(client, 0, 0, mtags, ":%s AWAY :%s", client->id, reason);
@@ -163,7 +162,7 @@ CMD_FUNC(cmd_away)
 		safe_free(client->user->away);
 		already_as_away = 1;
 	}
-	
+
 	safe_strdup(client->user->away, reason);
 
 	if (MyConnect(client))

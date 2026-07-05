@@ -21,14 +21,13 @@
 
 CMD_FUNC(cmd_svssilence);
 
-ModuleHeader MOD_HEADER
-  = {
-	"svssilence",	/* Name of module */
-	"5.0", /* Version */
-	"command /svssilence", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svssilence", /* Name of module */
+    "5.0", /* Version */
+    "command /svssilence", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -44,7 +43,7 @@ MOD_LOAD()
 
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /* cmd_svssilence()
@@ -61,13 +60,13 @@ CMD_FUNC(cmd_svssilence)
 	int mine;
 	char *p, *cp, c;
 	char request[BUFSIZE];
-	
+
 	if (!IsSvsCmdOk(client))
 		return;
 
 	if (parc < 3 || BadPtr(parv[2]) || !(target = find_user(parv[1], NULL)))
 		return;
-	
+
 	if (!MyUser(target))
 	{
 		sendto_one(target, NULL, ":%s SVSSILENCE %s :%s", client->name, parv[1], parv[2]);
@@ -85,8 +84,7 @@ CMD_FUNC(cmd_svssilence)
 		{
 			/* "no such nick" */
 			continue;
-		}
-		else
+		} else
 			c = '+';
 		cp = pretty_mask(p);
 		if ((c == '-' && !del_silence(target, cp)) ||

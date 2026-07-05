@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_sdesc);
 
-#define MSG_SDESC 	"SDESC"	/* sdesc */
+#define MSG_SDESC "SDESC" /* sdesc */
 
-ModuleHeader MOD_HEADER
-  = {
-	"sdesc",	/* Name of module */
-	"5.0", /* Version */
-	"command /sdesc", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sdesc", /* Name of module */
+    "5.0", /* Version */
+    "command /sdesc", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -60,12 +59,12 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_sdesc)
 {
-	if (!ValidatePermissionsForPath("server:description",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:description", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
-	
+
 	if ((parc < 2) || BadPtr(parv[1]))
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "SDESC");
@@ -77,7 +76,7 @@ CMD_FUNC(cmd_sdesc)
 		if (MyConnect(client))
 		{
 			sendnotice(client, "*** /SDESC Error: \"Server info\" may maximum be %i characters of length",
-				REALLEN);
+			           REALLEN);
 			return;
 		}
 	}

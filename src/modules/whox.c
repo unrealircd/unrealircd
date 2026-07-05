@@ -9,60 +9,66 @@
 #include "unrealircd.h"
 
 /* Module header */
-ModuleHeader MOD_HEADER
-  = {
-	"whox",
-	"5.0",
-	"command /who",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "whox",
+    "5.0",
+    "command /who",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 
 /* Defines */
-#define FIELD_CHANNEL	0x0001
-#define FIELD_HOP	0x0002
-#define FIELD_FLAGS	0x0004
-#define FIELD_HOST	0x0008
-#define FIELD_IP	0x0010
-#define FIELD_IDLE	0x0020
-#define FIELD_NICK	0x0040
-#define FIELD_INFO	0x0080
-#define FIELD_SERVER	0x0100
-#define FIELD_QUERYTYPE	0x0200 /* cookie for client */
-#define FIELD_USER	0x0400
-#define FIELD_ACCOUNT	0x0800
-#define FIELD_OPLEVEL	0x1000 /* meaningless and stupid, but whatever */
-#define FIELD_REALHOST	0x2000
-#define FIELD_MODES	0x4000
-#define FIELD_REPUTATION	0x8000
+#define FIELD_CHANNEL    0x0001
+#define FIELD_HOP        0x0002
+#define FIELD_FLAGS      0x0004
+#define FIELD_HOST       0x0008
+#define FIELD_IP         0x0010
+#define FIELD_IDLE       0x0020
+#define FIELD_NICK       0x0040
+#define FIELD_INFO       0x0080
+#define FIELD_SERVER     0x0100
+#define FIELD_QUERYTYPE  0x0200 /* cookie for client */
+#define FIELD_USER       0x0400
+#define FIELD_ACCOUNT    0x0800
+#define FIELD_OPLEVEL    0x1000 /* meaningless and stupid, but whatever */
+#define FIELD_REALHOST   0x2000
+#define FIELD_MODES      0x4000
+#define FIELD_REPUTATION 0x8000
 
-#define WMATCH_NICK	0x0001
-#define WMATCH_USER	0x0002
-#define WMATCH_OPER	0x0004
-#define WMATCH_HOST	0x0008
-#define WMATCH_INFO	0x0010
-#define WMATCH_SERVER	0x0020
-#define WMATCH_ACCOUNT	0x0040
-#define WMATCH_IP	0x0080
-#define WMATCH_MODES	0x0100
-#define WMATCH_CONTIME	0x0200
+#define WMATCH_NICK    0x0001
+#define WMATCH_USER    0x0002
+#define WMATCH_OPER    0x0004
+#define WMATCH_HOST    0x0008
+#define WMATCH_INFO    0x0010
+#define WMATCH_SERVER  0x0020
+#define WMATCH_ACCOUNT 0x0040
+#define WMATCH_IP      0x0080
+#define WMATCH_MODES   0x0100
+#define WMATCH_CONTIME 0x0200
 
-#define RPL_WHOSPCRPL	354
+#define RPL_WHOSPCRPL 354
 
 #define WHO_ADD 1
 #define WHO_DEL 0
 
 #define HasField(x, y) ((x)->fields & (y))
-#define IsMatch(x, y) ((x)->matchsel & (y))
+#define IsMatch(x, y)  ((x)->matchsel & (y))
 
-#define IsMarked(x)           (moddata_client(x, whox_md).l)
-#define SetMark(x)            do { moddata_client(x, whox_md).l = 1; } while(0)
-#define ClearMark(x)          do { moddata_client(x, whox_md).l = 0; } while(0)
+#define IsMarked(x) (moddata_client(x, whox_md).l)
+#define SetMark(x) \
+	do \
+	{ \
+		moddata_client(x, whox_md).l = 1; \
+	} while (0)
+#define ClearMark(x) \
+	do \
+	{ \
+		moddata_client(x, whox_md).l = 0; \
+	} while (0)
 
 /* Structs */
-struct who_format
-{
+struct who_format {
 	int fields;
 	int matchsel;
 	int umodes;
@@ -90,7 +96,7 @@ static int convert_classical_who_request(Client *client, int *parc, const char *
 const char *whox_md_serialize(ModData *m);
 void whox_md_unserialize(const char *str, ModData *m);
 void whox_md_free(ModData *md);
-static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...) __attribute__((format(printf,4,5)));
+static void append_format(char *buf, size_t bufsize, size_t *pos, const char *fmt, ...) __attribute__((format(printf, 4, 5)));
 
 MOD_INIT()
 {
@@ -227,16 +233,36 @@ CMD_FUNC(cmd_whox)
 		{
 			switch (ch)
 			{
-				case 'o': fmt.matchsel |= WMATCH_OPER; continue;
-				case 'n': fmt.matchsel |= WMATCH_NICK; continue;
-				case 'u': fmt.matchsel |= WMATCH_USER; continue;
-				case 'h': fmt.matchsel |= WMATCH_HOST; continue;
-				case 'i': fmt.matchsel |= WMATCH_IP; continue;
-				case 'r': fmt.matchsel |= WMATCH_INFO; continue;
-				case 's': fmt.matchsel |= WMATCH_SERVER; continue;
-				case 'a': fmt.matchsel |= WMATCH_ACCOUNT; continue;
-				case 'm': fmt.matchsel |= WMATCH_MODES; continue;
-				case 't': fmt.matchsel |= WMATCH_CONTIME; continue;
+				case 'o':
+					fmt.matchsel |= WMATCH_OPER;
+					continue;
+				case 'n':
+					fmt.matchsel |= WMATCH_NICK;
+					continue;
+				case 'u':
+					fmt.matchsel |= WMATCH_USER;
+					continue;
+				case 'h':
+					fmt.matchsel |= WMATCH_HOST;
+					continue;
+				case 'i':
+					fmt.matchsel |= WMATCH_IP;
+					continue;
+				case 'r':
+					fmt.matchsel |= WMATCH_INFO;
+					continue;
+				case 's':
+					fmt.matchsel |= WMATCH_SERVER;
+					continue;
+				case 'a':
+					fmt.matchsel |= WMATCH_ACCOUNT;
+					continue;
+				case 'm':
+					fmt.matchsel |= WMATCH_MODES;
+					continue;
+				case 't':
+					fmt.matchsel |= WMATCH_CONTIME;
+					continue;
 				case 'R':
 					if (IsOper(client))
 						fmt.show_realhost = 1;
@@ -256,22 +282,54 @@ CMD_FUNC(cmd_whox)
 		{
 			switch (*s)
 			{
-				case 'c': fmt.fields |= FIELD_CHANNEL; break;
-				case 'd': fmt.fields |= FIELD_HOP; break;
-				case 'f': fmt.fields |= FIELD_FLAGS; break;
-				case 'h': fmt.fields |= FIELD_HOST; break;
-				case 'H': fmt.fields |= FIELD_REALHOST; break;
-				case 'i': fmt.fields |= FIELD_IP; break;
-				case 'l': fmt.fields |= FIELD_IDLE; break;
-				case 'n': fmt.fields |= FIELD_NICK; break;
-				case 'r': fmt.fields |= FIELD_INFO; break;
-				case 's': fmt.fields |= FIELD_SERVER; break;
-				case 't': fmt.fields |= FIELD_QUERYTYPE; break;
-				case 'u': fmt.fields |= FIELD_USER; break;
-				case 'a': fmt.fields |= FIELD_ACCOUNT; break;
-				case 'm': fmt.fields |= FIELD_MODES; break;
-				case 'o': fmt.fields |= FIELD_OPLEVEL; break;
-				case 'R': fmt.fields |= FIELD_REPUTATION; break;
+				case 'c':
+					fmt.fields |= FIELD_CHANNEL;
+					break;
+				case 'd':
+					fmt.fields |= FIELD_HOP;
+					break;
+				case 'f':
+					fmt.fields |= FIELD_FLAGS;
+					break;
+				case 'h':
+					fmt.fields |= FIELD_HOST;
+					break;
+				case 'H':
+					fmt.fields |= FIELD_REALHOST;
+					break;
+				case 'i':
+					fmt.fields |= FIELD_IP;
+					break;
+				case 'l':
+					fmt.fields |= FIELD_IDLE;
+					break;
+				case 'n':
+					fmt.fields |= FIELD_NICK;
+					break;
+				case 'r':
+					fmt.fields |= FIELD_INFO;
+					break;
+				case 's':
+					fmt.fields |= FIELD_SERVER;
+					break;
+				case 't':
+					fmt.fields |= FIELD_QUERYTYPE;
+					break;
+				case 'u':
+					fmt.fields |= FIELD_USER;
+					break;
+				case 'a':
+					fmt.fields |= FIELD_ACCOUNT;
+					break;
+				case 'm':
+					fmt.fields |= FIELD_MODES;
+					break;
+				case 'o':
+					fmt.fields |= FIELD_OPLEVEL;
+					break;
+				case 'R':
+					fmt.fields |= FIELD_REPUTATION;
+					break;
 				case ',':
 					s++;
 					fmt.querytype = s;
@@ -289,8 +347,8 @@ CMD_FUNC(cmd_whox)
 
 	collapse(mask);
 
-	if ((ValidatePermissionsForPath("channel:see:who:secret",client,NULL,NULL,NULL) &&
-	     ValidatePermissionsForPath("channel:see:whois",client,NULL,NULL,NULL)))
+	if ((ValidatePermissionsForPath("channel:see:who:secret", client, NULL, NULL, NULL) &&
+	     ValidatePermissionsForPath("channel:see:whois", client, NULL, NULL, NULL)))
 	{
 		operspy = 1;
 	}
@@ -300,7 +358,7 @@ CMD_FUNC(cmd_whox)
 		char *s = mask;
 		int *umodes;
 		int what = WHO_ADD;
-	
+
 		while (*s)
 		{
 			Umode *um;
@@ -384,8 +442,8 @@ CMD_FUNC(cmd_whox)
 		return;
 	}
 
-	if (ValidatePermissionsForPath("channel:see:who:secret",client,NULL,NULL,NULL) ||
-                ValidatePermissionsForPath("channel:see:whois",client,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("channel:see:who:secret", client, NULL, NULL, NULL) ||
+	    ValidatePermissionsForPath("channel:see:whois", client, NULL, NULL, NULL))
 	{
 		operspy = 1;
 	}
@@ -417,12 +475,12 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 
 	/* default */
 	if (fmt->matchsel == 0 && (match_simple(mask, acptr->name) ||
-		match_simple(mask, acptr->user->username) ||
-		match_simple(mask, GetHost(acptr)) ||
-		(IsOper(client) &&
-		(match_simple(mask, acptr->user->realhost) ||
-		(acptr->ip &&
-		match_simple(mask, acptr->ip))))))
+	                           match_simple(mask, acptr->user->username) ||
+	                           match_simple(mask, GetHost(acptr)) ||
+	                           (IsOper(client) &&
+	                            (match_simple(mask, acptr->user->realhost) ||
+	                             (acptr->ip &&
+	                              match_simple(mask, acptr->ip))))))
 	{
 		return 1;
 	}
@@ -441,8 +499,8 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 
 	/* match hostname */
 	if (IsMatch(fmt, WMATCH_HOST) && (match_simple(mask, GetHost(acptr)) ||
-		(IsOper(client) && (match_simple(mask, acptr->user->realhost) ||
-		(acptr->ip && match_simple(mask, acptr->ip))))))
+	                                  (IsOper(client) && (match_simple(mask, acptr->user->realhost) ||
+	                                                      (acptr->ip && match_simple(mask, acptr->ip))))))
 	{
 		return 1;
 	}
@@ -453,7 +511,7 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 
 	/* match ip address */
 	if (IsMatch(fmt, WMATCH_IP) && IsOper(client) && acptr->ip &&
-		match_user(mask, acptr, MATCH_CHECK_IP))
+	    match_user(mask, acptr, MATCH_CHECK_IP))
 		return 1;
 
 	/* match account */
@@ -507,7 +565,7 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
  */
 
 static void who_common_channel(Client *client, Channel *channel,
-	char *mask, int *maxmatches, struct who_format *fmt)
+                               char *mask, int *maxmatches, struct who_format *fmt)
 {
 	Membership *us;
 	Member *cm;
@@ -572,7 +630,7 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 
 	/* Initialize the markers to zero */
 	list_for_each_entry(acptr, &client_list, client_node)
-		ClearMark(acptr);
+	    ClearMark(acptr);
 
 	/* First, if not operspy, then list all matching clients on common channels */
 	if (!operspy)
@@ -601,11 +659,11 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 		if (maxmatches > 0)
 		{
 			if (do_match(client, acptr, mask, fmt))
- 			{
+			{
 				do_who(client, acptr, NULL, fmt);
 				--maxmatches;
- 			}
- 		}
+			}
+		}
 	}
 
 	if (maxmatches <= 0)
@@ -626,7 +684,7 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
  */
 
 static void do_who_on_channel(Client *client, Channel *channel,
-	int member, int operspy, struct who_format *fmt)
+                              int member, int operspy, struct who_format *fmt)
 {
 	Membership *us = find_membership_link(client->user->channel, channel);
 	Member *cm;
@@ -716,9 +774,9 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 	Hook *h;
 
 	if (acptr->user->away)
- 		status[i++] = 'G';
- 	else
- 		status[i++] = 'H';
+		status[i++] = 'G';
+	else
+		status[i++] = 'H';
 
 	if (IsRegNick(acptr))
 		status[i++] = 'r';
@@ -751,8 +809,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 				char c = mode_to_prefix(*lp->member_modes);
 				if (c)
 					status[i++] = c;
-			}
-			else
+			} else
 			{
 				/* NAMES reply with all rights included (multi-prefix / NAMESX) */
 				strcpy(&status[i], modes_to_prefix(lp->member_modes));
@@ -762,7 +819,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 	}
 
 	status[i] = '\0';
- 
+
 	if (fmt->fields == 0)
 	{
 		char *host;
@@ -773,10 +830,10 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		else
 			host = GetHost(acptr);
 		sendnumeric(client, RPL_WHOREPLY,
-			channel ? channel->name : "*",
-			acptr->user->username, host,
-			hide ? "*" : acptr->user->server,
-			acptr->name, status, hide ? 0 : acptr->hopcount, acptr->info);
+		            channel ? channel->name : "*",
+		            acptr->user->username, host,
+		            hide ? "*" : acptr->user->server,
+		            acptr->name, status, hide ? 0 : acptr->hopcount, acptr->info);
 	} else
 	{
 		str[0] = '\0';
@@ -818,7 +875,8 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 				if (*umodes == '+')
 					umodes++;
 				append_format(str, sizeof str, &pos, " %s", umodes);
-			} else {
+			} else
+			{
 				append_format(str, sizeof str, &pos, " %s", "*");
 			}
 		}
@@ -827,7 +885,7 @@ static void do_who(Client *client, Client *acptr, Channel *channel, struct who_f
 		if (HasField(fmt, FIELD_IDLE))
 		{
 			append_format(str, sizeof str, &pos, " %d",
-				(int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->idle_since) : 0));
+			              (int)((MyUser(acptr) && !hide_idle_time(client, acptr)) ? (TStime() - acptr->local->idle_since) : 0));
 		}
 		if (HasField(fmt, FIELD_ACCOUNT))
 			append_format(str, sizeof str, &pos, " %s", IsLoggedIn(acptr) ? acptr->user->account : "0");
@@ -887,7 +945,8 @@ static int convert_classical_who_request(Client *client, int *parc, const char *
 			 * 'WHO +c #something' (which includes 'm')
 			 * could mean either WHO or WHOX style
 			 */
-		} else {
+		} else
+		{
 			/* If we get here then it's an classical
 			 * UnrealIRCd-style WHO request which has
 			 * the order: WHO <options> <mask>
@@ -900,7 +959,8 @@ static int convert_classical_who_request(Client *client, int *parc, const char *
 				const char *swap = parv[1];
 				parv[1] = parv[2];
 				parv[2] = swap;
-			} else {
+			} else
+			{
 				/* A request like 'WHO +I' or 'WHO +R' */
 				parv[2] = parv[1];
 				parv[1] = "*";
@@ -973,10 +1033,10 @@ static int convert_classical_who_request(Client *client, int *parc, const char *
 			}
 
 			if ((*parv[2] == '+') || (*parv[2] == '-'))
-				parv[2] = parv[2]+1; /* strip '+'/'-' prefix, which does not exist in WHOX */
+				parv[2] = parv[2] + 1; /* strip '+'/'-' prefix, which does not exist in WHOX */
 
 			sendnotice(client, "WHO request '%s' changed to match new WHOX syntax: 'WHO %s %s'",
-				oldrequest, parv[1], parv[2]);
+			           oldrequest, parv[1], parv[2]);
 			*orig_mask = parv[1];
 		}
 	}

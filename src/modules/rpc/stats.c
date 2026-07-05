@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/stats",
-	"1.0.2",
-	"stats.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/stats",
+    "1.0.2",
+    "stats.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -93,7 +92,8 @@ void rpc_stats_user(json_t *main, int detail)
 						DelListItem(e, countries);
 						e->priority--;
 						AddListItemPrio(e, countries, e->priority);
-					} else {
+					} else
+					{
 						add_nvplist(&countries, -1, geo->country_code, NULL);
 					}
 				}

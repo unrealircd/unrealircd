@@ -24,29 +24,29 @@
 
 /* internal definitions */
 
-#define MSG_EXTJWT	"EXTJWT"
-#define MYCONF "extjwt"
+#define MSG_EXTJWT "EXTJWT"
+#define MYCONF     "extjwt"
 
 #undef NEW_ISUPPORT /* enable this for https://github.com/ircv3/ircv3-specifications/pull/341#issuecomment-617038799 */
 
 #define EXTJWT_METHOD_NOT_SET 0
-#define EXTJWT_METHOD_HS256 1
-#define EXTJWT_METHOD_HS384 2
-#define EXTJWT_METHOD_HS512 3
-#define EXTJWT_METHOD_RS256 4
-#define EXTJWT_METHOD_RS384 5
-#define EXTJWT_METHOD_RS512 6
-#define EXTJWT_METHOD_ES256 7
-#define EXTJWT_METHOD_ES384 8
-#define EXTJWT_METHOD_ES512 9
-#define EXTJWT_METHOD_NONE 10
+#define EXTJWT_METHOD_HS256   1
+#define EXTJWT_METHOD_HS384   2
+#define EXTJWT_METHOD_HS512   3
+#define EXTJWT_METHOD_RS256   4
+#define EXTJWT_METHOD_RS384   5
+#define EXTJWT_METHOD_RS512   6
+#define EXTJWT_METHOD_ES256   7
+#define EXTJWT_METHOD_ES384   8
+#define EXTJWT_METHOD_ES512   9
+#define EXTJWT_METHOD_NONE    10
 
-#define NEEDS_KEY(x) (x>=EXTJWT_METHOD_RS256 && x<=EXTJWT_METHOD_ES512)
+#define NEEDS_KEY(x) (x >= EXTJWT_METHOD_RS256 && x <= EXTJWT_METHOD_ES512)
 
-#define URL_LENGTH 4096
-#define MODES_SIZE 41 /* about 10 mode chars */
-#define TS_LENGTH 19 /* 64-bit integer */
-#define MAX_TOKEN_CHUNK (510-sizeof(extjwt_message_pattern)-HOSTLEN-CHANNELLEN)
+#define URL_LENGTH      4096
+#define MODES_SIZE      41 /* about 10 mode chars */
+#define TS_LENGTH       19 /* 64-bit integer */
+#define MAX_TOKEN_CHUNK (510 - sizeof(extjwt_message_pattern) - HOSTLEN - CHANNELLEN)
 
 /* OpenSSL 1.0.x compatibility */
 
@@ -58,8 +58,8 @@ void ECDSA_SIG_get0(const ECDSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps)
 	if (ps != NULL)
 		*ps = sig->s;
 }
-#define EVP_MD_CTX_new   EVP_MD_CTX_create
-#define EVP_MD_CTX_free  EVP_MD_CTX_destroy
+ #define EVP_MD_CTX_new  EVP_MD_CTX_create
+ #define EVP_MD_CTX_free EVP_MD_CTX_destroy
 #endif
 
 /* struct definitions */
@@ -83,9 +83,9 @@ CMD_FUNC(cmd_extjwt);
 char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config *config);
 char *extjwt_generate_token(const char *payload, struct extjwt_config *config);
 void b64url(char *b64);
-unsigned char *extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int* resultlen);
-unsigned char *extjwt_sha_pem_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int* resultlen);
-unsigned char *extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int* resultlen);
+unsigned char *extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int *resultlen);
+unsigned char *extjwt_sha_pem_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int *resultlen);
+unsigned char *extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int *resultlen);
 char *extjwt_gen_header(int method);
 int extjwt_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int extjwt_configrun(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -107,11 +107,11 @@ const char extjwt_message_pattern[] = ":%s EXTJWT %s %s %s%s";
 /* global structs */
 
 ModuleHeader MOD_HEADER = {
-	"extjwt",
-	"6.1",
-	"Command /EXTJWT (web service authorization)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "extjwt",
+    "6.1",
+    "Command /EXTJWT (web service authorization)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 struct {
@@ -174,7 +174,7 @@ char *extjwt_isupport_param(void)
 	strlcpy(buf, "V:1", sizeof(buf));
 	while (services)
 	{
-		strlcat(buf, count?",":"&S:", sizeof(buf));
+		strlcat(buf, count ? "," : "&S:", sizeof(buf));
 		strlcat(buf, services->name, sizeof(buf));
 		count++;
 		services = services->next;
@@ -183,7 +183,8 @@ char *extjwt_isupport_param(void)
 }
 #endif
 
-void extjwt_free_services(struct jwt_service **services){
+void extjwt_free_services(struct jwt_service **services)
+{
 	struct jwt_service *ss, *next;
 	ss = *services;
 	while (ss)
@@ -217,7 +218,8 @@ int extjwt_valid_integer_string(const char *in, int min, int max)
 	int i, val;
 	if (BadPtr(in))
 		return 0;
-	for (i=0; in[i]; i++){
+	for (i = 0; in[i]; i++)
+	{
 		if (!isdigit(in[i]))
 			return 0;
 	}
@@ -245,13 +247,18 @@ char *extjwt_test_key(const char *file, int method)
 	BIO *bufkey = NULL;
 	EVP_PKEY *pkey = NULL;
 	int type, pkey_type;
-	do {
+	do
+	{
 		switch (method)
 		{
-			case EXTJWT_METHOD_RS256: case EXTJWT_METHOD_RS384: case EXTJWT_METHOD_RS512:
+			case EXTJWT_METHOD_RS256:
+			case EXTJWT_METHOD_RS384:
+			case EXTJWT_METHOD_RS512:
 				type = EVP_PKEY_RSA;
 				break;
-			case EXTJWT_METHOD_ES256: case EXTJWT_METHOD_ES384: case EXTJWT_METHOD_ES512:
+			case EXTJWT_METHOD_ES256:
+			case EXTJWT_METHOD_ES384:
+			case EXTJWT_METHOD_ES512:
 				type = EVP_PKEY_EC;
 				break;
 			default:
@@ -569,7 +576,8 @@ int extjwt_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				errors++;
 				continue;
 			}
-			if (!have_scert && NEEDS_KEY(have_smethod)) {
+			if (!have_scert && NEEDS_KEY(have_smethod))
+			{
 				config_error("%s:%i: invalid %s::service entry (must contain %s::service::key option)", cep->file->filename, cep->line_number, MYCONF, MYCONF);
 				errors++;
 				continue;
@@ -629,7 +637,7 @@ int extjwt_configposttest(int *errs)
 		if (NEEDS_KEY(cfg_state.have_method) && cfg_state.have_key && cfg_state.key_filename)
 		{
 			char *keyerr;
-			
+
 			keyerr = extjwt_test_key(cfg_state.key_filename, cfg_state.have_method);
 			if (keyerr)
 			{
@@ -769,7 +777,7 @@ CMD_FUNC(cmd_extjwt)
 	struct jwt_service *service = NULL;
 	struct extjwt_config *config;
 	int last = 0;
-	char message[MAX_TOKEN_CHUNK+1];
+	char message[MAX_TOKEN_CHUNK + 1];
 	if (parc < 2 || BadPtr(parv[1]))
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, MSG_EXTJWT);
@@ -796,9 +804,11 @@ CMD_FUNC(cmd_extjwt)
 			return;
 		}
 	}
-	if (service){
+	if (service)
+	{
 		config = service->cfg; /* service config */
-	} else {
+	} else
+	{
 		config = &cfg; /* default config */
 	}
 	if (!(payload = extjwt_make_payload(client, channel, config)) || !(full_token = extjwt_generate_token(payload, config)))
@@ -816,10 +826,10 @@ CMD_FUNC(cmd_extjwt)
 			strcpy(message, token);
 		} else
 		{ /* send a chunk and shift buffer */
-			strlcpy(message, token, MAX_TOKEN_CHUNK+1);
+			strlcpy(message, token, MAX_TOKEN_CHUNK + 1);
 			token += MAX_TOKEN_CHUNK;
 		}
-		sendto_one(client, NULL, extjwt_message_pattern, me.name, parv[1], "*", last?"":"* ", message);
+		sendto_one(client, NULL, extjwt_message_pattern, me.name, parv[1], "*", last ? "" : "* ", message);
 	} while (!last);
 	safe_free(full_token);
 }
@@ -831,7 +841,7 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	json_t *modes = NULL;
 	json_t *umodes = NULL;
 	char *modestring;
-	char singlemode[2] = { '\0' };
+	char singlemode[2] = {'\0'};
 	char *result;
 
 	if (!IsUser(client))
@@ -839,12 +849,12 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 
 	payload = json_object();
 	umodes = json_array();
-	
-	json_object_set_new(payload, "exp", json_integer(TStime()+config->exp_delay));
+
+	json_object_set_new(payload, "exp", json_integer(TStime() + config->exp_delay));
 	json_object_set_new(payload, "iss", json_string_unreal(me.name));
 	json_object_set_new(payload, "sub", json_string_unreal(client->name));
-	json_object_set_new(payload, "account", json_string_unreal(IsLoggedIn(client)?client->user->account:""));
-	
+	json_object_set_new(payload, "account", json_string_unreal(IsLoggedIn(client) ? client->user->account : ""));
+
 	if (config->vfy) /* also add the URL */
 		json_object_set_new(payload, "vfy", json_string_unreal(config->vfy));
 
@@ -867,7 +877,7 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 			}
 		}
 		json_object_set_new(payload, "channel", json_string_unreal(channel->name));
-		json_object_set_new(payload, "joined", json_integer(lp?1:0));
+		json_object_set_new(payload, "joined", json_integer(lp ? 1 : 0));
 		json_object_set_new(payload, "cmodes", modes);
 	}
 	result = json_dumps(payload, JSON_COMPACT);
@@ -892,19 +902,26 @@ void b64url(char *b64)
 	}
 }
 
-unsigned char *extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int* resultlen)
+unsigned char *extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int *resultlen)
 {
-	switch(method)
+	switch (method)
 	{
-		case EXTJWT_METHOD_HS256: case EXTJWT_METHOD_HS384: case EXTJWT_METHOD_HS512:
+		case EXTJWT_METHOD_HS256:
+		case EXTJWT_METHOD_HS384:
+		case EXTJWT_METHOD_HS512:
 			return extjwt_hmac_extjwt_hash(method, key, keylen, data, datalen, resultlen);
-		case EXTJWT_METHOD_RS256: case EXTJWT_METHOD_RS384: case EXTJWT_METHOD_RS512: case EXTJWT_METHOD_ES256: case EXTJWT_METHOD_ES384: case EXTJWT_METHOD_ES512:
+		case EXTJWT_METHOD_RS256:
+		case EXTJWT_METHOD_RS384:
+		case EXTJWT_METHOD_RS512:
+		case EXTJWT_METHOD_ES256:
+		case EXTJWT_METHOD_ES384:
+		case EXTJWT_METHOD_ES512:
 			return extjwt_sha_pem_extjwt_hash(method, key, keylen, data, datalen, resultlen);
 	}
 	return NULL;
 }
 
-unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int* resultlen)
+unsigned char *extjwt_sha_pem_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int *resultlen)
 {
 	EVP_MD_CTX *mdctx = NULL;
 	ECDSA_SIG *ec_sig = NULL;
@@ -1005,13 +1022,13 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 			ECDSA_SIG_get0(ec_sig, &ec_sig_r, &ec_sig_s);
 			r_len = BN_num_bytes(ec_sig_r);
 			s_len = BN_num_bytes(ec_sig_s);
-			bn_len = (degree+7)/8;
+			bn_len = (degree + 7) / 8;
 			if (r_len > bn_len || s_len > bn_len)
 				break;
-			buf_len = bn_len*2;
+			buf_len = bn_len * 2;
 			raw_buf = safe_alloc(buf_len);
-			BN_bn2bin(ec_sig_r, raw_buf+bn_len-r_len);
-			BN_bn2bin(ec_sig_s, raw_buf+buf_len-s_len);
+			BN_bn2bin(ec_sig_r, raw_buf + bn_len - r_len);
+			BN_bn2bin(ec_sig_s, raw_buf + buf_len - s_len);
 			output = safe_alloc(buf_len);
 			*resultlen = buf_len;
 			memcpy(output, raw_buf, buf_len);
@@ -1032,9 +1049,9 @@ unsigned char* extjwt_sha_pem_extjwt_hash(int method, const void *key, int keyle
 	return retval;
 }
 
-unsigned char* extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int* resultlen)
+unsigned char *extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, const unsigned char *data, int datalen, unsigned int *resultlen)
 {
-	const EVP_MD* typ;
+	const EVP_MD *typ;
 	char *hmac = safe_alloc(EVP_MAX_MD_SIZE);
 	switch (method)
 	{
@@ -1052,7 +1069,8 @@ unsigned char* extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, 
 	if (HMAC(typ, key, keylen, data, datalen, hmac, resultlen))
 	{ /* openssl call */
 		return hmac;
-	} else {
+	} else
+	{
 		safe_free(hmac);
 		return NULL;
 	}
@@ -1110,9 +1128,9 @@ char *extjwt_gen_header(int method)
 char *extjwt_generate_token(const char *payload, struct extjwt_config *config)
 {
 	char *header = extjwt_gen_header(config->method);
-	size_t b64header_size = strlen(header)*4/3 + 8; // base64 has 4/3 overhead
-	size_t b64payload_size = strlen(payload)*4/3 + 8;
-	size_t b64sig_size = 4096*4/3 + 8;
+	size_t b64header_size = strlen(header) * 4 / 3 + 8; // base64 has 4/3 overhead
+	size_t b64payload_size = strlen(payload) * 4 / 3 + 8;
+	size_t b64sig_size = 4096 * 4 / 3 + 8;
 	size_t b64data_size = b64header_size + b64payload_size + b64sig_size + 4;
 	char *b64header = safe_alloc(b64header_size);
 	char *b64payload = safe_alloc(b64payload_size);

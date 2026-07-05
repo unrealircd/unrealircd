@@ -55,10 +55,10 @@ const char *(*tkl_type_string)(TKL *tk);
 const char *(*tkl_type_config_string)(TKL *tk);
 char *(*tkl_uhost)(TKL *tkl, char *buf, size_t buflen, int options);
 TKL *(*tkl_add_serverban)(int type, const char *usermask, const char *hostmask, SecurityGroup *match,
-                              const char *reason, const char *setby,
-                              time_t expire_at, time_t set_at, int soft, int flags);
+                          const char *reason, const char *setby,
+                          time_t expire_at, time_t set_at, int soft, int flags);
 TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
-                            time_t expire_at, time_t set_at, int flags);
+                        time_t expire_at, time_t set_at, int flags);
 TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanAction *action,
                            Match *match, const char *rule, SecurityGroup *except,
                            const char *setby,
@@ -77,7 +77,7 @@ void (*tkl_hit)(Client *client, TKL *tkl);
 void (*remove_config_tkls)(int flag);
 void (*config_tkl_hits_restore)(void);
 int (*find_shun)(Client *client);
-int(*find_spamfilter_user)(Client *client, int flags);
+int (*find_spamfilter_user)(Client *client, int flags);
 TKL *(*find_qline)(Client *client, const char *nick, int *ishold);
 TKL *(*find_tkline_match_zap)(Client *client);
 void (*tkl_stats)(Client *client, int type, const char *para, int *cnt);
@@ -225,7 +225,7 @@ Efunction *EfunctionAddMain(Module *module, EfunctionType eftype, int (*func)(),
 		module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
-	
+
 	p = safe_alloc(sizeof(Efunction));
 	if (func)
 		p->func.intfunc = func;
@@ -302,7 +302,7 @@ static int num_efunctions(EfunctionType eftype)
 	for (e = Efunctions[eftype]; e; e = e->next)
 		if (!e->willberemoved)
 			cnt++;
-			
+
 	return cnt;
 }
 
@@ -310,9 +310,9 @@ static int num_efunctions(EfunctionType eftype)
 /** Ensure that all efunctions are present. */
 int efunctions_check(void)
 {
-	int i, n, errors=0;
+	int i, n, errors = 0;
 
-	for (i=0; i < MAXEFUNCTIONS; i++)
+	for (i = 0; i < MAXEFUNCTIONS; i++)
 	{
 		if (efunction_table[i].name)
 		{
@@ -328,8 +328,7 @@ int efunctions_check(void)
 				             "load all required modules! (hint: see modules.default.conf)",
 				             efunction_table[i].name);
 				errors++;
-			} else
-			if (n > 1)
+			} else if (n > 1)
 			{
 				config_error("ERROR: efunction '%s' was found %d times, perhaps you "
 				             "loaded a module multiple times??",
@@ -362,7 +361,7 @@ void efunctions_switchover(void)
 	 * as 'willberemoved' if needed.
 	 */
 
-	for (i=0; i < MAXEFUNCTIONS; i++)
+	for (i = 0; i < MAXEFUNCTIONS; i++)
 	{
 		int found = 0;
 		for (e = Efunctions[i]; e; e = e->next)

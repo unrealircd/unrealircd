@@ -19,17 +19,16 @@
 
 #include "unrealircd.h"
 
-#define IsNokick(client)    (client->umodes & UMODE_NOKICK)
+#define IsNokick(client) (client->umodes & UMODE_NOKICK)
 
 /* Module header */
-ModuleHeader MOD_HEADER
-  = {
-	"usermodes/nokick",
-	"4.2",
-	"User Mode +q",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "usermodes/nokick",
+    "4.2",
+    "User Mode +q",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Global variables */
 long UMODE_NOKICK = 0L;
@@ -47,9 +46,9 @@ MOD_TEST()
 MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'q', UMODE_GLOBAL, 1, umode_allow_unkickable_oper, &UMODE_NOKICK);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_KICK, 0, nokick_can_kick);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -68,7 +67,7 @@ int umode_allow_unkickable_oper(Client *client, int what)
 {
 	if (MyUser(client))
 	{
-		if (IsOper(client) && ValidatePermissionsForPath("self:unkickablemode",client,NULL,NULL,NULL))
+		if (IsOper(client) && ValidatePermissionsForPath("self:unkickablemode", client, NULL, NULL, NULL))
 			return 1;
 		return 0;
 	}
@@ -79,20 +78,20 @@ int umode_allow_unkickable_oper(Client *client, int what)
 int nokick_can_kick(Client *client, Client *target, Channel *channel, const char *comment,
                     const char *client_member_modes, const char *target_member_modes, const char **reject_reason)
 {
-	static char errmsg[NICKLEN+256];
+	static char errmsg[NICKLEN + 256];
 
-	if (IsNokick(target) && !IsULine(client) && MyUser(client) && !ValidatePermissionsForPath("channel:override:kick:nokick",client,target,channel,NULL))
+	if (IsNokick(target) && !IsULine(client) && MyUser(client) && !ValidatePermissionsForPath("channel:override:kick:nokick", client, target, channel, NULL))
 	{
 		ircsnprintf(errmsg, sizeof(errmsg), ":%s %d %s %s :%s",
 		            me.name, ERR_CANNOTDOCOMMAND, client->name, "KICK",
-				   "user is unkickable (user mode +q)");
+		            "user is unkickable (user mode +q)");
 
 		*reject_reason = errmsg;
 
 		sendnotice(target,
-			"*** umode q: %s tried to kick you from channel %s (%s)",
-			client->name, channel->name, comment);
-		
+		           "*** umode q: %s tried to kick you from channel %s (%s)",
+		           client->name, channel->name, comment);
+
 		return EX_ALWAYS_DENY;
 	}
 

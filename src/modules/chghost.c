@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-#define MSG_CHGHOST 	"CHGHOST"
+#define MSG_CHGHOST "CHGHOST"
 
 CMD_FUNC(cmd_chghost);
 void _userhost_save_current(Client *client);
@@ -30,14 +30,13 @@ void _userhost_changed(Client *client);
 
 long CAP_CHGHOST = 0L;
 
-ModuleHeader MOD_HEADER
-  = {
-	"chghost",	/* Name of module */
-	"5.0", /* Version */
-	"/chghost", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chghost", /* Name of module */
+    "5.0", /* Version */
+    "/chghost", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_TEST()
 {
@@ -51,7 +50,7 @@ MOD_INIT()
 {
 	ClientCapabilityInfo c;
 
-	CommandAdd(modinfo->handle, MSG_CHGHOST, cmd_chghost, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_CHGHOST, cmd_chghost, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	memset(&c, 0, sizeof(c));
@@ -64,18 +63,17 @@ MOD_INIT()
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
-	
 }
 
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 
-static char remember_nick[NICKLEN+1];
-static char remember_user[USERLEN+1];
-static char remember_host[HOSTLEN+1];
+static char remember_nick[NICKLEN + 1];
+static char remember_user[USERLEN + 1];
+static char remember_host[HOSTLEN + 1];
 
 /** Save current nick/user/host. Used later by userhost_changed(). */
 void _userhost_save_current(Client *client)
@@ -143,17 +141,17 @@ void _userhost_changed(Client *client)
 
 			/* Prepare buffers for PART, JOIN, MODE */
 			ircsnprintf(partbuf, sizeof(partbuf), ":%s!%s@%s PART %s :%s",
-						remember_nick, remember_user, remember_host,
-						channel->name,
-						"Changing host");
+			            remember_nick, remember_user, remember_host,
+			            channel->name,
+			            "Changing host");
 
 			ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
-						client->name, client->user->username, GetHost(client), channel->name);
+			            client->name, client->user->username, GetHost(client), channel->name);
 
 			ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-				client->name, client->user->username, GetHost(client), channel->name,
-				IsLoggedIn(client) ? client->user->account : "*",
-				client->info);
+			            client->name, client->user->username, GetHost(client), channel->name,
+			            IsLoggedIn(client) ? client->user->account : "*",
+			            client->info);
 
 			modes = get_chmodes_for_user(client, channels->member_modes);
 			if (!BadPtr(modes))
@@ -218,7 +216,7 @@ void _userhost_changed(Client *client)
 			}
 		}
 	}
-	
+
 	RunHook(HOOKTYPE_USERHOST_CHANGE, client, remember_user, remember_host);
 
 	if (MyUser(client))
@@ -258,7 +256,7 @@ CMD_FUNC(cmd_chghost)
 {
 	Client *target;
 
-	if (MyUser(client) && !ValidatePermissionsForPath("client:set:host",client,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("client:set:host", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -322,7 +320,7 @@ CMD_FUNC(cmd_chghost)
 			if (MyUser(client))
 			{
 				sendnumeric(client, ERR_DISABLED, "CHGHOST",
-					"This command is disabled on this server");
+				            "This command is disabled on this server");
 				return;
 			}
 			break;
@@ -346,17 +344,18 @@ CMD_FUNC(cmd_chghost)
 		if (issuer)
 		{
 			unreal_log(ULOG_INFO, "chgcmds", "CHGHOST_COMMAND", client,
-				   "CHGHOST: $issuer changed the virtual hostname of $target.details to be $new_hostname",
-				   log_data_string("issuer", issuer),
-				   log_data_string("change_type", "hostname"),
-				   log_data_client("target", target),
-				   log_data_string("new_hostname", parv[2]));
-		} else {
+			           "CHGHOST: $issuer changed the virtual hostname of $target.details to be $new_hostname",
+			           log_data_string("issuer", issuer),
+			           log_data_string("change_type", "hostname"),
+			           log_data_client("target", target),
+			           log_data_string("new_hostname", parv[2]));
+		} else
+		{
 			unreal_log(ULOG_INFO, "chgcmds", "CHGHOST_COMMAND", client,
-				   "CHGHOST: $client changed the virtual hostname of $target.details to be $new_hostname",
-				   log_data_string("change_type", "hostname"),
-				   log_data_client("target", target),
-				   log_data_string("new_hostname", parv[2]));
+			           "CHGHOST: $client changed the virtual hostname of $target.details to be $new_hostname",
+			           log_data_string("change_type", "hostname"),
+			           log_data_client("target", target),
+			           log_data_string("new_hostname", parv[2]));
 		}
 	}
 

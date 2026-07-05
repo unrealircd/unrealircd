@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"standard-replies",
-	"6.0",
-	"standard-replies CAP", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "standard-replies",
+    "6.0",
+    "standard-replies CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_STANDARD_REPLIES = 0L;

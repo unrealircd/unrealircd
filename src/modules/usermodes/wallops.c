@@ -24,23 +24,22 @@
 
 CMD_FUNC(cmd_wallops);
 
-#define MSG_WALLOPS 	"WALLOPS"	
+#define MSG_WALLOPS "WALLOPS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"usermodes/wallops",
-	"5.0",
-	"command /wallops", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "usermodes/wallops",
+    "5.0",
+    "command /wallops",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 long UMODE_WALLOP = 0L;        /* send wallops to them */
 
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_WALLOPS, cmd_wallops, 1, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_WALLOPS, cmd_wallops, 1, CMD_USER | CMD_SERVER);
 	UmodeAdd(modinfo->handle, 'w', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_WALLOP);
 	return MOD_SUCCESS;
 }
@@ -55,7 +54,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-#define SendWallops(x)          (!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
+#define SendWallops(x) (!IsMe(x) && IsUser(x) && ((x)->umodes & UMODE_WALLOP))
 
 /** Send a message to all wallops, except one.
  * @param one		Skip sending the message to this client/direction
@@ -73,10 +72,10 @@ void sendto_wallops(Client *one, Client *from, FORMAT_STRING(const char *pattern
 	{
 		if (!SendWallops(acptr))
 			continue;
-		if (acptr->direction->local->serial == current_serial)	/* sent message along it already ? */
+		if (acptr->direction->local->serial == current_serial) /* sent message along it already ? */
 			continue;
 		if (acptr->direction == one)
-			continue;	/* ...was the one I should skip */
+			continue; /* ...was the one I should skip */
 		acptr->direction->local->serial = current_serial;
 
 		va_start(vl, pattern);
@@ -99,7 +98,7 @@ CMD_FUNC(cmd_wallops)
 		return;
 	}
 
-	if (!ValidatePermissionsForPath("chat:wallops",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("chat:wallops", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;

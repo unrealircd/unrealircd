@@ -20,14 +20,13 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/topiclimit",
-	"6.0",
-	"Channel Mode +t",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/topiclimit",
+    "6.0",
+    "Channel Mode +t",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Global variables */
 Cmode_t EXTCMODE_TOPIC_LIMIT;
@@ -36,7 +35,7 @@ Cmode_t EXTCMODE_TOPIC_LIMIT;
 int topiclimit_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg);
 
 /* Macros */
-#define IsTopicLimit(channel)    (channel->mode.mode & EXTCMODE_TOPIC_LIMIT)
+#define IsTopicLimit(channel) (channel->mode.mode & EXTCMODE_TOPIC_LIMIT)
 
 MOD_INIT()
 {
@@ -66,7 +65,7 @@ MOD_UNLOAD()
 
 int topiclimit_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg)
 {
-	static char errmsg_buf[NICKLEN+256];
+	static char errmsg_buf[NICKLEN + 256];
 
 	if (has_channel_mode(channel, 't') &&
 	    !check_channel_access(client, channel, "hoaq") &&

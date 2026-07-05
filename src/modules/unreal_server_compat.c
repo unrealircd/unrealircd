@@ -27,14 +27,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"unreal_server_compat",
-	"1.0.0",
-	"Provides compatibility with non-U6 servers",
-	"Bram Matthys (Syzop)",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "unreal_server_compat",
+    "1.0.0",
+    "Provides compatibility with non-U6 servers",
+    "Bram Matthys (Syzop)",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int usc_packet(Client *from, Client *to, Client *intended_to, char **msg, int *length);
@@ -170,7 +169,7 @@ int usc_reparse_mode(char **msg, char *p, int *length)
 		if ((pm.modechar == 'b') || (pm.modechar == 'e') || (pm.modechar == 'I'))
 		{
 			const char *result = clean_ban_mask(pm.param, pm.what, mode_letter_to_extbantype(pm.modechar), &me, NULL, 1); // some context lost
-			strlcat(obuf, result?result:"<invalid>", sizeof(obuf));
+			strlcat(obuf, result ? result : "<invalid>", sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
 		} else
 		{
@@ -186,8 +185,8 @@ int usc_reparse_mode(char **msg, char *p, int *length)
 		return 0;
 
 	/* Strip final whitespace */
-	if (obuf[strlen(obuf)-1] == ' ')
-		obuf[strlen(obuf)-1] = '\0';
+	if (obuf[strlen(obuf) - 1] == ' ')
+		obuf[strlen(obuf) - 1] = '\0';
 
 	if (pm.parabuf && *pm.parabuf)
 	{
@@ -196,7 +195,7 @@ int usc_reparse_mode(char **msg, char *p, int *length)
 	}
 
 	/* Add CRLF */
-	if (obuf[strlen(obuf)-1] != '\n')
+	if (obuf[strlen(obuf) - 1] != '\n')
 		strlcat(obuf, "\r\n", sizeof(obuf));
 
 	/* Line modified, use it! */
@@ -245,12 +244,12 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 			if (!strchr("&\"'", next[1]))
 				goto fallback_usc_reparse_sjoin;
 			*next++ = '\0';
-			result = clean_ban_mask(next+1, MODE_ADD, listmode_sjoin_prefix_to_extbantype(*next), &me, NULL, 1); // some context lost
+			result = clean_ban_mask(next + 1, MODE_ADD, listmode_sjoin_prefix_to_extbantype(*next), &me, NULL, 1); // some context lost
 			if (!result)
 			{
 				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
 				           "[unreal_server_compat] usc_reparse_sjoin(): ban '$ban' could not be converted",
-				           log_data_string("ban", s+1));
+				           log_data_string("ban", s + 1));
 				continue;
 			}
 			strlcat(obuf, s, sizeof(obuf)); /* "<123,nick" */
@@ -258,34 +257,34 @@ int usc_reparse_sjoin(char **msg, char *p, int *length)
 			strlncat(obuf, next, sizeof(obuf), 1); /* & or \" or \\ */
 			strlcat(obuf, result, sizeof(obuf)); /* the converted result */
 			strlcat(obuf, " ", sizeof(obuf));
-		} else
-		if (strchr("&\"'", *s))
+		} else if (strchr("&\"'", *s))
 		{
 			/* +b / +e / +I */
-			const char *result = clean_ban_mask(s+1, MODE_ADD, listmode_sjoin_prefix_to_extbantype(*s), &me, NULL, 1); // some context lost
+			const char *result = clean_ban_mask(s + 1, MODE_ADD, listmode_sjoin_prefix_to_extbantype(*s), &me, NULL, 1); // some context lost
 			if (!result)
 			{
 				unreal_log(ULOG_WARNING, "unreal_server_compat", "USC_REPARSE_SJOIN_FAILURE", NULL,
 				           "[unreal_server_compat] usc_reparse_sjoin(): ban '$ban' could not be converted",
-				           log_data_string("ban", s+1));
+				           log_data_string("ban", s + 1));
 				continue;
 			}
 			strlncat(obuf, s, sizeof(obuf), 1);
 			strlcat(obuf, result, sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
-		} else {
-fallback_usc_reparse_sjoin:
+		} else
+		{
+		fallback_usc_reparse_sjoin:
 			strlcat(obuf, s, sizeof(obuf));
 			strlcat(obuf, " ", sizeof(obuf));
 		}
 	}
 
 	/* Strip final whitespace */
-	if (obuf[strlen(obuf)-1] == ' ')
-		obuf[strlen(obuf)-1] = '\0';
+	if (obuf[strlen(obuf) - 1] == ' ')
+		obuf[strlen(obuf) - 1] = '\0';
 
 	/* Add CRLF */
-	if (obuf[strlen(obuf)-1] != '\n')
+	if (obuf[strlen(obuf) - 1] != '\n')
 		strlcat(obuf, "\r\n", sizeof(obuf));
 
 	/* And use it! */
@@ -298,13 +297,15 @@ fallback_usc_reparse_sjoin:
 /** Skip space(s), if any. */
 void skip_spaces(char **p)
 {
-	for (; **p == ' '; *p = *p + 1);
+	for (; **p == ' '; *p = *p + 1)
+		;
 }
 
 /** Keep reading until we hit space. */
 void read_until_space(char **p)
 {
-	for (; **p && (**p != ' '); *p = *p + 1);
+	for (; **p && (**p != ' '); *p = *p + 1)
+		;
 }
 
 int eat_parameter(char **p)

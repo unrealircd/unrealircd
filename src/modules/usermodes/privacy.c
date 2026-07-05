@@ -19,30 +19,29 @@
 
 #include "unrealircd.h"
 
-#define IsPrivacy(client)    (client->umodes & UMODE_PRIVACY)
+#define IsPrivacy(client) (client->umodes & UMODE_PRIVACY)
 
 /* Module header */
-ModuleHeader MOD_HEADER
-  = {
-	"usermodes/privacy",
-	"4.2",
-	"User Mode +p",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "usermodes/privacy",
+    "4.2",
+    "User Mode +p",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Global variables */
 long UMODE_PRIVACY = 0L;
 
 /* Forward declarations */
 int privacy_see_channel_in_whois(Client *client, Client *target, Channel *channel);
-                    
+
 MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'p', UMODE_GLOBAL, 0, umode_allow_all, &UMODE_PRIVACY);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_SEE_CHANNEL_IN_WHOIS, 0, privacy_see_channel_in_whois);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -64,6 +63,6 @@ int privacy_see_channel_in_whois(Client *client, Client *target, Channel *channe
 {
 	if (IsPrivacy(target) && !IsMember(client, channel))
 		return EX_DENY;
-	
+
 	return EX_ALLOW;
 }

@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_rules);
 
-#define MSG_RULES 	"RULES"	
+#define MSG_RULES "RULES"
 
-ModuleHeader MOD_HEADER
-  = {
-	"rules",
-	"5.0",
-	"command /rules", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "rules",
+    "5.0",
+    "command /rules",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -74,7 +73,6 @@ CMD_FUNC(cmd_rules)
 	{
 		sendnumeric(client, ERR_NORULES);
 		return;
-
 	}
 
 	sendnumeric(client, RPL_RULESSTART, me.name);
@@ -82,7 +80,7 @@ CMD_FUNC(cmd_rules)
 	while (temp)
 	{
 		sendnumeric(client, RPL_RULES,
-		    temp->line);
+		            temp->line);
 		temp = temp->next;
 	}
 	sendnumeric(client, RPL_ENDOFRULES);

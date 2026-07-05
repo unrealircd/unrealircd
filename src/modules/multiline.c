@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"multiline",
-	"1.0",
-	"IRCv3 draft/multiline",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "multiline",
+    "1.0",
+    "IRCv3 draft/multiline",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* ===================== CONFIGURATION ===================== */
 
@@ -42,18 +41,18 @@ struct {
 /** State for a locally-initiated multiline batch (one per local client) */
 typedef struct MultilineBatch MultilineBatch;
 struct MultilineBatch {
-	char batch_id[MAXBATCHREFLEN+1];	/**< Client-chosen batch reference tag */
-	char *target;			/**< Target channel or nick */
-	SendType sendtype;		/**< SEND_TYPE_PRIVMSG or SEND_TYPE_NOTICE */
-	int sendtype_set;		/**< Has sendtype been determined (from first line)? */
-	char member_modes[2];		/**< Member mode filter from STATUSMSG prefix (e.g. "o"), or empty string */
-	MessageTag *client_mtags;	/**< Tags from the opening BATCH command */
+	char batch_id[MAXBATCHREFLEN + 1]; /**< Client-chosen batch reference tag */
+	char *target;   /**< Target channel or nick */
+	SendType sendtype;  /**< SEND_TYPE_PRIVMSG or SEND_TYPE_NOTICE */
+	int sendtype_set;  /**< Has sendtype been determined (from first line)? */
+	char member_modes[2];  /**< Member mode filter from STATUSMSG prefix (e.g. "o"), or empty string */
+	MessageTag *client_mtags; /**< Tags from the opening BATCH command */
 	int line_count;
-	int received_bytes;		/**< Total user-sent content bytes (for max-bytes policy) */
+	int received_bytes;  /**< Total user-sent content bytes (for max-bytes policy) */
 	time_t start_time;
-	int failed;			/**< Batch marked as failed — consume remaining lines, send error at BATCH close */
-	char *fail_message;		/**< FAIL response to send at BATCH close (if failed) */
-	char label[256];		/**< Saved label for echo-message + labeled-response interaction */
+	int failed;   /**< Batch marked as failed — consume remaining lines, send error at BATCH close */
+	char *fail_message;  /**< FAIL response to send at BATCH close (if failed) */
+	char label[256];  /**< Saved label for echo-message + labeled-response interaction */
 	/* Buffered lines */
 	MLine *lines;
 	MLine *lines_tail;
@@ -63,15 +62,15 @@ struct MultilineBatch {
 typedef struct S2SMultilineBatch S2SMultilineBatch;
 struct S2SMultilineBatch {
 	S2SMultilineBatch *prev, *next;
-	Client *sender;			/**< Remote user who initiated */
-	Client *direction;		/**< Server link it came from */
-	char batch_id[BATCHLEN+1];
+	Client *sender;   /**< Remote user who initiated */
+	Client *direction;  /**< Server link it came from */
+	char batch_id[BATCHLEN + 1];
 	char *target;
-	int is_channel;			/**< 1 if target is a channel, 0 if user */
+	int is_channel;   /**< 1 if target is a channel, 0 if user */
 	SendType sendtype;
 	int sendtype_set;
-	char member_modes[2];		/**< Member mode filter from STATUSMSG prefix */
-	MessageTag *first_mtags;	/**< Message tags from the opening BATCH (for relay) */
+	char member_modes[2];  /**< Member mode filter from STATUSMSG prefix */
+	MessageTag *first_mtags; /**< Message tags from the opening BATCH (for relay) */
 	int line_count;
 	int received_bytes;
 	time_t start_time;
@@ -230,8 +229,8 @@ const char *multiline_capability_parameter(Client *client)
 	FloodSettings *f = get_floodsettings_for_user(client, FLD_MULTILINE);
 
 	snprintf(buf, sizeof(buf), "max-bytes=%d,max-lines=%d",
-		(int)f->period[FLD_MULTILINE],
-		(int)f->limit[FLD_MULTILINE]);
+	         (int)f->period[FLD_MULTILINE],
+	         (int)f->limit[FLD_MULTILINE]);
 	return buf;
 }
 
@@ -251,10 +250,11 @@ int multiline_known_user_cache_change(Client *client)
 	{
 		const char *args = multiline_capability_parameter(client);
 		sendto_one(client, NULL, ":%s CAP %s NEW :draft/multiline=%s",
-			me.name, (*client->name ? client->name : "*"), args);
-	} else {
+		           me.name, (*client->name ? client->name : "*"), args);
+	} else
+	{
 		sendto_one(client, NULL, ":%s CAP %s NEW :draft/multiline",
-			me.name, (*client->name ? client->name : "*"));
+		           me.name, (*client->name ? client->name : "*"));
 	}
 
 	return HOOK_CONTINUE;
@@ -399,16 +399,16 @@ static void multiline_run_chanmsg_hooks(Client *sender, Channel *channel,
 	for (line = lines; line; line = line->next)
 	{
 		RunHook(HOOKTYPE_CHANMSG, sender, channel, sendflags,
-			member_modes, targetstr,
-			(line == lines) ? mtags : NULL,
-			line->text, sendtype);
+		        member_modes, targetstr,
+		        (line == lines) ? mtags : NULL,
+		        line->text, sendtype);
 	}
 	history_inhibit = 0;
 	echo_message_inhibit = 0;
 
 	/* Fire multiline hook for atomic history storage etc. */
 	RunHook(HOOKTYPE_CHANMSG_MULTILINE, sender, channel, sendflags,
-		member_modes, targetstr, mtags, lines, sendtype);
+	        member_modes, targetstr, mtags, lines, sendtype);
 }
 
 /** Run HOOKTYPE_USERMSG per-line for a multiline batch.
@@ -424,8 +424,8 @@ static void multiline_run_usermsg_hooks(Client *sender, Client *target,
 	for (line = lines; line; line = line->next)
 	{
 		RunHook(HOOKTYPE_USERMSG, sender, target,
-			(line == lines) ? mtags : NULL,
-			line->text, sendtype);
+		        (line == lines) ? mtags : NULL,
+		        line->text, sendtype);
 	}
 	history_inhibit = 0;
 	echo_message_inhibit = 0;
@@ -743,7 +743,8 @@ CMD_OVERRIDE_FUNC(multiline_override_batch)
 				/* Store member mode */
 				batch->member_modes[0] = prefix_to_mode(prefix);
 				batch->member_modes[1] = '\0';
-			} else {
+			} else
+			{
 				safe_strdup(batch->target, target);
 				batch->member_modes[0] = '\0';
 			}
@@ -935,7 +936,8 @@ CMD_OVERRIDE_FUNC(multiline_override_msg)
 	{
 		batch->sendtype = sendtype;
 		batch->sendtype_set = 1;
-	} else if (batch->sendtype != sendtype) {
+	} else if (batch->sendtype != sendtype)
+	{
 		char buf[512];
 		snprintf(buf, sizeof(buf), "FAIL BATCH MULTILINE_INVALID :Cannot mix PRIVMSG and NOTICE in a multiline batch");
 		multiline_fail_batch(client, batch, buf);
@@ -1053,11 +1055,13 @@ static void multiline_deliver(Client *client, MultilineBatch *batch)
 	if (channel)
 	{
 		multiline_deliver_channel(client, batch, channel);
-	} else if (strchr(batch->target, '#')) {
+	} else if (strchr(batch->target, '#'))
+	{
 		/* Target had a '#' but channel not found (parted/destroyed during batch) */
 		sendnumeric(client, ERR_NOSUCHNICK, batch->target);
 		return;
-	} else {
+	} else
+	{
 		target = hash_find_nickatserver(batch->target, NULL);
 		if (!target)
 		{
@@ -1175,7 +1179,7 @@ static void multiline_deliver_channel(Client *client, MultilineBatch *batch, Cha
 
 	/* Deliver to local channel members */
 	multiline_deliver_to_local_members(channel, client, batch, mtags,
-	                                  batch->target, cmd, filter_modes, client, sendflags);
+	                                   batch->target, cmd, filter_modes, client, sendflags);
 
 	/* Echo-message for sender */
 	multiline_echo_to_sender(client, batch, mtags, batch->target, cmd);
@@ -1184,8 +1188,8 @@ static void multiline_deliver_channel(Client *client, MultilineBatch *batch, Cha
 	multiline_send_s2s_channel(client, batch, channel, mtags, cmd, client->direction, batch->target);
 
 	multiline_run_chanmsg_hooks(client, channel, sendflags,
-	                           batch->member_modes[0] ? batch->member_modes : NULL,
-	                           batch->target, mtags, batch->lines, batch->sendtype);
+	                            batch->member_modes[0] ? batch->member_modes : NULL,
+	                            batch->target, mtags, batch->lines, batch->sendtype);
 
 	free_message_tags(mtags);
 }
@@ -1260,10 +1264,12 @@ static void multiline_deliver_user(Client *client, MultilineBatch *batch, Client
 		if (HasMultiline(target))
 		{
 			multiline_send_batch_to_client(target, client, batch, mtags, target->name, cmd);
-		} else {
+		} else
+		{
 			multiline_send_fallback_to_client(target, client, batch, mtags, target->name, cmd);
 		}
-	} else {
+	} else
+	{
 		/* Target is remote - relay as S2S batch */
 		multiline_send_s2s_user(client, batch, target, mtags, cmd);
 	}
@@ -1301,7 +1307,8 @@ static void multiline_echo_to_sender(Client *client, MultilineBatch *batch,
 	if (HasMultiline(client))
 	{
 		multiline_send_batch_to_client(client, client, batch, echo_mtags, targetstr, cmd);
-	} else {
+	} else
+	{
 		multiline_send_fallback_to_client(client, client, batch, echo_mtags, targetstr, cmd);
 	}
 
@@ -1319,7 +1326,7 @@ static void multiline_echo_to_sender(Client *client, MultilineBatch *batch,
 static void multiline_send_batch_to_client(Client *to, Client *from, MultilineBatch *batch,
                                            MessageTag *base_mtags, const char *targetstr, const char *cmd)
 {
-	char server_batch_id[BATCHLEN+1];
+	char server_batch_id[BATCHLEN + 1];
 	MLine *l;
 	MessageTag *m;
 
@@ -1396,7 +1403,8 @@ static void multiline_send_fallback_to_client(Client *to, Client *from, Multilin
 			                  ":%s %s %s :%s",
 			                  from->name, cmd, targetstr, l->text);
 			first = 0;
-		} else {
+		} else
+		{
 			/* Subsequent lines get all tags except msgid */
 			sendto_prefix_one(to, from, rest_mtags,
 			                  ":%s %s %s :%s",
@@ -1428,7 +1436,7 @@ static void multiline_deliver_to_local_members(Channel *channel, Client *from,
 	LineCache *cache_batch_close; // cache for "BATCH -id"
 	LineCache **cache_lines = NULL; // one cache per multiline content line
 	LineCache **cache_fb = NULL; // one cache per non-blank fallback line
-	char server_batch_id[BATCHLEN+1]; // shared across all multiline recipients
+	char server_batch_id[BATCHLEN + 1]; // shared across all multiline recipients
 	int i;
 	int fallback_count = 0; // number of non-blank fallback lines
 	int first; // tracks first non-blank line in fallback pass
@@ -1581,7 +1589,8 @@ static void multiline_send_s2s_to_direction(Client *direction, Client *from,
 			/* First line carries all base_mtags (msgid, time, etc.) */
 			line_mtags = duplicate_mtags(base_mtags);
 			first = 0;
-		} else {
+		} else
+		{
 			/* Subsequent lines carry base_mtags minus msgid */
 			line_mtags = duplicate_mtags_for_subsequent_lines(base_mtags);
 		}
@@ -1613,7 +1622,7 @@ static void multiline_send_s2s_to_direction(Client *direction, Client *from,
 static void multiline_send_s2s_channel(Client *from, MultilineBatch *batch, Channel *channel,
                                        MessageTag *base_mtags, const char *cmd, Client *skip_direction, const char *targetstr)
 {
-	char ref[BATCHLEN+1];
+	char ref[BATCHLEN + 1];
 	Member *lp;
 	Client *acptr;
 	char expanded_modes[64];
@@ -1674,7 +1683,7 @@ static void multiline_send_s2s_channel(Client *from, MultilineBatch *batch, Chan
 static void multiline_send_s2s_user(Client *from, MultilineBatch *batch, Client *target,
                                     MessageTag *base_mtags, const char *cmd)
 {
-	char ref[BATCHLEN+1];
+	char ref[BATCHLEN + 1];
 
 	generate_batch_id(ref);
 	multiline_send_s2s_to_direction(target->direction, from, batch, base_mtags, cmd, target->id, ref);
@@ -1803,7 +1812,8 @@ static void multiline_handle_s2s_msg(Client *client, MessageTag *recv_mtags,
 	{
 		s2s->sendtype = sendtype;
 		s2s->sendtype_set = 1;
-	} else if (s2s->sendtype != sendtype) {
+	} else if (s2s->sendtype != sendtype)
+	{
 		/* Mismatch - discard batch */
 		multiline_free_s2s_batch(s2s);
 		return;
@@ -1902,16 +1912,17 @@ static void multiline_deliver_s2s_batch(S2SMultilineBatch *s2s)
 
 			/* Deliver to local members */
 			multiline_deliver_to_local_members(channel, s2s->sender, batch, mtags,
-			                                  s2s->target, cmd, filter_modes, NULL, 0);
+			                                   s2s->target, cmd, filter_modes, NULL, 0);
 
 			/* Relay to further server directions (excluding where it came from) */
 			multiline_send_s2s_channel(s2s->sender, batch, channel, mtags, cmd, s2s->direction, s2s->target);
 
 			multiline_run_chanmsg_hooks(s2s->sender, channel, SEND_ALL,
-			                           s2s->member_modes[0] ? s2s->member_modes : NULL,
-			                           s2s->target, mtags, s2s->lines, s2s->sendtype);
+			                            s2s->member_modes[0] ? s2s->member_modes : NULL,
+			                            s2s->target, mtags, s2s->lines, s2s->sendtype);
 		}
-	} else {
+	} else
+	{
 		/* User-to-user */
 		Client *target = find_client(s2s->target, NULL);
 
@@ -1925,7 +1936,8 @@ static void multiline_deliver_s2s_batch(S2SMultilineBatch *s2s)
 					multiline_send_batch_to_client(target, s2s->sender, batch, mtags, target->name, cmd);
 				else
 					multiline_send_fallback_to_client(target, s2s->sender, batch, mtags, target->name, cmd);
-			} else {
+			} else
+			{
 				/* Relay further */
 				multiline_send_s2s_user(s2s->sender, batch, target, mtags, cmd);
 			}

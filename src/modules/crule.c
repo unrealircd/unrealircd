@@ -21,13 +21,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"crule",
-	"1.0.1",
-	"Crule support for and deny link::rule and spamfilter::rule",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "crule",
+    "1.0.1",
+    "Crule support for and deny link::rule and spamfilter::rule",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Originally by Tony Vencill (Tonto on IRC) <vencill@bga.com>
@@ -88,7 +87,7 @@ enum crule_token {
 	CR_WORD        /**< Something that looks like a hostmask (alphanumerics, "*?.-"). */
 };
 
-#define IsComparisson(x)	((x == CR_EQUAL) || (x == CR_LESS_THAN) || (x == CR_MORE_THAN))
+#define IsComparisson(x) ((x == CR_EQUAL) || (x == CR_LESS_THAN) || (x == CR_MORE_THAN))
 
 /** Parser error codes. */
 typedef enum crule_errcode crule_errcode;
@@ -110,7 +109,7 @@ enum crule_errcode {
 
 int _crule_test(const char *rule);
 CRuleNode *_crule_parse(const char *rule);
-void _crule_free(CRuleNode**);
+void _crule_free(CRuleNode **);
 int _crule_eval(crule_context *context, CRuleNode *rule);
 const char *_crule_errstring(int errcode);
 
@@ -190,17 +189,17 @@ static int crule_parsearglist(CRuleNode *, crule_token *, const char **);
 
 /* error messages */
 char *crule_errstr[] = {
-	"Unknown error",	/* NOERR? - for completeness */
-	"Unexpected token",	/* UNEXPCTTOK */
-	"Unknown token",	/* UNKNWTOK */
-	"And expr expected",	/* EXPCTAND */
-	"Or expr expected",	/* EXPCTOR */
-	"Primary expected",	/* EXPCTPRIM */
-	"( expected",		/* EXPCTOPEN */
-	") expected",		/* EXPCTCLOSE */
-	"Unknown function",	/* UNKNWFUNC */
-	"Argument mismatch",	/* ARGMISMAT */
-	"Missing value in comparisson",	/* CR_EXPCTVALUE */
+    "Unknown error", /* NOERR? - for completeness */
+    "Unexpected token", /* UNEXPCTTOK */
+    "Unknown token", /* UNKNWTOK */
+    "And expr expected", /* EXPCTAND */
+    "Or expr expected", /* EXPCTOR */
+    "Primary expected", /* EXPCTPRIM */
+    "( expected",  /* EXPCTOPEN */
+    ") expected",  /* EXPCTCLOSE */
+    "Unknown function", /* UNKNWFUNC */
+    "Argument mismatch", /* ARGMISMAT */
+    "Missing value in comparisson", /* CR_EXPCTVALUE */
 };
 
 /* function table - null terminated */
@@ -212,67 +211,67 @@ struct crule_funclistent {
 
 /* This table MUST remain sorted alphabetically (due to binary search) */
 struct crule_funclistent crule_funclist[] = {
-	{"bytes_received", 0, crule_bytes_received},
-	{"bytes_sent", 0, crule_bytes_sent},
-	{"cap_set", 1, crule_cap_set},
-	{"cap_version", 0, crule_cap_version},
-	{"channel_count", 0, crule_channel_count},
-	{"channel_member_count", 0, crule_channel_member_count},
-	{"connected", 1, crule_connected},
-	{"connections_from_ip", 0, crule_connections_from_ip},
-	{"destination", 1, crule_destination},
-	{"digit_percentage", 0, crule_digit_percentage},
-	{"directcon", 1, crule_directcon},
-	{"directop", 0, crule_directop},
-	{"has_channel_mode", 1, crule_has_channel_mode},
-	{"has_swhois", 0, crule_has_swhois},
-	{"has_user_mode", 1, crule_has_user_mode},
-	{"idle_time", 0, crule_idle_time},
-	{"in_channel", 1, crule_in_channel},
-	{"in_security_group", 1, crule_in_security_group},
-	{"inchannel", 1, crule_in_channel}, // old name, keep it around for now..
-	{"is_away", 0, crule_away},
-	{"is_identified", 0, crule_is_identified},
-	{"is_local", 0, crule_is_local},
-	{"is_oper", 0, crule_is_oper},
-	{"is_tls", 0, crule_tls},
-	{"is_webirc", 0, crule_is_webirc},
-	{"is_websocket", 0, crule_is_websocket},
-	{"match_account", 1, crule_match_account},
-	{"match_asn", 1, crule_match_asn},
-	{"match_asname", 1, crule_match_asname},
-	{"match_away", 1, crule_match_away},
-	{"match_certfp", 1, crule_match_certfp},
-	{"match_class", 1, crule_match_class},
-	{"match_country", 1, crule_match_country},
-	{"match_ip", 1, crule_match_ip},
-	{"match_mask", 1, crule_match_mask},
-	{"match_operclass", 1, crule_match_operclass},
-	{"match_operlogin", 1, crule_match_operlogin},
-	{"match_realhost", 1, crule_match_realhost},
-	{"match_realname", 1, crule_match_realname},
-	{"match_server", 1, crule_match_server},
-	{"match_sni", 1, crule_match_sni},
-	{"match_tls_cipher", 1, crule_match_tls_cipher},
-	{"match_vhost", 1, crule_match_vhost},
-	{"max_repeat_count", 0, crule_max_repeat_count},
-	{"messages_received", 0, crule_messages_received},
-	{"messages_sent", 0, crule_messages_sent},
-	{"mixed_utf8_score", 0, crule_mixed_utf8_score},
-	{"non_ascii_percentage", 0, crule_non_ascii_percentage},
-	{"online_time", 0, crule_online_time},
-	{"reputation", 0, crule_reputation},
-	{"server_flood_count", 1, crule_server_flood_count},
-	{"server_port", 0, crule_server_port},
-	{"tag", 1, crule_tag},
-	{"text_byte_count", 0, crule_text_byte_count},
-	{"text_character_count", 0, crule_text_character_count},
-	{"total_channel_flood_count", 1, crule_total_channel_flood_count},
-	{"unicode_block_count", 0, crule_unicode_block_count},
-	{"unicode_count", 1, crule_unicode_count},
-	{"uppercase_percentage", 0, crule_uppercase_percentage},
-	{"via", 2, crule_via},
-	{"word_count", 0, crule_word_count},
+    {"bytes_received", 0, crule_bytes_received},
+    {"bytes_sent", 0, crule_bytes_sent},
+    {"cap_set", 1, crule_cap_set},
+    {"cap_version", 0, crule_cap_version},
+    {"channel_count", 0, crule_channel_count},
+    {"channel_member_count", 0, crule_channel_member_count},
+    {"connected", 1, crule_connected},
+    {"connections_from_ip", 0, crule_connections_from_ip},
+    {"destination", 1, crule_destination},
+    {"digit_percentage", 0, crule_digit_percentage},
+    {"directcon", 1, crule_directcon},
+    {"directop", 0, crule_directop},
+    {"has_channel_mode", 1, crule_has_channel_mode},
+    {"has_swhois", 0, crule_has_swhois},
+    {"has_user_mode", 1, crule_has_user_mode},
+    {"idle_time", 0, crule_idle_time},
+    {"in_channel", 1, crule_in_channel},
+    {"in_security_group", 1, crule_in_security_group},
+    {"inchannel", 1, crule_in_channel}, // old name, keep it around for now..
+    {"is_away", 0, crule_away},
+    {"is_identified", 0, crule_is_identified},
+    {"is_local", 0, crule_is_local},
+    {"is_oper", 0, crule_is_oper},
+    {"is_tls", 0, crule_tls},
+    {"is_webirc", 0, crule_is_webirc},
+    {"is_websocket", 0, crule_is_websocket},
+    {"match_account", 1, crule_match_account},
+    {"match_asn", 1, crule_match_asn},
+    {"match_asname", 1, crule_match_asname},
+    {"match_away", 1, crule_match_away},
+    {"match_certfp", 1, crule_match_certfp},
+    {"match_class", 1, crule_match_class},
+    {"match_country", 1, crule_match_country},
+    {"match_ip", 1, crule_match_ip},
+    {"match_mask", 1, crule_match_mask},
+    {"match_operclass", 1, crule_match_operclass},
+    {"match_operlogin", 1, crule_match_operlogin},
+    {"match_realhost", 1, crule_match_realhost},
+    {"match_realname", 1, crule_match_realname},
+    {"match_server", 1, crule_match_server},
+    {"match_sni", 1, crule_match_sni},
+    {"match_tls_cipher", 1, crule_match_tls_cipher},
+    {"match_vhost", 1, crule_match_vhost},
+    {"max_repeat_count", 0, crule_max_repeat_count},
+    {"messages_received", 0, crule_messages_received},
+    {"messages_sent", 0, crule_messages_sent},
+    {"mixed_utf8_score", 0, crule_mixed_utf8_score},
+    {"non_ascii_percentage", 0, crule_non_ascii_percentage},
+    {"online_time", 0, crule_online_time},
+    {"reputation", 0, crule_reputation},
+    {"server_flood_count", 1, crule_server_flood_count},
+    {"server_port", 0, crule_server_port},
+    {"tag", 1, crule_tag},
+    {"text_byte_count", 0, crule_text_byte_count},
+    {"text_character_count", 0, crule_text_character_count},
+    {"total_channel_flood_count", 1, crule_total_channel_flood_count},
+    {"unicode_block_count", 0, crule_unicode_block_count},
+    {"unicode_count", 1, crule_unicode_count},
+    {"uppercase_percentage", 0, crule_uppercase_percentage},
+    {"via", 2, crule_via},
+    {"word_count", 0, crule_word_count},
 };
 
 MOD_TEST()
@@ -558,7 +557,7 @@ static int crule_cap_set(crule_context *context, int numargs, void *crulearg[])
 {
 	const char *capname = (char *)crulearg[0];
 
-	if (!context || !context->client || !context->client->local )
+	if (!context || !context->client || !context->client->local)
 		return 0;
 
 	if (HasCapability(context->client, capname))
@@ -586,7 +585,7 @@ static int crule_match_mask(crule_context *context, int numargs, void *crulearg[
 	if (!context || !context->client)
 		return 0;
 
-	if (match_user(arg, context->client, MATCH_CHECK_REAL_HOST|MATCH_CHECK_IP|MATCH_CHECK_EXTENDED))
+	if (match_user(arg, context->client, MATCH_CHECK_REAL_HOST | MATCH_CHECK_IP | MATCH_CHECK_EXTENDED))
 		return 1;
 
 	return 0;
@@ -599,7 +598,7 @@ static int crule_match_ip(crule_context *context, int numargs, void *crulearg[])
 	if (!context || !context->client)
 		return 0;
 
-	if (match_user(arg, context->client, MATCH_CHECK_IP|MATCH_MASK_IS_HOST))
+	if (match_user(arg, context->client, MATCH_CHECK_IP | MATCH_MASK_IS_HOST))
 		return 1;
 
 	return 0;
@@ -1011,7 +1010,8 @@ static int crule_max_repeat_count(crule_context *context, int numargs, void *cru
 		if (*p == *(p - 1))
 		{
 			cur++;
-		} else {
+		} else
+		{
 			if (cur > max)
 				max = cur;
 			cur = 1;
@@ -1026,7 +1026,7 @@ static int crule_max_repeat_count(crule_context *context, int numargs, void *cru
  * @param[in] rule Rule to evalute.
  * @return Non-zero if the rule allows the connection, zero otherwise.
  */
-int _crule_eval(crule_context *context, CRuleNode* rule)
+int _crule_eval(crule_context *context, CRuleNode *rule)
 {
 	int ret = rule->funcptr(context, rule->numargs, rule->arg);
 	switch (rule->func_test_type)
@@ -1146,7 +1146,7 @@ static int crule_gettoken(crule_token *next_tokp, const char **ruleptr)
 				break;
 			default:
 				if ((isalnum(*(--(*ruleptr)))) || (**ruleptr == '*') ||
-						(**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') || (**ruleptr == '_') || (**ruleptr == '\''))
+				    (**ruleptr == '?') || (**ruleptr == '.') || (**ruleptr == '-') || (**ruleptr == '_') || (**ruleptr == '\''))
 					*next_tokp = CR_WORD;
 				else
 					return CR_UNKNWTOK;
@@ -1174,11 +1174,7 @@ static void crule_getword(char *word, int *wordlenp, size_t maxlen, const char *
 		quoted = 1;
 	}
 
-	while ((size_t)(word_ptr - word) < maxlen
-	       && (isalnum(**ruleptr)
-	           || **ruleptr == '*' || **ruleptr == '?'
-	           || **ruleptr == '.' || **ruleptr == '-'
-	           || **ruleptr == '_' || (quoted && (**ruleptr != '\''))))
+	while ((size_t)(word_ptr - word) < maxlen && (isalnum(**ruleptr) || **ruleptr == '*' || **ruleptr == '?' || **ruleptr == '.' || **ruleptr == '-' || **ruleptr == '_' || (quoted && (**ruleptr != '\''))))
 	{
 		*word_ptr++ = *(*ruleptr)++;
 	}
@@ -1198,18 +1194,20 @@ CRuleNode *_crule_parse(const char *rule)
 {
 	const char *ruleptr = rule;
 	crule_token next_tok;
-	CRuleNode* ruleroot = 0;
+	CRuleNode *ruleroot = 0;
 	int errcode = CR_NOERR;
 
-	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
-		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok, &ruleptr)) == CR_NOERR) {
-			if (ruleroot != NULL) {
+	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR)
+	{
+		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok, &ruleptr)) == CR_NOERR)
+		{
+			if (ruleroot != NULL)
+			{
 				if (next_tok == CR_END)
 					return ruleroot;
 				else
 					errcode = CR_UNEXPCTTOK;
-			}
-			else
+			} else
 				errcode = CR_EXPCTOR;
 		}
 	}
@@ -1226,22 +1224,25 @@ int _crule_test(const char *rule)
 {
 	const char *ruleptr = rule;
 	crule_token next_tok;
-	CRuleNode* ruleroot = 0;
+	CRuleNode *ruleroot = 0;
 	int errcode = CR_NOERR;
 
-	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR) {
-		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok, &ruleptr)) == CR_NOERR) {
-			if (ruleroot != NULL) {
+	if ((errcode = crule_gettoken(&next_tok, &ruleptr)) == CR_NOERR)
+	{
+		if ((errcode = crule_parseorexpr(&ruleroot, &next_tok, &ruleptr)) == CR_NOERR)
+		{
+			if (ruleroot != NULL)
+			{
 				if (next_tok == CR_END)
 				{
 					/* PASS */
 					crule_free(&ruleroot);
 					return 0;
-				} else {
+				} else
+				{
 					errcode = CR_UNEXPCTTOK;
 				}
-			}
-			else
+			} else
 				errcode = CR_EXPCTOR;
 		}
 	}
@@ -1255,7 +1256,7 @@ const char *_crule_errstring(int errcode)
 	if (errcode == 0)
 		return "No error";
 	else
-		return crule_errstr[errcode-1];
+		return crule_errstr[errcode - 1];
 }
 
 /** Parse an or expression.
@@ -1285,12 +1286,10 @@ static int crule_parseorexpr(CRuleNode **orrootp, crule_token *next_tokp, const 
 			{
 				(*orrootp)->arg[1] = andexpr;
 				orptr->arg[0] = *orrootp;
-			}
-			else
+			} else
 				orptr->arg[0] = andexpr;
 			*orrootp = orptr;
-		}
-		else
+		} else
 		{
 			if (*orrootp != NULL)
 			{
@@ -1298,14 +1297,12 @@ static int crule_parseorexpr(CRuleNode **orrootp, crule_token *next_tokp, const 
 				{
 					(*orrootp)->arg[1] = andexpr;
 					return errcode;
-				}
-				else
+				} else
 				{
-					(*orrootp)->arg[1] = NULL;		/* so free doesn't seg fault */
+					(*orrootp)->arg[1] = NULL;  /* so free doesn't seg fault */
 					return CR_EXPCTAND;
 				}
-			}
-			else
+			} else
 			{
 				*orrootp = andexpr;
 				return errcode;
@@ -1343,12 +1340,10 @@ static int crule_parseandexpr(CRuleNode **androotp, crule_token *next_tokp, cons
 			{
 				(*androotp)->arg[1] = primary;
 				andptr->arg[0] = *androotp;
-			}
-			else
+			} else
 				andptr->arg[0] = primary;
 			*androotp = andptr;
-		}
-		else
+		} else
 		{
 			if (*androotp != NULL)
 			{
@@ -1356,14 +1351,12 @@ static int crule_parseandexpr(CRuleNode **androotp, crule_token *next_tokp, cons
 				{
 					(*androotp)->arg[1] = primary;
 					return errcode;
-				}
-				else
+				} else
 				{
-					(*androotp)->arg[1] = NULL;	 /* so free doesn't seg fault */
+					(*androotp)->arg[1] = NULL;  /* so free doesn't seg fault */
 					return CR_EXPCTPRIM;
 				}
-			}
-			else
+			} else
 			{
 				*androotp = primary;
 				return errcode;
@@ -1414,7 +1407,7 @@ static int crule_parseprimary(CRuleNode **primrootp, crule_token *next_tokp, con
 				(*insertionp)->flags |= CRULE_FLAG_NOT;
 				(*insertionp)->numargs = 1;
 				(*insertionp)->arg[0] = NULL;
-				insertionp = (CRuleNode **) & ((*insertionp)->arg[0]);
+				insertionp = (CRuleNode **)&((*insertionp)->arg[0]);
 				if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
 					break;
 				continue;
@@ -1466,9 +1459,9 @@ static int crule_parsefunction(CRuleNode **funcrootp, crule_token *next_tokp, co
 		if ((errcode = crule_gettoken(next_tokp, ruleptr)) != CR_NOERR)
 			return errcode;
 		*funcrootp = safe_alloc(sizeof(CRuleNode));
-		(*funcrootp)->funcptr = NULL;			 /* for freeing aborted trees */
+		(*funcrootp)->funcptr = NULL;    /* for freeing aborted trees */
 		if ((errcode =
-				crule_parsearglist(*funcrootp, next_tokp, ruleptr)) != CR_NOERR)
+		         crule_parsearglist(*funcrootp, next_tokp, ruleptr)) != CR_NOERR)
 			return errcode;
 		if (*next_tokp != CR_CLOSEPAREN)
 			return CR_EXPCTCLOSE;
@@ -1494,8 +1487,7 @@ static int crule_parsefunction(CRuleNode **funcrootp, crule_token *next_tokp, co
 		}
 		(*funcrootp)->funcptr = func->funcptr;
 		return CR_NOERR;
-	}
-	else
+	} else
 		return CR_EXPCTOPEN;
 }
 
@@ -1530,8 +1522,7 @@ static int crule_parsearglist(CRuleNode *argrootp, crule_token *next_tokp, const
 						strcat(currarg, word);
 						arglen += wordlen + 1;
 					}
-				}
-				else
+				} else
 				{
 					strcpy(currarg, word);
 					arglen = wordlen;
@@ -1576,16 +1567,14 @@ void _crule_free(CRuleNode **elem)
 	{
 		/* type conversions and ()'s are fun! ;)	here have an aspirin.. */
 		if ((*(elem))->arg[0] != NULL)
-			crule_free((CRuleNode**) &((*(elem))->arg[0]));
-	}
-	else if ((*(elem))->flags & CRULE_FLAG_AND_OR)
+			crule_free((CRuleNode **)&((*(elem))->arg[0]));
+	} else if ((*(elem))->flags & CRULE_FLAG_AND_OR)
 	{
 		if ((*(elem))->arg[0] != NULL)
-			crule_free((CRuleNode**) &((*(elem))->arg[0]));
+			crule_free((CRuleNode **)&((*(elem))->arg[0]));
 		if ((*(elem))->arg[1] != NULL)
-			crule_free((CRuleNode**) &((*(elem))->arg[1]));
-	}
-	else
+			crule_free((CRuleNode **)&((*(elem))->arg[1]));
+	} else
 	{
 		numargs = (*(elem))->numargs;
 		for (arg = 0; arg < numargs; arg++)

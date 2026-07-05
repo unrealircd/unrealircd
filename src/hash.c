@@ -42,49 +42,50 @@
 
 #define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
 
-#define U32TO8_LE(p, v)                                                        \
-    (p)[0] = (char)((v));                                                   \
-    (p)[1] = (char)((v) >> 8);                                              \
-    (p)[2] = (char)((v) >> 16);                                             \
-    (p)[3] = (char)((v) >> 24);
+#define U32TO8_LE(p, v) \
+	(p)[0] = (char)((v)); \
+	(p)[1] = (char)((v) >> 8); \
+	(p)[2] = (char)((v) >> 16); \
+	(p)[3] = (char)((v) >> 24);
 
-#define U64TO8_LE(p, v)                                                        \
-    U32TO8_LE((p), (uint32_t)((v)));                                           \
-    U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
+#define U64TO8_LE(p, v) \
+	U32TO8_LE((p), (uint32_t)((v))); \
+	U32TO8_LE((p) + 4, (uint32_t)((v) >> 32));
 
-#define U8TO64_LE(p)                                                           \
-    (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) |                        \
-     ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) |                 \
-     ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) |                 \
-     ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56))
+#define U8TO64_LE(p) \
+	(((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) | \
+	 ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) | \
+	 ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) | \
+	 ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56))
 
-#define U8TO64_LE_NOCASE(p)                                                    \
-    (((uint64_t)(tolower((p)[0]))) |                                           \
-     ((uint64_t)(tolower((p)[1])) << 8) |                                      \
-     ((uint64_t)(tolower((p)[2])) << 16) |                                     \
-     ((uint64_t)(tolower((p)[3])) << 24) |                                     \
-     ((uint64_t)(tolower((p)[4])) << 32) |                                              \
-     ((uint64_t)(tolower((p)[5])) << 40) |                                              \
-     ((uint64_t)(tolower((p)[6])) << 48) |                                              \
-     ((uint64_t)(tolower((p)[7])) << 56))
+#define U8TO64_LE_NOCASE(p) \
+	(((uint64_t)(tolower((p)[0]))) | \
+	 ((uint64_t)(tolower((p)[1])) << 8) | \
+	 ((uint64_t)(tolower((p)[2])) << 16) | \
+	 ((uint64_t)(tolower((p)[3])) << 24) | \
+	 ((uint64_t)(tolower((p)[4])) << 32) | \
+	 ((uint64_t)(tolower((p)[5])) << 40) | \
+	 ((uint64_t)(tolower((p)[6])) << 48) | \
+	 ((uint64_t)(tolower((p)[7])) << 56))
 
-#define SIPROUND                                                               \
-    do {                                                                       \
-        v0 += v1;                                                              \
-        v1 = ROTL(v1, 13);                                                     \
-        v1 ^= v0;                                                              \
-        v0 = ROTL(v0, 32);                                                     \
-        v2 += v3;                                                              \
-        v3 = ROTL(v3, 16);                                                     \
-        v3 ^= v2;                                                              \
-        v0 += v3;                                                              \
-        v3 = ROTL(v3, 21);                                                     \
-        v3 ^= v0;                                                              \
-        v2 += v1;                                                              \
-        v1 = ROTL(v1, 17);                                                     \
-        v1 ^= v2;                                                              \
-        v2 = ROTL(v2, 32);                                                     \
-    } while (0)
+#define SIPROUND \
+	do \
+	{ \
+		v0 += v1; \
+		v1 = ROTL(v1, 13); \
+		v1 ^= v0; \
+		v0 = ROTL(v0, 32); \
+		v2 += v3; \
+		v3 = ROTL(v3, 16); \
+		v3 ^= v2; \
+		v0 += v3; \
+		v3 = ROTL(v3, 21); \
+		v3 ^= v0; \
+		v2 += v1; \
+		v1 = ROTL(v1, 17); \
+		v1 ^= v2; \
+		v2 = ROTL(v2, 32); \
+	} while (0)
 
 /** Generic hash function in UnrealIRCd - raw version.
  * Note that you probably want siphash() or siphash_nocase() instead.
@@ -102,61 +103,72 @@
  */
 uint64_t siphash_raw(const char *in, size_t inlen, const char *k)
 {
-    uint64_t hash;
-    char *out = (char*) &hash;
-    uint64_t v0 = 0x736f6d6570736575ULL;
-    uint64_t v1 = 0x646f72616e646f6dULL;
-    uint64_t v2 = 0x6c7967656e657261ULL;
-    uint64_t v3 = 0x7465646279746573ULL;
-    uint64_t k0 = U8TO64_LE(k);
-    uint64_t k1 = U8TO64_LE(k + 8);
-    uint64_t m;
-    const char *end = in + inlen - (inlen % sizeof(uint64_t));
-    const int left = inlen & 7;
-    uint64_t b = ((uint64_t)inlen) << 56;
-    v3 ^= k1;
-    v2 ^= k0;
-    v1 ^= k1;
-    v0 ^= k0;
+	uint64_t hash;
+	char *out = (char *)&hash;
+	uint64_t v0 = 0x736f6d6570736575ULL;
+	uint64_t v1 = 0x646f72616e646f6dULL;
+	uint64_t v2 = 0x6c7967656e657261ULL;
+	uint64_t v3 = 0x7465646279746573ULL;
+	uint64_t k0 = U8TO64_LE(k);
+	uint64_t k1 = U8TO64_LE(k + 8);
+	uint64_t m;
+	const char *end = in + inlen - (inlen % sizeof(uint64_t));
+	const int left = inlen & 7;
+	uint64_t b = ((uint64_t)inlen) << 56;
+	v3 ^= k1;
+	v2 ^= k0;
+	v1 ^= k1;
+	v0 ^= k0;
 
-    for (; in != end; in += 8) {
-        m = U8TO64_LE(in);
-        v3 ^= m;
+	for (; in != end; in += 8)
+	{
+		m = U8TO64_LE(in);
+		v3 ^= m;
 
-        SIPROUND;
-        SIPROUND;
+		SIPROUND;
+		SIPROUND;
 
-        v0 ^= m;
-    }
+		v0 ^= m;
+	}
 
-    switch (left) {
-    case 7: b |= ((uint64_t)in[6]) << 48; /* fallthrough */
-    case 6: b |= ((uint64_t)in[5]) << 40; /* fallthrough */
-    case 5: b |= ((uint64_t)in[4]) << 32; /* fallthrough */
-    case 4: b |= ((uint64_t)in[3]) << 24; /* fallthrough */
-    case 3: b |= ((uint64_t)in[2]) << 16; /* fallthrough */
-    case 2: b |= ((uint64_t)in[1]) << 8;  /* fallthrough */
-    case 1: b |= ((uint64_t)in[0]); break;
-    case 0: break;
-    }
+	switch (left)
+	{
+		case 7:
+			b |= ((uint64_t)in[6]) << 48; /* fallthrough */
+		case 6:
+			b |= ((uint64_t)in[5]) << 40; /* fallthrough */
+		case 5:
+			b |= ((uint64_t)in[4]) << 32; /* fallthrough */
+		case 4:
+			b |= ((uint64_t)in[3]) << 24; /* fallthrough */
+		case 3:
+			b |= ((uint64_t)in[2]) << 16; /* fallthrough */
+		case 2:
+			b |= ((uint64_t)in[1]) << 8;  /* fallthrough */
+		case 1:
+			b |= ((uint64_t)in[0]);
+			break;
+		case 0:
+			break;
+	}
 
-    v3 ^= b;
+	v3 ^= b;
 
-    SIPROUND;
-    SIPROUND;
+	SIPROUND;
+	SIPROUND;
 
-    v0 ^= b;
-    v2 ^= 0xff;
+	v0 ^= b;
+	v2 ^= 0xff;
 
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
+	SIPROUND;
+	SIPROUND;
+	SIPROUND;
+	SIPROUND;
 
-    b = v0 ^ v1 ^ v2 ^ v3;
-    U64TO8_LE(out, b);
+	b = v0 ^ v1 ^ v2 ^ v3;
+	U64TO8_LE(out, b);
 
-    return hash;
+	return hash;
 }
 
 /** Generic hash function in UnrealIRCd - case insensitive.
@@ -172,62 +184,73 @@ uint64_t siphash_raw(const char *in, size_t inlen, const char *k)
  */
 uint64_t siphash_nocase(const char *in, const char *k)
 {
-    uint64_t hash;
-    char *out = (char*) &hash;
-    size_t inlen = strlen(in);
-    uint64_t v0 = 0x736f6d6570736575ULL;
-    uint64_t v1 = 0x646f72616e646f6dULL;
-    uint64_t v2 = 0x6c7967656e657261ULL;
-    uint64_t v3 = 0x7465646279746573ULL;
-    uint64_t k0 = U8TO64_LE(k);
-    uint64_t k1 = U8TO64_LE(k + 8);
-    uint64_t m;
-    const char *end = in + inlen - (inlen % sizeof(uint64_t));
-    const int left = inlen & 7;
-    uint64_t b = ((uint64_t)inlen) << 56;
-    v3 ^= k1;
-    v2 ^= k0;
-    v1 ^= k1;
-    v0 ^= k0;
+	uint64_t hash;
+	char *out = (char *)&hash;
+	size_t inlen = strlen(in);
+	uint64_t v0 = 0x736f6d6570736575ULL;
+	uint64_t v1 = 0x646f72616e646f6dULL;
+	uint64_t v2 = 0x6c7967656e657261ULL;
+	uint64_t v3 = 0x7465646279746573ULL;
+	uint64_t k0 = U8TO64_LE(k);
+	uint64_t k1 = U8TO64_LE(k + 8);
+	uint64_t m;
+	const char *end = in + inlen - (inlen % sizeof(uint64_t));
+	const int left = inlen & 7;
+	uint64_t b = ((uint64_t)inlen) << 56;
+	v3 ^= k1;
+	v2 ^= k0;
+	v1 ^= k1;
+	v0 ^= k0;
 
-    for (; in != end; in += 8) {
-        m = U8TO64_LE_NOCASE(in);
-        v3 ^= m;
+	for (; in != end; in += 8)
+	{
+		m = U8TO64_LE_NOCASE(in);
+		v3 ^= m;
 
-        SIPROUND;
-        SIPROUND;
+		SIPROUND;
+		SIPROUND;
 
-        v0 ^= m;
-    }
+		v0 ^= m;
+	}
 
-    switch (left) {
-    case 7: b |= ((uint64_t)tolower(in[6])) << 48; /* fallthrough */
-    case 6: b |= ((uint64_t)tolower(in[5])) << 40; /* fallthrough */
-    case 5: b |= ((uint64_t)tolower(in[4])) << 32; /* fallthrough */
-    case 4: b |= ((uint64_t)tolower(in[3])) << 24; /* fallthrough */
-    case 3: b |= ((uint64_t)tolower(in[2])) << 16; /* fallthrough */
-    case 2: b |= ((uint64_t)tolower(in[1])) << 8;  /* fallthrough */
-    case 1: b |= ((uint64_t)tolower(in[0])); break;
-    case 0: break;
-    }
+	switch (left)
+	{
+		case 7:
+			b |= ((uint64_t)tolower(in[6])) << 48; /* fallthrough */
+		case 6:
+			b |= ((uint64_t)tolower(in[5])) << 40; /* fallthrough */
+		case 5:
+			b |= ((uint64_t)tolower(in[4])) << 32; /* fallthrough */
+		case 4:
+			b |= ((uint64_t)tolower(in[3])) << 24; /* fallthrough */
+		case 3:
+			b |= ((uint64_t)tolower(in[2])) << 16; /* fallthrough */
+		case 2:
+			b |= ((uint64_t)tolower(in[1])) << 8;  /* fallthrough */
+		case 1:
+			b |= ((uint64_t)tolower(in[0]));
+			break;
+		case 0:
+			break;
+	}
 
-    v3 ^= b;
+	v3 ^= b;
 
-    SIPROUND;
-    SIPROUND;
+	SIPROUND;
+	SIPROUND;
 
-    v0 ^= b;
-    v2 ^= 0xff;
+	v0 ^= b;
+	v2 ^= 0xff;
 
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
+	SIPROUND;
+	SIPROUND;
+	SIPROUND;
+	SIPROUND;
 
-    b = v0 ^ v1 ^ v2 ^ v3;
-    U64TO8_LE(out, b);
+	b = v0 ^ v1 ^ v2 ^ v3;
+	U64TO8_LE(out, b);
 
-    return hash;
+	return hash;
 }
 
 /* End of imported code */
@@ -243,9 +266,9 @@ uint64_t siphash_nocase(const char *in, const char *k)
  */
 uint64_t siphash(const char *in, const char *k)
 {
-    size_t inlen = strlen(in);
+	size_t inlen = strlen(in);
 
-    return siphash_raw(in, inlen, k);
+	return siphash_raw(in, inlen, k);
 }
 
 /** Generate a key that is used by siphash() and siphash_nocase().
@@ -440,9 +463,9 @@ Client *hash_find_id(const char *name, Client *client)
 Client *hash_find_nickatserver(const char *str, Client *def)
 {
 	char *serv;
-	char nick[NICKLEN+HOSTLEN+1];
+	char nick[NICKLEN + HOSTLEN + 1];
 	Client *client;
-	
+
 	strlcpy(nick, str, sizeof(nick)); /* let's work on a copy */
 
 	serv = strchr(nick, '@');
@@ -452,14 +475,14 @@ Client *hash_find_nickatserver(const char *str, Client *def)
 	client = find_user(nick, NULL);
 	if (!client)
 		return NULL; /* client not found */
-	
+
 	if (!serv)
 		return client; /* validated: was just 'nick' and not 'nick@serv' */
 
 	/* Now validate the server portion */
 	if (client->user && !smycmp(serv, client->user->server))
 		return client; /* validated */
-	
+
 	return def;
 }
 /*
@@ -590,7 +613,7 @@ Channel *hash_get_chan_bucket(uint64_t hashv)
  */
 Client *find_server_by_uid(const char *uid)
 {
-	char sid[SIDLEN+1];
+	char sid[SIDLEN + 1];
 
 	if (!isdigit(*uid))
 		return NULL; /* not a UID/SID */
@@ -606,7 +629,7 @@ Client *find_server_by_uid(const char *uid)
  * already handled real-time. This is just to catch the other cases
  * (we don't know what type of complex known-users rules people have).
  */
-#define UPDATE_KNOWN_USER_CACHE_TIMER_WORKPERITERATION (NICK_HASH_TABLE_SIZE/24)
+#define UPDATE_KNOWN_USER_CACHE_TIMER_WORKPERITERATION (NICK_HASH_TABLE_SIZE / 24)
 
 EVENT(update_known_user_cache_timer)
 {
@@ -614,9 +637,10 @@ EVENT(update_known_user_cache_timer)
 	int work_done = 0;
 	Client *client;
 
-	do {
+	do
+	{
 		list_for_each_entry(client, &idTable[slot], id_hash)
-			update_known_user_cache(client);
+		    update_known_user_cache(client);
 
 		if (++slot >= NICK_HASH_TABLE_SIZE)
 			slot = 0;

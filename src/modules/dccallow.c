@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_dccallow);
 
-#define MSG_DCCALLOW 	"DCCALLOW"
+#define MSG_DCCALLOW "DCCALLOW"
 
-ModuleHeader MOD_HEADER
-  = {
-	"dccallow",
-	"5.0",
-	"command /dccallow", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "dccallow",
+    "5.0",
+    "command /dccallow",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 int dccallow_user_quit(Client *client, MessageTag *mtags, const char *comment);
 
@@ -68,11 +67,11 @@ void remove_dcc_references(Client *client)
 	int found;
 
 	lp = client->user->dccallow;
-	while(lp)
+	while (lp)
 	{
 		nextlp = lp->next;
 		acptr = lp->value.client;
-		for(found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+		for (found = 0, lpp = &(acptr->user->dccallow); *lpp; lpp = &((*lpp)->next))
 		{
 			if (lp->flags == (*lpp)->flags)
 				continue; /* match only opposite types for sanity */
@@ -81,8 +80,8 @@ void remove_dcc_references(Client *client)
 				if ((*lpp)->flags == DCC_LINK_ME)
 				{
 					sendto_one(acptr, NULL, ":%s %d %s :%s has been removed from "
-						"your DCC allow list for signing off",
-						me.name, RPL_DCCINFO, acptr->name, client->name);
+					                        "your DCC allow list for signing off",
+					           me.name, RPL_DCCINFO, acptr->name, client->name);
 				}
 				tmp = *lpp;
 				*lpp = tmp->next;
@@ -129,27 +128,27 @@ CMD_FUNC(cmd_dccallow)
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("WHOIS");
 	static char *dcc_help[] = {
-		"/DCCALLOW [<+|->nick[,<+|->nick, ...]] [list] [help]",
-		"You may allow DCCs of files which are otherwise blocked by the IRC server",
-		"by specifying a DCC allow for the user you want to recieve files from.",
-		"For instance, to allow the user Bob to send you file.exe, you would type:",
-		"/DCCALLOW +bob",
-		"and Bob would then be able to send you files. Bob will have to resend the file",
-		"if the server gave him an error message before you added him to your allow list.",
-		"/DCCALLOW -bob",
-		"Will do the exact opposite, removing him from your dcc allow list.",
-		"/dccallow list",
-		"Will list the users currently on your dcc allow list.",
-		NULL,
+	    "/DCCALLOW [<+|->nick[,<+|->nick, ...]] [list] [help]",
+	    "You may allow DCCs of files which are otherwise blocked by the IRC server",
+	    "by specifying a DCC allow for the user you want to recieve files from.",
+	    "For instance, to allow the user Bob to send you file.exe, you would type:",
+	    "/DCCALLOW +bob",
+	    "and Bob would then be able to send you files. Bob will have to resend the file",
+	    "if the server gave him an error message before you added him to your allow list.",
+	    "/DCCALLOW -bob",
+	    "Will do the exact opposite, removing him from your dcc allow list.",
+	    "/dccallow list",
+	    "Will list the users currently on your dcc allow list.",
+	    NULL,
 	};
 
 	if (!MyUser(client))
 		return;
-	
+
 	if (parc < 2)
 	{
 		sendnotice(client, "No command specified for DCCALLOW. "
-			"Type '/DCCALLOW HELP' for more information.");
+		                   "Type '/DCCALLOW HELP' for more information.");
 		return;
 	}
 
@@ -166,25 +165,24 @@ CMD_FUNC(cmd_dccallow)
 			didanything = 1;
 			if (!*++s)
 				continue;
-			
+
 			friend = find_user(s, NULL);
-			
+
 			if (friend == client)
 				continue;
-			
+
 			if (!friend)
 			{
 				sendnumeric(client, ERR_NOSUCHNICK, s);
 				continue;
 			}
 			add_dccallow(client, friend);
-		} else
-		if (*s == '-')
+		} else if (*s == '-')
 		{
 			didanything = 1;
 			if (!*++s)
 				continue;
-			
+
 			friend = find_user(s, NULL);
 			if (friend == client)
 				continue;
@@ -194,25 +192,23 @@ CMD_FUNC(cmd_dccallow)
 				continue;
 			}
 			del_dccallow(client, friend);
-		} else
-		if (!didlist && !strncasecmp(s, "list", 4))
+		} else if (!didlist && !strncasecmp(s, "list", 4))
 		{
 			didanything = didlist = 1;
 			sendnumeric(client, RPL_DCCINFO, "The following users are on your dcc allow list:");
-			for(lp = client->user->dccallow; lp; lp = lp->next)
+			for (lp = client->user->dccallow; lp; lp = lp->next)
 			{
 				if (lp->flags == DCC_LINK_REMOTE)
 					continue;
 				sendnumericfmt(client, RPL_DCCLIST, ":%s (%s@%s)", lp->value.client->name,
-					lp->value.client->user->username,
-					GetHost(lp->value.client));
+				               lp->value.client->user->username,
+				               GetHost(lp->value.client));
 			}
 			sendnumeric(client, RPL_ENDOFDCCLIST, s);
-		} else
-		if (!didhelp && !strncasecmp(s, "help", 4))
+		} else if (!didhelp && !strncasecmp(s, "help", 4))
 		{
 			didanything = didhelp = 1;
-			for(ptr = dcc_help; *ptr; ptr++)
+			for (ptr = dcc_help; *ptr; ptr++)
 				sendnumeric(client, RPL_DCCINFO, *ptr);
 			sendnumeric(client, RPL_ENDOFDCCLIST, s);
 		}
@@ -246,7 +242,7 @@ int add_dccallow(Client *client, Client *optr)
 	if (cnt >= MAXDCCALLOW)
 	{
 		sendnumeric(client, ERR_TOOMANYDCC,
-			optr->name, MAXDCCALLOW);
+		            optr->name, MAXDCCALLOW);
 		return 0;
 	}
 
@@ -272,7 +268,7 @@ int del_dccallow(Client *client, Client *optr)
 	Link **lpp, *lp;
 	int found = 0;
 
-	for (lpp = &(client->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	for (lpp = &(client->user->dccallow); *lpp; lpp = &((*lpp)->next))
 	{
 		if ((*lpp)->flags != DCC_LINK_ME)
 			continue;
@@ -291,7 +287,7 @@ int del_dccallow(Client *client, Client *optr)
 		return 0;
 	}
 
-	for (found = 0, lpp = &(optr->user->dccallow); *lpp; lpp=&((*lpp)->next))
+	for (found = 0, lpp = &(optr->user->dccallow); *lpp; lpp = &((*lpp)->next))
 	{
 		if ((*lpp)->flags != DCC_LINK_REMOTE)
 			continue;

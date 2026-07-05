@@ -7,14 +7,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"geoip_base",
-	"5.0",
-	"Base module for geoip",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "geoip_base",
+    "5.0",
+    "Base module for geoip",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 struct geoip_base_config_s {
 	int check_on_load;
@@ -43,15 +42,15 @@ struct geoip_base_config_s geoip_base_config;
  * should use geoip_client(client) !
  */
 
-#define GEOIPDATARAW(x)	(moddata_client((x), geoip_md).ptr)
-#define GEOIPDATA(x)	((GeoIPResult *)moddata_client((x), geoip_md).ptr)
+#define GEOIPDATARAW(x) (moddata_client((x), geoip_md).ptr)
+#define GEOIPDATA(x)    ((GeoIPResult *)moddata_client((x), geoip_md).ptr)
 
 int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep;
 	int errors = 0;
 	int i;
-	
+
 	if (type != CONFIG_SET)
 		return 0;
 
@@ -70,7 +69,7 @@ int geoip_base_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		}
 		config_warn("%s:%i: unknown item geoip::%s", cep->file->filename, cep->line_number, cep->name);
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -126,7 +125,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_IP_CHANGE, 0, geoip_base_ip_change);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_HANDSHAKE_OUT, 0, geoip_base_handshake);
 	HookAdd(modinfo->handle, HOOKTYPE_CONNECT_EXTINFO, 1, geoip_connect_extinfo); /* (prio: near-first) */
-	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0,geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
+	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_CONNECT, 0, geoip_base_handshake); /* in case the IP changed in registration phase (WEBIRC, HTTP Forwarded) */
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois_country);
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, geoip_base_whois_asn);
 	HookAdd(modinfo->handle, HOOKTYPE_JSON_EXPAND_CLIENT, 0, geoip_json_expand_client);
@@ -224,22 +223,23 @@ const char *geoip_base_serialize(ModData *m)
 	if (geo->asname)
 	{
 		snprintf(buf, sizeof(buf), "cc=%s|cd=%s|asn=%u|asname=%s",
-			 geo->country_code,
-			 geo->country_name,
-			 geo->asn,
-			 geoip_sanitized_asname(geo->asname));
-	} else {
+		         geo->country_code,
+		         geo->country_name,
+		         geo->asn,
+		         geoip_sanitized_asname(geo->asname));
+	} else
+	{
 		snprintf(buf, sizeof(buf), "cc=%s|cd=%s|asn=%u",
-			 geo->country_code,
-			 geo->country_name,
-			 geo->asn);
+		         geo->country_code,
+		         geo->country_name,
+		         geo->asn);
 	}
 	return buf;
 }
 
 void geoip_base_unserialize(const char *str, ModData *m)
 {
-	char buf[512], *p=NULL, *varname, *value;
+	char buf[512], *p = NULL, *varname, *value;
 	char *country_name = NULL;
 	char *country_code = NULL;
 	long asn = 0;
@@ -370,11 +370,11 @@ int geoip_base_whois_asn(Client *client, Client *target, NameValuePrioList **lis
 
 	// WHOIS_CONFIG_DETAILS_LIMITED / WHOIS_CONFIG_DETAILS_FULL distinction makes no sense here
 	add_nvplist_numeric_fmt(list, 0, "asn", client, RPL_WHOISASN,
-				"%s %u :is connecting from AS%u [%s]",
-				target->name,
-				geo->asn,
-				geo->asn,
-				geo->asname ? geo->asname : "UNKNOWN");
+	                        "%s %u :is connecting from AS%u [%s]",
+	                        target->name,
+	                        geo->asn,
+	                        geo->asn,
+	                        geo->asname ? geo->asname : "UNKNOWN");
 	return 0;
 }
 
@@ -399,7 +399,8 @@ CMD_FUNC(cmd_geoip)
 	if (strchr(parv[1], '.') || strchr(parv[1], ':'))
 	{
 		ip = parv[1];
-	} else {
+	} else
+	{
 		target = find_user(parv[1], NULL);
 		if (!target)
 		{
@@ -421,7 +422,8 @@ CMD_FUNC(cmd_geoip)
 	{
 		sendnotice(client, "- No information available");
 		return;
-	} else {
+	} else
+	{
 		if (res->country_code)
 			sendnotice(client, "- Country code: %s", res->country_code);
 		if (res->country_name)

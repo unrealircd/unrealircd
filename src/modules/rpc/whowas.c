@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/whowas",
-	"1.0.1",
-	"whowas.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/whowas",
+    "1.0.1",
+    "whowas.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Externals */
@@ -64,13 +63,14 @@ void json_expand_whowas(json_t *j, const char *key, WhoWas *e, int detail)
 {
 	json_t *child;
 	json_t *user = NULL;
-	char buf[BUFSIZE+1];
+	char buf[BUFSIZE + 1];
 
 	if (key)
 	{
 		child = json_object();
 		json_object_set_new(j, key, child);
-	} else {
+	} else
+	{
 		child = j;
 	}
 
@@ -146,7 +146,7 @@ RPC_CALL_FUNC(rpc_whowas_get)
 	list = json_array();
 	json_object_set_new(result, "list", list);
 
-	for (i=0; i < NICKNAMEHISTORYLENGTH; i++)
+	for (i = 0; i < NICKNAMEHISTORYLENGTH; i++)
 	{
 		WhoWas *e = &WHOWAS[i];
 		if (!e->name)

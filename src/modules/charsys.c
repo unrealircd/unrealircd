@@ -23,16 +23,15 @@
 #include "unrealircd.h"
 
 #ifndef ARRAY_SIZEOF
- #define ARRAY_SIZEOF(x) (sizeof((x))/sizeof((x)[0]))
+ #define ARRAY_SIZEOF(x) (sizeof((x)) / sizeof((x)[0]))
 #endif
 
-ModuleHeader MOD_HEADER
-= {
-	"charsys",	/* Name of module */
-	"5.0", /* Version */
-	"Character System (set::allowed-nickchars)", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "charsys", /* Name of module */
+    "5.0", /* Version */
+    "Character System (set::allowed-nickchars)", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* NOTE: it is guaranteed that char is unsigned by compiling options
@@ -43,8 +42,7 @@ ModuleHeader MOD_HEADER
 
 /** Our multibyte structure */
 typedef struct MBList MBList;
-struct MBList
-{
+struct MBList {
 	MBList *next;
 	char s1, e1, s2, e2;
 };
@@ -57,26 +55,25 @@ static int langav = 0;
 char langsinuse[4096];
 
 /* bitmasks: */
-#define LANGAV_ASCII			0x000001 /* 8 bit ascii */
-#define LANGAV_LATIN1			0x000002 /* latin1 (western europe) */
-#define LANGAV_LATIN2			0x000004 /* latin2 (eastern europe, eg: polish) */
-#define LANGAV_ISO8859_7		0x000008 /* greek */
-#define LANGAV_ISO8859_8I		0x000010 /* hebrew */
-#define LANGAV_ISO8859_9		0x000020 /* turkish */
-#define LANGAV_W1250			0x000040 /* windows-1250 (eg: polish-w1250) */
-#define LANGAV_W1251			0x000080 /* windows-1251 (eg: russian) */
-#define LANGAV_LATIN2W1250		0x000100 /* Compatible with both latin2 AND windows-1250 (eg: hungarian) */
-#define LANGAV_ISO8859_6		0x000200 /* arabic */
-#define LANGAV_GBK			0x001000 /* (Chinese) GBK encoding */
-#define LANGAV_UTF8			0x002000 /* any UTF8 encoding */
-#define LANGAV_LATIN_UTF8		0x004000 /* UTF8: latin script */
-#define LANGAV_CYRILLIC_UTF8		0x008000 /* UTF8: cyrillic script */
-#define LANGAV_GREEK_UTF8		0x010000 /* UTF8: greek script */
-#define LANGAV_HEBREW_UTF8		0x020000 /* UTF8: hebrew script */
-#define LANGAV_ARABIC_UTF8		0x040000 /* UTF8: arabic script */
+#define LANGAV_ASCII         0x000001 /* 8 bit ascii */
+#define LANGAV_LATIN1        0x000002 /* latin1 (western europe) */
+#define LANGAV_LATIN2        0x000004 /* latin2 (eastern europe, eg: polish) */
+#define LANGAV_ISO8859_7     0x000008 /* greek */
+#define LANGAV_ISO8859_8I    0x000010 /* hebrew */
+#define LANGAV_ISO8859_9     0x000020 /* turkish */
+#define LANGAV_W1250         0x000040 /* windows-1250 (eg: polish-w1250) */
+#define LANGAV_W1251         0x000080 /* windows-1251 (eg: russian) */
+#define LANGAV_LATIN2W1250   0x000100 /* Compatible with both latin2 AND windows-1250 (eg: hungarian) */
+#define LANGAV_ISO8859_6     0x000200 /* arabic */
+#define LANGAV_GBK           0x001000 /* (Chinese) GBK encoding */
+#define LANGAV_UTF8          0x002000 /* any UTF8 encoding */
+#define LANGAV_LATIN_UTF8    0x004000 /* UTF8: latin script */
+#define LANGAV_CYRILLIC_UTF8 0x008000 /* UTF8: cyrillic script */
+#define LANGAV_GREEK_UTF8    0x010000 /* UTF8: greek script */
+#define LANGAV_HEBREW_UTF8   0x020000 /* UTF8: hebrew script */
+#define LANGAV_ARABIC_UTF8   0x040000 /* UTF8: arabic script */
 typedef struct LangList LangList;
-struct LangList
-{
+struct LangList {
 	char *directive;
 	char *code;
 	int setflags;
@@ -149,8 +146,7 @@ static LangList langlist[] = {
 
 /* For temporary use during config_run */
 typedef struct ILangList ILangList;
-struct ILangList
-{
+struct ILangList {
 	ILangList *prev, *next;
 	char *name;
 };
@@ -237,20 +233,20 @@ int charsys_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (ce->value)
 	{
 		config_error("%s:%i: set::allowed-nickchars: please use 'allowed-nickchars { name; };' "
-					 "and not 'allowed-nickchars name;'",
-					 ce->file->filename, ce->line_number);
+		             "and not 'allowed-nickchars name;'",
+		             ce->file->filename, ce->line_number);
 		/* Give up immediately. Don't bother the user with any other errors. */
 		errors++;
 		*errs = errors;
 		return -1;
 	}
 
-	for (cep = ce->items; cep; cep=cep->next)
+	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!charsys_test_language(cep->name))
 		{
 			config_error("%s:%i: set::allowed-nickchars: Unknown (sub)language '%s'",
-				ce->file->filename, ce->line_number, cep->name);
+			             ce->file->filename, ce->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -283,7 +279,7 @@ int charsys_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 int charsys_config_posttest(int *errs)
 {
 	int errors = 0;
-	int x=0;
+	int x = 0;
 
 	if ((langav & LANGAV_ASCII) && (langav & LANGAV_GBK))
 	{
@@ -315,7 +311,7 @@ int charsys_config_posttest(int *errs)
 	if (langav & LANGAV_W1251)
 		x++;
 	if ((langav & LANGAV_LATIN2W1250) && !(langav & LANGAV_LATIN2) && !(langav & LANGAV_W1250))
-	    x++;
+		x++;
 	if (x > 1)
 	{
 #if 0
@@ -356,12 +352,12 @@ int charsys_config_posttest(int *errs)
 void charsys_free_mblist(void)
 {
 	MBList *m, *m_next;
-	for (m=mblist; m; m=m_next)
+	for (m = mblist; m; m = m_next)
 	{
 		m_next = m->next;
 		safe_free(m);
 	}
-	mblist=mblist_tail=NULL;
+	mblist = mblist_tail = NULL;
 }
 
 /** Called on boot and just before config run */
@@ -371,7 +367,7 @@ void charsys_reset(void)
 	MBList *m, *m_next;
 
 	/* First, reset everything */
-	for (i=0; i < 256; i++)
+	for (i = 0; i < 256; i++)
 		char_atribs[i] &= ~ALLOWN;
 	charsys_free_mblist();
 	/* Then add the default which will always be allowed */
@@ -404,9 +400,9 @@ static void ilang_sort(void)
 	/* Selection sort -- perhaps optimize to qsort/whatever if
      * possible? ;)
      */
-	for (outer=ilanglist; outer; outer=outer->next)
+	for (outer = ilanglist; outer; outer = outer->next)
 	{
-		for (inner=outer->next; inner; inner=inner->next)
+		for (inner = outer->next; inner; inner = inner->next)
 		{
 			if (strcmp(outer->name, inner->name) > 0)
 				ilang_swap(outer, inner);
@@ -423,7 +419,7 @@ void charsys_finish(void)
 
 	/* [note: this can be optimized] */
 	langsinuse[0] = '\0';
-	for (e=ilanglist; e; e=e->next)
+	for (e = ilanglist; e; e = e->next)
 	{
 		strlcat(langsinuse, e->name, sizeof(langsinuse));
 		if (e->next)
@@ -431,9 +427,9 @@ void charsys_finish(void)
 	}
 
 	/* Free everything */
-	for (e=ilanglist; e; e=e_next)
+	for (e = ilanglist; e; e = e_next)
 	{
-		e_next=e->next;
+		e_next = e->next;
 		safe_free(e->name);
 		safe_free(e);
 	}
@@ -454,7 +450,7 @@ void charsys_finish(void)
  */
 void charsys_addmultibyterange(char s1, char e1, char s2, char e2)
 {
-MBList *m = safe_alloc(sizeof(MBList));
+	MBList *m = safe_alloc(sizeof(MBList));
 
 	m->s1 = s1;
 	m->e1 = e1;
@@ -508,7 +504,7 @@ static int do_nick_name_standard(char *nick)
 	if ((*nick == '-') || isdigit(*nick))
 		return 0;
 
-	for (ch=nick,len=0; *ch && len <= NICKLEN; ch++, len++)
+	for (ch = nick, len = 0; *ch && len <= NICKLEN; ch++, len++)
 		if (!isvalid(*ch))
 			return 0; /* reject the full nick */
 	*ch = '\0';
@@ -519,11 +515,11 @@ static int isvalidmbyte(unsigned char c1, unsigned char c2)
 {
 	MBList *m;
 
-	for (m=mblist; m; m=m->next)
+	for (m = mblist; m; m = m->next)
 	{
 		if ((c1 >= m->s1) && (c1 <= m->e1) &&
 		    (c2 >= m->s2) && (c2 <= m->e2))
-		    return 1;
+			return 1;
 	}
 	return 0;
 }
@@ -541,7 +537,7 @@ static int do_nick_name_multibyte(char *nick)
 	if ((*nick == '-') || isdigit(*nick))
 		return 0;
 
-	for (ch=nick,len=0; *ch && len <= NICKLEN; ch++, len++)
+	for (ch = nick, len = 0; *ch && len <= NICKLEN; ch++, len++)
 	{
 		/* Some characters are ALWAYS illegal, so they have to be disallowed here */
 		if ((*ch <= 32) || strchr(illegalnickchars, *ch))
@@ -580,7 +576,7 @@ int _do_remote_nick_name(char *nick)
 		return 0;
 
 	/* Now the other, more relaxed checks.. */
-	for (c=nick; *c; c++)
+	for (c = nick; *c; c++)
 		if ((*c <= 32) || strchr(illegalnickchars, *c))
 			return 0;
 
@@ -590,18 +586,18 @@ int _do_remote_nick_name(char *nick)
 static LangList *charsys_find_language(char *name)
 {
 	int start = 0;
-	int stop = ARRAY_SIZEOF(langlist)-1;
+	int stop = ARRAY_SIZEOF(langlist) - 1;
 	int mid;
 
 	while (start <= stop)
 	{
-		mid = (start+stop)/2;
+		mid = (start + stop) / 2;
 		if (!langlist[mid].directive || smycmp(name, langlist[mid].directive) < 0)
-			stop = mid-1;
+			stop = mid - 1;
 		else if (strcmp(name, langlist[mid].directive) == 0)
 			return &langlist[mid];
 		else
-			start = mid+1;
+			start = mid + 1;
 	}
 	return NULL;
 }
@@ -637,10 +633,10 @@ int charsys_test_language(char *name)
 
 static void charsys_doadd_language(char *name)
 {
-LangList *l;
-ILangList *li;
-int found;
-char tmp[512], *lang, *p;
+	LangList *l;
+	ILangList *li;
+	int found;
+	char tmp[512], *lang, *p;
 
 	l = charsys_find_language(name);
 	if (!l)
@@ -655,8 +651,8 @@ char tmp[512], *lang, *p;
 	for (lang = strtoken(&p, tmp, ","); lang; lang = strtoken(&p, NULL, ","))
 	{
 		/* Check if present... */
-		found=0;
-		for (li=ilanglist; li; li=li->next)
+		found = 0;
+		for (li = ilanglist; li; li = li->next)
 			if (!strcmp(li->name, lang))
 			{
 				found = 1;
@@ -674,8 +670,8 @@ char tmp[512], *lang, *p;
 
 void charsys_add_language(char *name)
 {
-	char latin1=0, latin2=0, w1250=0, w1251=0, chinese=0;
-	char latin_utf8=0, cyrillic_utf8=0;
+	char latin1 = 0, latin2 = 0, w1250 = 0, w1251 = 0, chinese = 0;
+	char latin_utf8 = 0, cyrillic_utf8 = 0;
 
 	/** Note: there could well be some characters missing in the lists below.
 	 *        While I've seen other altnernatives that just allow pretty much
@@ -1245,9 +1241,9 @@ char *charsys_displaychars(void)
 	 * try this instead (lazy).. this is only used in DEBUGMODE
 	 * via a command line option anyway:
 	 */
-	for (i=0; i <= 255; i++)
+	for (i = 0; i <= 255; i++)
 	{
-		for (j=0; j <= 255; j++)
+		for (j = 0; j <= 255; j++)
 		{
 			if (isvalidmbyte(i, j))
 			{

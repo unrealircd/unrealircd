@@ -29,13 +29,12 @@ CMD_FUNC(cmd_isupport);
 /* Variables */
 long CAP_EXTISUPPORT = 0L;
 
-ModuleHeader MOD_HEADER
-={
-	"extended-isupport", /* Name of module */
-	"5.0", /* Version */
-	"Implements IRCv3 draft/extended-isupport", /* Short description of module */
-	"UnrealIRCd Team", /* Author */
-	"unrealircd-6", /* Version of UnrealIRCd */
+ModuleHeader MOD_HEADER = {
+    "extended-isupport", /* Name of module */
+    "5.0", /* Version */
+    "Implements IRCv3 draft/extended-isupport", /* Short description of module */
+    "UnrealIRCd Team", /* Author */
+    "unrealircd-6", /* Version of UnrealIRCd */
 };
 
 // Module initialization
@@ -48,7 +47,7 @@ MOD_INIT()
 	cap.name = "draft/extended-isupport";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_EXTISUPPORT);
 
-	CommandAdd(modinfo->handle, "ISUPPORT", cmd_isupport, 0, CMD_USER|CMD_UNREGISTERED);
+	CommandAdd(modinfo->handle, "ISUPPORT", cmd_isupport, 0, CMD_USER | CMD_UNREGISTERED);
 
 	return MOD_SUCCESS;
 }

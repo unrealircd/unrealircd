@@ -39,29 +39,29 @@
  #include <winsock2.h>
  #include <ws2tcpip.h>
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
+ #include <sys/socket.h>
+ #include <netinet/in.h>
 #endif
 
 /** Status/error codes returned by mmdb functions */
 typedef enum {
-	MMDB_OK = 0,              /**< Success */
-	MMDB_ERR_OPEN,            /**< Could not open or mmap the file */
-	MMDB_ERR_INVALID_DB,      /**< Not a valid MMDB file */
-	MMDB_ERR_CORRUPT,         /**< Search tree or data section corruption */
-	MMDB_ERR_NODATA,          /**< IP found but requested path doesn't exist */
-	MMDB_ERR_TYPE,            /**< Type mismatch (asked for string, got uint, etc) */
-	MMDB_ERR_IPV6_IN_V4,     /**< Tried to look up an IPv6 address in an IPv4-only db */
-	MMDB_ERR_BADARG,          /**< Invalid argument (e.g. unparseable IP address) */
+	MMDB_OK = 0,         /**< Success */
+	MMDB_ERR_OPEN,       /**< Could not open or mmap the file */
+	MMDB_ERR_INVALID_DB, /**< Not a valid MMDB file */
+	MMDB_ERR_CORRUPT,    /**< Search tree or data section corruption */
+	MMDB_ERR_NODATA,     /**< IP found but requested path doesn't exist */
+	MMDB_ERR_TYPE,       /**< Type mismatch (asked for string, got uint, etc) */
+	MMDB_ERR_IPV6_IN_V4, /**< Tried to look up an IPv6 address in an IPv4-only db */
+	MMDB_ERR_BADARG,     /**< Invalid argument (e.g. unparseable IP address) */
 } MMDB_Status;
 
 /** Database metadata */
 typedef struct {
-	uint32_t node_count;        /**< Number of nodes in the search tree */
-	uint16_t record_size;       /**< Size of each record in bits */
-	uint16_t ip_version;        /**< IP version the database covers (4 or 6) */
-	uint64_t build_epoch;       /**< Unix timestamp when the database was built */
-	char database_type[128];    /**< Database type string (e.g. "GeoLite2-Country") */
+	uint32_t node_count;     /**< Number of nodes in the search tree */
+	uint16_t record_size;    /**< Size of each record in bits */
+	uint16_t ip_version;     /**< IP version the database covers (4 or 6) */
+	uint64_t build_epoch;    /**< Unix timestamp when the database was built */
+	char database_type[128]; /**< Database type string (e.g. "GeoLite2-Country") */
 } MMDB_Metadata;
 
 /** Database handle */
@@ -78,9 +78,9 @@ typedef struct {
 
 /** Lookup result */
 typedef struct {
-	MMDB_DB *db;                /**< Database this result belongs to */
-	size_t offset;              /**< Offset into data section, or 0 if not found */
-	int has_data;               /**< 1 if IP was found and has data */
+	MMDB_DB *db;   /**< Database this result belongs to */
+	size_t offset; /**< Offset into data section, or 0 if not found */
+	int has_data;  /**< 1 if IP was found and has data */
 } MMDB_Result;
 
 /** Open an MMDB database file.

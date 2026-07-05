@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/server_ban_exception",
-	"1.0.1",
-	"server_ban_exception.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/server_ban_exception",
+    "1.0.1",
+    "server_ban_exception.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -115,11 +114,11 @@ RPC_CALL_FUNC(rpc_server_ban_exception_list)
 
 /** Shared code for selecting a server ban, for .add/.del/.get */
 int server_ban_exception_select_criteria(Client *client, json_t *request, json_t *params, int add,
-                               const char **name,
-                               const char **exception_types,
-                               char **usermask,
-                               char **hostmask,
-                               int *soft)
+                                         const char **name,
+                                         const char **exception_types,
+                                         char **usermask,
+                                         char **hostmask,
+                                         int *soft)
 {
 	const char *error;
 
@@ -138,7 +137,8 @@ int server_ban_exception_select_criteria(Client *client, json_t *request, json_t
 			rpc_error(client, request, JSON_RPC_ERROR_INVALID_PARAMS, "Missing parameter: 'exception_types'");
 			return 0;
 		}
-	} else {
+	} else
+	{
 		*exception_types = NULL;
 	}
 
@@ -160,13 +160,13 @@ RPC_CALL_FUNC(rpc_server_ban_exception_get)
 	TKL *tkl;
 
 	if (!server_ban_exception_select_criteria(client, request, params, 0,
-	                                &name, &exception_types,
-	                                &usermask, &hostmask, &soft))
+	                                          &name, &exception_types,
+	                                          &usermask, &hostmask, &soft))
 	{
 		return;
 	}
 
-	if (!(tkl = find_tkl_banexception(TKL_EXCEPTION|TKL_GLOBAL, usermask, hostmask, soft)) &&
+	if (!(tkl = find_tkl_banexception(TKL_EXCEPTION | TKL_GLOBAL, usermask, hostmask, soft)) &&
 	    !(tkl = find_tkl_banexception(TKL_EXCEPTION, usermask, hostmask, soft)))
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Ban exception not found");
@@ -191,13 +191,13 @@ RPC_CALL_FUNC(rpc_server_ban_exception_del)
 	const char *tkllayer[11];
 
 	if (!server_ban_exception_select_criteria(client, request, params, 0,
-	                                &name, &exception_types,
-	                                &usermask, &hostmask, &soft))
+	                                          &name, &exception_types,
+	                                          &usermask, &hostmask, &soft))
 	{
 		return;
 	}
 
-	if (!(tkl = find_tkl_banexception(TKL_EXCEPTION|TKL_GLOBAL, usermask, hostmask, soft)) &&
+	if (!(tkl = find_tkl_banexception(TKL_EXCEPTION | TKL_GLOBAL, usermask, hostmask, soft)) &&
 	    !(tkl = find_tkl_banexception(TKL_EXCEPTION, usermask, hostmask, soft)))
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_NOT_FOUND, "Ban exception not found");
@@ -223,11 +223,12 @@ RPC_CALL_FUNC(rpc_server_ban_exception_del)
 	tkllayer[10] = NULL;
 	cmd_tkl(NULL, &me, NULL, 6, tkllayer);
 
-	if (!find_tkl_banexception(TKL_EXCEPTION|TKL_GLOBAL, usermask, hostmask, soft) &&
+	if (!find_tkl_banexception(TKL_EXCEPTION | TKL_GLOBAL, usermask, hostmask, soft) &&
 	    !find_tkl_banexception(TKL_EXCEPTION, usermask, hostmask, soft))
 	{
 		rpc_response(client, request, result);
-	} else {
+	} else
+	{
 		/* Actually this may not be an internal error, it could be an
 		 * incorrect request, such as asking to remove a config-based ban.
 		 */
@@ -251,8 +252,8 @@ RPC_CALL_FUNC(rpc_server_ban_exception_add)
 	time_t tkl_set_at = TStime();
 
 	if (!server_ban_exception_select_criteria(client, request, params, 1,
-	                                &name, &exception_types,
-	                                &usermask, &hostmask, &soft))
+	                                          &name, &exception_types,
+	                                          &usermask, &hostmask, &soft))
 	{
 		return;
 	}
@@ -267,8 +268,7 @@ RPC_CALL_FUNC(rpc_server_ban_exception_add)
 		tkl_expire_at = config_checkval(str, CFG_TIME);
 		if (tkl_expire_at > 0)
 			tkl_expire_at = TStime() + tkl_expire_at;
-	} else
-	if ((str = json_object_get_string(params, "expire_at")))
+	} else if ((str = json_object_get_string(params, "expire_at")))
 	{
 		tkl_expire_at = server_time_to_unix_time(str);
 	} else
@@ -287,14 +287,14 @@ RPC_CALL_FUNC(rpc_server_ban_exception_add)
 		return;
 	}
 
-	if (find_tkl_banexception(TKL_EXCEPTION|TKL_GLOBAL, usermask, hostmask, soft) ||
+	if (find_tkl_banexception(TKL_EXCEPTION | TKL_GLOBAL, usermask, hostmask, soft) ||
 	    find_tkl_banexception(TKL_EXCEPTION, usermask, hostmask, soft))
 	{
 		rpc_error(client, request, JSON_RPC_ERROR_ALREADY_EXISTS, "A ban exception with that mask already exists");
 		return;
 	}
 
-	tkl = tkl_add_banexception(TKL_EXCEPTION|TKL_GLOBAL, usermask, hostmask,
+	tkl = tkl_add_banexception(TKL_EXCEPTION | TKL_GLOBAL, usermask, hostmask,
 	                           NULL, reason,
 	                           set_by, tkl_expire_at, tkl_set_at,
 	                           soft, exception_types, 0);

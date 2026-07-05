@@ -69,7 +69,7 @@ extern MODVAR int bootopt;
 extern MODVAR time_t timeofday;
 extern MODVAR struct timeval timeofday_tv;
 extern MODVAR char cmodestring[512];
-extern MODVAR char umodestring[UMODETABLESZ+1];
+extern MODVAR char umodestring[UMODETABLESZ + 1];
 /* newconf */
 #define get_sendq(x) ((x)->local->class ? (x)->local->class->sendq : DEFAULT_SENDQ)
 /* get_recvq is only called in send.c for local connections */
@@ -89,33 +89,33 @@ extern void preprocessor_replace_defines(char **item, ConfigEntry *ce);
 /*
  * Configuration linked lists
 */
-extern MODVAR ConfigItem_me		*conf_me;
-extern MODVAR ConfigItem_files		*conf_files;
-extern MODVAR ConfigItem_class 	*conf_class;
-extern MODVAR ConfigItem_class		*default_class;
-extern MODVAR ConfigItem_admin 	*conf_admin;
-extern MODVAR ConfigItem_admin		*conf_admin_tail;
-extern MODVAR ConfigItem_drpass	*conf_drpass;
-extern MODVAR ConfigItem_ulines	*conf_ulines;
-extern MODVAR ConfigItem_tld		*conf_tld;
-extern MODVAR ConfigItem_oper		*conf_oper;
-extern MODVAR ConfigItem_listen	*conf_listen;
-extern MODVAR ConfigItem_allow		*conf_allow;
-extern MODVAR ConfigItem_link		*conf_link;
-extern MODVAR ConfigItem_sni		*conf_sni;
-extern MODVAR ConfigItem_ban		*conf_ban;
-extern MODVAR ConfigItem_deny_channel  *conf_deny_channel;
+extern MODVAR ConfigItem_me *conf_me;
+extern MODVAR ConfigItem_files *conf_files;
+extern MODVAR ConfigItem_class *conf_class;
+extern MODVAR ConfigItem_class *default_class;
+extern MODVAR ConfigItem_admin *conf_admin;
+extern MODVAR ConfigItem_admin *conf_admin_tail;
+extern MODVAR ConfigItem_drpass *conf_drpass;
+extern MODVAR ConfigItem_ulines *conf_ulines;
+extern MODVAR ConfigItem_tld *conf_tld;
+extern MODVAR ConfigItem_oper *conf_oper;
+extern MODVAR ConfigItem_listen *conf_listen;
+extern MODVAR ConfigItem_allow *conf_allow;
+extern MODVAR ConfigItem_link *conf_link;
+extern MODVAR ConfigItem_sni *conf_sni;
+extern MODVAR ConfigItem_ban *conf_ban;
+extern MODVAR ConfigItem_deny_channel *conf_deny_channel;
 extern MODVAR ConfigItem_allow_channel *conf_allow_channel;
-extern MODVAR ConfigItem_deny_version	*conf_deny_version;
-extern MODVAR ConfigItem_alias		*conf_alias;
-extern MODVAR ConfigItem_help		*conf_help;
-extern MODVAR ConfigItem_offchans	*conf_offchans;
-extern MODVAR ConfigItem_proxy		*conf_proxy;
-extern void		completed_connection(int, int, void *);
+extern MODVAR ConfigItem_deny_version *conf_deny_version;
+extern MODVAR ConfigItem_alias *conf_alias;
+extern MODVAR ConfigItem_help *conf_help;
+extern MODVAR ConfigItem_offchans *conf_offchans;
+extern MODVAR ConfigItem_proxy *conf_proxy;
+extern void completed_connection(int, int, void *);
 extern void clear_unknown();
 extern EVENT(e_unload_module_delayed);
 
-extern void  module_loadall(void);
+extern void module_loadall(void);
 extern long set_usermode(const char *umode);
 extern const char *get_usermode_string(Client *acptr);
 extern const char *get_usermode_string_r(Client *client, char *buf, size_t buflen);
@@ -123,8 +123,8 @@ extern const char *get_usermode_string_raw(long umodes);
 extern const char *get_usermode_string_raw_r(long umodes, char *buf, size_t buflen);
 extern ConfigFile *config_parse(const char *filename, char *confdata);
 extern ConfigFile *config_parse_with_offset(const char *filename, char *confdata, unsigned int line_offset);
-extern void config_error(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
-extern void config_warn(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_error(FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 1, 2)));
+extern void config_warn(FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 1, 2)));
 extern void config_error_missing(const char *filename, int line, const char *entry);
 extern void config_error_unknown(const char *filename, int line, const char *block, const char *entry);
 extern void config_error_unknownflag(const char *filename, int line, const char *block, const char *entry);
@@ -141,19 +141,19 @@ extern void config_entry_free_all(ConfigEntry *ce);
 extern ConfigFile *config_load(const char *filename, const char *displayname);
 extern void config_free(ConfigFile *cfptr);
 extern void ipport_seperate(const char *string, char **ip, char **port);
-extern ConfigItem_class	*find_class(const char *name);
-extern ConfigItem_oper		*find_oper(const char *name);
-extern ConfigItem_operclass	*find_operclass(const char *name);
+extern ConfigItem_class *find_class(const char *name);
+extern ConfigItem_oper *find_oper(const char *name);
+extern ConfigItem_operclass *find_operclass(const char *name);
 extern ConfigItem_listen *find_listen(const char *ipmask, int port, SocketType socket_type);
 extern ConfigItem_sni *find_sni(const char *name);
-extern ConfigItem_ulines	*find_uline(const char *host);
-extern ConfigItem_tld		*find_tld(Client *cptr);
-extern ConfigItem_link		*find_link(const char *servername);
-extern ConfigItem_ban 		*find_ban(Client *, const char *host, short type);
-extern ConfigItem_ban 		*find_banEx(Client *,const char *host, short type, short type2);
+extern ConfigItem_ulines *find_uline(const char *host);
+extern ConfigItem_tld *find_tld(Client *cptr);
+extern ConfigItem_link *find_link(const char *servername);
+extern ConfigItem_ban *find_ban(Client *, const char *host, short type);
+extern ConfigItem_ban *find_banEx(Client *, const char *host, short type, short type2);
 extern ConfigItem_deny_channel *find_channel_allowed(Client *cptr, const char *name);
-extern ConfigItem_alias	*find_alias(const char *name);
-extern ConfigItem_help 	*find_Help(const char *command);
+extern ConfigItem_alias *find_alias(const char *name);
+extern ConfigItem_help *find_Help(const char *command);
 
 extern OperPermission ValidatePermissionsForPath(const char *path, Client *client, Client *victim, Channel *channel, const void *extra);
 extern void OperClassValidatorDel(OperClassValidator *validator);
@@ -164,7 +164,7 @@ extern void OperClass_freePath(OperClassACLPath *path);
 extern OperClassACL *_conf_parseACL(const char *name, ConfigEntry *ce);
 extern void free_operclass_struct(OperClass *o);
 
-extern ConfigItem_ban  *find_ban_ip(Client *client);
+extern ConfigItem_ban *find_ban_ip(Client *client);
 extern void add_ListItem(ListStruct *, ListStruct **);
 extern void append_ListItem(ListStruct *item, ListStruct **list);
 extern void add_ListItemPrio(ListStructPrio *, ListStructPrio **, int);
@@ -172,13 +172,13 @@ extern void del_ListItem(ListStruct *, ListStruct **);
 extern MODVAR LoopStruct loop;
 extern int del_banid(Channel *channel, const char *banid);
 extern int del_exbanid(Channel *channel, const char *banid);
-#define REPORT_DO_DNS	"NOTICE * :*** Looking up your hostname...\r\n"
-#define REPORT_FIN_DNS	"NOTICE * :*** Found your hostname\r\n"
+#define REPORT_DO_DNS   "NOTICE * :*** Looking up your hostname...\r\n"
+#define REPORT_FIN_DNS  "NOTICE * :*** Found your hostname\r\n"
 #define REPORT_FIN_DNSC "NOTICE * :*** Found your hostname (cached)\r\n"
 #define REPORT_FAIL_DNS "NOTICE * :*** Couldn't resolve your hostname; using your IP address instead\r\n"
-#define REPORT_DO_ID	"NOTICE * :*** Checking ident...\r\n"
-#define REPORT_FIN_ID	"NOTICE * :*** Received identd response\r\n"
-#define REPORT_FAIL_ID	"NOTICE * :*** No ident response; username prefixed with ~\r\n"
+#define REPORT_DO_ID    "NOTICE * :*** Checking ident...\r\n"
+#define REPORT_FIN_ID   "NOTICE * :*** Received identd response\r\n"
+#define REPORT_FAIL_ID  "NOTICE * :*** No ident response; username prefixed with ~\r\n"
 extern MODVAR int R_do_dns, R_fin_dns, R_fin_dnsc, R_fail_dns, R_do_id, R_fin_id, R_fail_id;
 extern MODVAR struct list_head client_list;
 extern MODVAR struct list_head lclient_list;
@@ -259,7 +259,7 @@ extern MODVAR int debuglevel;
 #else
 extern int debuglevel, errno, h_errno;
 #endif
-extern MODVAR int OpenFiles;  /* number of files currently open */
+extern MODVAR int OpenFiles; /* number of files currently open */
 extern MODVAR int debuglevel, portnum, debugtty, maxusersperchannel;
 extern MODVAR int readcalls, udpfd, resfd;
 extern Client *add_connection(ConfigItem_listen *, int);
@@ -284,31 +284,31 @@ extern void set_socket_buffers(int fd, int rcvbuf, int sndbuf);
 extern int send_queued(Client *);
 extern void send_queued_cb(int fd, int revents, void *data);
 extern void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, const char *umodes);
-extern void    sendto_message_one(Client *to, Client *from, const char *sender, const char *cmd, const char *nick, const char *msg);
+extern void sendto_message_one(Client *to, Client *from, const char *sender, const char *cmd, const char *nick, const char *msg);
 extern LineCache *linecache_init(void);
 extern void linecache_free(LineCache *cache);
 extern void sendto_prefix_one_cached(LineCache *cache, int line_opts, Client *to, Client *from,
                                      MessageTag *mtags,
-                                     FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
+                                     FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 6, 7)));
 extern void sendto_channel(Channel *channel, Client *from, Client *skip,
                            char *member_modes, long clicap, int sendflags,
                            MessageTag *mtags,
-                           FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,8,9)));
+                           FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 8, 9)));
 extern void sendto_local_common_channels(Client *user, Client *skip,
                                          long clicap, MessageTag *mtags,
-                                         FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,5,6)));
+                                         FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 5, 6)));
 extern void quit_sendto_local_common_channels(Client *user, MessageTag *mtags, const char *reason);
-extern void sendto_match_servs(Channel *, Client *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void sendto_match_servs(Channel *, Client *, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 3, 4)));
 extern void sendto_match_butone(Client *, Client *, const char *, int, MessageTag *,
-    FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
-extern void sendto_all_butone(Client *, Client *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
-extern void sendto_ops(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
-extern void sendto_prefix_one(Client *, Client *, MessageTag *, FORMAT_STRING(const char *), ...) __attribute__((format(printf,4,5)));
+                                FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 6, 7)));
+extern void sendto_all_butone(Client *, Client *, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 3, 4)));
+extern void sendto_ops(FORMAT_STRING(const char *), ...) __attribute__((format(printf, 1, 2)));
+extern void sendto_prefix_one(Client *, Client *, MessageTag *, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 4, 5)));
 extern void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl);
-extern void sendto_opers(FORMAT_STRING(const char *), ...) __attribute__((format(printf,1,2)));
-extern void sendto_umode(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
-extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
-extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
+extern void sendto_opers(FORMAT_STRING(const char *), ...) __attribute__((format(printf, 1, 2)));
+extern void sendto_umode(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 2, 3)));
+extern void sendto_umode_global(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 2, 3)));
+extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 2, 3)));
 /** Send numeric message to a client.
  * @param to		The recipient
  * @param numeric	The numeric, one of RPL_* or ERR_*, see include/numeric.h
@@ -327,7 +327,7 @@ extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __at
  * @endcode
  * @ingroup SendFunctions
  */
-#define sendnumeric(to, numeric, ...) sendtaggednumericfmt(to, NULL, numeric, STR_ ## numeric, ##__VA_ARGS__)
+#define sendnumeric(to, numeric, ...) sendtaggednumericfmt(to, NULL, numeric, STR_##numeric, ##__VA_ARGS__)
 
 /** Send numeric message to a client - format to user specific needs.
  * This will ignore the numeric definition of src/numeric.c and always send ":me.name numeric clientname "
@@ -350,11 +350,11 @@ extern void sendnotice(Client *to, FORMAT_STRING(const char *pattern), ...) __at
  * @param ...		Format string parameters.
  * @note Don't forget to add a colon if you need it (eg `:%%s`), this is a common mistake.
  */
-#define sendtaggednumeric(to, mtags, numeric, ...) sendtaggednumericfmt(to, mtags, numeric, STR_ ## numeric, ##__VA_ARGS__)
+#define sendtaggednumeric(to, mtags, numeric, ...) sendtaggednumericfmt(to, mtags, numeric, STR_##numeric, ##__VA_ARGS__)
 
-extern void sendtaggednumericfmt(Client *to, MessageTag *mtags, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,4,5)));
+extern void sendtaggednumericfmt(Client *to, MessageTag *mtags, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 4, 5)));
 
-extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,2,3)));
+extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 2, 3)));
 /** Build numeric message so it is ready to be sent to a client - rarely used, normally you use sendnumeric() instead.
  * This function is normally only used in eg CAN_KICK and CAN_SET_TOPIC, where
  * you need to set an 'errbuf' with a full IRC protocol line to reject the request
@@ -367,8 +367,8 @@ extern void sendtxtnumeric(Client *to, FORMAT_STRING(const char *pattern), ...) 
  * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check include/numeric.h when in doubt!
  * @ingroup SendFunctions
  */
-#define buildnumeric(buf, buflen, to, numeric, ...) buildnumericfmt(buf, buflen, to, numeric, STR_ ## numeric, ##__VA_ARGS__)
-extern void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,5,6)));
+#define buildnumeric(buf, buflen, to, numeric, ...) buildnumericfmt(buf, buflen, to, numeric, STR_##numeric, ##__VA_ARGS__)
+extern void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 5, 6)));
 extern void sendto_server(Client *one, unsigned long caps, unsigned long nocaps, MessageTag *mtags, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 5, 6)));
 extern void send_raw_direct(Client *user, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 2, 3)));
 extern MODVAR int writecalls, writeb[];
@@ -402,7 +402,7 @@ extern int hunt_server(Client *, MessageTag *, const char *, int, int, const cha
 extern int cmd_server_estab(Client *);
 extern void umode_init(void);
 #define UMODE_GLOBAL 1
-#define UMODE_LOCAL 0
+#define UMODE_LOCAL  0
 extern int umode_allow_all(Client *client, int what);
 extern int umode_allow_unset(Client *client, int what);
 extern int umode_allow_opers(Client *client, int what);
@@ -440,8 +440,8 @@ extern time_t expire_cache(time_t);
 extern void del_queries(const char *);
 
 /* Hash stuff */
-#define NICK_HASH_TABLE_SIZE 32768
-#define CHAN_HASH_TABLE_SIZE 32768
+#define NICK_HASH_TABLE_SIZE   32768
+#define CHAN_HASH_TABLE_SIZE   32768
 #define WHOWAS_HASH_TABLE_SIZE 32768
 extern uint64_t siphash(const char *in, const char *k);
 extern uint64_t siphash_raw(const char *in, size_t len, const char *k);
@@ -471,16 +471,16 @@ extern Client *hash_find_server(const char *, Client *);
 
 /* Mode externs
 */
-extern MODVAR long UMODE_INVISIBLE; /*  makes user invisible */
-extern MODVAR long UMODE_OPER;      /*  Operator */
-extern MODVAR long UMODE_REGNICK;   /*  Nick set by services as registered */
-extern MODVAR long UMODE_SERVNOTICE;/* server notices such as kill */
-extern MODVAR long UMODE_HIDE;	     /* Hide from Nukes */
-extern MODVAR long UMODE_SECURE;    /*	User is a secure connect */
-extern MODVAR long UMODE_DEAF;      /* Deaf */
-extern MODVAR long UMODE_HIDEOPER;  /* Hide oper mode */
-extern MODVAR long UMODE_SETHOST;   /* used sethost */
-extern MODVAR long UMODE_HIDLE;     /* hides oper idle times */
+extern MODVAR long UMODE_INVISIBLE;  /*  makes user invisible */
+extern MODVAR long UMODE_OPER;       /*  Operator */
+extern MODVAR long UMODE_REGNICK;    /*  Nick set by services as registered */
+extern MODVAR long UMODE_SERVNOTICE; /* server notices such as kill */
+extern MODVAR long UMODE_HIDE;       /* Hide from Nukes */
+extern MODVAR long UMODE_SECURE;     /*	User is a secure connect */
+extern MODVAR long UMODE_DEAF;       /* Deaf */
+extern MODVAR long UMODE_HIDEOPER;   /* Hide oper mode */
+extern MODVAR long UMODE_SETHOST;    /* used sethost */
+extern MODVAR long UMODE_HIDLE;      /* hides oper idle times */
 extern MODVAR long AllUmodes, SendUmodes;
 
 extern MODVAR long SNO_KILLS;
@@ -518,7 +518,7 @@ extern char *strldup(const char *src, size_t n);
 
 extern void dopacket(Client *, char *, int);
 
-extern void debug(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf,2,3)));
+extern void debug(int, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 2, 3)));
 #if defined(DEBUGMODE)
 extern void send_usage(Client *, const char *);
 extern void count_memory(Client *, const char *);
@@ -551,14 +551,14 @@ extern int b64_decode(char const *src, unsigned char *target, size_t targsize);
 
 extern AuthenticationType Auth_FindType(const char *hash, const char *type);
 extern void AuthBlockToAuthConfig(ConfigEntry *ce, AuthConfig **list);
-extern void		Auth_FreeAuthConfig(AuthConfig *as);
-extern int		Auth_Check(Client *cptr, AuthConfig *as, const char *para);
-extern const char	*Auth_Hash(AuthenticationType type, const char *text);
-extern int   		Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext);
-extern int              Auth_AutoDetectHashType(const char *hash);
+extern void Auth_FreeAuthConfig(AuthConfig *as);
+extern int Auth_Check(Client *cptr, AuthConfig *as, const char *para);
+extern const char *Auth_Hash(AuthenticationType type, const char *text);
+extern int Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext);
+extern int Auth_AutoDetectHashType(const char *hash);
 
 extern void make_cloakedhost(Client *client, const char *curr, char *buf, size_t buflen);
-extern int  channel_canjoin(Client *client, const char *name);
+extern int channel_canjoin(Client *client, const char *name);
 extern char *collapse(char *pattern);
 extern void dcc_sync(Client *client);
 extern void request_rehash(Client *client);
@@ -568,10 +568,10 @@ extern int match_simple(const char *mask, const char *name);
 extern int match_esc(const char *mask, const char *name);
 extern int add_listener(ConfigItem_listen *conf);
 extern void link_cleanup(ConfigItem_link *link_ptr);
-extern void       listen_cleanup();
-extern int  numeric_collides(long numeric);
-extern void      flag_add(char ch);
-extern void      flag_del(char ch);
+extern void listen_cleanup();
+extern int numeric_collides(long numeric);
+extern void flag_add(char ch);
+extern void flag_del(char ch);
 extern void init_dynconf(void);
 extern int config_read_start(void);
 extern int is_config_read_finished(void);
@@ -596,7 +596,13 @@ extern void *safe_alloc(size_t size);
 /** Free previously allocate memory pointer.
  * This also sets the pointer to NULL, since that would otherwise be common to forget.
  */
-#define safe_free(x) do { if (x) free(x); x = NULL; } while(0)
+#define safe_free(x) \
+	do \
+	{ \
+		if (x) \
+			free(x); \
+		x = NULL; \
+	} while (0)
 /** Free previously allocated memory pointer.
  * Raw version which does not touch the pointer itself. You most likely don't
  * need this, as it's only used in 1 place in UnrealIRCd.
@@ -607,7 +613,16 @@ extern void *safe_alloc(size_t size);
  * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
  * @param str   The string you want to copy
  */
-#define safe_strdup(dst,str) do { if (dst) free(dst); if ((str) == NULL) dst = NULL; else dst = our_strdup(str); } while(0)
+#define safe_strdup(dst, str) \
+	do \
+	{ \
+		if (dst) \
+			free(dst); \
+		if ((str) == NULL) \
+			dst = NULL; \
+		else \
+			dst = our_strdup(str); \
+	} while (0)
 
 /** Return a copy of the string. Do not free any existing memory.
  * @param str   The string to duplicate
@@ -628,7 +643,16 @@ extern void *safe_alloc(size_t size);
  * @param str   The string you want to copy
  * @param sz    Length limit including the NUL byte, usually sizeof(dst)
  */
-#define safe_strldup(dst,str,sz) do { if (dst) free(dst); if (!str) dst = NULL; else dst = our_strldup(str,sz); } while(0)
+#define safe_strldup(dst, str, sz) \
+	do \
+	{ \
+		if (dst) \
+			free(dst); \
+		if (!str) \
+			dst = NULL; \
+		else \
+			dst = our_strldup(str, sz); \
+	} while (0)
 
 /** Return a duplicate of the specified string with a length limit. Do not free any existing memory.
  * @param str   The string you want to copy
@@ -653,7 +677,13 @@ extern void *safe_alloc_sensitive(size_t size);
  * It also sets the pointer to NULL, since that would otherwise be common to forget.
  * @note If you call this function on normally allocated memory (non-sensitive) then we will crash.
  */
-#define safe_free_sensitive(x) do { if (x) sodium_free(x); x = NULL; } while(0)
+#define safe_free_sensitive(x) \
+	do \
+	{ \
+		if (x) \
+			sodium_free(x); \
+		x = NULL; \
+	} while (0)
 
 /** Free previous memory (if any) and then save a duplicate of the specified string -
  * This is the 'sensitive' version which should only be used for HIGHLY sensitive data,
@@ -661,12 +691,26 @@ extern void *safe_alloc_sensitive(size_t size);
  * @param dst   The current pointer and the pointer where a new copy of the string will be stored.
  * @param str   The string you want to copy
  */
-#define safe_strdup_sensitive(dst,str) do { if (dst) sodium_free(dst); if (!(str)) dst = NULL; else dst = our_strdup_sensitive(str); } while(0)
+#define safe_strdup_sensitive(dst, str) \
+	do \
+	{ \
+		if (dst) \
+			sodium_free(dst); \
+		if (!(str)) \
+			dst = NULL; \
+		else \
+			dst = our_strdup_sensitive(str); \
+	} while (0)
 
 /** Safely destroy a string in memory (but do not free!) */
 #define destroy_string(str) sodium_memzero(str, strlen(str))
 
-#define safe_json_decref(result)	do { json_decref(result); result = NULL; } while(0)
+#define safe_json_decref(result) \
+	do \
+	{ \
+		json_decref(result); \
+		result = NULL; \
+	} while (0)
 
 /** @} */
 extern char *our_strdup(const char *str);
@@ -674,7 +718,7 @@ extern char *our_strldup(const char *str, size_t max);
 extern char *our_strdup_sensitive(const char *str);
 
 extern long config_checkval(const char *value, unsigned short flags);
-extern void config_status(FORMAT_STRING(const char *format), ...) __attribute__((format(printf,1,2)));
+extern void config_status(FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 1, 2)));
 extern void init_random();
 extern u_char getrandom8();
 extern uint16_t getrandom16();
@@ -682,9 +726,21 @@ extern uint32_t getrandom32();
 extern void gen_random_alnum(char *buf, int numbytes);
 
 /* Check config entry for empty/missing parameter */
-#define CheckNull(x) if ((!(x)->value) || (!(*((x)->value)))) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
+#define CheckNull(x) \
+	if ((!(x)->value) || (!(*((x)->value)))) \
+	{ \
+		config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); \
+		errors++; \
+		continue; \
+	}
 /* as above, but accepting empty string */
-#define CheckNullAllowEmpty(x) if ((!(x)->value)) { config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); errors++; continue; }
+#define CheckNullAllowEmpty(x) \
+	if ((!(x)->value)) \
+	{ \
+		config_error("%s:%i: missing parameter", (x)->file->filename, (x)->line_number); \
+		errors++; \
+		continue; \
+	}
 
 extern MODVAR char extchmstr[4][64];
 
@@ -740,8 +796,18 @@ extern void parse_ban_action_config(ConfigEntry *ce, BanAction **store_action);
 extern int test_ban_action_config(ConfigEntry *ce);
 extern void free_single_ban_action(BanAction *action);
 extern void free_all_ban_actions(BanAction *actions);
-#define safe_free_all_ban_actions(x) do { free_all_ban_actions(x); x = NULL; } while(0)
-#define safe_free_single_ban_action(x) do { free_single_ban_action(x); x = NULL; } while(0)
+#define safe_free_all_ban_actions(x) \
+	do \
+	{ \
+		free_all_ban_actions(x); \
+		x = NULL; \
+	} while (0)
+#define safe_free_single_ban_action(x) \
+	do \
+	{ \
+		free_single_ban_action(x); \
+		x = NULL; \
+	} while (0)
 BanAction *duplicate_ban_actions(BanAction *actions);
 extern int highest_ban_action(BanAction *action);
 extern BanActionValue banact_stringtoval(const char *s);
@@ -765,7 +831,7 @@ extern void remove_oper_modes(Client *client);
 extern char *spamfilter_inttostring_long(int v);
 extern int is_invited(Client *client, Channel *channel);
 extern void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, size_t pbuf_size, Channel *channel, int hide_local_modes);
-extern int op_can_override(const char *acl, Client *client,Channel *channel,void* extra);
+extern int op_can_override(const char *acl, Client *client, Channel *channel, void *extra);
 extern Client *find_chasing(Client *client, const char *user, int *chasing);
 extern MODVAR long opermode;
 extern MODVAR long sajoinmode;
@@ -810,7 +876,7 @@ extern MODVAR void (*join_channel)(Channel *channel, Client *client, MessageTag 
 extern MODVAR int (*can_join)(Client *client, Channel *channel, const char *key, char **errmsg);
 extern MODVAR void (*do_mode)(Channel *channel, Client *client, MessageTag *mtags, int parc, const char *parv[], time_t sendts, int samode);
 extern MODVAR MultiLineMode *(*set_mode)(Channel *channel, Client *cptr, int parc, const char *parv[], u_int *pcount,
-                            char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+                                         char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 extern MODVAR void (*set_channel_mode)(Channel *channel, MessageTag *mtags, const char *modes, const char *parameters);
 extern MODVAR void (*set_channel_topic)(Client *client, Channel *channel, MessageTag *recv_mtags, const char *topic, const char *set_by, time_t set_at);
 extern MODVAR void (*cmd_umode)(ClientContext *, Client *, MessageTag *, int, const char **);
@@ -828,7 +894,7 @@ extern MODVAR TKL *(*tkl_add_banexception)(int type, const char *usermask, const
                                            const char *reason, const char *set_by,
                                            time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 extern MODVAR TKL *(*tkl_add_nameban)(int type, const char *name, int hold, const char *reason, const char *setby,
-                                          time_t expire_at, time_t set_at, int flags);
+                                      time_t expire_at, time_t set_at, int flags);
 extern MODVAR TKL *(*tkl_add_spamfilter)(int type, const char *id, unsigned short target, BanAction *action,
                                          Match *match, const char *rule, SecurityGroup *except,
                                          const char *setby,
@@ -928,7 +994,7 @@ extern MODVAR void (*webserver_close_client)(Client *client);
 extern MODVAR int (*webserver_handle_body)(Client *client, WebRequest *web, const char *readbuf, int length);
 extern MODVAR void (*rpc_response)(Client *client, json_t *request, json_t *result);
 extern MODVAR void (*rpc_error)(Client *client, json_t *request, JsonRpcError error_code, const char *error_message);
-extern MODVAR void (*rpc_error_fmt)(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf,4,5)));
+extern MODVAR void (*rpc_error_fmt)(Client *client, json_t *request, JsonRpcError error_code, FORMAT_STRING(const char *fmt), ...) __attribute__((format(printf, 4, 5)));
 extern MODVAR void (*rpc_send_request_to_remote)(Client *source, Client *target, json_t *request);
 extern MODVAR void (*rpc_send_response_to_remote)(Client *source, Client *target, json_t *request);
 extern MODVAR int (*rrpc_supported_simple)(Client *target, char **problem_server);
@@ -944,7 +1010,12 @@ extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioLis
 extern MODVAR int (*crule_test)(const char *rule);
 extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
 extern MODVAR int (*crule_eval)(crule_context *context, CRuleNode *rule);
-#define safe_crule_free(x) do { if (x) crule_free(&x); } while(0)
+#define safe_crule_free(x) \
+	do \
+	{ \
+		if (x) \
+			crule_free(&x); \
+	} while (0)
 extern MODVAR void (*crule_free)(CRuleNode **);
 extern MODVAR const char *(*crule_errstring)(int errcode);
 extern MODVAR void (*ban_act_set_reputation)(Client *client, BanAction *action);
@@ -974,7 +1045,7 @@ extern MODVAR void (*channel_flood_expand_json)(json_t *root, Client *client);
 /* TLS functions */
 extern int early_init_tls();
 extern int init_tls();
-extern int ssl_handshake(Client *);   /* Handshake the accpeted con.*/
+extern int ssl_handshake(Client *);                           /* Handshake the accpeted con.*/
 extern int ssl_client_handshake(Client *, ConfigItem_link *); /* and the initiated con.*/
 extern int unreal_tls_accept(Client *acptr, int fd);
 extern int unreal_tls_connect(Client *acptr, int fd);
@@ -1226,13 +1297,19 @@ extern int is_handshake_finished(Client *client);
 extern void SetCapability(Client *acptr, const char *token);
 extern void ClearCapability(Client *acptr, const char *token);
 extern void new_message(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list);
-extern void new_message_special(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,4,5)));
+extern void new_message_special(Client *sender, MessageTag *recv_mtags, MessageTag **mtag_list, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 4, 5)));
 extern void generate_batch_id(char *str);
 extern MessageTag *find_mtag(MessageTag *mtags, const char *token);
 extern MessageTag *duplicate_mtag(MessageTag *mtag);
 extern MessageTag *duplicate_mtags(MessageTag *mtags);
 extern MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags);
-#define safe_free_message_tags(x) do { if (x) free_message_tags(x); x = NULL; } while(0)
+#define safe_free_message_tags(x) \
+	do \
+	{ \
+		if (x) \
+			free_message_tags(x); \
+		x = NULL; \
+	} while (0)
 extern void free_message_tags(MessageTag *m);
 extern int history_set_limit(const char *object, int max_lines, long max_t);
 extern int history_add(const char *object, MessageTag *mtags, const char *line);
@@ -1274,7 +1351,13 @@ extern int is_extended_ban(const char *str);
 extern int is_extended_server_ban(const char *str);
 extern int empty_mode(const char *m);
 extern void free_multilinemode(MultiLineMode *m);
-#define safe_free_multilinemode(m) do { if (m) free_multilinemode(m); m = NULL; } while(0)
+#define safe_free_multilinemode(m) \
+	do \
+	{ \
+		if (m) \
+			free_multilinemode(m); \
+		m = NULL; \
+	} while (0)
 extern ExtbanType mode_letter_to_extbantype(char c);
 extern ExtbanType listmode_sjoin_prefix_to_extbantype(char c);
 extern int valid_sid(const char *name);
@@ -1286,7 +1369,13 @@ extern char *filename_add_suffix(const char *fname, const char *suffix);
 extern int filename_has_suffix(const char *fname, const char *suffix);
 extern void addmultiline(MultiLine **l, const char *line);
 extern void freemultiline(MultiLine *l);
-#define safe_free_multiline(x) do { if (x) freemultiline(x); x = NULL; } while(0)
+#define safe_free_multiline(x) \
+	do \
+	{ \
+		if (x) \
+			freemultiline(x); \
+		x = NULL; \
+	} while (0)
 extern MultiLine *line2multiline(const char *str);
 extern void sendnotice_multiline(Client *client, MultiLine *m);
 extern void unreal_del_quotes(char *i);
@@ -1299,12 +1388,12 @@ extern void lost_server_link(Client *serv, const char *tls_error_string);
 extern const char *sendtype_to_cmd(SendType sendtype);
 extern MODVAR MessageTagHandler *mtaghandlers;
 extern MODVAR RPCHandler *rpchandlers;
-#define nv_find_by_name(stru, name)       do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
+#define nv_find_by_name(stru, name) do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 extern long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements);
-#define nv_find_by_value(stru, value)       do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
+#define nv_find_by_value(stru, value) do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
 extern const char *do_nv_find_by_value(NameValue *table, long value, int numelements);
 extern NameValuePrioList *add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value);
-extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf,4,5)));
+extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *name, FORMAT_STRING(const char *format), ...) __attribute__((format(printf, 4, 5)));
 /** Combination of add_nvplist() and buildnumeric() for convenience - only used in WHOIS response functions.
  * @param lst		The NameValuePrioList &head
  * @param priority	The priority of the item being added
@@ -1314,12 +1403,17 @@ extern void add_fmt_nvplist(NameValuePrioList **lst, int priority, const char *n
  * @param ...		The parameters for the numeric
  * @note Be sure to provide the correct number and type of parameters that belong to the numeric. Check include/numeric.h when in doubt!
  */
-#define add_nvplist_numeric(lst, priority, name, to, numeric, ...) add_nvplist_numeric_fmt(lst, priority, name, to, numeric, STR_ ## numeric, ##__VA_ARGS__)
-extern void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *name, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,6,7)));
+#define add_nvplist_numeric(lst, priority, name, to, numeric, ...) add_nvplist_numeric_fmt(lst, priority, name, to, numeric, STR_##numeric, ##__VA_ARGS__)
+extern void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *name, Client *to, int numeric, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 6, 7)));
 extern NameValuePrioList *find_nvplist(NameValuePrioList *list, const char *name);
 extern const char *get_nvplist(NameValuePrioList *list, const char *name);
 extern void free_nvplist(NameValuePrioList *lst);
-#define safe_free_nvplist(x)	do { free_nvplist(x); x = NULL; } while(0)
+#define safe_free_nvplist(x) \
+	do \
+	{ \
+		free_nvplist(x); \
+		x = NULL; \
+	} while (0)
 extern void del_nvplist_entry(NameValuePrioList *nvp, NameValuePrioList **lst);
 extern NameValuePrioList *duplicate_nvplist(NameValuePrioList *e);
 extern NameValuePrioList *duplicate_nvplist_append(NameValuePrioList *e, NameValuePrioList **list);
@@ -1375,7 +1469,15 @@ extern int security_group_exists(const char *name);
 extern SecurityGroup *add_security_group(const char *name, int order);
 extern SecurityGroup *find_security_group(const char *name);
 extern void free_security_group(SecurityGroup *s);
-#define safe_free_security_group(x) do { if (x) { free_security_group(x); x = NULL; } } while(0)
+#define safe_free_security_group(x) \
+	do \
+	{ \
+		if (x) \
+		{ \
+			free_security_group(x); \
+			x = NULL; \
+		} \
+	} while (0)
 extern SecurityGroup *duplicate_security_group(SecurityGroup *s);
 extern void set_security_group_defaults(void);
 extern int user_allowed_by_security_group(Client *client, SecurityGroup *s);
@@ -1436,7 +1538,7 @@ extern const char *log_level_terminal_color(LogLevel loglevel);
 extern LogType log_type_stringtoval(const char *str);
 extern const char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
-/* In debug mode we include file/linenumber. We put this arg at the end, however
+ /* In debug mode we include file/linenumber. We put this arg at the end, however
  * there is an issue if unreal_log() is used with a parameter like xyz ? log_data_string("zzz") : NULL,
  * since then our log_data_source() would be beyond NULL and thus would never be freed,
  * so we allocate and handle that differently. File/line would still be lost but at
@@ -1444,31 +1546,41 @@ extern const char *log_type_valtostring(LogType v);
  * parameters explicitly, put log_data_source() at the beginning of the argument list
  * and then use non-portable ## __VA_ARGS__ for the remainder.
  */
-#define unreal_log(level, sys, id, ...) do { \
-		if (!log_throttled((sys), (id))) { \
-			LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
-			do_unreal_log((level), (sys), (id), __VA_ARGS__, lds, NULL); \
-			log_data_free(lds); \
-		} \
-	} while(0)
-#define unreal_log_raw(level, sys, id, ...) do { \
-		if (!log_throttled((sys), (id))) { \
-			LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
-			do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, lds, NULL); \
-			log_data_free(lds); \
-		} \
-	} while(0)
+ #define unreal_log(level, sys, id, ...) \
+	 do \
+	 { \
+		 if (!log_throttled((sys), (id))) \
+		 { \
+			 LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
+			 do_unreal_log((level), (sys), (id), __VA_ARGS__, lds, NULL); \
+			 log_data_free(lds); \
+		 } \
+	 } while (0)
+ #define unreal_log_raw(level, sys, id, ...) \
+	 do \
+	 { \
+		 if (!log_throttled((sys), (id))) \
+		 { \
+			 LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
+			 do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, lds, NULL); \
+			 log_data_free(lds); \
+		 } \
+	 } while (0)
 #else
-#define unreal_log(level, sys, id, ...) do { \
-		if (!log_throttled((sys), (id))) \
-			do_unreal_log((level), (sys), (id), __VA_ARGS__, NULL); \
-	} while(0)
-#define unreal_log_raw(level, sys, id, ...) do { \
-		if (!log_throttled((sys), (id))) \
-			do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, NULL); \
-	} while(0)
+ #define unreal_log(level, sys, id, ...) \
+	 do \
+	 { \
+		 if (!log_throttled((sys), (id))) \
+			 do_unreal_log((level), (sys), (id), __VA_ARGS__, NULL); \
+	 } while (0)
+ #define unreal_log_raw(level, sys, id, ...) \
+	 do \
+	 { \
+		 if (!log_throttled((sys), (id))) \
+			 do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, NULL); \
+	 } while (0)
 #endif
-extern void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...) __attribute__((format(printf,5,0)));
+extern void do_unreal_log(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...) __attribute__((format(printf, 5, 0)));
 extern void do_unreal_log_raw(LogLevel loglevel, const char *subsystem, const char *event_id, Client *client, const char *msg, ...);
 extern void do_unreal_log_internal_from_remote(LogLevel loglevel, const char *subsystem, const char *event_id, MultiLine *msg, json_t *json, const char *json_serialized, Client *from_server);
 extern LogData *log_data_string(const char *key, const char *str);
@@ -1542,7 +1654,7 @@ extern int downloads_in_progress(void);
 /* end of url stuff */
 extern char *collapse(char *pattern);
 extern void clear_scache_hash_table(void);
-extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf,3,4)));
+extern void sendto_one(Client *, MessageTag *mtags, FORMAT_STRING(const char *), ...) __attribute__((format(printf, 3, 4)));
 extern void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
 extern void mark_data_to_send(Client *to);
 extern EVENT(garbage_collect);
@@ -1596,7 +1708,15 @@ extern MODVAR DynamicSetBlock unknown_users_set;
 extern MODVAR DynamicSetBlock dynamic_set;
 extern void start_dns_and_ident_lookup(Client *client);
 extern void free_webserver(WebServer *webserver);
-#define safe_free_webserver(x)	do { if (x) { free_webserver(x); x = NULL; } } while(0)
+#define safe_free_webserver(x) \
+	do \
+	{ \
+		if (x) \
+		{ \
+			free_webserver(x); \
+			x = NULL; \
+		} \
+	} while (0)
 extern Tag *find_tag(Client *client, const char *name);
 extern Tag *add_tag(Client *client, const char *name, int value);
 extern void free_all_tags(Client *client);
@@ -1612,7 +1732,15 @@ extern int highest_channel_member_count(Client *client);
 extern MODVAR long long central_spamfilter_last_download;
 extern int valid_operclass_character(char c);
 extern int valid_operclass_name(const char *str);
-#define safe_free_outgoingwebrequest(x)	do { if (x) { free_outgoingwebrequest(x); x = NULL; } } while(0)
+#define safe_free_outgoingwebrequest(x) \
+	do \
+	{ \
+		if (x) \
+		{ \
+			free_outgoingwebrequest(x); \
+			x = NULL; \
+		} \
+	} while (0)
 extern void free_outgoingwebrequest(OutgoingWebRequest *r);
 extern OutgoingWebRequest *duplicate_outgoingwebrequest(OutgoingWebRequest *orig);
 extern void url_callback(OutgoingWebRequest *r, const char *file, const char *memory, long long memory_len, const char *errorbuf, int cached, void *ptr);

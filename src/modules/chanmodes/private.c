@@ -20,18 +20,17 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/private",
-	"6.0",
-	"Channel Mode +p",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/private",
+    "6.0",
+    "Channel Mode +p",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_PRIVATE;
 
-#define IsPrivate(channel)    (channel->mode.mode & EXTCMODE_PRIVATE)
+#define IsPrivate(channel) (channel->mode.mode & EXTCMODE_PRIVATE)
 
 int private_modechar_add(Channel *channel, int modechar);
 

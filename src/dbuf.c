@@ -129,7 +129,7 @@ void dbuf_delete(dbuf *dyn, size_t length)
 **
 ** Partially based on extract_one_line() from ircd-hybrid. --kaniini
 */
-int  dbuf_getmsg(dbuf *dyn, char *buf)
+int dbuf_getmsg(dbuf *dyn, char *buf)
 {
 	dbufbuf *block;
 	int line_bytes = 0, empty_bytes = 0, phase = 0;
@@ -159,17 +159,20 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 				empty_bytes++;
 				if (phase == 1)
 					phase = 2;
-			}
-			else switch (phase)
-			{
-				case 0: phase = 1; /* FALLTHROUGH */
-				case 1: if (line_bytes++ < READBUFSIZE - 2)
-						*p++ = c;
-					break;
-				case 2: *p = '\0';
-					dbuf_delete(dyn, line_bytes + empty_bytes);
-					return MIN(line_bytes, READBUFSIZE - 2);
-			}
+			} else
+				switch (phase)
+				{
+					case 0:
+						phase = 1; /* FALLTHROUGH */
+					case 1:
+						if (line_bytes++ < READBUFSIZE - 2)
+							*p++ = c;
+						break;
+					case 2:
+						*p = '\0';
+						dbuf_delete(dyn, line_bytes + empty_bytes);
+						return MIN(line_bytes, READBUFSIZE - 2);
+				}
 		}
 	}
 
@@ -180,7 +183,8 @@ int  dbuf_getmsg(dbuf *dyn, char *buf)
 		 */
 		line_bytes = 0;
 		*buf = '\0';
-	} else {
+	} else
+	{
 		/* Zero terminate the string */
 		*p = '\0';
 	}
@@ -203,7 +207,7 @@ int dbuf_get(dbuf *dyn, char **buf)
 
 	/* First calculate the room needed... */
 	list_for_each_entry2(block, dbufbuf, &dyn->dbuf_list, dbuf_node)
-		bytes += block->size;
+	    bytes += block->size;
 
 	d = *buf = safe_alloc(bytes + 1);
 

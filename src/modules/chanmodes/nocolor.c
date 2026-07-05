@@ -21,18 +21,17 @@
 
 CMD_FUNC(nocolor);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/nocolor",
-	"4.2",
-	"Channel Mode +c",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/nocolor",
+    "4.2",
+    "Channel Mode +c",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NOCOLOR;
 
-#define IsNoColor(channel)    (channel->mode.mode & EXTCMODE_NOCOLOR)
+#define IsNoColor(channel) (channel->mode.mode & EXTCMODE_NOCOLOR)
 
 int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 const char *nocolor_prelocalpart(Client *client, Channel *channel, const char *comment);
@@ -45,7 +44,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	/* Channel mode */
 	memset(&req, 0, sizeof(req));
@@ -53,12 +52,12 @@ CmodeInfo req;
 	req.letter = 'c';
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOCOLOR);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, nocolor_can_send_to_channel);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_PART, 0, nocolor_prelocalpart);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT_CHAN, 0, nocolor_prelocalpart);
 	HookAddConstString(modinfo->handle, HOOKTYPE_PRE_LOCAL_QUIT, 0, nocolor_prelocalquit);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -75,14 +74,14 @@ MOD_UNLOAD()
 
 static int IsUsingColor(const char *s)
 {
-        if (!s)
-                return 0;
+	if (!s)
+		return 0;
 
-        for (; *s; s++)
-                if (*s == 3 || *s == 27 || *s == 4 || *s == 22) /* mirc color, ansi, rgb, reverse */
-                        return 1;
+	for (; *s; s++)
+		if (*s == 3 || *s == 27 || *s == 4 || *s == 22) /* mirc color, ansi, rgb, reverse */
+			return 1;
 
-        return 0;
+	return 0;
 }
 
 int nocolor_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)

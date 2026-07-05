@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_addomotd);
 
-#define MSG_ADDOMOTD 	"ADDOMOTD"	
+#define MSG_ADDOMOTD "ADDOMOTD"
 
-ModuleHeader MOD_HEADER
-  = {
-	"addomotd",
-	"5.0",
-	"command /addomotd", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "addomotd",
+    "5.0",
+    "command /addomotd",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -67,7 +66,7 @@ CMD_FUNC(cmd_addomotd)
 	if (!MyConnect(client))
 		return;
 
-	if (!ValidatePermissionsForPath("server:addomotd",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:addomotd", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;

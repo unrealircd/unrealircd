@@ -28,20 +28,22 @@ int tags_rehash_complete(void);
 Module *module;
 
 ModuleHeader MOD_HEADER = {
-	"clienttagdeny",
-	"5.0",
-	"Informs clients about supported client tags",
-	"k4be",
-	"unrealircd-6",
+    "clienttagdeny",
+    "5.0",
+    "Informs clients about supported client tags",
+    "k4be",
+    "unrealircd-6",
 };
 
-MOD_INIT(){
+MOD_INIT()
+{
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	return MOD_SUCCESS;
 }
 
-MOD_LOAD(){
+MOD_LOAD()
+{
 	module = modinfo->handle;
 	ISupportAdd(module, "CLIENTTAGDENY", ct_isupport_param());
 	HookAdd(module, HOOKTYPE_REHASH_COMPLETE, 0, tags_rehash_complete);
@@ -49,29 +51,33 @@ MOD_LOAD(){
 	return MOD_SUCCESS;
 }
 
-MOD_UNLOAD(){
+MOD_UNLOAD()
+{
 	return MOD_SUCCESS;
 }
 
 #define BUFLEN 500
 
-char *ct_isupport_param(void){
+char *ct_isupport_param(void)
+{
 	static char buf[BUFLEN];
 	MessageTagHandler *m;
-	
+
 	strlcpy(buf, "*", sizeof(buf));
 
-	for (m = mtaghandlers; m; m = m->next) {
-		if (!m->unloaded && m->name[0] == '+'){
+	for (m = mtaghandlers; m; m = m->next)
+	{
+		if (!m->unloaded && m->name[0] == '+')
+		{
 			strlcat(buf, ",-", sizeof(buf));
-			strlcat(buf, m->name+1, sizeof(buf));
+			strlcat(buf, m->name + 1, sizeof(buf));
 		}
 	}
 	return buf;
 }
 
-int tags_rehash_complete(void){
+int tags_rehash_complete(void)
+{
 	ISupportSet(module, "CLIENTTAGDENY", ct_isupport_param());
 	return HOOK_CONTINUE;
 }
-

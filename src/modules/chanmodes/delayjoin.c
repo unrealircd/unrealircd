@@ -5,16 +5,15 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/delayjoin",   /* Name of module */
-	"5.0", /* Version */
-	"delayed join (+D,+d)", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/delayjoin",   /* Name of module */
+    "5.0", /* Version */
+    "delayed join (+D,+d)", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
-#define MOD_DATA_STR "delayjoin"
+#define MOD_DATA_STR       "delayjoin"
 #define MOD_DATA_INVISIBLE "1"
 
 static long UMODE_PRIVDEAF = 0;
@@ -130,12 +129,12 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 	set_user_invisible(client, channel, 0);
 
 	ircsnprintf(joinbuf, sizeof(joinbuf), ":%s!%s@%s JOIN %s",
-				client->name, client->user->username, GetHost(client), channel->name);
+	            client->name, client->user->username, GetHost(client), channel->name);
 
 	ircsnprintf(exjoinbuf, sizeof(exjoinbuf), ":%s!%s@%s JOIN %s %s :%s",
-		client->name, client->user->username, GetHost(client), channel->name,
-		IsLoggedIn(client) ? client->user->account : "*",
-		client->info);
+	            client->name, client->user->username, GetHost(client), channel->name,
+	            IsLoggedIn(client) ? client->user->account : "*",
+	            client->info);
 
 	new_message_special(client, recv_mtags, &mtags, ":%s JOIN %s", client->name, channel->name);
 	for (i = channel->members; i; i = i->next)
@@ -153,7 +152,7 @@ void clear_user_invisible_announce(Channel *channel, Client *client, MessageTag 
 
 	/* If this was the last invisible user to become visible, then set -d */
 	if ((channel->mode.mode & EXTMODE_POST_DELAYED) && !channel_has_invisible_users(channel))
-	        clear_post_delayed(channel);
+		clear_post_delayed(channel);
 }
 
 int delayjoin_is_ok(Client *client, Channel *channel, char mode, const char *para, int checkt, int what)
@@ -176,7 +175,7 @@ int moded_part(Client *client, Channel *channel, MessageTag *mtags, const char *
 	{
 		set_user_invisible(client, channel, 0);
 		if (!channel_has_invisible_users(channel))
-		        clear_post_delayed(channel);
+			clear_post_delayed(channel);
 	}
 	return 0;
 }
@@ -186,7 +185,7 @@ int moded_quit(Client *client, MessageTag *mtags, const char *comment)
 	Membership *membership;
 	Channel *channel;
 
-	for (membership = client->user->channel; membership; membership=membership->next)
+	for (membership = client->user->channel; membership; membership = membership->next)
 	{
 		channel = membership->channel;
 		/* Identical to moded_part() */
@@ -244,8 +243,8 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 		{
 			if (pm.what == MODE_ADD && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
 			{
-				Member* i;
-				Client *user = find_client(pm.param,NULL);
+				Member *i;
+				Client *user = find_client(pm.param, NULL);
 				if (!user)
 					continue;
 
@@ -271,18 +270,18 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 							           channel->name,
 							           IsLoggedIn(i->client) ? i->client->user->account : "*",
 							           i->client->info);
-						} else {
+						} else
+						{
 							sendto_one(user, mtags, ":%s!%s@%s JOIN :%s", i->client->name, i->client->user->username, GetHost(i->client), channel->name);
 						}
 						free_message_tags(mtags);
 					}
 				}
-
 			}
 			if (pm.what == MODE_DEL && (pm.modechar == 'o' || pm.modechar == 'h' || pm.modechar == 'a' || pm.modechar == 'q' || pm.modechar == 'v'))
 			{
-				Member* i;
-				Client *user = find_client(pm.param,NULL);
+				Member *i;
+				Client *user = find_client(pm.param, NULL);
 				if (!user)
 					continue;
 
@@ -305,7 +304,6 @@ int moded_chanmode(Client *client, Channel *channel, MessageTag *recv_mtags, con
 						free_message_tags(mtags);
 					}
 				}
-
 			}
 		}
 	}

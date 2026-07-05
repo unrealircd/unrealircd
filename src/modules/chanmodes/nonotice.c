@@ -19,18 +19,17 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/nonotice",
-	"4.2",
-	"Channel Mode +T",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/nonotice",
+    "4.2",
+    "Channel Mode +T",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NONOTICE;
 
-#define IsNoNotice(channel)    (channel->mode.mode & EXTCMODE_NONOTICE)
+#define IsNoNotice(channel) (channel->mode.mode & EXTCMODE_NONOTICE)
 
 int nonotice_check_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
@@ -48,7 +47,7 @@ MOD_INIT()
 	req.letter = 'T';
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NONOTICE);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_CHANNEL, 0, nonotice_check_can_send_to_channel);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);

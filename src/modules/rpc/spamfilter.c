@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/spamfilter",
-	"1.0.3",
-	"spamfilter.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/spamfilter",
+    "1.0.3",
+    "spamfilter.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -177,7 +176,7 @@ RPC_CALL_FUNC(rpc_spamfilter_get)
 		return; /* Error already communicated to client */
 
 	/* For spamfilter.get we first try global spamfilters, then local. */
-	tkl = find_tkl_spamfilter(TKL_SPAMF|TKL_GLOBAL, name, action, targets);
+	tkl = find_tkl_spamfilter(TKL_SPAMF | TKL_GLOBAL, name, action, targets);
 	if (!tkl)
 	{
 		tkl = find_tkl_spamfilter(TKL_SPAMF, name, action, targets);
@@ -197,7 +196,7 @@ RPC_CALL_FUNC(rpc_spamfilter_get)
 RPC_CALL_FUNC(rpc_spamfilter_add)
 {
 	json_t *result;
-	int type = TKL_SPAMF|TKL_GLOBAL;
+	int type = TKL_SPAMF | TKL_GLOBAL;
 	const char *str;
 	const char *name, *reason;
 	const char *set_by;
@@ -277,7 +276,7 @@ RPC_CALL_FUNC(rpc_spamfilter_add)
 RPC_CALL_FUNC(rpc_spamfilter_del)
 {
 	json_t *result;
-	int type = TKL_SPAMF|TKL_GLOBAL;
+	int type = TKL_SPAMF | TKL_GLOBAL;
 	const char *name;
 	const char *set_by;
 	TKL *tkl;
@@ -325,7 +324,8 @@ RPC_CALL_FUNC(rpc_spamfilter_del)
 	if (!tkl)
 	{
 		rpc_response(client, request, result);
-	} else {
+	} else
+	{
 		/* Spamfilter still exists so failure to remove.
 		 * Actually this may not be an internal error, it could be an
 		 * incorrect request, such as asking to remove a config-based spamfilter.

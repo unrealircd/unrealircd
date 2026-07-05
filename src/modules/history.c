@@ -28,17 +28,16 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"history",
-	"5.0",
-	"Simple history command for end-users",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "history",
+    "5.0",
+    "Simple history command for end-users",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 #define HISTORY_LINES_DEFAULT 100
-#define HISTORY_LINES_MAX 100
+#define HISTORY_LINES_MAX     100
 
 CMD_FUNC(cmd_history);
 
@@ -65,7 +64,7 @@ void history_usage(Client *client)
 	sendnotice(client, "  Ex: /HISTORY #lobby");
 	sendnotice(client, "  Ex: /HISTORY #lobby 50");
 	sendnotice(client, "The lines-to-display value must be 1-%d, the default is %d",
-		HISTORY_LINES_MAX, HISTORY_LINES_DEFAULT);
+	           HISTORY_LINES_MAX, HISTORY_LINES_DEFAULT);
 	sendnotice(client, "Naturally, the line count and time limits in channel mode +H are obeyed");
 }
 

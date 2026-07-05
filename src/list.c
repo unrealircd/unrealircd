@@ -23,35 +23,34 @@
 void free_link(Link *);
 Link *make_link();
 
-ID_Copyright
-    ("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
+ID_Copyright("(C) 1988 University of Oulu, Computing Center and Jarkko Oikarinen");
 ID_Notes("2.24 4/20/94");
 
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 static struct liststats {
-	int  inuse;
+	int inuse;
 } cloc, crem, users, servs, links;
 
 #endif
 
-MODVAR int  flinks = 0;
-MODVAR int  freelinks = 0;
+MODVAR int flinks = 0;
+MODVAR int freelinks = 0;
 MODVAR Link *freelink = NULL;
 MODVAR Member *freemember = NULL;
 MODVAR Membership *freemembership = NULL;
-MODVAR int  numclients = 0;
+MODVAR int numclients = 0;
 
 // TODO: Document whether servers are included or excluded in these lists...
 
-MODVAR struct list_head unknown_list;		/**< Local clients in handshake (may become a user or server later) */
-MODVAR struct list_head control_list;		/**< Local "control channel" clients */
-MODVAR struct list_head lclient_list;		/**< Local clients (users only, right?) */
-MODVAR struct list_head client_list;		/**< All clients - local and remote (not in handshake) */
-MODVAR struct list_head server_list;		/**< Locally connected servers */
-MODVAR struct list_head oper_list;		/**< Locally connected IRC Operators */
-MODVAR struct list_head global_server_list;	/**< All servers (local and remote) */
-MODVAR struct list_head dead_list;		/**< All dead clients (local and remote) that will soon be freed in the main loop */
-MODVAR struct list_head rpc_remote_list;	/**< All remote RPC clients (very specific use-case) */
+MODVAR struct list_head unknown_list;  /**< Local clients in handshake (may become a user or server later) */
+MODVAR struct list_head control_list;  /**< Local "control channel" clients */
+MODVAR struct list_head lclient_list;  /**< Local clients (users only, right?) */
+MODVAR struct list_head client_list;  /**< All clients - local and remote (not in handshake) */
+MODVAR struct list_head server_list;  /**< Locally connected servers */
+MODVAR struct list_head oper_list;  /**< Locally connected IRC Operators */
+MODVAR struct list_head global_server_list; /**< All servers (local and remote) */
+MODVAR struct list_head dead_list;  /**< All dead clients (local and remote) that will soon be freed in the main loop */
+MODVAR struct list_head rpc_remote_list; /**< All remote RPC clients (very specific use-case) */
 
 static mp_pool_t *client_pool = NULL;
 static mp_pool_t *local_client_pool = NULL;
@@ -60,7 +59,7 @@ static mp_pool_t *link_pool = NULL;
 
 void initlists(void)
 {
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	memset(&cloc, 0, sizeof(cloc));
 	memset(&crem, 0, sizeof(crem));
 	memset(&users, 0, sizeof(users));
@@ -99,7 +98,7 @@ Client *make_client(Client *from, Client *servr)
 	Client *client = mp_pool_get(client_pool);
 	memset(client, 0, sizeof(Client));
 
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	if (!from)
 		cloc.inuse++;
 	else
@@ -107,7 +106,7 @@ Client *make_client(Client *from, Client *servr)
 #endif
 
 	/* Note: all fields are already NULL/0, no need to set here */
-	client->direction = from ? from : client;	/* 'from' of local client is self! */
+	client->direction = from ? from : client; /* 'from' of local client is self! */
 	client->uplink = servr;
 	client->status = CLIENT_STATUS_UNKNOWN;
 
@@ -120,16 +119,16 @@ Client *make_client(Client *from, Client *servr)
 	{
 		/* Local client */
 		const char *id;
-		
+
 		client->local = mp_pool_get(local_client_pool);
 		memset(client->local, 0, sizeof(LocalClient));
-		
+
 		INIT_LIST_HEAD(&client->lclient_node);
 		INIT_LIST_HEAD(&client->special_node);
 
 		client->local->fake_lag = client->local->last_msg_received =
-		client->lastnick = client->local->creationtime =
-		client->local->idle_since = TStime();
+		    client->lastnick = client->local->creationtime =
+		        client->local->idle_since = TStime();
 		client->local->class = NULL;
 		client->local->passwd = NULL;
 		client->local->sockhost[0] = '\0';
@@ -196,7 +195,7 @@ void free_client(Client *client)
 			dbuf_delete(&client->local->recvQ, DBufLength(&client->local->recvQ));
 			dbuf_delete(&client->local->sendQ, DBufLength(&client->local->sendQ));
 			free_all_tags(client);
-			
+
 			mp_pool_release(client->local);
 		}
 		if (*client->id)
@@ -232,7 +231,7 @@ User *make_user(Client *client)
 		memset(user, 0, sizeof(User));
 		client->user = user;
 
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 		users.inuse++;
 #endif
 
@@ -253,7 +252,8 @@ User *make_user(Client *client)
 		{
 			/* initially set client->user->realhost to IP */
 			strlcpy(user->realhost, client->ip, sizeof(user->realhost));
-		} else {
+		} else
+		{
 			*user->realhost = '\0';
 		}
 		/* These may change later (eg when using hostname instead of IP),
@@ -272,7 +272,7 @@ Server *make_server(Client *client)
 	if (!serv)
 	{
 		serv = safe_alloc(sizeof(Server));
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 		servs.inuse++;
 #endif
 		*serv->by = '\0';
@@ -316,7 +316,7 @@ void free_user(Client *client)
 	safe_free(client->user->operlogin);
 	safe_free(client->user->snomask);
 	mp_pool_release(client->user);
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	users.inuse--;
 #endif
 	client->user = NULL;
@@ -355,17 +355,15 @@ void remove_client_from_list(Client *client)
 		if (client->uplink && client->uplink->server)
 			client->uplink->server->users--;
 	}
-	if (IsUnknown(client) || IsConnecting(client) || IsHandshake(client)
-		|| IsTLSHandshake(client)
-	)
+	if (IsUnknown(client) || IsConnecting(client) || IsHandshake(client) || IsTLSHandshake(client))
 		irccounts.unknown--;
 
-	if (IsUser(client))	/* Only persons can have been added before */
+	if (IsUser(client)) /* Only persons can have been added before */
 	{
 		add_history(client, 0, WHOWAS_EVENT_QUIT);
-		off_history(client);	/* Remove all pointers to client */
+		off_history(client); /* Remove all pointers to client */
 	}
-	
+
 	if (client->user)
 		free_user(client);
 	if (client->server)
@@ -378,11 +376,11 @@ void remove_client_from_list(Client *client)
 		safe_free(client->server->features.software);
 		safe_free(client->server->features.nickchars);
 		safe_free(client->server);
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 		servs.inuse--;
 #endif
 	}
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	if (client->local && client->local->fd == -2)
 		cloc.inuse--;
 	else
@@ -422,7 +420,7 @@ Link *make_link(void)
 {
 	Link *l = mp_pool_get(link_pool);
 	memset(l, 0, sizeof(Link));
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	links.inuse++;
 #endif
 	return l;
@@ -433,7 +431,7 @@ void free_link(Link *lp)
 {
 	mp_pool_release(lp);
 
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	links.inuse--;
 #endif
 }
@@ -441,7 +439,7 @@ void free_link(Link *lp)
 /** Returns the length (entry count) of a +beI list */
 int link_list_length(Link *lp)
 {
-	int  count = 0;
+	int count = 0;
 
 	for (; lp; lp = lp->next)
 		count++;
@@ -453,7 +451,7 @@ Ban *make_ban(void)
 	Ban *lp;
 
 	lp = safe_alloc(sizeof(Ban));
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	links.inuse++;
 #endif
 	return lp;
@@ -462,7 +460,7 @@ Ban *make_ban(void)
 void free_ban(Ban *lp)
 {
 	safe_free(lp);
-#ifdef	DEBUGMODE
+#ifdef DEBUGMODE
 	links.inuse--;
 #endif
 }
@@ -489,7 +487,8 @@ void append_ListItem(ListStruct *item, ListStruct **list)
 		return;
 	}
 
-	for (l = *list; l->next; l = l->next);
+	for (l = *list; l->next; l = l->next)
+		;
 	l->next = item;
 	item->prev = l;
 }
@@ -516,14 +515,14 @@ void del_ListItem(ListStruct *item, ListStruct **list)
 void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 {
 	ListStructPrio *x, *last = NULL;
-	
+
 	if (!*list)
 	{
 		/* We are the only item. Easy. */
 		*list = new;
 		return;
 	}
-	
+
 	for (x = *list; x; x = x->next)
 	{
 		last = x;
@@ -540,7 +539,8 @@ void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 			new->next = x;
 			x->prev->next = new;
 			x->prev = new;
-		} else {
+		} else
+		{
 			/* We are the new head */
 			*list = new;
 			new->next = x;
@@ -558,14 +558,14 @@ void add_ListItemPrio(ListStructPrio *new, ListStructPrio **list, int priority)
 
 void _add_name_list(NameList **list, const char *name)
 {
-	NameList *e = safe_alloc(sizeof(NameList)+strlen(name)+1);
+	NameList *e = safe_alloc(sizeof(NameList) + strlen(name) + 1);
 	strcpy(e->name, name); /* safe, allocated above */
 	AddListItem(e, *list);
 }
 
 void _append_name_list(NameList **list, const char *name)
 {
-	NameList *e = safe_alloc(sizeof(NameList)+strlen(name)+1);
+	NameList *e = safe_alloc(sizeof(NameList) + strlen(name) + 1);
 	strcpy(e->name, name); /* safe, allocated above */
 	AppendListItem(e, *list);
 }
@@ -588,7 +588,7 @@ NameList *duplicate_name_list(NameList *e)
 	/* We do manual pointer tracking here to speed things up */
 	for (; e; e = e->next)
 	{
-		n = safe_alloc(sizeof(NameList)+strlen(e->name)+1);
+		n = safe_alloc(sizeof(NameList) + strlen(e->name) + 1);
 		strcpy(n->name, e->name); /* safe, allocated above */
 		if (tail)
 			tail->next = n;
@@ -739,34 +739,35 @@ NameValuePrioList *duplicate_nvplist_append(NameValuePrioList *e, NameValuePrioL
 	return *list;
 }
 
-#define nv_find_by_name(stru, name)	do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
+#define nv_find_by_name(stru, name) do_nv_find_by_name(stru, name, ARRAY_SIZEOF((stru)))
 
 long do_nv_find_by_name(NameValue *table, const char *cmd, int numelements)
 {
 	int start = 0;
-	int stop = numelements-1;
+	int stop = numelements - 1;
 	int mid;
-	while (start <= stop) {
-		mid = (start+stop)/2;
+	while (start <= stop)
+	{
+		mid = (start + stop) / 2;
 
-		if (smycmp(cmd,table[mid].name) < 0) {
-			stop = mid-1;
-		}
-		else if (strcmp(cmd,table[mid].name) == 0) {
+		if (smycmp(cmd, table[mid].name) < 0)
+		{
+			stop = mid - 1;
+		} else if (strcmp(cmd, table[mid].name) == 0)
+		{
 			return table[mid].value;
-		}
-		else
-			start = mid+1;
+		} else
+			start = mid + 1;
 	}
 	return 0;
 }
 
-#define nv_find_by_value(stru, value)	do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
+#define nv_find_by_value(stru, value) do_nv_find_by_value(stru, value, ARRAY_SIZEOF((stru)))
 const char *do_nv_find_by_value(NameValue *table, long value, int numelements)
 {
 	int i;
 
-	for (i=0; i < numelements; i++)
+	for (i = 0; i < numelements; i++)
 		if (table[i].value == value)
 			return table[i].name;
 

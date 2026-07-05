@@ -22,17 +22,16 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"antirandom",
-	"1.5",
-	"Detect and ban users with random names",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "antirandom",
+    "1.5",
+    "Detect and ban users with random names",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 #ifndef MAX
- #define MAX(x,y) ((x) > (y) ? (x) : (y))
+ #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
 /* "<char1><char2>" followed by "<rest>" */
@@ -482,7 +481,7 @@ static char *triples_txt[] = {
 /* clang-format on */
 
 /* Used for parsed triples: */
-#define TRIPLES_REST_SIZE	32
+#define TRIPLES_REST_SIZE 32
 typedef struct Triples Triples;
 struct Triples {
 	Triples *next;
@@ -576,21 +575,19 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::antirandom... */
 	if (!ce || !ce->name || strcmp(ce->name, "antirandom"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
-		} else
-		if (!strcmp(cep->name, "except-hosts"))
+		} else if (!strcmp(cep->name, "except-hosts"))
 		{
-		} else
-		if (!strcmp(cep->name, "except-webirc"))
+		} else if (!strcmp(cep->name, "except-webirc"))
 		{
 			/* This should normally be UNDER the generic 'set::antirandom::%s with no value'
 			 * stuff but I put it here because people may think it's a hostlist and then
@@ -602,39 +599,32 @@ int antirandom_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				             cep->file->filename, cep->line_number);
 				errors++;
 			}
-		} else
-		if (!cep->value)
+		} else if (!cep->value)
 		{
 			config_error("%s:%i: set::antirandom::%s with no value",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "threshold"))
+		} else if (!strcmp(cep->name, "threshold"))
 		{
 			req.threshold = 1;
-		} else
-		if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
+		} else if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
 		{
 			req.ban_action = 1;
 			errors += test_ban_action_config(cep);
-		} else
-		if (!strcmp(cep->name, "ban-reason"))
+		} else if (!strcmp(cep->name, "ban-reason"))
 		{
 			req.ban_reason = 1;
-		} else
-		if (!strcmp(cep->name, "ban-time"))
+		} else if (!strcmp(cep->name, "ban-time"))
 		{
 			req.ban_time = 1;
-		} else
-		if (!strcmp(cep->name, "convert-to-lowercase"))
+		} else if (!strcmp(cep->name, "convert-to-lowercase"))
 		{
-		} else
-		if (!strcmp(cep->name, "show-failedconnects"))
+		} else if (!strcmp(cep->name, "show-failedconnects"))
 		{
 		} else
 		{
 			config_error("%s:%i: unknown directive set::antirandom::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -648,45 +638,38 @@ int antirandom_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::antirandom... */
 	if (!ce || !ce->name || strcmp(ce->name, "antirandom"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &cfg.except);
-		} else
-		if (!strcmp(cep->name, "except-hosts"))
+		} else if (!strcmp(cep->name, "except-hosts"))
 		{
 			/* backwards compatible with set::antirandom::except */
 			for (cep2 = cep->items; cep2; cep2 = cep2->next)
 				unreal_add_masks(&cfg.except->mask, cep2);
-		} else
-		if (!strcmp(cep->name, "except-webirc"))
+		} else if (!strcmp(cep->name, "except-webirc"))
 		{
 			/* backwards compatible with set::antirandom::except */
 			cfg.except->webirc = config_checkval(cep->value, CFG_YESNO);
-		} else
-		if (!strcmp(cep->name, "threshold"))
+		} else if (!strcmp(cep->name, "threshold"))
 		{
 			cfg.threshold = atoi(cep->value);
-		} else
-		if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
+		} else if (!strcmp(cep->name, "ban-action") || !strcmp(cep->name, "action"))
 		{
 			parse_ban_action_config(cep, &cfg.ban_action);
-		} else
-		if (!strcmp(cep->name, "ban-reason"))
+		} else if (!strcmp(cep->name, "ban-reason"))
 		{
 			safe_strdup(cfg.ban_reason, cep->value);
-		} else
-		if (!strcmp(cep->name, "ban-time"))
+		} else if (!strcmp(cep->name, "ban-time"))
 		{
 			cfg.ban_time = config_checkval(cep->value, CFG_TIME);
-		} else
-		if (!strcmp(cep->name, "convert-to-lowercase"))
+		} else if (!strcmp(cep->name, "convert-to-lowercase"))
 		{
 			cfg.convert_to_lowercase = config_checkval(cep->value, CFG_YESNO);
 		}
@@ -702,11 +685,27 @@ int antirandom_config_posttest(int *errs)
 {
 	int errors = 0;
 
-	if (!req.threshold) { config_error("set::antirandom::threshold missing"); errors++; }
-	if (!req.ban_action) { config_error("set::antirandom::ban-action missing"); errors++; }
-	if (!req.ban_time) { config_error("set::antirandom::ban-time missing"); errors++; }
-	if (!req.ban_reason) { config_error("set::antirandom::ban-reason missing"); errors++; }
-	
+	if (!req.threshold)
+	{
+		config_error("set::antirandom::threshold missing");
+		errors++;
+	}
+	if (!req.ban_action)
+	{
+		config_error("set::antirandom::ban-action missing");
+		errors++;
+	}
+	if (!req.ban_time)
+	{
+		config_error("set::antirandom::ban-time missing");
+		errors++;
+	}
+	if (!req.ban_reason)
+	{
+		config_error("set::antirandom::ban-reason missing");
+		errors++;
+	}
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -722,17 +721,17 @@ static int init_stuff(void)
 static int init_triples(void)
 {
 	char **s;
-	Triples *e, *last=NULL;
-	int cnt=0;
+	Triples *e, *last = NULL;
+	int cnt = 0;
 
-	for (s=triples_txt; *s; s++)
+	for (s = triples_txt; *s; s++)
 	{
 		cnt++;
 		e = safe_alloc(sizeof(Triples));
 		if (strlen(*s) > 2)
 		{
 			config_error("init_triples: error parsing triples_txt, cnt=%d, item='%s' (length>2)",
-				cnt, *s);
+			             cnt, *s);
 			return 0;
 		}
 		strcpy(e->two, *s); /* (SAFE) */
@@ -740,13 +739,13 @@ static int init_triples(void)
 		if (!*s)
 		{
 			config_error("init_triples: error parsing triples_txt, cnt=%d, got NULL expected param",
-				cnt);
+			             cnt);
 			return 0;
 		}
-		if (strlen(*s) > TRIPLES_REST_SIZE-1)
+		if (strlen(*s) > TRIPLES_REST_SIZE - 1)
 		{
 			config_error("init_triples: error parsing triples_txt, cnt=%d, item='%s' (length>%d)",
-				cnt, *s, TRIPLES_REST_SIZE-1);
+			             cnt, *s, TRIPLES_REST_SIZE - 1);
 			return 0;
 		}
 		strcpy(e->rest, *s); /* (SAFE) */
@@ -772,27 +771,30 @@ static int internal_getscore(char *str)
 	Triples *t;
 	register char *s;
 	int score = 0;
-	int highest_vowels=0, highest_consonants=0, highest_digits=0;
-	int vowels=0, consonants=0, digits=0;
+	int highest_vowels = 0, highest_consonants = 0, highest_digits = 0;
+	int vowels = 0, consonants = 0, digits = 0;
 
 	/* Fast digit/consonant/vowel checks... */
-	for (s=str; *s; s++)
+	for (s = str; *s; s++)
 	{
 		if ((*s >= '0') && (*s <= '9'))
 			digits++;
-		else {
+		else
+		{
 			highest_digits = MAX(highest_digits, digits);
 			digits = 0;
 		}
 		if (strchr("bcdfghjklmnpqrstvwxz", *s))
 			consonants++;
-		else {
+		else
+		{
 			highest_consonants = MAX(highest_consonants, consonants);
 			consonants = 0;
 		}
 		if (strchr("aeiou", *s))
 			vowels++;
-		else {
+		else
+		{
 			highest_vowels = MAX(highest_vowels, vowels);
 			vowels = 0;
 		}
@@ -801,7 +803,7 @@ static int internal_getscore(char *str)
 	digits = MAX(highest_digits, digits);
 	consonants = MAX(highest_consonants, consonants);
 	vowels = MAX(highest_vowels, vowels);
-	
+
 	if (digits >= 5)
 	{
 		score += digits;
@@ -814,18 +816,17 @@ static int internal_getscore(char *str)
 	{
 		score += consonants;
 	}
-	
-	for (t=triples; t; t=t->next)
+
+	for (t = triples; t; t = t->next)
 	{
-		for (s=str; *s; s++)
+		for (s = str; *s; s++)
 			if ((t->two[0] == s[0]) && (t->two[1] == s[1]) && s[2] && strchr(t->rest, s[2]))
 			{
 				score++; /* OK */
 			}
 	}
 
-	
-	
+
 	return score;
 }
 
@@ -837,7 +838,7 @@ static int get_spam_score(Client *client)
 	char *nick = client->name;
 	char *user = client->user->username;
 	char *gecos = client->info;
-	char nbuf[NICKLEN+1], ubuf[USERLEN+1], rbuf[REALLEN+1];
+	char nbuf[NICKLEN + 1], ubuf[USERLEN + 1], rbuf[REALLEN + 1];
 	int nscore, uscore, gscore, score;
 
 	if (cfg.convert_to_lowercase)
@@ -874,8 +875,7 @@ int antirandom_preconnect(Client *client)
 			unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
 			           "[antirandom] would have denied access to user with score $score: $client.details:$client.user.realname",
 			           log_data_integer("score", score));
-		} else
-		if (n <= 0)
+		} else if (n <= 0)
 		{
 			/* No action / exempt */
 		} else
@@ -883,8 +883,8 @@ int antirandom_preconnect(Client *client)
 			if (cfg.show_failedconnects)
 			{
 				unreal_log(ULOG_INFO, "antirandom", "ANTIRANDOM_DENIED_USER", client,
-					   "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
-					   log_data_integer("score", score));
+				           "[antirandom] denied access to user with score $score: $client.details:$client.user.realname",
+				           log_data_integer("score", score));
 			}
 			return HOOK_DENY;
 		}
@@ -896,7 +896,7 @@ static void free_stuff(void)
 {
 	Triples *t, *t_next;
 
-	for (t=triples; t; t=t_next)
+	for (t = triples; t; t = t_next)
 	{
 		t_next = t->next;
 		safe_free(t);

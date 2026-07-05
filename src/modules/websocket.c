@@ -4,19 +4,18 @@
  * License: GPLv2 or later
  * This module was sponsored by Aberrant Software Inc.
  */
-   
+
 #include "unrealircd.h"
 
 #define WEBSOCKET_VERSION "1.1.0"
 
-ModuleHeader MOD_HEADER
-  = {
-	"websocket",
-	WEBSOCKET_VERSION,
-	"WebSocket support (RFC6455)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "websocket",
+    WEBSOCKET_VERSION,
+    "WebSocket support (RFC6455)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 #if CHAR_MIN < 0
  #error "In UnrealIRCd char should always be unsigned. Check your compiler"
@@ -26,11 +25,11 @@ ModuleHeader MOD_HEADER
  #define WEBSOCKET_SEND_BUFFER_SIZE 16384
 #endif
 
-#define WSU(client)	((WebSocketUser *)moddata_client(client, websocket_md).ptr)
-#define WEB(client)		((WebRequest *)moddata_local_client(client, webserver_md).ptr)
+#define WSU(client) ((WebSocketUser *)moddata_client(client, websocket_md).ptr)
+#define WEB(client) ((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 
-#define WEBSOCKET_PORT(client)	((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
-#define WEBSOCKET_TYPE(client)	(WSU(client)->type)
+#define WEBSOCKET_PORT(client) ((client->local && client->local->listener) ? client->local->listener->websocket_options : 0)
+#define WEBSOCKET_TYPE(client) (WSU(client)->type)
 
 /* Forward declarations */
 int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -55,7 +54,7 @@ MOD_TEST()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, websocket_config_posttest);
 
 	/* Call MOD_INIT very early, since we manage sockets, but depend on websocket_common */
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT+1);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_INIT + 1);
 	return MOD_SUCCESS;
 }
 
@@ -75,7 +74,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIG_LISTENER, 0, websocket_config_listener);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD-1);
+	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD - 1);
 	return MOD_SUCCESS;
 }
 
@@ -127,14 +126,12 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					errored_once_nick = 1;
 					errors++;
 				}
-			}
-			else if (!strcmp(cep->value, "binary"))
+			} else if (!strcmp(cep->value, "binary"))
 			{
-			}
-			else
+			} else
 			{
 				config_error("%s:%i: listen::options::websocket::type must be either 'binary' or 'text' (not '%s')",
-					cep->file->filename, cep->line_number, cep->value);
+				             cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		} else if (!strcmp(cep->name, "forward"))
@@ -148,7 +145,7 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		{
 			config_error("%s:%i: unknown directive listen::options::websocket::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -157,7 +154,7 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!has_type)
 	{
 		config_error("%s:%i: websocket set, but type unspecified. Use something like: listen { ip *; port 443; websocket { type text; } }",
-			ce->file->filename, ce->line_number);
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 
@@ -264,8 +261,8 @@ void add_lf_if_needed(char **buf, int *len)
 	if (b[l - 1] == '\n')
 		return; /* already contains \n */
 
-	if (l >= sizeof(newbuf)-2)
-		l = sizeof(newbuf)-2; /* cut-off if necessary */
+	if (l >= sizeof(newbuf) - 2)
+		l = sizeof(newbuf) - 2; /* cut-off if necessary */
 
 	memcpy(newbuf, b, l);
 	newbuf[l] = '\n';
@@ -301,7 +298,7 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
    	 * 1 = the space between them
 	 * 1 = NULL terminator?
  	*/
-	static char utf8buf[8192+512+1+1];
+	static char utf8buf[8192 + 512 + 1 + 1];
 
 	if (MyConnect(to) && !IsRPC(to) && websocket_md && WSU(to) && WSU(to)->handshake_completed)
 	{
@@ -347,8 +344,7 @@ int websocket_handle_request(Client *client, WebRequest *web)
 				return -1;
 			}
 			safe_strdup(WSU(client)->handshake_key, value);
-		} else
-		if (!strcasecmp(key, "Sec-WebSocket-Protocol"))
+		} else if (!strcasecmp(key, "Sec-WebSocket-Protocol"))
 		{
 			/* Save it here, will be processed later */
 			safe_strdup(WSU(client)->sec_websocket_protocol, value);
@@ -388,7 +384,7 @@ int websocket_handle_request(Client *client, WebRequest *web)
 	{
 		if (is_module_loaded("webredir"))
 		{
-			const char *parx[2] = { NULL, NULL };
+			const char *parx[2] = {NULL, NULL};
 			do_cmd(client, NULL, "GET", 1, parx);
 		}
 		webserver_send_response(client, 404, "This port is for IRC WebSocket only");
@@ -410,8 +406,7 @@ int websocket_handle_request(Client *client, WebRequest *web)
 			{
 				negotiated = WEBSOCKET_TYPE_BINARY;
 				break; /* First hit wins */
-			} else
-			if (!strcmp(name, "text.ircv3.net") && ws_text_mode_available)
+			} else if (!strcmp(name, "text.ircv3.net") && ws_text_mode_available)
 			{
 				negotiated = WEBSOCKET_TYPE_TEXT;
 				break; /* First hit wins */
@@ -421,8 +416,7 @@ int websocket_handle_request(Client *client, WebRequest *web)
 		{
 			WSU(client)->type = WEBSOCKET_TYPE_BINARY;
 			safe_strdup(WSU(client)->sec_websocket_protocol, "binary.ircv3.net");
-		} else
-		if (negotiated == WEBSOCKET_TYPE_TEXT)
+		} else if (negotiated == WEBSOCKET_TYPE_TEXT)
 		{
 			WSU(client)->type = WEBSOCKET_TYPE_TEXT;
 			safe_strdup(WSU(client)->sec_websocket_protocol, "text.ircv3.net");
@@ -475,7 +469,7 @@ int websocket_handshake_send_response(Client *client)
 		/* using strlen() is safe here since above buffer will not
 		 * cause it to be >=512 and thus we won't get into negatives.
 		 */
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
 		         "Sec-WebSocket-Protocol: %s\r\n",
 		         WSU(client)->sec_websocket_protocol);
 	}

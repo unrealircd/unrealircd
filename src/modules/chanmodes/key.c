@@ -19,25 +19,24 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/key",
-	"6.0",
-	"Channel Mode +k",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/key",
+    "6.0",
+    "Channel Mode +k",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 typedef struct ChannelKey ChannelKey;
 struct ChannelKey {
-	char key[KEYLEN+1];
+	char key[KEYLEN + 1];
 };
 
 /* Global variables */
 ModDataInfo *mdkey = NULL;
 Cmode_t EXTMODE_KEY = 0L;
 
-#define IsKey(x)	((x)->mode.mode & EXTMODE_KEY)
+#define IsKey(x) ((x)->mode.mode & EXTMODE_KEY)
 
 /* Forward declarations */
 int key_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
@@ -110,13 +109,12 @@ int cmode_key_is_ok(Client *client, Channel *channel, char mode, const char *par
 		if (IsUser(client) && check_channel_access(client, channel, "hoaq"))
 			return EX_ALLOW;
 		return EX_DENY;
-	} else
-	if (type == EXCHK_PARAM)
+	} else if (type == EXCHK_PARAM)
 	{
 		if (!is_valid_key(param))
 		{
 			sendnumeric(client, ERR_INVALIDMODEPARAM,
-				channel->name, 'k', "*", "Channel key contains forbidden characters or is too long");
+			            channel->name, 'k', "*", "Channel key contains forbidden characters or is too long");
 			return EX_DENY;
 		}
 		return EX_ALLOW;
@@ -141,7 +139,7 @@ void *cmode_key_put_param(void *k_in, const char *param)
 const char *cmode_key_get_param(void *r_in)
 {
 	ChannelKey *r = (ChannelKey *)r_in;
-	static char retbuf[KEYLEN+1];
+	static char retbuf[KEYLEN + 1];
 
 	if (!r)
 		return NULL;
@@ -152,7 +150,7 @@ const char *cmode_key_get_param(void *r_in)
 
 const char *cmode_key_conv_param(const char *param, Client *client, Channel *channel)
 {
-	static char retbuf[KEYLEN+1];
+	static char retbuf[KEYLEN + 1];
 
 	transform_channel_key(param, retbuf, sizeof(retbuf));
 

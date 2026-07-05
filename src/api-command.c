@@ -35,7 +35,7 @@ static RealCommand *add_Command_backend(const char *cmd);
 int CommandExists(const char *name)
 {
 	RealCommand *p;
-	
+
 	for (p = CommandHash[toupper(*name)]; p; p = p->next)
 	{
 		if (!strcasecmp(p->cmd, name))
@@ -95,7 +95,7 @@ static Command *CommandAddInternal(Module *module, const char *cmd, CmdFunc func
 			module->errorcode = MODERR_EXISTS;
 		return NULL;
 	}
-	
+
 	if (!flags)
 	{
 		config_error("CommandAdd(): Could not add command '%s': flags are 0", cmd);
@@ -103,7 +103,7 @@ static Command *CommandAddInternal(Module *module, const char *cmd, CmdFunc func
 			module->errorcode = MODERR_INVALID;
 		return NULL;
 	}
-	
+
 	c = add_Command_backend(cmd);
 	c->parameters = (params > MAXPARA) ? MAXPARA : params;
 	c->flags = flags;
@@ -144,7 +144,7 @@ void CommandDelX(Command *command, RealCommand *cmd)
 		{
 			if (cmdobj->type == MOBJ_COMMAND && cmdobj->object.command == command)
 			{
-				DelListItem(cmdobj,cmd->owner->objects);
+				DelListItem(cmdobj, cmd->owner->objects);
 				safe_free(cmdobj);
 				break;
 			}
@@ -208,7 +208,7 @@ void do_cmd(Client *client, MessageTag *mtags, const char *cmd, int parc, const 
 			new_message(client, NULL, &mtags);
 		memset(&clictx, 0, sizeof(clictx));
 		clictx.cmd = cmptr;
-		(*cmptr->func) (&clictx, client, mtags, parc, parv);
+		(*cmptr->func)(&clictx, client, mtags, parc, parv);
 		if (gen_mtags)
 			free_message_tags(mtags);
 	}
@@ -228,11 +228,11 @@ RealCommand *CommandHash[256]; /* one per letter */
 void init_CommandHash(void)
 {
 	memset(CommandHash, 0, sizeof(CommandHash));
-	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, CMD_UNREGISTERED|CMD_SERVER);
-	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
+	CommandAdd(NULL, MSG_ERROR, cmd_error, MAXPARA, CMD_UNREGISTERED | CMD_SERVER);
+	CommandAdd(NULL, MSG_VERSION, cmd_version, MAXPARA, CMD_UNREGISTERED | CMD_USER | CMD_SERVER);
 	CommandAdd(NULL, MSG_INFO, cmd_info, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_DNS, cmd_dns, MAXPARA, CMD_USER);
-	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(NULL, MSG_REHASH, cmd_rehash, MAXPARA, CMD_USER | CMD_SERVER);
 	CommandAdd(NULL, MSG_RESTART, cmd_restart, 2, CMD_USER);
 	CommandAdd(NULL, MSG_DIE, cmd_die, MAXPARA, CMD_USER);
 	CommandAdd(NULL, MSG_CREDITS, cmd_credits, MAXPARA, CMD_USER);
@@ -294,7 +294,7 @@ RealCommand *find_command_simple(const char *cmd)
 	for (c = CommandHash[toupper(*cmd)]; c; c = c->next)
 	{
 		if (!strcasecmp(c->cmd, cmd))
-				return c;
+			return c;
 	}
 
 	return NULL;

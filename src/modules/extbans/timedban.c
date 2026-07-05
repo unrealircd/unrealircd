@@ -20,11 +20,11 @@
  * then look at another extended ban * module as this module is not a
  * good starting point ;)
  */
-   
+
 #include "unrealircd.h"
 
 /* Maximum time (in minutes) for a ban */
-#define TIMEDBAN_MAX_TIME	9999
+#define TIMEDBAN_MAX_TIME 9999
 
 /* Maximum length of a ban */
 #define MAX_LENGTH 128
@@ -36,23 +36,22 @@
  * NOTE: until all channels are processed it takes
  *       TIMEDBAN_TIMER_ITERATION_SPLIT * TIMEDBAN_TIMER.
  */
-#define TIMEDBAN_TIMER	2
+#define TIMEDBAN_TIMER 2
 
 /* We allow a ban to (potentially) expire slightly before the deadline.
  * For example with TIMEDBAN_TIMER_ITERATION_SPLIT=4 and TIMEDBAN_TIMER=2
  * a 1 minute ban would expire at 56-63 seconds, rather than 60-67 seconds.
  * This is usually preferred.
  */
-#define TIMEDBAN_TIMER_DELTA ((TIMEDBAN_TIMER_ITERATION_SPLIT*TIMEDBAN_TIMER)/2)
+#define TIMEDBAN_TIMER_DELTA ((TIMEDBAN_TIMER_ITERATION_SPLIT * TIMEDBAN_TIMER) / 2)
 
-ModuleHeader MOD_HEADER
-  = {
-	"extbans/timedban",
-	"1.0",
-	"ExtBan ~time: automatically removed timed bans",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "extbans/timedban",
+    "1.0",
+    "ExtBan ~time: automatically removed timed bans",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 const char *timedban_extban_conv_param(BanContext *b, Extban *extban);
@@ -89,8 +88,8 @@ MOD_INIT()
 		config_error("timedban: unable to register 't' extban type!!");
 		return MOD_FAILED;
 	}
-                
-	EventAdd(modinfo->handle, "timedban_timeout", timedban_timeout, NULL, TIMEDBAN_TIMER*1000, 0);
+
+	EventAdd(modinfo->handle, "timedban_timeout", timedban_timeout, NULL, TIMEDBAN_TIMER * 1000, 0);
 
 	return MOD_SUCCESS;
 }
@@ -124,7 +123,8 @@ const char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 		*cp = '\0';
 
 	/* Strip any ':' at beginning since that would cause a desync */
-	for (; (*mask && (*mask == ':')); mask++);
+	for (; (*mask && (*mask == ':')); mask++)
+		;
 	if (!*mask)
 		return NULL;
 
@@ -157,7 +157,7 @@ const char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 		}
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
 		if ((mask[1] != ':') || (mask[2] == '\0'))
-		    return NULL; /* require a ":<char>" after extban type */
+			return NULL; /* require a ":<char>" after extban type */
 		if (strlen(mask) > 80)
 			mask[80] = '\0';
 		return mask;
@@ -169,20 +169,20 @@ const char *generic_clean_ban_mask(BanContext *b, Extban *extban)
 /** Convert ban to an acceptable format (or return NULL to fully reject it) */
 const char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[MAX_LENGTH+1];
-	char para[MAX_LENGTH+1];
-	char tmpmask[MAX_LENGTH+1];
+	static char retbuf[MAX_LENGTH + 1];
+	char para[MAX_LENGTH + 1];
+	char tmpmask[MAX_LENGTH + 1];
 	char *durationstr; /**< Duration, such as '5' */
 	int duration;
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	const char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 	static int timedban_extban_conv_param_recursion = 0;
-	
+
 	if (timedban_extban_conv_param_recursion)
 		return NULL; /* reject: recursion detected! */
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
-	
+
 	/* ~time:duration:n!u@h   for direct matching
 	 * ~time:duration:~x:.... when calling another bantype
 	 */
@@ -192,7 +192,7 @@ const char *timedban_extban_conv_param(BanContext *b, Extban *extban)
 	if (!matchby || !matchby[1])
 		return NULL;
 	*matchby++ = '\0';
-	
+
 	duration = atoi(durationstr);
 
 	if ((duration <= 0) || (duration > TIMEDBAN_MAX_TIME))
@@ -244,12 +244,11 @@ int generic_ban_is_ok(BanContext *b)
 				if ((b->is_ok_check == EXBCHK_ACCESS) || (b->is_ok_check == EXBCHK_ACCESS_ERR))
 				{
 					if (!extban->is_ok(b) &&
-					    !ValidatePermissionsForPath("channel:override:mode:extban",b->client,NULL,b->channel,NULL))
+					    !ValidatePermissionsForPath("channel:override:mode:extban", b->client, NULL, b->channel, NULL))
 					{
 						return 0; /* REJECT */
 					}
-				} else
-				if (b->is_ok_check == EXBCHK_PARAM)
+				} else if (b->is_ok_check == EXBCHK_PARAM)
 				{
 					if (!extban->is_ok(b))
 					{
@@ -259,7 +258,7 @@ int generic_ban_is_ok(BanContext *b)
 			}
 		}
 	}
-	
+
 	/* ACCEPT:
 	 * - not an extban; OR
 	 * - extban with NULL is_ok; OR
@@ -271,8 +270,8 @@ int generic_ban_is_ok(BanContext *b)
 /** Validate ban ("is this ban ok?") */
 int timedban_extban_is_ok(BanContext *b)
 {
-	char para[MAX_LENGTH+1];
-	char tmpmask[MAX_LENGTH+1];
+	char para[MAX_LENGTH + 1];
+	char tmpmask[MAX_LENGTH + 1];
 	char *durationstr; /**< Duration, such as '5' */
 	int duration;
 	char *matchby; /**< Matching method, such as 'n!u@h' */
@@ -288,7 +287,7 @@ int timedban_extban_is_ok(BanContext *b)
 		return 0; /* Recursion detected (~time:1:~time:....) */
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
-	
+
 	/* ~time:duration:n!u@h   for direct matching
 	 * ~time:duration:~x:.... when calling another bantype
 	 */
@@ -352,15 +351,15 @@ int timedban_has_ban_expired(Ban *ban)
 		p1 = banstr + 6;
 	else
 		return 0; /* not for us */
-	p2 = strchr(p1+1, ':'); /* skip time argument */
+	p2 = strchr(p1 + 1, ':'); /* skip time argument */
 	if (!p2)
 		return 0; /* invalid fmt */
 	*p2 = '\0'; /* danger.. must restore!! */
 	t = atoi(p1);
 	*p2 = ':'; /* restored.. */
-	
+
 	expire_on = ban->when + (t * 60) - TIMEDBAN_TIMER_DELTA;
-	
+
 	if (expire_on < TStime())
 		return 1;
 	return 0;
@@ -391,30 +390,30 @@ EVENT(timedban_timeout)
 			continue; /* not this time, maybe next */
 
 		*mbuf = *pbuf = '\0';
-		for (ban = channel->banlist; ban; ban=nextban)
+		for (ban = channel->banlist; ban; ban = nextban)
 		{
 			nextban = ban->next;
 			if (!strncmp(ban->banstr, "~t", 2) && timedban_has_ban_expired(ban))
 			{
-				add_send_mode_param(channel, &me, '-',  'b', ban->banstr);
+				add_send_mode_param(channel, &me, '-', 'b', ban->banstr);
 				del_listmode(&channel->banlist, channel, ban->banstr);
 			}
 		}
-		for (ban = channel->exlist; ban; ban=nextban)
+		for (ban = channel->exlist; ban; ban = nextban)
 		{
 			nextban = ban->next;
 			if (!strncmp(ban->banstr, "~t", 2) && timedban_has_ban_expired(ban))
 			{
-				add_send_mode_param(channel, &me, '-',  'e', ban->banstr);
+				add_send_mode_param(channel, &me, '-', 'e', ban->banstr);
 				del_listmode(&channel->exlist, channel, ban->banstr);
 			}
 		}
-		for (ban = channel->invexlist; ban; ban=nextban)
+		for (ban = channel->invexlist; ban; ban = nextban)
 		{
 			nextban = ban->next;
 			if (!strncmp(ban->banstr, "~t", 2) && timedban_has_ban_expired(ban))
 			{
-				add_send_mode_param(channel, &me, '-',  'I', ban->banstr);
+				add_send_mode_param(channel, &me, '-', 'I', ban->banstr);
 				del_listmode(&channel->invexlist, channel, ban->banstr);
 			}
 		}
@@ -434,14 +433,17 @@ EVENT(timedban_timeout)
  #error "add_send_mode_param() is not made for MODEBUFLEN > 512"
 #endif
 
-void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param) {
+void add_send_mode_param(Channel *channel, Client *from, char what, char mode, char *param)
+{
 	static char *modes = NULL, lastwhat;
 	static short count = 0;
 	short send = 0;
-	
-	if (!modes) modes = mbuf;
-	
-	if (!mbuf[0]) {
+
+	if (!modes)
+		modes = mbuf;
+
+	if (!mbuf[0])
+	{
 		modes = mbuf;
 		*modes++ = what;
 		*modes = 0;
@@ -449,20 +451,21 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 		*pbuf = 0;
 		count = 0;
 	}
-	if (lastwhat != what) {
+	if (lastwhat != what)
+	{
 		*modes++ = what;
 		*modes = 0;
 		lastwhat = what;
 	}
-	if (strlen(pbuf) + strlen(param) + 11 < MODEBUFLEN) {
-		if (*pbuf) 
+	if (strlen(pbuf) + strlen(param) + 11 < MODEBUFLEN)
+	{
+		if (*pbuf)
 			strcat(pbuf, " ");
 		strcat(pbuf, param);
 		*modes++ = mode;
 		*modes = 0;
 		count++;
-	}
-	else if (*pbuf) 
+	} else if (*pbuf)
 		send = 1;
 
 	if (count == MAXMODEPARAMS)
@@ -486,7 +489,8 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 			strlcpy(pbuf, param, sizeof(pbuf));
 			*modes++ = mode;
 			count = 1;
-		} else {
+		} else
+		{
 			count = 0;
 		}
 		*modes = 0;

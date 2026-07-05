@@ -21,17 +21,16 @@
 #include "unrealircd.h"
 
 /* Defines */
-#define MSG_QUIT        "QUIT"  /* QUIT */
+#define MSG_QUIT "QUIT"  /* QUIT */
 
 /* Structs */
-ModuleHeader MOD_HEADER
-  = {
-	"quit",	/* Name of module */
-	"5.0", /* Version */
-	"command /quit", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "quit", /* Name of module */
+    "5.0", /* Version */
+    "command /quit", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 CMD_FUNC(cmd_quit);
@@ -56,7 +55,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_QUIT, cmd_quit, 1, CMD_UNREGISTERED|CMD_USER|CMD_VIRUS|CMD_TEXTANALYSIS);
+	CommandAdd(modinfo->handle, MSG_QUIT, cmd_quit, 1, CMD_UNREGISTERED | CMD_USER | CMD_VIRUS | CMD_TEXTANALYSIS);
 	return MOD_SUCCESS;
 }
 
@@ -84,7 +83,8 @@ CMD_FUNC(cmd_quit)
 	{
 		strlncpy(commentbuf, parv[1], sizeof(commentbuf), iConf.quit_length);
 		comment = commentbuf;
-	} else {
+	} else
+	{
 		comment = client->name;
 	}
 
@@ -112,10 +112,10 @@ CMD_FUNC(cmd_quit)
 			if (IsDead(client))
 				return;
 		}
-		
-		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time",client,NULL,NULL,NULL) && ANTI_SPAM_QUIT_MSG_TIME)
+
+		if (!ValidatePermissionsForPath("immune:anti-spam-quit-message-time", client, NULL, NULL, NULL) && ANTI_SPAM_QUIT_MSG_TIME)
 		{
-			if (client->local->creationtime+ANTI_SPAM_QUIT_MSG_TIME > TStime())
+			if (client->local->creationtime + ANTI_SPAM_QUIT_MSG_TIME > TStime())
 				comment = client->name;
 		}
 
@@ -156,7 +156,8 @@ CMD_FUNC(cmd_quit)
 						strlcpy(tmp, newcomment, sizeof(tmp));
 						parx[2] = tmp;
 						parx[3] = NULL;
-					} else {
+					} else
+					{
 						parx[2] = NULL;
 					}
 
@@ -172,7 +173,7 @@ CMD_FUNC(cmd_quit)
 		{
 			comment = (*(tmphook->func.stringfunc))(client, comment);
 			if (!comment)
-			{			
+			{
 				comment = client->name;
 				break;
 			}
@@ -184,8 +185,7 @@ CMD_FUNC(cmd_quit)
 			strlcpy(commentbuf2, comment, sizeof(commentbuf2));
 
 		exit_client(client, recv_mtags, commentbuf2);
-	}
-	else
+	} else
 	{
 		/* Remote quits and non-person quits always use their original comment.
 		 * Also pass recv_mtags so to keep the msgid and such.
@@ -261,8 +261,7 @@ void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, con
 		if (client->server && client->server->conf)
 		{
 			client->server->conf->refcount--;
-			if (!client->server->conf->refcount
-			  && client->server->conf->flag.temporary)
+			if (!client->server->conf->refcount && client->server->conf->flag.temporary)
 			{
 				delete_linkblock(client->server->conf);
 				client->server->conf = NULL;
@@ -274,8 +273,8 @@ void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, con
 			if (!IsServerDisconnectLogged(client))
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
-					   "Lost server link to $client [$client.ip]: $reason",
-					   log_data_string("reason", comment));
+				           "Lost server link to $client [$client.ip]: $reason",
+				           log_data_string("reason", comment));
 			}
 		}
 		free_pending_net(client);
@@ -285,12 +284,11 @@ void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, con
 			long connected_time = TStime() - client->local->creationtime;
 			RunHook(HOOKTYPE_LOCAL_QUIT, client, recv_mtags, comment);
 			unreal_log(ULOG_INFO, "connect", "LOCAL_CLIENT_DISCONNECT", client,
-				   "Client exiting: $client ($client.user.username@$client.hostname) [$client.ip] ($reason)",
-				   log_data_string("extended_client_info", get_connect_extinfo(client)),
-				   log_data_string("reason", comment),
-				   log_data_integer("connected_time", connected_time));
-		} else
-		if (IsUnknown(client))
+			           "Client exiting: $client ($client.user.username@$client.hostname) [$client.ip] ($reason)",
+			           log_data_string("extended_client_info", get_connect_extinfo(client)),
+			           log_data_string("reason", comment),
+			           log_data_integer("connected_time", connected_time));
+		} else if (IsUnknown(client))
 		{
 			RunHook(HOOKTYPE_UNKUSER_QUIT, client, recv_mtags, comment);
 		}
@@ -301,16 +299,15 @@ void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, con
 				sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)", get_client_name(client, FALSE), comment);
 		}
 		close_connection(client);
-	}
-	else if (IsUser(client) && !IsULine(client))
+	} else if (IsUser(client) && !IsULine(client))
 	{
 		if (client->uplink != &me)
 		{
 			unreal_log(ULOG_INFO, "connect", "REMOTE_CLIENT_DISCONNECT", client,
-				   "Client exiting: $client ($client.user.username@$client.hostname) [$client.ip] ($reason)",
-				   log_data_string("extended_client_info", get_connect_extinfo(client)),
-				   log_data_string("reason", comment),
-				   log_data_string("from_server_name", client->user->server));
+			           "Client exiting: $client ($client.user.username@$client.hostname) [$client.ip] ($reason)",
+			           log_data_string("extended_client_info", get_connect_extinfo(client)),
+			           log_data_string("reason", comment),
+			           log_data_string("from_server_name", client->user->server));
 		}
 	}
 
@@ -334,13 +331,11 @@ void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, con
 		remove_dependents(client, origin, recv_mtags, comment, splitstr);
 
 		/* Special case for remote async RPC, server.rehash in particular.. */
-		list_for_each_entry_safe(acptr, next, &rpc_remote_list, client_node)
-			if (!strncmp(client->id, acptr->id, SIDLEN))
-				free_client(acptr);
+		list_for_each_entry_safe(acptr, next, &rpc_remote_list, client_node) if (!strncmp(client->id, acptr->id, SIDLEN))
+		    free_client(acptr);
 
 		RunHook(HOOKTYPE_SERVER_QUIT, client, recv_mtags);
-	}
-	else if (IsUser(client) && !IsKilled(client))
+	} else if (IsUser(client) && !IsKilled(client))
 	{
 		sendto_server(client, 0, 0, recv_mtags, ":%s QUIT :%s", client->id, comment);
 	}
@@ -374,7 +369,8 @@ static int should_hide_ban_reason(Client *client, const char *reason)
 				return 1;
 		}
 		return 0;
-	} else {
+	} else
+	{
 		return HIDE_BAN_REASON == HIDE_BAN_REASON_YES ? 1 : 0;
 	}
 }
@@ -513,7 +509,8 @@ void _banned_client(Client *client, const char *bantype, const char *reason, con
 	{
 		snprintf(idbuf, sizeof(idbuf), " [ID: %s]", tklid);
 		banid = idbuf + 1;
-	} else {
+	} else
+	{
 		idbuf[0] = '\0';
 		banid = idbuf;
 	}
@@ -559,14 +556,16 @@ void _banned_client(Client *client, const char *bantype, const char *reason, con
 		AddListItem(m, mtags);
 		/* And the quit reason for anyone else, goes here.. */
 		snprintf(buf, sizeof(buf), "Banned (%s)%s", bantype, idbuf);
-	} else {
+	} else
+	{
 		snprintf(buf, sizeof(buf), "Banned (%s): %s%s", bantype, reason, idbuf);
 	}
 
 	if (noexit != NO_EXIT_CLIENT)
 	{
 		exit_client(client, mtags, buf);
-	} else {
+	} else
+	{
 		/* Special handling for direct Z-line code */
 		client->flags |= CLIENT_FLAG_DEADSOCKET_IS_BANNED;
 		dead_socket(client, buf);

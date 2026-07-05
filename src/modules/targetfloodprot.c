@@ -2,22 +2,21 @@
  * (C)Copyright 2020 Bram Matthys and the UnrealIRCd team
  * License: GPLv2 or later
  */
-   
+
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"targetfloodprot",
-	"5.0",
-	"Target flood protection (set::anti-flood::target-flood)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "targetfloodprot",
+    "5.0",
+    "Target flood protection (set::anti-flood::target-flood)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
-#define TFP_PRIVMSG	0
-#define TFP_NOTICE	1
-#define TFP_TAGMSG	2
-#define TFP_MAX		3
+#define TFP_PRIVMSG 0
+#define TFP_NOTICE  1
+#define TFP_TAGMSG  2
+#define TFP_MAX     3
 
 typedef struct TargetFlood TargetFlood;
 struct TargetFlood {
@@ -160,7 +159,7 @@ int targetfloodprot_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *
 		} else
 		{
 			config_error("%s:%i: unknown directive set::anti-flood::target-flood:%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
@@ -235,7 +234,7 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 		return HOOK_CONTINUE;
 
 	/* U-Lines, servers and IRCOps override */
-	if (IsULine(client) || !IsUser(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,NULL,channel,NULL)))
+	if (IsULine(client) || !IsUser(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood", client, NULL, channel, NULL)))
 		return HOOK_CONTINUE;
 
 	what = sendtypetowhat(sendtype);
@@ -260,10 +259,10 @@ int targetfloodprot_can_send_to_channel(Client *client, Channel *channel, Member
 	{
 		/* Flood detected */
 		unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
-			   "Flood blocked ($flood_type) from $client.details [$client.ip] to $channel ($message_type)",
-			   log_data_string("flood_type", "target-flood-channel"),
-			   log_data_channel("channel", channel),
-			   log_data_string("message_type", sendtype_to_cmd(sendtype)));
+		           "Flood blocked ($flood_type) from $client.details [$client.ip] to $channel ($message_type)",
+		           log_data_string("flood_type", "target-flood-channel"),
+		           log_data_channel("channel", channel),
+		           log_data_string("message_type", sendtype_to_cmd(sendtype)));
 		snprintf(errbuf, sizeof(errbuf), "Channel is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;
@@ -286,7 +285,7 @@ int targetfloodprot_can_send_to_user(Client *client, Client *target, const char 
 		return HOOK_CONTINUE;
 
 	/* U-Lines, servers and IRCOps override */
-	if (IsULine(client) || !IsUser(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood",client,target,NULL,NULL)))
+	if (IsULine(client) || !IsUser(client) || (IsOper(client) && ValidatePermissionsForPath("immune:target-flood", client, target, NULL, NULL)))
 		return HOOK_CONTINUE;
 
 	what = sendtypetowhat(sendtype);
@@ -311,10 +310,10 @@ int targetfloodprot_can_send_to_user(Client *client, Client *target, const char 
 	{
 		/* Flood detected */
 		unreal_log(ULOG_INFO, "flood", "FLOOD_BLOCKED", client,
-			   "Flood blocked ($flood_type) from $client.details [$client.ip] to $target ($message_type)",
-			   log_data_string("flood_type", "target-flood-user"),
-			   log_data_client("target", target),
-			   log_data_string("message_type", sendtype_to_cmd(sendtype)));
+		           "Flood blocked ($flood_type) from $client.details [$client.ip] to $target ($message_type)",
+		           log_data_string("flood_type", "target-flood-user"),
+		           log_data_client("target", target),
+		           log_data_string("message_type", sendtype_to_cmd(sendtype)));
 		snprintf(errbuf, sizeof(errbuf), "User is being flooded. Message not delivered.");
 		*errmsg = errbuf;
 		return HOOK_DENY;

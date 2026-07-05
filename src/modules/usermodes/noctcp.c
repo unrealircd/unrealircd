@@ -21,18 +21,17 @@
 
 CMD_FUNC(noctcp);
 
-ModuleHeader MOD_HEADER
-  = {
-	"usermodes/noctcp",
-	"4.2",
-	"User Mode +T",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "usermodes/noctcp",
+    "4.2",
+    "User Mode +T",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 long UMODE_NOCTCP = 0L;
 
-#define IsNoCTCP(client)    (client->umodes & UMODE_NOCTCP)
+#define IsNoCTCP(client) (client->umodes & UMODE_NOCTCP)
 
 int noctcp_can_send_to_user(Client *client, Client *target, const char **text, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
@@ -43,12 +42,12 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	UmodeAdd(modinfo->handle, 'T', UMODE_GLOBAL, 0, NULL, &UMODE_NOCTCP);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_SEND_TO_USER, 0, noctcp_can_send_to_user);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

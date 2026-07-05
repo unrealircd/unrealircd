@@ -22,16 +22,15 @@
 CMD_FUNC(cmd_cycle);
 
 /* Place includes here */
-#define MSG_CYCLE       "CYCLE"
+#define MSG_CYCLE "CYCLE"
 
-ModuleHeader MOD_HEADER
-  = {
-	"cycle",	/* Name of module */
-	"5.0", /* Version */
-	"command /cycle", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "cycle", /* Name of module */
+    "5.0", /* Version */
+    "command /cycle", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
@@ -45,13 +44,12 @@ MOD_INIT()
 MOD_LOAD()
 {
 	return MOD_SUCCESS;
-	
 }
 
 /* Called when module is unloaded */
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /*
@@ -64,7 +62,7 @@ CMD_FUNC(cmd_cycle)
 	char channels[BUFSIZE];
 	const char *parx[3];
 	int n;
-	
+
 	if (parc < 2)
 		return;
 

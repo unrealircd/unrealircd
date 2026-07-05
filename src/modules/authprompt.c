@@ -19,13 +19,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"authprompt",
-	"1.0",
-	"SASL authentication for clients that don't support SASL",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "authprompt",
+    "1.0",
+    "SASL authentication for clients that don't support SASL",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /** Configuration settings */
@@ -62,9 +61,13 @@ CMD_FUNC(cmd_auth);
 void authprompt_md_free(ModData *md);
 
 /* Some macros */
-#define SetAPUser(x, y) do { moddata_local_client(x, authprompt_md).ptr = y; } while(0)
-#define SEUSER(x)       ((APUser *)moddata_local_client(x, authprompt_md).ptr)
-#define AGENT_SID(agent_p)      (agent_p->user != NULL ? agent_p->user->server : agent_p->name)
+#define SetAPUser(x, y) \
+	do \
+	{ \
+		moddata_local_client(x, authprompt_md).ptr = y; \
+	} while (0)
+#define SEUSER(x)          ((APUser *)moddata_local_client(x, authprompt_md).ptr)
+#define AGENT_SID(agent_p) (agent_p->user != NULL ? agent_p->user->server : agent_p->name)
 
 MOD_TEST()
 {
@@ -167,24 +170,20 @@ int authprompt_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!cep->value)
 		{
 			config_error("%s:%i: set::authentication-prompt::%s with no value",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "enabled"))
+		} else if (!strcmp(cep->name, "enabled"))
 		{
-		} else
-		if (!strcmp(cep->name, "message"))
+		} else if (!strcmp(cep->name, "message"))
 		{
-		} else
-		if (!strcmp(cep->name, "fail-message"))
+		} else if (!strcmp(cep->name, "fail-message"))
 		{
-		} else
-		if (!strcmp(cep->name, "unconfirmed-message"))
+		} else if (!strcmp(cep->name, "unconfirmed-message"))
 		{
 		} else
 		{
 			config_error("%s:%i: unknown directive set::authentication-prompt::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 		}
 	}
@@ -208,16 +207,13 @@ int authprompt_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "enabled"))
 		{
 			cfg.enabled = config_checkval(cep->value, CFG_YESNO);
-		} else
-		if (!strcmp(cep->name, "message"))
+		} else if (!strcmp(cep->name, "message"))
 		{
 			addmultiline(&cfg.message, cep->value);
-		} else
-		if (!strcmp(cep->name, "fail-message"))
+		} else if (!strcmp(cep->name, "fail-message"))
 		{
 			addmultiline(&cfg.fail_message, cep->value);
-		} else
-		if (!strcmp(cep->name, "unconfirmed-message"))
+		} else if (!strcmp(cep->name, "unconfirmed-message"))
 		{
 			addmultiline(&cfg.unconfirmed_message, cep->value);
 		}
@@ -273,14 +269,14 @@ char *make_authbuf(const char *username, const char *password)
 	int size;
 
 	size = strlen(username) + 1 + strlen(username) + 1 + strlen(password);
-	if (size >= sizeof(inbuf)-1)
+	if (size >= sizeof(inbuf) - 1)
 		return NULL; /* too long */
 
 	/* Because size limits are already checked above, we can cut some corners here: */
 	memset(inbuf, 0, sizeof(inbuf));
 	strcpy(inbuf, username);
-	strcpy(inbuf+strlen(username)+1, username);
-	strcpy(inbuf+strlen(username)+1+strlen(username)+1, password);
+	strcpy(inbuf + strlen(username) + 1, username);
+	strcpy(inbuf + strlen(username) + 1 + strlen(username) + 1, password);
 	/* ^ normal people use stpcpy here ;) */
 
 	if (b64_encode(inbuf, size, outbuf, sizeof(outbuf)) < 0)
@@ -309,22 +305,23 @@ void send_first_auth(Client *client)
 	/* Make them a user, needed for CHGHOST etc that we may receive */
 	if (!client->user)
 		make_user(client);
-	
+
 	if (Hooks[HOOKTYPE_SASL_AUTHENTICATE] && (find_client(SASL_SERVER, NULL) == &me))
 	{
 		/* We are the SASL server (some module handling auth) */
 		RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 1, "PLAIN");
 		RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 0, SEUSER(client)->authmsg);
-	} else {
+	} else
+	{
 		sendto_one(sasl_server, NULL, ":%s SASL %s %s H %s %s",
-			me.id, SASL_SERVER, client->id, addr, addr);
+		           me.id, SASL_SERVER, client->id, addr, addr);
 
 		if (certfp)
 			sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s %s",
-				me.id, SASL_SERVER, client->id, "PLAIN", certfp);
+			           me.id, SASL_SERVER, client->id, "PLAIN", certfp);
 		else
 			sendto_one(sasl_server, NULL, ":%s SASL %s %s S %s",
-				me.id, SASL_SERVER, client->id, "PLAIN");
+			           me.id, SASL_SERVER, client->id, "PLAIN");
 	}
 	/* The rest is sent from authprompt_sasl_continuation() */
 
@@ -426,10 +423,10 @@ int authprompt_find_tkline_match(Client *client, TKL *tkl)
 	 * and the user is not yet online, then we will handle this user.
 	 */
 	if (cfg.enabled &&
-		TKLIsServerBan(tkl) &&
-	   (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) &&
-	   !IsLoggedIn(client) &&
-	   !IsUser(client))
+	    TKLIsServerBan(tkl) &&
+	    (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT) &&
+	    !IsLoggedIn(client) &&
+	    !IsUser(client))
 	{
 		/* And tag the user */
 		authprompt_tag_as_auth_required(client, tkl->ptr.serverban->reason);
@@ -463,7 +460,7 @@ int authprompt_sasl_continuation(Client *client, const char *buf)
 		if (agent)
 		{
 			sendto_one(agent, NULL, ":%s SASL %s %s C %s",
-				me.id, AGENT_SID(agent), client->id, SEUSER(client)->authmsg);
+			           me.id, AGENT_SID(agent), client->id, SEUSER(client)->authmsg);
 		}
 		safe_free(SEUSER(client)->authmsg);
 	}

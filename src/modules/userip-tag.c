@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"userip-tag",
-	"5.0",
-	"userip message tag",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "userip-tag",
+    "5.0",
+    "userip message tag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;
@@ -89,8 +88,9 @@ void mtag_add_userip(Client *client, MessageTag *recv_mtags, MessageTag **mtag_l
 		if (m)
 		{
 			m = duplicate_mtag(m);
-		} else {
-			char nuh[USERLEN+HOSTLEN+1];
+		} else
+		{
+			char nuh[USERLEN + HOSTLEN + 1];
 
 			snprintf(nuh, sizeof(nuh), "%s@%s", client->user->username, GetIP(client));
 

@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_protoctl);
 
-#define MSG_PROTOCTL 	"PROTOCTL"	
+#define MSG_PROTOCTL "PROTOCTL"
 
-ModuleHeader MOD_HEADER
-  = {
-	"protoctl",
-	"5.0",
-	"command /protoctl", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "protoctl",
+    "5.0",
+    "command /protoctl",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PROTOCTL, cmd_protoctl, MAXPARA, CMD_UNREGISTERED|CMD_SERVER|CMD_USER);
+	CommandAdd(modinfo->handle, MSG_PROTOCTL, cmd_protoctl, MAXPARA, CMD_UNREGISTERED | CMD_SERVER | CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -62,7 +61,7 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_protoctl)
 {
-	int  i;
+	int i;
 	int first_protoctl = IsProtoctlReceived(client) ? 0 : 1; /**< First PROTOCTL we receive? Special ;) */
 	char proto[512];
 	char *name, *value, *p;
@@ -81,7 +80,8 @@ CMD_FUNC(cmd_protoctl)
 			name = proto;
 			*p++ = '\0';
 			value = p;
-		} else {
+		} else
+		{
 			name = proto;
 			value = NULL;
 		}
@@ -89,44 +89,34 @@ CMD_FUNC(cmd_protoctl)
 		if (!strcmp(name, "NAMESX"))
 		{
 			SetCapability(client, "multi-prefix");
-		}
-		else if (!strcmp(name, "UHNAMES") && UHNAMES_ENABLED)
+		} else if (!strcmp(name, "UHNAMES") && UHNAMES_ENABLED)
 		{
 			SetCapability(client, "userhost-in-names");
-		}
-		else if (IsUser(client))
+		} else if (IsUser(client))
 		{
 			return;
-		}
-		else if (!strcmp(name, "VL"))
+		} else if (!strcmp(name, "VL"))
 		{
 			SetVL(client);
-		}
-		else if (!strcmp(name, "VHP"))
+		} else if (!strcmp(name, "VHP"))
 		{
 			SetVHP(client);
-		}
-		else if (!strcmp(name, "CLK"))
+		} else if (!strcmp(name, "CLK"))
 		{
 			SetCLK(client);
-		}
-		else if (!strcmp(name, "SJSBY") && iConf.ban_setter_sync)
+		} else if (!strcmp(name, "SJSBY") && iConf.ban_setter_sync)
 		{
 			SetSJSBY(client);
-		}
-		else if (!strcmp(name, "MTAGS"))
+		} else if (!strcmp(name, "MTAGS"))
 		{
 			SetMTAGS(client);
-		}
-		else if (!strcmp(name, "NEXTBANS"))
+		} else if (!strcmp(name, "NEXTBANS"))
 		{
 			SetNEXTBANS(client);
-		}
-		else if (!strcmp(name, "BIGLINES"))
+		} else if (!strcmp(name, "BIGLINES"))
 		{
 			SetBIGLINES(client);
-		}
-		else if (!strcmp(name, "NICKCHARS") && value)
+		} else if (!strcmp(name, "NICKCHARS") && value)
 		{
 			if (!IsServer(client) && !IsEAuth(client) && !IsHandshake(client))
 				continue;
@@ -137,8 +127,8 @@ CMD_FUNC(cmd_protoctl)
 			if (strstr(charsys_get_current_languages(), "utf8") && !strstr(value, "utf8"))
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_CHARSYS_INCOMPATIBLE", client,
-					   "Server link $client rejected. Server $me_name has utf8 in set::allowed-nickchars but $client does not.",
-					   log_data_string("me_name", me.name));
+				           "Server link $client rejected. Server $me_name has utf8 in set::allowed-nickchars but $client does not.",
+				           log_data_string("me_name", me.name));
 				exit_client(client, NULL, "Incompatible set::allowed-nickchars setting");
 				return;
 			}
@@ -146,10 +136,10 @@ CMD_FUNC(cmd_protoctl)
 			if (strcmp(value, charsys_get_current_languages()))
 			{
 				unreal_log(ULOG_WARNING, "link", "LINK_WARNING_CHARSYS", client,
-					   "Server link $client does not have the same set::allowed-nickchars settings, "
-					   "this may possibly cause display issues. Our charset: '$our_charsys', theirs: '$their_charsys'",
-					   log_data_string("our_charsys", charsys_get_current_languages()),
-					   log_data_string("their_charsys", value));
+				           "Server link $client does not have the same set::allowed-nickchars settings, "
+				           "this may possibly cause display issues. Our charset: '$our_charsys', theirs: '$their_charsys'",
+				           log_data_string("our_charsys", charsys_get_current_languages()),
+				           log_data_string("their_charsys", value));
 			}
 			if (client->server)
 				safe_strdup(client->server->features.nickchars, value);
@@ -157,8 +147,7 @@ CMD_FUNC(cmd_protoctl)
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(client))
 				broadcast_sinfo(client, NULL, client);
-		}
-		else if (!strcmp(name, "CHANNELCHARS") && value)
+		} else if (!strcmp(name, "CHANNELCHARS") && value)
 		{
 			int their_value;
 
@@ -169,16 +158,15 @@ CMD_FUNC(cmd_protoctl)
 			if (their_value != iConf.allowed_channelchars)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_ALLOWED_CHANNELCHARS_INCOMPATIBLE", client,
-					   "Server link $client rejected. Server has set::allowed-channelchars setting "
-					   "of $their_allowed_channelchars, while we have $our_allowed_channelchars.\n"
-					   "Please set set::allowed-channelchars to the same value on all servers.",
-					   log_data_string("their_allowed_channelchars", value),
-					   log_data_string("our_allowed_channelchars", allowed_channelchars_valtostr(iConf.allowed_channelchars)));
+				           "Server link $client rejected. Server has set::allowed-channelchars setting "
+				           "of $their_allowed_channelchars, while we have $our_allowed_channelchars.\n"
+				           "Please set set::allowed-channelchars to the same value on all servers.",
+				           log_data_string("their_allowed_channelchars", value),
+				           log_data_string("our_allowed_channelchars", allowed_channelchars_valtostr(iConf.allowed_channelchars)));
 				exit_client(client, NULL, "Incompatible set::allowed-channelchars setting");
 				return;
 			}
-		}
-		else if (!strcmp(name, "SID") && value)
+		} else if (!strcmp(name, "SID") && value)
 		{
 			Client *aclient;
 			char *sid = value;
@@ -189,7 +177,7 @@ CMD_FUNC(cmd_protoctl)
 				return;
 			}
 
-			if (*client->id && (strlen(client->id)==3))
+			if (*client->id && (strlen(client->id) == 3))
 			{
 				exit_client(client, NULL, "Got PROTOCTL SID twice");
 				return;
@@ -210,9 +198,9 @@ CMD_FUNC(cmd_protoctl)
 			if ((aclient = hash_find_id(sid, NULL)) != NULL)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_SID_COLLISION", client,
-					   "Server link $client rejected. Server with SID $sid already exist via uplink $existing_client.server.uplink.",
-					   log_data_string("sid", sid),
-					   log_data_client("existing_client", aclient));
+				           "Server link $client rejected. Server with SID $sid already exist via uplink $existing_client.server.uplink.",
+				           log_data_string("sid", sid),
+				           log_data_client("existing_client", aclient));
 				exit_client(client, NULL, "SID collision");
 				return;
 			}
@@ -221,8 +209,7 @@ CMD_FUNC(cmd_protoctl)
 				del_from_id_hash_table(client->id, client); /* delete old UID entry (created on connect) */
 			strlcpy(client->id, sid, sizeof(client->id));
 			add_to_id_hash_table(client->id, client); /* add SID */
-		}
-		else if (!strcmp(name, "EAUTH") && value)
+		} else if (!strcmp(name, "EAUTH") && value)
 		{
 			/* Early authorization: EAUTH=servername,protocol,flags,software
 			 * (Only servername is mandatory, rest is optional)
@@ -246,15 +233,15 @@ CMD_FUNC(cmd_protoctl)
 				*p = '\0';
 				p = NULL;
 			}
-			
+
 			servername = strtoken_noskip(&p, buf, ",");
 			if (!servername || !valid_server_name(servername))
 			{
 				exit_client(client, NULL, "Bogus server name");
 				return;
 			}
-			
-			
+
+
 			protocol = strtoken_noskip(&p, NULL, ",");
 			if (protocol)
 			{
@@ -262,7 +249,7 @@ CMD_FUNC(cmd_protoctl)
 				if (flags)
 					software = strtoken_noskip(&p, NULL, ",");
 			}
-			
+
 			/* Set client->name but don't add to hash list, this gives better
 			 * log messages and should be safe. See CMTSRV941 in server.c.
 			 */
@@ -288,18 +275,17 @@ CMD_FUNC(cmd_protoctl)
 			}
 			if (!IsHandshake(client) && aconf) /* Send PASS early... */
 				sendto_one(client, NULL, "PASS :%s", (aconf->auth->type == AUTHTYPE_PLAINTEXT) ? aconf->auth->data : "*");
-		}
-		else if (!strcmp(name, "SERVERS") && value)
+		} else if (!strcmp(name, "SERVERS") && value)
 		{
 			Client *aclient, *srv;
 			char *sid = NULL;
-			
+
 			if (!IsEAuth(client))
 				continue;
-				
+
 			if (client->server->features.protocol < 2351)
 				continue; /* old SERVERS= version */
-			
+
 			/* Other side lets us know which servers are behind it.
 			 * SERVERS=<sid-of-server-1>[,<sid-of-server-2[,..etc..]]
 			 * Eg: SERVERS=001,002,0AB,004,005
@@ -311,21 +297,21 @@ CMD_FUNC(cmd_protoctl)
 			if (aclient)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID", client,
-					   "Denied server $client: Server with SID $existing_client.id ($existing_client) is already linked.",
-					   log_data_client("existing_client", aclient));
+				           "Denied server $client: Server with SID $existing_client.id ($existing_client) is already linked.",
+				           log_data_client("existing_client", aclient));
 				exit_client(client, NULL, "Server Exists (or non-unique me::sid)");
 				return;
 			}
-			
+
 			aclient = find_pending_net_duplicates(client, &srv, &sid);
 			if (aclient)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_LINKED", client,
-					   "Denied server $client: Server would (later) introduce SID $sid, "
-					   "but we already have SID $sid linked ($existing_client)\n"
-					   "Possible race condition, just wait a moment for the network to synchronize...",
-					   log_data_string("sid", sid),
-					   log_data_client("existing_client", aclient));
+				           "Denied server $client: Server would (later) introduce SID $sid, "
+				           "but we already have SID $sid linked ($existing_client)\n"
+				           "Possible race condition, just wait a moment for the network to synchronize...",
+				           log_data_string("sid", sid),
+				           log_data_client("existing_client", aclient));
 				exit_client(client, NULL, "Server Exists (just wait a moment...)");
 				return;
 			}
@@ -333,8 +319,7 @@ CMD_FUNC(cmd_protoctl)
 			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
 			if (*value != '*')
 				send_protoctl_servers(client, 1);
-		}
-		else if (!strcmp(name, "TS") && value && (IsServer(client) || IsEAuth(client)))
+		} else if (!strcmp(name, "TS") && value && (IsServer(client) || IsEAuth(client)))
 		{
 			long t = atol(value);
 
@@ -353,8 +338,7 @@ CMD_FUNC(cmd_protoctl)
 				exit_client_fmt(client, NULL, "Incorrect clock. Our clocks are %lld seconds apart.",
 				                (long long)(TStime() - t));
 				return;
-			} else
-			if ((t - TStime()) > MAX_SERVER_TIME_OFFSET)
+			} else if ((t - TStime()) > MAX_SERVER_TIME_OFFSET)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_CLOCK_INCORRECT", client,
 				           "Denied server $client: clock on server $client is $time_delta "
@@ -367,30 +351,25 @@ CMD_FUNC(cmd_protoctl)
 				                (long long)(t - TStime()));
 				return;
 			}
-		}
-		else if (!strcmp(name, "MLOCK"))
+		} else if (!strcmp(name, "MLOCK"))
 		{
 			client->local->proto |= PROTO_MLOCK;
-		}
-		else if (!strcmp(name, "CHANMODES") && value && client->server)
+		} else if (!strcmp(name, "CHANMODES") && value && client->server)
 		{
 			parse_chanmodes_protoctl(client, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(client))
 				broadcast_sinfo(client, NULL, client);
-		}
-		else if (!strcmp(name, "USERMODES") && value && client->server)
+		} else if (!strcmp(name, "USERMODES") && value && client->server)
 		{
 			safe_strdup(client->server->features.usermodes, value);
 			/* If this is a runtime change (so post-handshake): */
 			if (IsServer(client))
 				broadcast_sinfo(client, NULL, client);
-		}
-		else if (!strcmp(name, "BOOTED") && value && client->server)
+		} else if (!strcmp(name, "BOOTED") && value && client->server)
 		{
 			client->server->boottime = atol(value);
-		}
-		else if (!strcmp(name, "EXTSWHOIS"))
+		} else if (!strcmp(name, "EXTSWHOIS"))
 		{
 			client->local->proto |= PROTO_EXTSWHOIS;
 		}

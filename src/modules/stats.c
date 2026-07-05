@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_stats);
 
-#define MSG_STATS 	"STATS"
+#define MSG_STATS "STATS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"stats",
-	"5.0",
-	"command /stats",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "stats",
+    "5.0",
+    "command /stats",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -52,7 +51,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-extern MODVAR int  max_connection_count;
+extern MODVAR int max_connection_count;
 
 int stats_banversion(Client *, const char *);
 int stats_links(Client *, const char *);
@@ -85,7 +84,7 @@ int stats_fdtable(Client *, const char *);
 int stats_linecache(Client *client, const char *para);
 
 #define SERVER_AS_PARA 0x1
-#define FLAGS_AS_PARA 0x2
+#define FLAGS_AS_PARA  0x2
 
 struct statstab {
 	char flag;
@@ -152,34 +151,37 @@ int stats_compare(const char *s1, const char *s2)
 	return 1;
 }
 
-static inline struct statstab *stats_binary_search(char c) {
+static inline struct statstab *stats_binary_search(char c)
+{
 	int start = 0;
-	int stop = sizeof(StatsTable)/sizeof(StatsTable[0])-1;
+	int stop = sizeof(StatsTable) / sizeof(StatsTable[0]) - 1;
 	int mid;
-	while (start <= stop) {
-		mid = (start+stop)/2;
+	while (start <= stop)
+	{
+		mid = (start + stop) / 2;
 		if (c < StatsTable[mid].flag)
-			stop = mid-1;
+			stop = mid - 1;
 		else if (StatsTable[mid].flag == c)
 			return &StatsTable[mid];
 		else
-			start = mid+1;
+			start = mid + 1;
 	}
 	return NULL;
 }
 
-static inline struct statstab *stats_search(const char *s) {
+static inline struct statstab *stats_search(const char *s)
+{
 	int i;
 	for (i = 0; StatsTable[i].flag; i++)
-		if (!stats_compare(StatsTable[i].longflag,s))
+		if (!stats_compare(StatsTable[i].longflag, s))
 			return &StatsTable[i];
 	return NULL;
 }
 
 static inline char *stats_combine_parv(const char *p1, const char *p2)
 {
-	static char buf[BUFSIZE+1];
-        ircsnprintf(buf, sizeof(buf), "%s %s", p1, p2);
+	static char buf[BUFSIZE + 1];
+	ircsnprintf(buf, sizeof(buf), "%s %s", p1, p2);
 	return buf;
 }
 
@@ -238,7 +240,7 @@ static inline int allow_user_stats_short(char c)
 	l = tolower(c);
 	/* Hack for the flags that are case insensitive */
 	if (l == 'o' || l == 'y' || l == 'k' || l == 'g' || l == 'x' || l == 'c' ||
-		l =='f' || l == 'i' || l == 'h' || l == 'm')
+	    l == 'f' || l == 'i' || l == 'h' || l == 'm')
 	{
 		if (islower(c) && strchr(ALLOW_USER_STATS, toupper(c)))
 			return 1;
@@ -270,7 +272,7 @@ static inline int allow_user_stats_long(const char *s)
 /* This is pretty slow, but it isn't used often so it isn't a big deal */
 static inline char *allow_user_stats_long_to_short()
 {
-	static char buffer[BUFSIZE+1];
+	static char buffer[BUFSIZE + 1];
 	int i = 0;
 	OperStat *os;
 	for (os = iConf.allow_user_stats_ext; os; os = os->next)
@@ -294,8 +296,7 @@ CMD_FUNC(cmd_stats)
 	{
 		if (hunt_server(client, recv_mtags, "STATS", 2, parc, parv) != HUNTED_ISME)
 			return;
-	}
-	else if (parc == 4 && parv[2][0] != '+' && parv[2][0] != '-')
+	} else if (parc == 4 && parv[2][0] != '+' && parv[2][0] != '-')
 	{
 		if (hunt_server(client, recv_mtags, "STATS", 2, parc, parv) != HUNTED_ISME)
 			return;
@@ -310,17 +311,16 @@ CMD_FUNC(cmd_stats)
 	/* Decide if we are looking for 1 char or a string */
 	if (parv[1][0] && !parv[1][1])
 	{
-		if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && !allow_user_stats_short(parv[1][0]))
+		if (!ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL) && !allow_user_stats_short(parv[1][0]))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
 		}
 		/* Old style, we can use a binary search here */
 		stat = stats_binary_search(parv[1][0]);
-	}
-	else
+	} else
 	{
-		if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL) && !allow_user_stats_long(parv[1]))
+		if (!ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL) && !allow_user_stats_long(parv[1]))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			return;
@@ -354,23 +354,20 @@ CMD_FUNC(cmd_stats)
 		if (parc > 2 && (parv[2][0] == '+' || parv[2][0] == '-'))
 		{
 			if (parc > 3)
-				stat->func(client, stats_combine_parv(parv[2],parv[3]));
+				stat->func(client, stats_combine_parv(parv[2], parv[3]));
 			else
 				stat->func(client, parv[2]);
-		}
-		else if (parc > 3)
+		} else if (parc > 3)
 			stat->func(client, parv[3]);
 		else
 			stat->func(client, NULL);
-	}
-	else if (stat->options & SERVER_AS_PARA)
+	} else if (stat->options & SERVER_AS_PARA)
 	{
 		if (parc > 2)
 			stat->func(client, parv[2]);
 		else
 			stat->func(client, NULL);
-	}
-	else
+	} else
 		stat->func(client, NULL);
 
 	/* Modules can append data:
@@ -393,7 +390,7 @@ int stats_banversion(Client *client, const char *para)
 		if (bans->flag.type != CONF_BAN_VERSION)
 			continue;
 		sendnumeric(client, RPL_STATSBANVER,
-			bans->mask, bans->reason ? bans->reason : "No Reason");
+		            bans->mask, bans->reason ? bans->reason : "No Reason");
 	}
 	return 0;
 }
@@ -407,37 +404,36 @@ int stats_links(Client *client, const char *para)
 	for (link_p = conf_link; link_p; link_p = link_p->next)
 	{
 		sendnumericfmt(client, RPL_STATSCLINE, "C - * %s %i %s %s%s%s",
-			link_p->servername,
-			link_p->outgoing.port,
-			link_p->class->name,
-			(link_p->outgoing.options & CONNECT_OUTGOING_AUTO) ? "a" : "",
-			(link_p->outgoing.options & CONNECT_OUTGOING_TLS) ? "S" : "",
-			(link_p->flag.temporary == 1) ? "T" : "");
+		               link_p->servername,
+		               link_p->outgoing.port,
+		               link_p->class->name,
+		               (link_p->outgoing.options & CONNECT_OUTGOING_AUTO) ? "a" : "",
+		               (link_p->outgoing.options & CONNECT_OUTGOING_TLS) ? "S" : "",
+		               (link_p->flag.temporary == 1) ? "T" : "");
 #ifdef DEBUGMODE
 		sendnotice(client, "%s (%p) has refcount %d",
-			link_p->servername, link_p, link_p->refcount);
+		           link_p->servername, link_p, link_p->refcount);
 #endif
 		if (link_p->hub)
 			sendnumericfmt(client, RPL_STATSHLINE, "H %s * %s",
-				link_p->hub, link_p->servername);
+			               link_p->hub, link_p->servername);
 		else if (link_p->leaf)
 			sendnumericfmt(client, RPL_STATSLLINE, "L %s * %s %d",
-				link_p->leaf, link_p->servername, link_p->leaf_depth);
+			               link_p->leaf, link_p->servername, link_p->leaf_depth);
 	}
 #ifdef DEBUGMODE
-	list_for_each_entry(acptr, &client_list, client_node)
-		if (MyConnect(acptr) && acptr->server && !IsMe(acptr))
-		{
-			if (!acptr->server->conf)
-				sendnotice(client, "client '%s' (%p) has NO CONF attached (? :P)",
-					acptr->name, acptr);
-			else
-				sendnotice(client, "client '%s' (%p) has conf %p attached, refcount: %d, temporary: %s",
-					acptr->name, acptr,
-					acptr->server->conf,
-					acptr->server->conf->refcount,
-					acptr->server->conf->flag.temporary ? "YES" : "NO");
-		}
+	list_for_each_entry(acptr, &client_list, client_node) if (MyConnect(acptr) && acptr->server && !IsMe(acptr))
+	{
+		if (!acptr->server->conf)
+			sendnotice(client, "client '%s' (%p) has NO CONF attached (? :P)",
+			           acptr->name, acptr);
+		else
+			sendnotice(client, "client '%s' (%p) has conf %p attached, refcount: %d, temporary: %s",
+			           acptr->name, acptr,
+			           acptr->server->conf,
+			           acptr->server->conf->refcount,
+			           acptr->server->conf->flag.temporary ? "YES" : "NO");
+	}
 #endif
 	return 0;
 }
@@ -445,8 +441,8 @@ int stats_links(Client *client, const char *para)
 int stats_gline(Client *client, const char *para)
 {
 	int cnt = 0;
-	tkl_stats(client, TKL_GLOBAL|TKL_KILL, para, &cnt);
-	tkl_stats(client, TKL_GLOBAL|TKL_ZAP, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL | TKL_KILL, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL | TKL_ZAP, para, &cnt);
 	return 0;
 }
 
@@ -454,7 +450,7 @@ int stats_spamfilter(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_SPAMF, para, &cnt);
-	tkl_stats(client, TKL_GLOBAL|TKL_SPAMF, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL | TKL_SPAMF, para, &cnt);
 	return 0;
 }
 
@@ -462,7 +458,7 @@ int stats_except(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_EXCEPTION, para, &cnt);
-	tkl_stats(client, TKL_EXCEPTION|TKL_GLOBAL, para, &cnt);
+	tkl_stats(client, TKL_EXCEPTION | TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
@@ -476,12 +472,12 @@ int stats_allow(Client *client, const char *para)
 		for (m = allows->match->printable_list; m; m = m->next)
 		{
 			sendnumeric(client, RPL_STATSILINE,
-				    namevalue_nospaces(m), "-",
-				    allows->maxperip,
-				    allows->global_maxperip,
-				    allows->class->name,
-				    allows->server ? allows->server : DEFAULT_SERVER,
-				    allows->port ? allows->port : 6667);
+			            namevalue_nospaces(m), "-",
+			            allows->maxperip,
+			            allows->global_maxperip,
+			            allows->class->name,
+			            allows->server ? allows->server : DEFAULT_SERVER,
+			            allows->port ? allows->port : 6667);
 		}
 	}
 	return 0;
@@ -494,8 +490,8 @@ int stats_command(Client *client, const char *para)
 	for (i = 0; i < 256; i++)
 		for (mptr = CommandHash[i]; mptr; mptr = mptr->next)
 			if (mptr->count)
-			sendnumeric(client, RPL_STATSCOMMANDS, mptr->cmd,
-				mptr->count, mptr->bytes);
+				sendnumeric(client, RPL_STATSCOMMANDS, mptr->cmd,
+				            mptr->count, mptr->bytes);
 
 	return 0;
 }
@@ -511,7 +507,7 @@ int stats_oper(Client *client, const char *para)
 		{
 			sendnumeric(client, RPL_STATSOLINE,
 			            'O', namevalue_nospaces(m), o->name,
-			            o->operclass ? o->operclass: "",
+			            o->operclass ? o->operclass : "",
 			            o->class->name ? o->class->name : "");
 		}
 	}
@@ -523,9 +519,9 @@ static char *stats_port_helper(ConfigItem_listen *listener)
 	static char buf[256];
 
 	ircsnprintf(buf, sizeof(buf), "%s%s%s",
-	    (listener->options & LISTENER_CLIENTSONLY)? "clientsonly ": "",
-	    (listener->options & LISTENER_SERVERSONLY)? "serversonly ": "",
-	    (listener->options & LISTENER_DEFER_ACCEPT)? "defer-accept ": "");
+	            (listener->options & LISTENER_CLIENTSONLY) ? "clientsonly " : "",
+	            (listener->options & LISTENER_SERVERSONLY) ? "serversonly " : "",
+	            (listener->options & LISTENER_DEFER_ACCEPT) ? "defer-accept " : "");
 
 	/* And one of these.. */
 	if (listener->options & LISTENER_CONTROL)
@@ -547,28 +543,30 @@ int stats_port(Client *client, const char *para)
 	{
 		if (!(listener->options & LISTENER_BOUND))
 			continue;
-		if ((listener->options & LISTENER_SERVERSONLY) && !ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+		if ((listener->options & LISTENER_SERVERSONLY) && !ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL))
 			continue;
 		if (listener->socket_type == SOCKET_TYPE_UNIX)
 		{
 			sendtxtnumeric(client, "Listener on %s (UNIX): has %i client(s), options: %s %s",
-				   listener->file,
-				   listener->clients,
-				   stats_port_helper(listener),
-				   listener->flag.temporary ? "[TEMPORARY]" : "");
-		} else {
+			               listener->file,
+			               listener->clients,
+			               stats_port_helper(listener),
+			               listener->flag.temporary ? "[TEMPORARY]" : "");
+		} else
+		{
 			sendtxtnumeric(client, "Listener on %s:%i (%s): has %i client(s), options: %s %s",
-				   listener->ip,
-				   listener->port,
-				   listener->socket_type == SOCKET_TYPE_IPV6 ? "IPv6" : "IPv4",
-				   listener->clients,
-				   stats_port_helper(listener),
-				   listener->flag.temporary ? "[TEMPORARY]" : "");
+			               listener->ip,
+			               listener->port,
+			               listener->socket_type == SOCKET_TYPE_IPV6 ? "IPv6" : "IPv4",
+			               listener->clients,
+			               stats_port_helper(listener),
+			               listener->flag.temporary ? "[TEMPORARY]" : "");
 		}
 		if (listener->options & LISTENER_TLS)
 		{
 			TLSOptions *o = tls_options_for_listener(listener);
-			const char *kind = listener->tls_options ? "" : (o == iConf.server_linking_tls_options) ? "server-linking " : "default ";
+			const char *kind = listener->tls_options ? "" : (o == iConf.server_linking_tls_options) ? "server-linking "
+			                                                                                        : "default ";
 			NameList *n, *n2;
 			for (n = o->certificate_files, n2 = o->key_files; n && n2; n = n->next, n2 = n2->next)
 				sendtxtnumeric(client, "- using %stls certificate %s + key %s", kind, n->name, n2->name);
@@ -581,7 +579,7 @@ int stats_bannick(Client *client, const char *para)
 {
 	int cnt = 0;
 	tkl_stats(client, TKL_NAME, para, &cnt);
-	tkl_stats(client, TKL_GLOBAL|TKL_NAME, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL | TKL_NAME, para, &cnt);
 	return 0;
 }
 
@@ -601,13 +599,11 @@ int stats_traffic(Client *client, const char *para)
 		{
 			sp->is_sti += now - acptr->local->creationtime;
 			sp->is_sv++;
-		}
-		else if (IsUser(acptr))
+		} else if (IsUser(acptr))
 		{
 			sp->is_cti += now - acptr->local->creationtime;
 			sp->is_cl++;
-		}
-		else if (IsUnknown(acptr))
+		} else if (IsUnknown(acptr))
 			sp->is_ni++;
 	}
 
@@ -625,7 +621,7 @@ int stats_traffic(Client *client, const char *para)
 	sendnumericfmt(client, RPL_STATSDEBUG, "bytes sent %lld", me.local->traffic.bytes_sent);
 	sendnumericfmt(client, RPL_STATSDEBUG, "bytes received %lld", me.local->traffic.bytes_received);
 	sendnumericfmt(client, RPL_STATSDEBUG, "time connected %lld %lld",
-	    (long long)sp->is_cti, (long long)sp->is_sti);
+	               (long long)sp->is_cti, (long long)sp->is_sti);
 
 	return 0;
 }
@@ -643,12 +639,12 @@ int stats_fdtable(Client *client, const char *para)
 
 #ifndef DEBUGMODE
 		sendnumericfmt(client, RPL_STATSDEBUG,
-			"fd %3d, desc '%s', read-hdl %d, write-hdl %d, cbdata %d",
-			fde->fd, fde->desc, fde->read_callback ? 1 : 0, fde->write_callback ? 1 : 0, fde->data ? 1 : 0);
+		               "fd %3d, desc '%s', read-hdl %d, write-hdl %d, cbdata %d",
+		               fde->fd, fde->desc, fde->read_callback ? 1 : 0, fde->write_callback ? 1 : 0, fde->data ? 1 : 0);
 #else
 		sendnumericfmt(client, RPL_STATSDEBUG,
-			"fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
-			fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
+		               "fd %3d, desc '%s', read-hdl %p, write-hdl %p, cbdata %p",
+		               fde->fd, fde->desc, fde->read_callback, fde->write_callback, fde->data);
 #endif
 	}
 
@@ -678,8 +674,7 @@ int stats_banrealname(Client *client, const char *para)
 	{
 		if (bans->flag.type == CONF_BAN_REALNAME)
 		{
-			sendnumeric(client, RPL_STATSNLINE, bans->mask, bans->reason
-				? bans->reason : "<no reason>");
+			sendnumeric(client, RPL_STATSNLINE, bans->mask, bans->reason ? bans->reason : "<no reason>");
 		}
 	}
 	return 0;
@@ -688,7 +683,7 @@ int stats_banrealname(Client *client, const char *para)
 int stats_sqline(Client *client, const char *para)
 {
 	int cnt = 0;
-	tkl_stats(client, TKL_NAME|TKL_GLOBAL, para, &cnt);
+	tkl_stats(client, TKL_NAME | TKL_GLOBAL, para, &cnt);
 	return 0;
 }
 
@@ -700,8 +695,8 @@ int stats_chanrestrict(Client *client, const char *para)
 	{
 		sendtxtnumeric(client, "deny %s %c %s", dchans->channel, dchans->warn ? 'w' : '-', dchans->reason);
 	}
-  	for (achans = conf_allow_channel; achans; achans = achans->next)
-  	{
+	for (achans = conf_allow_channel; achans; achans = achans->next)
+	{
 		sendtxtnumeric(client, "allow %s", achans->channel);
 	}
 	return 0;
@@ -710,7 +705,7 @@ int stats_chanrestrict(Client *client, const char *para)
 int stats_shun(Client *client, const char *para)
 {
 	int cnt = 0;
-	tkl_stats(client, TKL_GLOBAL|TKL_SHUN, para, &cnt);
+	tkl_stats(client, TKL_GLOBAL | TKL_SHUN, para, &cnt);
 	return 0;
 }
 
@@ -726,42 +721,40 @@ int stats_officialchannels(Client *client, const char *para)
 	return 0;
 }
 
-#define SafePrint(x)   ((x) ? (x) : "")
+#define SafePrint(x) ((x) ? (x) : "")
 
 /** Helper for stats_set() */
 static void stats_set_anti_flood(Client *client, FloodSettings *f)
 {
 	int i;
 
-	for (i=0; floodoption_names[i]; i++)
+	for (i = 0; floodoption_names[i]; i++)
 	{
 		if (f->limit[i] == 0)
 			continue; /* unconfigured */
 		if (i == FLD_CONVERSATIONS)
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d users, new user every %s",
-				f->name, floodoption_names[i],
-				(int)f->limit[i], pretty_time_val(f->period[i]));
-		} else
-		if (i == FLD_LAG_PENALTY)
+			               f->name, floodoption_names[i],
+			               (int)f->limit[i], pretty_time_val(f->period[i]));
+		} else if (i == FLD_LAG_PENALTY)
 		{
 			sendtxtnumeric(client, "anti-flood::%s::lag-penalty: %d msec",
-				f->name, (int)f->period[i]);
+			               f->name, (int)f->period[i]);
 			sendtxtnumeric(client, "anti-flood::%s::lag-penalty-bytes: %d",
-				f->name,
-				f->limit[i] == INT_MAX ? 0 : (int)f->limit[i]);
-		} else
-		if (i == FLD_MULTILINE)
+			               f->name,
+			               f->limit[i] == INT_MAX ? 0 : (int)f->limit[i]);
+		} else if (i == FLD_MULTILINE)
 		{
 			sendtxtnumeric(client, "anti-flood::%s::multiline::max-lines: %d",
-				f->name, (int)f->limit[i]);
+			               f->name, (int)f->limit[i]);
 			sendtxtnumeric(client, "anti-flood::%s::multiline::max-bytes: %d",
-				f->name, (int)f->period[i]);
+			               f->name, (int)f->period[i]);
 		} else
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
-				f->name, floodoption_names[i],
-				(int)f->limit[i], pretty_time_val(f->period[i]));
+			               f->name, floodoption_names[i],
+			               (int)f->limit[i], pretty_time_val(f->period[i]));
 		}
 	}
 }
@@ -774,7 +767,7 @@ int stats_set(Client *client, const char *para)
 	NameList *n;
 	char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
-	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return 0;
@@ -901,7 +894,7 @@ int stats_set(Client *client, const char *para)
 	RunHook(HOOKTYPE_STATS, client, "S");
 #ifndef _WIN32
 	sendtxtnumeric(client, "This server can handle %d concurrent sockets (%d clients + %d reserve)",
-		maxclients+reserved_fds, maxclients, reserved_fds);
+	               maxclients + reserved_fds, maxclients, reserved_fds);
 #endif
 	return 1;
 }
@@ -930,10 +923,10 @@ int stats_uptime(Client *client, const char *para)
 
 	uptime = TStime() - me.local->fake_lag;
 	sendnumeric(client, RPL_STATSUPTIME,
-	    uptime / 86400, (uptime / 3600) % 24, (uptime / 60) % 60,
-	    uptime % 60);
+	            uptime / 86400, (uptime / 3600) % 24, (uptime / 60) % 60,
+	            uptime % 60);
 	sendnumeric(client, RPL_STATSCONN,
-	    max_connection_count, irccounts.me_max);
+	            max_connection_count, irccounts.me_max);
 	return 0;
 }
 
@@ -943,7 +936,7 @@ int stats_denyver(Client *client, const char *para)
 	for (versions = conf_deny_version; versions; versions = versions->next)
 	{
 		sendnumeric(client, RPL_STATSVLINE,
-			versions->version, versions->flags, versions->mask);
+		            versions->version, versions->flags, versions->mask);
 	}
 	return 0;
 }
@@ -957,7 +950,7 @@ int stats_notlink(Client *client, const char *para)
 		if (!find_server_quick(link_p->servername))
 		{
 			sendnumeric(client, RPL_STATSXLINE, link_p->servername,
-				link_p->outgoing.port);
+			            link_p->outgoing.port);
 		}
 	}
 	return 0;
@@ -970,10 +963,10 @@ int stats_class(Client *client, const char *para)
 	for (classes = conf_class; classes; classes = classes->next)
 	{
 		sendnumeric(client, RPL_STATSYLINE, classes->name, classes->pingfreq, classes->connfreq,
-			classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : DEFAULT_RECVQ);
+		            classes->maxclients, classes->sendq, classes->recvq ? classes->recvq : DEFAULT_RECVQ);
 #ifdef DEBUGMODE
 		sendnotice(client, "class '%s' has clients=%d, xrefcount=%d",
-			classes->name, classes->clients, classes->xrefcount);
+		           classes->name, classes->clients, classes->xrefcount);
 #endif
 	}
 	return 0;
@@ -1010,8 +1003,7 @@ int stats_linkinfoint(Client *client, const char *para, int all)
 			doall = 1;
 		if (strchr(para, '*') || strchr(para, '?'))
 			wilds = 1;
-	}
-	else
+	} else
 		para = me.name;
 
 	sendnumericfmt(client, RPL_STATSLINKINFO, "Name SendQ SendM SendBytes RcveM RcveBytes Open_since :Idle");
@@ -1025,7 +1017,7 @@ int stats_linkinfoint(Client *client, const char *para, int all)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsInvisible(acptr) && (doall || wilds) &&
-			!IsOper(acptr) && (acptr != client))
+		    !IsOper(acptr) && (acptr != client))
 			continue;
 		if (remote && doall && !IsServer(acptr) && !IsMe(acptr))
 			continue;
@@ -1041,22 +1033,22 @@ int stats_linkinfoint(Client *client, const char *para, int all)
 		}
 
 		sendnumericfmt(client, RPL_STATSLINKINFO,
-		        "%s%s %lld %lld %lld %lld %lld %lld :%lld",
-			acptr->name, get_client_status(acptr),
-			(long long)DBufLength(&acptr->local->sendQ),
-			(long long)acptr->local->traffic.messages_sent,
-			(long long)acptr->local->traffic.bytes_sent,
-			(long long)acptr->local->traffic.messages_received,
-			(long long)acptr->local->traffic.bytes_received,
-			(long long)(TStime() - acptr->local->creationtime),
-			(long long)(TStime() - acptr->local->last_msg_received));
+		               "%s%s %lld %lld %lld %lld %lld %lld :%lld",
+		               acptr->name, get_client_status(acptr),
+		               (long long)DBufLength(&acptr->local->sendQ),
+		               (long long)acptr->local->traffic.messages_sent,
+		               (long long)acptr->local->traffic.bytes_sent,
+		               (long long)acptr->local->traffic.messages_received,
+		               (long long)acptr->local->traffic.bytes_received,
+		               (long long)(TStime() - acptr->local->creationtime),
+		               (long long)(TStime() - acptr->local->last_msg_received));
 	}
 #ifdef DEBUGMODE
 	list_for_each_entry(acptr, &client_list, client_node)
 	{
 		if (IsServer(acptr))
 			sendnotice(client, "Server %s is %s",
-				acptr->name, acptr->server->flags.synced ? "SYNCED" : "NOT SYNCED!!");
+			           acptr->name, acptr->server->flags.synced ? "SYNCED" : "NOT SYNCED!!");
 	}
 #endif
 	return 0;
@@ -1066,7 +1058,7 @@ int stats_linecache(Client *client, const char *para)
 {
 	ClientCapability *e;
 
-	if (!ValidatePermissionsForPath("server:info:stats",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info:stats", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return 0;
@@ -1078,7 +1070,7 @@ int stats_linecache(Client *client, const char *para)
 			sendtxtnumeric(client, "CAP %s", e->name);
 
 	//sendtxtnumeric(client, " ");
-	//sendtxtnumeric(client, "Line statistics:");	
+	//sendtxtnumeric(client, "Line statistics:");
 
 	return 0;
 }
