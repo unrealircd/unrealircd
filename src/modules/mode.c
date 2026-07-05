@@ -763,13 +763,15 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 	}
 
 	if (what == MODE_ADD)
-	{ /* + */
+	{
+		/* + */
 		channel->mode.mode |= handler->mode;
 		if (handler->paracount)
 			cm_putparameter(channel, handler->letter, param);
 		RunHook(HOOKTYPE_MODECHAR_ADD, channel, (int)mode);
 	} else
-	{ /* - */
+	{
+		/* - */
 		channel->mode.mode &= ~(handler->mode);
 		RunHook(HOOKTYPE_MODECHAR_DEL, channel, (int)mode);
 		if (handler->paracount)

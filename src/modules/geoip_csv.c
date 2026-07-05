@@ -435,7 +435,8 @@ static int geoip_csv_read_ipv4(char *file)
 
 		mask = 0;
 		while (cidr)
-		{ /* calculate netmask */
+		{
+			/* calculate netmask */
 			mask >>= 1;
 			mask |= (1 << 31);
 			cidr--;
@@ -443,7 +444,8 @@ static int geoip_csv_read_ipv4(char *file)
 
 		i = 0;
 		do
-		{ /* multiple iterations in case CIDR is <8 and we have multiple first octets matching */
+		{
+			/* multiple iterations in case CIDR is <8 and we have multiple first octets matching */
 			uint8_t index = addr >> 24;
 			if (!curr[index])
 			{
@@ -467,8 +469,13 @@ static int geoip_csv_read_ipv4(char *file)
 	return 0;
 }
 
+/** Convert an IPv6 address from text to binary form.
+ * @param ip   IPv6 address as text
+ * @param out  Result: eight 16-bit groups
+ * @returns 1 on success, 0 if the address is invalid.
+ */
 static int geoip_csv_ip6_convert(char *ip, uint16_t out[8])
-{ /* convert text to binary form */
+{
 	uint16_t tmp[8];
 	int i;
 	if (inet_pton(AF_INET6, ip, out) < 1)
@@ -554,7 +561,8 @@ static int geoip_csv_read_ipv6(char *file)
 
 		int mask_bit = 0;
 		while (cidr)
-		{ /* calculate netmask */
+		{
+			/* calculate netmask */
 			mask[mask_bit / 16] |= 1 << (15 - (mask_bit % 16));
 			mask_bit++;
 			cidr--;
@@ -618,7 +626,8 @@ static int geoip_csv_read_countries(char *file)
 		return 1;
 	}
 	while (fscanf(u, "%d,%" STR(BUFLEN) "[^\n]", &id, buf) == 2)
-	{ /* getting country ID integer and all other data in string */
+	{
+		/* getting country ID integer and all other data in string */
 		char *ptr = buf;
 		char *codeptr = code;
 		char *contptr = continent;
@@ -760,7 +769,8 @@ static int geoip_csv_get_v4_geoid(char *iip)
 			tmp_addr = addr;
 			tmp_addr &= curr->mask; /* mask the address to filter out net prefix only */
 			if (tmp_addr == curr->addr)
-			{ /* ... and match it to the loaded data */
+			{
+				/* ... and match it to the loaded data */
 				found = 1;
 				break;
 			}
@@ -793,7 +803,8 @@ static int geoip_csv_get_v6_geoid(char *iip)
 			for (i = 0; i < 8; i++)
 			{
 				if (curr->addr[i] != (addr[i] & curr->mask[i]))
-				{ /* compare net address to loaded data */
+				{
+					/* compare net address to loaded data */
 					found = 0;
 					break;
 				}

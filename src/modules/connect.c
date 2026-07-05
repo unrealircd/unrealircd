@@ -66,7 +66,8 @@ CMD_FUNC(cmd_connect)
 	const char *str;
 
 	if (!IsServer(client) && MyConnect(client) && !ValidatePermissionsForPath("route:global", client, NULL, NULL, NULL) && parc > 3)
-	{   /* Only allow LocOps to make */
+	{
+		/* Only allow LocOps to make */
 		/* local CONNECTS --SRB      */
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;

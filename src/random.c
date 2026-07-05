@@ -94,11 +94,13 @@ static void chacha_keysetup(chacha_ctx *x, const u8 *k, u32 kbits, u32 ivbits)
 	x->input[6] = U8TO32_LITTLE(k + 8);
 	x->input[7] = U8TO32_LITTLE(k + 12);
 	if (kbits == 256)
-	{ /* recommended */
+	{
+		/* recommended */
 		k += 16;
 		constants = sigma;
 	} else
-	{ /* kbits == 128 */
+	{
+		/* kbits == 128 */
 		constants = tau;
 	}
 	x->input[8] = U8TO32_LITTLE(k + 0);

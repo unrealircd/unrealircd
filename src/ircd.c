@@ -1031,7 +1031,8 @@ static void open_debugfile(void)
 		/*(void)printf("isatty = %d ttyname = %#x\n",
 		    isatty(2), (u_int)ttyname(2)); */
 		if (!(bootopt & BOOT_TTY))
-		{ /* leave debugging output on fd 2 */
+		{
+			/* leave debugging output on fd 2 */
 			if (truncate(LOGFILE, 0) < 0)
 				fprintf(stderr, "WARNING: could not truncate log file '%s'\n", LOGFILE);
 			if ((fd = open(LOGFILE, O_WRONLY | O_CREAT, 0600)) < 0)

@@ -151,7 +151,8 @@ MOD_LOAD()
 	ISupportAdd(modinfo->handle, "EXTJWT", "1");
 #endif
 	while (service)
-	{ /* copy default exp to all services not having one specified */
+	{
+		/* copy default exp to all services not having one specified */
 		if (service->cfg->exp_delay == 0)
 			service->cfg->exp_delay = cfg.exp_delay;
 		service = service->next;
@@ -239,8 +240,13 @@ int vfy_url_is_valid(const char *string)
 	return 0;
 }
 
+/** Test whether a private key file is usable for the given method.
+ * @param file    Filename of the key file
+ * @param method  One of EXTJWT_METHOD_*
+ * @returns NULL when the key is valid, otherwise an error message.
+ */
 char *extjwt_test_key(const char *file, int method)
-{ /* returns NULL when valid */
+{
 	int fsize;
 	char *fcontent = NULL;
 	char *retval = NULL;
@@ -660,8 +666,9 @@ int extjwt_configposttest(int *errs)
 	return 1;
 }
 
+/** Config run hook: actually use the new set::extjwt configuration data */
 int extjwt_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
-{ /* actually use the new configuration data */
+{
 	ConfigEntry *cep, *cep2;
 	struct jwt_service **ss = &jwt_services;
 	if (*ss)
@@ -701,7 +708,8 @@ int extjwt_configrun(ConfigFile *cf, ConfigEntry *ce, int type)
 			continue;
 		}
 		if (!strcmp(cep->name, "service"))
-		{ /* nested block */
+		{
+			/* nested block */
 			*ss = safe_alloc(sizeof(struct jwt_service));
 			(*ss)->cfg = safe_alloc(sizeof(struct extjwt_config));
 			safe_strdup((*ss)->name, cep->value); /* copy the service name */
@@ -821,11 +829,13 @@ CMD_FUNC(cmd_extjwt)
 	do
 	{
 		if (strlen(token) <= MAX_TOKEN_CHUNK)
-		{ /* the remaining data (or whole token) will fit a single irc message */
+		{
+			/* the remaining data (or whole token) will fit a single irc message */
 			last = 1;
 			strcpy(message, token);
 		} else
-		{ /* send a chunk and shift buffer */
+		{
+			/* send a chunk and shift buffer */
 			strlcpy(message, token, MAX_TOKEN_CHUNK + 1);
 			token += MAX_TOKEN_CHUNK;
 		}
@@ -863,7 +873,8 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	json_object_set_new(payload, "umodes", umodes);
 
 	if (channel)
-	{ /* fill in channel information and user flags */
+	{
+		/* fill in channel information and user flags */
 		lp = find_membership_link(client->user->channel, channel);
 		modes = json_array();
 		if (lp)
@@ -885,8 +896,12 @@ char *extjwt_make_payload(Client *client, Channel *channel, struct extjwt_config
 	return result;
 }
 
+/** Convert a base64 string to base64-url, in place.
+ * Replaces '+' with '-' and '/' with '_', and cuts the
+ * string short at the first '=' (padding).
+ */
 void b64url(char *b64)
-{ /* convert base64 to base64-url */
+{
 	while (*b64)
 	{
 		if (*b64 == '+')
@@ -1067,7 +1082,8 @@ unsigned char *extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, 
 			break;
 	}
 	if (HMAC(typ, key, keylen, data, datalen, hmac, resultlen))
-	{ /* openssl call */
+	{
+		/* openssl call */
 		return hmac;
 	} else
 	{
@@ -1076,8 +1092,11 @@ unsigned char *extjwt_hmac_extjwt_hash(int method, const void *key, int keylen, 
 	}
 }
 
+/** Generate the JWT header for the given method (one of EXTJWT_METHOD_*).
+ * @returns The header as JSON text.
+ */
 char *extjwt_gen_header(int method)
-{ /* returns header json */
+{
 	json_t *header = NULL;
 	json_t *alg;
 	char *result;

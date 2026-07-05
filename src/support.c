@@ -555,7 +555,8 @@ int b64_decode(char const *src, unsigned char *target, size_t targsize)
 	 */
 
 	if (ch == Pad64)
-	{  /* We got a pad char. */
+	{
+		/* We got a pad char. */
 		ch = *src++;  /* Skip it, get next. */
 		switch (state)
 		{
