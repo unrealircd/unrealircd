@@ -33,7 +33,7 @@ ModuleHeader MOD_HEADER
 	"1.0.0",
 	"Provides compatibility with non-U6 servers",
 	"Bram Matthys (Syzop)",
-	"unrealircd-6"
+	"unrealircd-6",
     };
 
 /* Forward declarations */

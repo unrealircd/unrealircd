@@ -143,7 +143,7 @@ CMD_FUNC(cmd_list)
 		"T<number List channels whose topics are not older than <number> minutes.",
 		"*mask*   List channels that match *mask*",
 		"!*mask*  List channels that do not match *mask*",
-		NULL
+		NULL,
 	};
 
 	/* Remote /LIST is not supported */

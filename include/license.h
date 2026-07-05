@@ -45,5 +45,5 @@ char *gnulicense[] = {
 	"To see the UnrealIRCd License, please point your browser",
 	"to https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
 	"or look at the LICENSE file in the UnrealIRCd distribution.",
-	NULL
+	NULL,
 };

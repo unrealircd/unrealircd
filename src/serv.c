@@ -285,8 +285,7 @@ int remotecmdfilter(Client *client, int parc, const char *parv[])
 }
 
 /** Output for /INFO */
-char *unrealinfo[] =
-{
+char *unrealinfo[] = {
 	"This release was brought to you by the following people:",
 	"",
 	"Head coder:",
@@ -305,7 +304,7 @@ char *unrealinfo[] =
 	"* codemastr (ret. u3.2 head coder)",
 	"* aquanight, WolfSage, ..",
 	"* McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
-	NULL
+	NULL,
 };
 
 /** Send /INFO output */

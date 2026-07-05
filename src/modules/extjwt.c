@@ -111,7 +111,7 @@ ModuleHeader MOD_HEADER = {
 	"6.1",
 	"Command /EXTJWT (web service authorization)",
 	"UnrealIRCd Team",
-	"unrealircd-6"
+	"unrealircd-6",
 };
 
 struct {

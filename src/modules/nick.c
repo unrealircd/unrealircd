@@ -928,7 +928,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 		const char *args[3] = {
 			NULL,
 			chans,
-			NULL
+			NULL,
 		};
 		do_cmd(client, NULL, "JOIN", 3, args);
 		safe_free(chans);
@@ -941,7 +941,7 @@ void welcome_user(Client *client, TKL *viruschan_tkl)
 		const char *args[3] = {
 			NULL,
 			chans,
-			NULL
+			NULL,
 		};
 		do_cmd(client, NULL, "JOIN", 3, args);
 		safe_free(chans);

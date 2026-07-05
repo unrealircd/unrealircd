@@ -244,7 +244,7 @@ void rpc_log_send(Client *client, json_t *request, json_t *params)
 		subsystem,
 		event_id,
 		msg,
-		NULL
+		NULL,
 	};
 
 	do_cmd(&me, mtags, "SLOG", 5, cmd_params);

@@ -190,10 +190,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	HWND hWnd;
 	HICON hIcon;
 	SC_HANDLE hService, hSCManager;
-	SERVICE_TABLE_ENTRY DispatchTable[] = 
-	{
+	SERVICE_TABLE_ENTRY DispatchTable[] = {
 		{ "UnrealIRCd", ServiceMain },
-		{ 0, 0 }
+		{ 0, 0 },
 	};
 	DWORD need;
 	

@@ -42,7 +42,7 @@ AuthTypeList MODVAR AuthTypeLists[] = {
 	{"tlsclientcertfp", AUTHTYPE_TLS_CLIENTCERTFP},
 	{"spkifp",          AUTHTYPE_SPKIFP},
 	{"argon2",          AUTHTYPE_ARGON2},
-	{NULL,              0}
+	{NULL,              0},
 };
 
 /* Forward declarations */

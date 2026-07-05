@@ -2240,7 +2240,7 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 		"0",			/*6  expire_at */
 		NULL,			/*7  set_at */
 		"no reason",	/*8  reason */
-		NULL
+		NULL,
 	};
 	struct tm *t;
 
@@ -2591,7 +2591,7 @@ CMD_FUNC(cmd_eline)
 		"-",			/*7  set_at */
 		"-",			/*8  ban types */
 		"-",			/*9  reason */
-		NULL
+		NULL,
 	};
 	TKLTypeTable *t;
 
@@ -2740,7 +2740,7 @@ void spamfilter_del_by_id(Client *client, const char *id)
 		"",			/*  9 tkl reason */
 		"",			/* 10 match method */
 		"",			/* 11 regex */
-		NULL
+		NULL,
 	};
 
 	for (index = 0; index < TKLISTLEN; index++)
@@ -2812,7 +2812,7 @@ CMD_FUNC(cmd_spamfilter)
 		"",			/*  9 tkl reason */
 		"",			/* 10 match method */
 		"",			/* 11 regex */
-		NULL
+		NULL,
 	};
 	int targets = 0, action = 0;
 	char targetbuf[64], actionbuf[2];
@@ -5788,7 +5788,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					NULL,
 					NULL,		/*6  expire_at */
 					NULL,		/*7  set_at */
-					NULL		/*8  reason */
+					NULL,		/*8  reason */
 				};
 
 				if (take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION)

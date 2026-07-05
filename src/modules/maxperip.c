@@ -58,7 +58,7 @@ static const char *irccloud_cidrs[] = {
 	"2a03:5180:f::/62",
 	"2a03:5180:f:4::/63",
 	"2a03:5180:f:6::/64",
-	NULL
+	NULL,
 };
 
 /* Forward declarations */

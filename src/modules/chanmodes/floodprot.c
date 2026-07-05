@@ -143,7 +143,7 @@ static const char *channelfloodtype_names[NUMFLD] = {
 	"nick",		/* CHFLD_NICK   */
 	"text",		/* CHFLD_TEXT   */
 	"repeat",	/* CHFLD_REPEAT */
-	"paste"		/* CHFLD_PASTE  */
+	"paste",	/* CHFLD_PASTE  */
 };
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
 Cmode_t EXTMODE_FLOOD_PROFILE = 0L;

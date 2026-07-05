@@ -204,7 +204,7 @@ static void who_sendhelp(Client *client)
     "                        wildcards accepted",
     "Behavior flags:",
     "Flag M: check for user in channels I am a member of",
-    NULL
+    NULL,
   };
 
   char *who_oper_help[] = {
@@ -234,7 +234,7 @@ static void who_sendhelp(Client *client)
     "Flag M: check for user in channels I am a member of",
     "Flag R: show users' real hostnames",
     "Flag I: show users' IP addresses",
-    NULL
+    NULL,
   };
   char **s;
 

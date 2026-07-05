@@ -957,7 +957,7 @@ MODVAR const char *floodoption_names[] = {
 	"lag-penalty",
 	"vhost-flood",
 	"multiline",
-	NULL
+	NULL,
 };
 
 /* Per-session flood-block counter names, parallel to floodoption_names[].
@@ -976,7 +976,7 @@ MODVAR const char *floodoption_shortnames[] = {
 	NULL,			/* FLD_LAG_PENALTY: not counted (soft penalty, not a block) */
 	"vhost",		/* FLD_VHOST */
 	NULL,			/* FLD_MULTILINE: not counted */
-	NULL
+	NULL,
 };
 
 /** Count a flood-block for this client.

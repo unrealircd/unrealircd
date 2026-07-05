@@ -74,7 +74,7 @@ static const char *rmtkl_help[] = {
 /*	"    - \002/rmtkl * * *Zombie*\002",
 	"        [remove all non-spamfilter bans having \037Zombie\037 in the reason field]", TODO: re-add spamfilter support  */
 	"*** \002End of help\002 ***",
-	NULL
+	NULL,
 };
 
 MOD_INIT()

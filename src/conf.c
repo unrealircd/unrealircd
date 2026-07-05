@@ -436,8 +436,7 @@ int text_in_array(const char *name, const char *list[])
 
 int flood_option_is_old(const char *name)
 {
-	const char *opts[] =
-	{
+	const char *opts[] = {
 		"max-concurrent-conversations",
 		"unknown-flood-amount",
 		"unknown-flood-bantime",
@@ -452,7 +451,7 @@ int flood_option_is_old(const char *name)
 		"connect-flood",
 		"target-flood",
 		"multiline",
-		NULL
+		NULL,
 	};
 
 	return text_in_array(name, opts);
@@ -460,13 +459,12 @@ int flood_option_is_old(const char *name)
 
 int flood_option_is_for_everyone(const char *name)
 {
-	const char *opts[] =
-	{
+	const char *opts[] = {
 		"connect-flood",
 		"handshake-data-flood",
 		"unknown-flood",
 		"target-flood",
-		NULL
+		NULL,
 	};
 
 	return text_in_array(name, opts);
@@ -2910,8 +2908,7 @@ void config_switchover(void)
 }
 
 /** Priority of config blocks during CONFIG_TEST stage */
-static const char *config_test_priority_blocks[] =
-{
+static const char *config_test_priority_blocks[] = {
 	"me",
 	"secret",
 	"log", /* "log" needs to be before "set" in CONFIG_TEST */
@@ -2921,8 +2918,7 @@ static const char *config_test_priority_blocks[] =
 };
 
 /** Priority of config blocks during CONFIG_RUN stage */
-static const char *config_run_priority_blocks[] =
-{
+static const char *config_run_priority_blocks[] = {
 	"me",
 	"secret",
 	"security-group",

@@ -65,7 +65,7 @@ CMD_FUNC(cmd_umode2)
 		client->name,
 		parv[1],
 		(parc > 3) ? parv[3] : NULL,
-		NULL
+		NULL,
 	};
 
 	if (!parv[1])

@@ -62,7 +62,7 @@ MODVAR char serveropts[] = {
 	'\0',
 	'\0',
 	'\0',
-	'\0'
+	'\0',
 };
 
 char *extraflags = NULL;

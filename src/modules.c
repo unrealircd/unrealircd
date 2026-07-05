@@ -1360,7 +1360,7 @@ static const char *module_error_str[] = {
 	"Object already exists",
 	"No space available",
 	"Invalid parameter(s)",
-	"Object was not found"
+	"Object was not found",
 };
 
 const char *ModuleGetErrorStr(Module *module)

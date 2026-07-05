@@ -128,8 +128,7 @@ CMD_FUNC(cmd_dccallow)
 	char **ptr;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("WHOIS");
-	static char *dcc_help[] =
-	{
+	static char *dcc_help[] = {
 		"/DCCALLOW [<+|->nick[,<+|->nick, ...]] [list] [help]",
 		"You may allow DCCs of files which are otherwise blocked by the IRC server",
 		"by specifying a DCC allow for the user you want to recieve files from.",
@@ -141,7 +140,7 @@ CMD_FUNC(cmd_dccallow)
 		"Will do the exact opposite, removing him from your dcc allow list.",
 		"/dccallow list",
 		"Will list the users currently on your dcc allow list.",
-		NULL
+		NULL,
 	};
 
 	if (!MyUser(client))

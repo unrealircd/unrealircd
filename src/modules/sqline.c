@@ -74,7 +74,7 @@ CMD_FUNC(cmd_sqline)
 		client->name,     /*5  setby */
 		"0",            /*6  expire_at */
 		NULL,           /*7  set_at */
-		"no reason"     /*8  reason */
+		"no reason",    /*8  reason */
 	};
 
 	if (parc < 2)

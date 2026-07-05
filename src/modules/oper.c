@@ -178,7 +178,7 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 		const char *args[3] = {
 			client->name,
 			chans,
-			NULL
+			NULL,
 		};
 		do_cmd(client, NULL, "JOIN", 3, args);
 		safe_free(chans);

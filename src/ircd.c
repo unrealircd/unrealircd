@@ -303,7 +303,7 @@ static int bad_command(const char *argv0)
 }
 
 char chess[] = {
-	85, 110, 114, 101, 97, 108, 0
+	85, 110, 114, 101, 97, 108, 0,
 };
 
 extern void applymeblock(void);
