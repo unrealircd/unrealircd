@@ -17,9 +17,9 @@ This is work in progress and may not always be a stable version.
   to `.git-blame-ignore-revs`. For local `git blame` to benefit as well,
   run this once in your working copy:
   `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
-  If you maintain a fork or local patches, then read the git commit
-  message that added this release notes entry: it contains migration
-  instructions.
+  If you maintain a fork or local patches, then read the migration
+  instructions in
+  [this commit message](https://github.com/unrealircd/unrealircd/commit/e77eb9e923e84853c0fb2a154150f401a9602e0b).
 
 UnrealIRCd 6.2.6
 -----------------
