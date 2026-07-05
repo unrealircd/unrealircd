@@ -2649,7 +2649,8 @@ void s_die()
 		loop.terminating = 1;
 		unload_all_modules();
 
-		list_for_each_entry(client, &lclient_list, lclient_node)(void) send_queued(client);
+		list_for_each_entry(client, &lclient_list, lclient_node)
+			(void)send_queued(client);
 
 		exit(-1);
 	} else
@@ -2732,7 +2733,8 @@ void server_reboot(const char *mesg)
 	           "Restarting server: $reason",
 	           log_data_string("reason", mesg));
 
-	list_for_each_entry(client, &lclient_list, lclient_node)(void) send_queued(client);
+	list_for_each_entry(client, &lclient_list, lclient_node)
+		(void)send_queued(client);
 
 	/*
 	 * ** fd 0 must be 'preserved' if either the -d or -i options have

@@ -207,7 +207,7 @@ int dbuf_get(dbuf *dyn, char **buf)
 
 	/* First calculate the room needed... */
 	list_for_each_entry2(block, dbufbuf, &dyn->dbuf_list, dbuf_node)
-	    bytes += block->size;
+		bytes += block->size;
 
 	d = *buf = safe_alloc(bytes + 1);
 

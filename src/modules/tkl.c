@@ -3784,50 +3784,51 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 
 	for (i = 0; i <= 5; i++)
 	{
-		list_for_each_entry(client, &lclient_list, lclient_node) if (MyUser(client) && IsShunned(client))
-		{
-			chost = client->local->sockhost;
-			cname = client->user->username;
-
-			cip = GetIP(client);
-
-			if ((*tmp->ptr.serverban->hostmask >= '0') && (*tmp->ptr.serverban->hostmask <= '9'))
-				is_ip = 1;
-			else
-				is_ip = 0;
-
-			if (is_ip == 0
-			        ? (match_simple(tmp->ptr.serverban->hostmask, chost) && match_simple(tmp->ptr.serverban->usermask, cname))
-			        : (match_simple(tmp->ptr.serverban->hostmask, chost) || match_simple(tmp->ptr.serverban->hostmask, cip)) &&
-			              match_simple(tmp->ptr.serverban->usermask, cname))
+		list_for_each_entry(client, &lclient_list, lclient_node)
+			if (MyUser(client) && IsShunned(client))
 			{
-				        /*
+				chost = client->local->sockhost;
+				cname = client->user->username;
+
+				cip = GetIP(client);
+
+				if ((*tmp->ptr.serverban->hostmask >= '0') && (*tmp->ptr.serverban->hostmask <= '9'))
+					is_ip = 1;
+				else
+					is_ip = 0;
+
+				if (is_ip == 0
+				        ? (match_simple(tmp->ptr.serverban->hostmask, chost) && match_simple(tmp->ptr.serverban->usermask, cname))
+				        : (match_simple(tmp->ptr.serverban->hostmask, chost) || match_simple(tmp->ptr.serverban->hostmask, cip)) &&
+				              match_simple(tmp->ptr.serverban->usermask, cname))
+				{
+					/*
 					  before blindly marking this user as un-shunned, we need to check
 					  if the user is under any other existing shuns. (#0003906)
 					  Unfortunately, this requires crazy amounts of indentation ;-).
 
 					  This enumeration code is based off of _tkl_stats()
 					 */
-				keep_shun = 0;
-				for (tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
-					if (tk != tmp && match_simple(tk->ptr.serverban->usermask, cname))
-					{
-						if ((*tk->ptr.serverban->hostmask >= '0') && (*tk->ptr.serverban->hostmask <= '9')
-						    /* the hostmask is an IP */
-						    && (match_simple(tk->ptr.serverban->hostmask, chost) || match_simple(tk->ptr.serverban->hostmask, cip)))
-							keep_shun = 1;
-						else
-							/* the hostmask is not an IP */
-							if (match_simple(tk->ptr.serverban->hostmask, chost) && match_simple(tk->ptr.serverban->usermask, cname))
+					keep_shun = 0;
+					for (tk = tklines[tkl_hash('s')]; tk && !keep_shun; tk = tk->next)
+						if (tk != tmp && match_simple(tk->ptr.serverban->usermask, cname))
+						{
+							if ((*tk->ptr.serverban->hostmask >= '0') && (*tk->ptr.serverban->hostmask <= '9')
+                                                    /* the hostmask is an IP */
+							    && (match_simple(tk->ptr.serverban->hostmask, chost) || match_simple(tk->ptr.serverban->hostmask, cip)))
 								keep_shun = 1;
-					}
+							else
+                                                        /* the hostmask is not an IP */
+								if (match_simple(tk->ptr.serverban->hostmask, chost) && match_simple(tk->ptr.serverban->usermask, cname))
+									keep_shun = 1;
+						}
 
-				if (!keep_shun)
-				{
-					ClearShunned(client);
+					if (!keep_shun)
+					{
+						ClearShunned(client);
+					}
 				}
 			}
-		}
 	}
 }
 

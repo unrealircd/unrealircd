@@ -881,15 +881,16 @@ void sendto_umode(int umodes, FORMAT_STRING(const char *pattern), ...)
 	Client *acptr;
 	char nbuf[1024];
 
-	list_for_each_entry(acptr, &lclient_list, lclient_node) if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
-	{
-		ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :", me.name, acptr->name);
-		strlcat(nbuf, pattern, sizeof nbuf);
+	list_for_each_entry(acptr, &lclient_list, lclient_node)
+		if (IsUser(acptr) && (acptr->umodes & umodes) == umodes)
+		{
+			ircsnprintf(nbuf, sizeof(nbuf), ":%s NOTICE %s :", me.name, acptr->name);
+			strlcat(nbuf, pattern, sizeof nbuf);
 
-		va_start(vl, pattern);
-		vsendto_one(acptr, NULL, nbuf, vl);
-		va_end(vl);
-	}
+			va_start(vl, pattern);
+			vsendto_one(acptr, NULL, nbuf, vl);
+			va_end(vl);
+		}
 }
 
 /** Send a message to all users with specified user mode (local & remote users).

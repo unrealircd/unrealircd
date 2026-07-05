@@ -331,8 +331,9 @@ void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, con
 		remove_dependents(client, origin, recv_mtags, comment, splitstr);
 
 		/* Special case for remote async RPC, server.rehash in particular.. */
-		list_for_each_entry_safe(acptr, next, &rpc_remote_list, client_node) if (!strncmp(client->id, acptr->id, SIDLEN))
-		    free_client(acptr);
+		list_for_each_entry_safe(acptr, next, &rpc_remote_list, client_node)
+			if (!strncmp(client->id, acptr->id, SIDLEN))
+				free_client(acptr);
 
 		RunHook(HOOKTYPE_SERVER_QUIT, client, recv_mtags);
 	} else if (IsUser(client) && !IsKilled(client))

@@ -630,7 +630,7 @@ static void who_global(Client *client, char *mask, int operspy, struct who_forma
 
 	/* Initialize the markers to zero */
 	list_for_each_entry(acptr, &client_list, client_node)
-	    ClearMark(acptr);
+		ClearMark(acptr);
 
 	/* First, if not operspy, then list all matching clients on common channels */
 	if (!operspy)

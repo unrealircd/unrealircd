@@ -285,8 +285,9 @@ int count_whowas_and_user_entries(void)
 			cnt++;
 	}
 
-	list_for_each_entry(client, &client_list, client_node) if (IsUser(client))
-	    cnt++;
+	list_for_each_entry(client, &client_list, client_node)
+		if (IsUser(client))
+			cnt++;
 
 	return cnt;
 }

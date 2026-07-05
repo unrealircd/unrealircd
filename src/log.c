@@ -1566,8 +1566,10 @@ void do_unreal_log_control(LogLevel loglevel, const char *subsystem, const char 
 	if (!strcmp(subsystem, "rawtraffic"))
 		return;
 
-	list_for_each_entry(client, &control_list, lclient_node) if (IsMonitorRehash(client) && IsControl(client)) for (m = msg; m; m = m->next)
-	    sendto_one(client, NULL, "REPLY [%s] %s", log_level_valtostring(loglevel), m->line);
+	list_for_each_entry(client, &control_list, lclient_node)
+		if (IsMonitorRehash(client) && IsControl(client))
+			for (m = msg; m; m = m->next)
+				sendto_one(client, NULL, "REPLY [%s] %s", log_level_valtostring(loglevel), m->line);
 
 	if (json_rehash_log)
 	{

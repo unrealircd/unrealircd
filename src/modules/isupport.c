@@ -145,8 +145,9 @@ void isupport_check_for_changes_one(const char *addstr, char *buf, size_t buflen
 	if (*changes == 0)
 	{
 		/* First change, need to start the batch */
-		list_for_each_entry(acptr, &lclient_list, lclient_node) if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
-		    sendto_one(acptr, NULL, ":%s BATCH +%s draft/isupport", me.name, batch);
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+			if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+				sendto_one(acptr, NULL, ":%s BATCH +%s draft/isupport", me.name, batch);
 	}
 
 	*changes = *changes + 1;
@@ -221,8 +222,9 @@ void _isupport_check_for_changes(void)
 	if (changes)
 	{
 		/* End the batch (for those clients who received a batch, that is) */
-		list_for_each_entry(acptr, &lclient_list, lclient_node) if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
-		    sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
+		list_for_each_entry(acptr, &lclient_list, lclient_node)
+			if (HasCapability(acptr, "draft/extended-isupport") && HasCapability(acptr, "batch"))
+				sendto_one(acptr, NULL, ":%s BATCH -%s", me.name, batch);
 	}
 
 	safe_free_message_tags(mtags);

@@ -640,7 +640,7 @@ EVENT(update_known_user_cache_timer)
 	do
 	{
 		list_for_each_entry(client, &idTable[slot], id_hash)
-		    update_known_user_cache(client);
+			update_known_user_cache(client);
 
 		if (++slot >= NICK_HASH_TABLE_SIZE)
 			slot = 0;

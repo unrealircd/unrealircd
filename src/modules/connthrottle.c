@@ -916,9 +916,9 @@ EVENT(ct_check)
 				b->check_known = b->check_excepted = b->check_unknown = 0;
 
 	list_for_each_entry(client, &client_list, client_node)
-	    ct_check_walk_one(client);
+		ct_check_walk_one(client);
 	list_for_each_entry(client, &unknown_list, lclient_node)
-	    ct_check_walk_one(client);
+		ct_check_walk_one(client);
 
 	for (tier = 0; tier < CT_NUM_TIERS; tier++)
 	{
