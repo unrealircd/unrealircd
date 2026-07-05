@@ -1,5 +1,19 @@
-UnrealIRCd 6.2.6
+UnrealIRCd 6.2.7-git
 =================
+
+This is the git version (development version) for future UnrealIRCd 6.2.7.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+
+### Changes:
+
+### Fixes:
+
+### Developers and protocol:
+
+UnrealIRCd 6.2.6
+-----------------
 
 UnrealIRCd 6.2.6 enables multiline by default, adds TKL IDs and tracking of
 hit counts on *LINES/Spamfilter. New crule functions were added to fetch
