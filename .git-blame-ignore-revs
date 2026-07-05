@@ -1,0 +1,18 @@
+# Commits that 'git blame' should ignore, such as the big clang-format
+# reformat of July 2026. Also used by the blame view on github.com
+# automatically.
+# For local use, activate this file with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# The big clang-format reformat of July 2026: the whole-tree reformat
+# itself, the preparation commits leading up to it (cosmetic changes so
+# the formatter output would come out right) and the whitespace-only
+# fixups afterwards.
+2d8df60e145807b2db65edda381f60a9ede424d1
+27f6eaf4742443c61f33afeeb1db43d2659ebbc3
+3c6b552df5a99260e1b56c057bf188e6570c4790
+f820c862858efab5814a0b5b81b3f8287eec986e
+391a94cdd49db5c449ac21e3797ea421ea9034c0
+678aeb5c1758a434a70bcf1784191fc156e3f925
+548d66d26c3e8e52ada71de84f07569fcee33f69
+b785d693098613ac2d0dacc860f6300ca1dde00d
