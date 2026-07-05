@@ -77,8 +77,7 @@ void mp_pool_release(void *item)
 #else
 
 /** Returns floor(log2(u64)).  If u64 is 0, (incorrectly) returns 0. */
-static int
-tor_log2(uint64_t u64)
+static int tor_log2(uint64_t u64)
 {
 	int r = 0;
 
@@ -118,8 +117,7 @@ tor_log2(uint64_t u64)
 
 /** Return the power of 2 in range [1,UINT64_MAX] closest to <b>u64</b>.  If
  * there are two powers of 2 equally close, round down. */
-static uint64_t
-round_to_power_of_2(uint64_t u64)
+static uint64_t round_to_power_of_2(uint64_t u64)
 {
 	int lg2;
 	uint64_t low;
@@ -265,8 +263,7 @@ void mp_pool_init(void)
 
 /** Helper: Allocate and return a new memory chunk for <b>pool</b>.  Does not
  * link the chunk into any list. */
-static mp_chunk_t *
-mp_chunk_new(mp_pool_t *pool)
+static mp_chunk_t *mp_chunk_new(mp_pool_t *pool)
 {
 	size_t sz = pool->new_chunk_capacity * pool->item_alloc_size;
 	mp_chunk_t *chunk = safe_alloc(CHUNK_OVERHEAD + sz);
@@ -285,8 +282,7 @@ mp_chunk_new(mp_pool_t *pool)
 /** Take a <b>chunk</b> that has just been allocated or removed from
  * <b>pool</b>'s empty chunk list, and add it to the head of the used chunk
  * list. */
-static void
-add_newly_used_chunk_to_used_list(mp_pool_t *pool, mp_chunk_t *chunk)
+static void add_newly_used_chunk_to_used_list(mp_pool_t *pool, mp_chunk_t *chunk)
 {
 	chunk->next = pool->used_chunks;
 	if (chunk->next)
@@ -296,8 +292,7 @@ add_newly_used_chunk_to_used_list(mp_pool_t *pool, mp_chunk_t *chunk)
 }
 
 /** Return a newly allocated item from <b>pool</b>. */
-void *
-mp_pool_get(mp_pool_t *pool)
+void *mp_pool_get(mp_pool_t *pool)
 {
 	mp_chunk_t *chunk;
 	mp_allocated_t *allocated;
@@ -454,8 +449,7 @@ void mp_pool_release(void *item)
 
 /** Allocate a new memory pool to hold items of size <b>item_size</b>. We'll
  * try to fit about <b>chunk_capacity</b> bytes in each chunk. */
-mp_pool_t *
-mp_pool_new(size_t item_size, size_t chunk_capacity)
+mp_pool_t *mp_pool_new(size_t item_size, size_t chunk_capacity)
 {
 	mp_pool_t *pool;
 	size_t alloc_size, new_chunk_cap;
@@ -518,8 +512,7 @@ mp_pool_new(size_t item_size, size_t chunk_capacity)
 
 /** Helper function for qsort: used to sort pointers to mp_chunk_t into
  * descending order of fullness. */
-static int
-mp_pool_sort_used_chunks_helper(const void *_a, const void *_b)
+static int mp_pool_sort_used_chunks_helper(const void *_a, const void *_b)
 {
 	mp_chunk_t *a = *(mp_chunk_t *const *)_a;
 	mp_chunk_t *b = *(mp_chunk_t *const *)_b;
@@ -529,8 +522,7 @@ mp_pool_sort_used_chunks_helper(const void *_a, const void *_b)
 /** Sort the used chunks in <b>pool</b> into descending order of fullness,
  * so that we preferentially fill up mostly full chunks before we make
  * nearly empty chunks less nearly empty. */
-static void
-mp_pool_sort_used_chunks(mp_pool_t *pool)
+static void mp_pool_sort_used_chunks(mp_pool_t *pool)
 {
 	int i, n = 0, inverted = 0;
 	mp_chunk_t **chunks, *chunk;
@@ -630,8 +622,7 @@ static void destroy_chunks(mp_chunk_t *chunk)
 }
 
 /** Helper: make sure that a given chunk list is not corrupt. */
-static int
-assert_chunks_ok(mp_pool_t *pool, mp_chunk_t *chunk, int empty, int full)
+static int assert_chunks_ok(mp_pool_t *pool, mp_chunk_t *chunk, int empty, int full)
 {
 	mp_allocated_t *allocated;
 	int n = 0;
