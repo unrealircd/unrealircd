@@ -1982,6 +1982,9 @@ struct HTTPForwardedHeader
  * and bad: w->url = "...";
  * All the data is freed by the URL Subsystem, you don't need to worry
  * about this.
+ * If you are adding fields to this struct:
+ * 1) update duplicate_outgoingwebrequest() in src/misc.c
+ * 2) and update free_outgoingwebrequest() there as well (if something needs to be freed)
  */
 struct OutgoingWebRequest
 {
@@ -2005,12 +2008,11 @@ struct OutgoingWebRequest
 	                     *   DOWNLOAD_MAX_SIZE_MEMORY_BACKED (small, since it
 	                     *   sits in RAM) or DOWNLOAD_MAX_SIZE_FILE_BACKED
 	                     *   (larger). */
-	// If you are adding fields here:
-	// 1) update duplicate_outgoingwebrequest() in src/misc.c
-	// 2) and update free_outgoingwebrequest() there as well (if something needs to be freed)
 };
 
-/** The result of an HTTP(S) call, such as the downloaded file, error, etc. */
+/** The result of an HTTP(S) call, such as the downloaded file, error, etc.
+ * If you add or modify fields, update url_callback() in src/misc.c!
+ */
 struct OutgoingWebResponse
 {
 	const char *file; /**< The temporary file of the download, or NULL. This is only set if OutgoingWebRequest had 'store_in_file' set to 1 and the download was succesful. */
@@ -2019,7 +2021,6 @@ struct OutgoingWebResponse
 	const char *errorbuf; /**< If this is non-NULL then an error occured and this is the error string. Check this member before checking any others! */
 	int cached; /**< Set to 1 if OutgoingWebRequest had 'cachetime' set and we have a cache hit on the webserver. The file and errobuf will be NULL since there was no data transfer. */
 	void *ptr; /**< The OutgoingWebRequest 'callback_data' */
-	// If you add or modify fields, update url_callback() in src/misc.c!
 };
 
 typedef struct WebRequest WebRequest;
@@ -2729,20 +2730,21 @@ typedef enum WhoisConfigDetails {
 #define UNRL_STRIP_LOW_ASCII    0x1     /**< Strip all ASCII < 32 (control codes) */
 #define UNRL_STRIP_KEEP_LF      0x2     /**< Do not strip LF (line feed, \n) */
 
-/** JSON-RPC API Errors, according to jsonrpc.org spec */
+/** JSON-RPC API Errors, according to jsonrpc.org spec.
+ * The -327xx range are the official JSON-RPC error codes,
+ * the -320xx range are UnrealIRCd JSON-RPC server specific error codes,
+ * and -1000 and below are UnrealIRCd specific application error codes.
+ */
 typedef enum JsonRpcError {
-	// Official JSON-RPC error codes:
 	JSON_RPC_ERROR_PARSE_ERROR	= -32700, /**< JSON parse error (fatal) */
 	JSON_RPC_ERROR_INVALID_REQUEST	= -32600, /**< Invalid JSON-RPC Request */
 	JSON_RPC_ERROR_METHOD_NOT_FOUND	= -32601, /**< Method not found */
 	JSON_RPC_ERROR_INVALID_PARAMS	= -32602, /**< Method parameters invalid */
 	JSON_RPC_ERROR_INTERNAL_ERROR	= -32603, /**< Internal server error */
-	// UnrealIRCd JSON-RPC server specific error codes:
 	JSON_RPC_ERROR_API_CALL_DENIED	= -32000, /**< The api user does not have enough permissions to do this call */
 	JSON_RPC_ERROR_SERVER_GONE	= -32001, /**< The request was forwarded to a remote server, but this server went gone while processing the request */
 	JSON_RPC_ERROR_TIMEOUT		= -32002, /**< The request was forwarded to a remote server, but the request/response timed out (15 seconds) */
 	JSON_RPC_ERROR_REMOTE_SERVER_NO_RPC	= -32003, /**< The request was going to be forwarded to a remote server, but the remote server does not support JSON-RPC */
-	// UnrealIRCd specific application error codes:
 	JSON_RPC_ERROR_NOT_FOUND	=  -1000, /**< Target not found (no such nick / channel / ..) */
 	JSON_RPC_ERROR_ALREADY_EXISTS	=  -1001, /**< Resource already exists by that name (eg on nickchange request, a gline, etc) */
 	JSON_RPC_ERROR_INVALID_NAME	=  -1002, /**< Name is not permitted (eg: nick, channel, ..) */
