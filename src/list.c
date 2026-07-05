@@ -42,15 +42,15 @@ MODVAR int numclients = 0;
 
 // TODO: Document whether servers are included or excluded in these lists...
 
-MODVAR struct list_head unknown_list;  /**< Local clients in handshake (may become a user or server later) */
-MODVAR struct list_head control_list;  /**< Local "control channel" clients */
-MODVAR struct list_head lclient_list;  /**< Local clients (users only, right?) */
-MODVAR struct list_head client_list;  /**< All clients - local and remote (not in handshake) */
-MODVAR struct list_head server_list;  /**< Locally connected servers */
-MODVAR struct list_head oper_list;  /**< Locally connected IRC Operators */
+MODVAR struct list_head unknown_list;       /**< Local clients in handshake (may become a user or server later) */
+MODVAR struct list_head control_list;       /**< Local "control channel" clients */
+MODVAR struct list_head lclient_list;       /**< Local clients (users only, right?) */
+MODVAR struct list_head client_list;        /**< All clients - local and remote (not in handshake) */
+MODVAR struct list_head server_list;        /**< Locally connected servers */
+MODVAR struct list_head oper_list;          /**< Locally connected IRC Operators */
 MODVAR struct list_head global_server_list; /**< All servers (local and remote) */
-MODVAR struct list_head dead_list;  /**< All dead clients (local and remote) that will soon be freed in the main loop */
-MODVAR struct list_head rpc_remote_list; /**< All remote RPC clients (very specific use-case) */
+MODVAR struct list_head dead_list;          /**< All dead clients (local and remote) that will soon be freed in the main loop */
+MODVAR struct list_head rpc_remote_list;    /**< All remote RPC clients (very specific use-case) */
 
 static mp_pool_t *client_pool = NULL;
 static mp_pool_t *local_client_pool = NULL;

@@ -189,15 +189,15 @@ static int crule_parsearglist(CRuleNode *, crule_token *, const char **);
 
 /* error messages */
 char *crule_errstr[] = {
-    "Unknown error", /* NOERR? - for completeness */
-    "Unexpected token", /* UNEXPCTTOK */
-    "Unknown token", /* UNKNWTOK */
+    "Unknown error",     /* NOERR? - for completeness */
+    "Unexpected token",  /* UNEXPCTTOK */
+    "Unknown token",     /* UNKNWTOK */
     "And expr expected", /* EXPCTAND */
-    "Or expr expected", /* EXPCTOR */
-    "Primary expected", /* EXPCTPRIM */
-    "( expected",  /* EXPCTOPEN */
-    ") expected",  /* EXPCTCLOSE */
-    "Unknown function", /* UNKNWFUNC */
+    "Or expr expected",  /* EXPCTOR */
+    "Primary expected",  /* EXPCTPRIM */
+    "( expected",        /* EXPCTOPEN */
+    ") expected",        /* EXPCTCLOSE */
+    "Unknown function",  /* UNKNWFUNC */
     "Argument mismatch", /* ARGMISMAT */
     "Missing value in comparisson", /* CR_EXPCTVALUE */
 };

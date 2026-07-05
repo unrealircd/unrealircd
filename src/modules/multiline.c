@@ -42,17 +42,17 @@ struct {
 typedef struct MultilineBatch MultilineBatch;
 struct MultilineBatch {
 	char batch_id[MAXBATCHREFLEN + 1]; /**< Client-chosen batch reference tag */
-	char *target;   /**< Target channel or nick */
-	SendType sendtype;  /**< SEND_TYPE_PRIVMSG or SEND_TYPE_NOTICE */
-	int sendtype_set;  /**< Has sendtype been determined (from first line)? */
-	char member_modes[2];  /**< Member mode filter from STATUSMSG prefix (e.g. "o"), or empty string */
+	char *target;             /**< Target channel or nick */
+	SendType sendtype;        /**< SEND_TYPE_PRIVMSG or SEND_TYPE_NOTICE */
+	int sendtype_set;         /**< Has sendtype been determined (from first line)? */
+	char member_modes[2];     /**< Member mode filter from STATUSMSG prefix (e.g. "o"), or empty string */
 	MessageTag *client_mtags; /**< Tags from the opening BATCH command */
 	int line_count;
 	int received_bytes;  /**< Total user-sent content bytes (for max-bytes policy) */
 	time_t start_time;
-	int failed;   /**< Batch marked as failed — consume remaining lines, send error at BATCH close */
-	char *fail_message;  /**< FAIL response to send at BATCH close (if failed) */
-	char label[256];  /**< Saved label for echo-message + labeled-response interaction */
+	int failed;         /**< Batch marked as failed — consume remaining lines, send error at BATCH close */
+	char *fail_message; /**< FAIL response to send at BATCH close (if failed) */
+	char label[256];    /**< Saved label for echo-message + labeled-response interaction */
 	/* Buffered lines */
 	MLine *lines;
 	MLine *lines_tail;

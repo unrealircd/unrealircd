@@ -227,7 +227,7 @@ chacha_encrypt_bytes(chacha_ctx *x, const u8 *m, u8 *c, u32 bytes)
 		if (!j12)
 		{
 			j13 = PLUSONE(j13);
-      /* stopping at 2^70 bytes per nonce is user's responsibility */
+                /* stopping at 2^70 bytes per nonce is user's responsibility */
 		}
 
 		U32TO8_LITTLE(c + 0, x0);
@@ -302,10 +302,10 @@ chacha_encrypt_bytes(chacha_ctx *x, const u8 *m, u8 *c, u32 bytes)
  #define BLOCKSZ 64
  #define RSBUFSZ (16 * BLOCKSZ)
 static int rs_initialized;
-static chacha_ctx rs;  /* chacha context for random keystream */
+static chacha_ctx rs;          /* chacha context for random keystream */
 static u_char rs_buf[RSBUFSZ]; /* keystream blocks */
-static size_t rs_have;  /* valid bytes at end of rs_buf */
-static size_t rs_count;  /* bytes till reseed */
+static size_t rs_have;         /* valid bytes at end of rs_buf */
+static size_t rs_count;        /* bytes till reseed */
 
 static inline void _rs_rekey(u_char *dat, size_t datlen);
 

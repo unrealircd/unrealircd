@@ -343,10 +343,10 @@ CMD_FUNC(cmd_nick_local)
 			/* Changing cAsE */
 			removemoder = 0;
 		} else
-                /* Collision with a nick of a session that is still in handshake */
+			/* Collision with a nick of a session that is still in handshake */
 			if (IsUnknown(acptr) && MyConnect(acptr))
 			{
-                        /* Kill the other connection that is still in progress */
+				/* Kill the other connection that is still in progress */
 				SetKilled(acptr);
 				exit_client(acptr, NULL, "Overridden");
 			} else

@@ -68,9 +68,9 @@ struct Download {
 	int port;  /**< Parsed port (from 'url') */
 	char *username;
 	char *password;
-	char *document;  /**< Parsed document (from 'url') */
-	char *ip4;  /**< Resolved IP (IPv4) */
-	char *ip6;  /**< Resolved IP (IPv6) */
+	char *document;         /**< Parsed document (from 'url') */
+	char *ip4;              /**< Resolved IP (IPv4) */
+	char *ip6;              /**< Resolved IP (IPv6) */
 	SocketType socket_type; /**< Socket type that we are trying (SOCKET_TYPE_IPV4 or SOCKET_TYPE_IPV6) */
 	SSL *ssl;
 	int fd;   /**< Socket */

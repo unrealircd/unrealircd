@@ -32,11 +32,11 @@ MODVAR char serveropts[] = {
 #ifdef DEBUGMODE
     'D',
 #endif
-        /* FDLIST (always) */
+    /* FDLIST (always) */
     'F',
-        /* Hub (always) */
+    /* Hub (always) */
     'h',
-        /* NOSPOOF (always) */
+    /* NOSPOOF (always) */
     'n',
 #ifdef VALLOC
     'V',

@@ -57,10 +57,10 @@ void mp_pool_init(void)
 mp_pool_t *mp_pool_new(size_t sz, size_t ignored)
 {
 	mp_pool_t *m = safe_alloc(sizeof(mp_pool_t));
-    /* We (mis)use the item_alloc_size. It has a slightly different
-     * meaning in the real mempool code where it's aligned, rounded, etc.
-     * That is something we don't want as it would hide small overflows.
-     */
+	/* We (mis)use the item_alloc_size. It has a slightly different
+	 * meaning in the real mempool code where it's aligned, rounded, etc.
+	 * That is something we don't want as it would hide small overflows.
+	 */
 	m->item_alloc_size = sz;
 	return m;
 }
@@ -206,20 +206,20 @@ typedef struct mp_chunk_t mp_chunk_t;
 
 /** Holds a single allocated item, allocated as part of a chunk. */
 struct mp_allocated_t {
-  /** The chunk that this item is allocated in.  This adds overhead to each
-   * allocated item, thus making this implementation inappropriate for
-   * very small items. */
+	/** The chunk that this item is allocated in.  This adds overhead to each
+	 * allocated item, thus making this implementation inappropriate for
+	 * very small items. */
 	mp_chunk_t *in_chunk;
 
 	union {
-    /** If this item is free, the next item on the free list. */
+		/** If this item is free, the next item on the free list. */
 		mp_allocated_t *next_free;
 
-    /** If this item is not free, the actual memory contents of this item.
-     * (Not actual size.) */
+		/** If this item is not free, the actual memory contents of this item.
+		 * (Not actual size.) */
 		char mem[1];
 
-    /** An extra element to the union to insure correct alignment. */
+		/** An extra element to the union to insure correct alignment. */
 		ALIGNMENT_TYPE dummy_;
 	} u;
 };
@@ -234,10 +234,10 @@ struct mp_chunk_t {
 	mp_chunk_t *prev; /**< The previous free, used, or full chunk in sequence. */
 	mp_pool_t *pool; /**< The pool that this chunk is part of. */
 
-  /** First free item in the freelist for this chunk.  Note that this may be
-   * NULL even if this chunk is not at capacity: if so, the free memory at
-   * next_mem has not yet been carved into items.
-   */
+	/** First free item in the freelist for this chunk.  Note that this may be
+	 * NULL even if this chunk is not at capacity: if so, the free memory at
+	 * next_mem has not yet been carved into items.
+	 */
 	mp_allocated_t *first_free;
 	int n_allocated; /**< Number of currently allocated items in this chunk. */
 	int capacity; /**< Number of items that can be fit into this chunk. */
@@ -304,28 +304,28 @@ mp_pool_get(mp_pool_t *pool)
 
 	if (pool->used_chunks != NULL)
 	{
-    /*
-     * Common case: there is some chunk that is neither full nor empty. Use
-     * that one. (We can't use the full ones, obviously, and we should fill
-     * up the used ones before we start on any empty ones.
-     */
+		/*
+		 * Common case: there is some chunk that is neither full nor empty. Use
+		 * that one. (We can't use the full ones, obviously, and we should fill
+		 * up the used ones before we start on any empty ones.
+		 */
 		chunk = pool->used_chunks;
 
 	} else if (pool->empty_chunks)
 	{
-    /*
-     * We have no used chunks, but we have an empty chunk that we haven't
-     * freed yet: use that. (We pull from the front of the list, which should
-     * get us the most recently emptied chunk.)
-     */
+		/*
+		 * We have no used chunks, but we have an empty chunk that we haven't
+		 * freed yet: use that. (We pull from the front of the list, which should
+		 * get us the most recently emptied chunk.)
+		 */
 		chunk = pool->empty_chunks;
 
-    /* Remove the chunk from the empty list. */
+		/* Remove the chunk from the empty list. */
 		pool->empty_chunks = chunk->next;
 		if (chunk->next)
 			chunk->next->prev = NULL;
 
-    /* Put the chunk on the 'used' list*/
+		/* Put the chunk on the 'used' list*/
 		add_newly_used_chunk_to_used_list(pool, chunk);
 
 		assert(!chunk->prev);
@@ -334,10 +334,10 @@ mp_pool_get(mp_pool_t *pool)
 			pool->min_empty_chunks = pool->n_empty_chunks;
 	} else
 	{
-    /* We have no used or empty chunks: allocate a new chunk. */
+		/* We have no used or empty chunks: allocate a new chunk. */
 		chunk = mp_chunk_new(pool);
 
-    /* Add the new chunk to the used list. */
+		/* Add the new chunk to the used list. */
 		add_newly_used_chunk_to_used_list(pool, chunk);
 	}
 
@@ -345,19 +345,19 @@ mp_pool_get(mp_pool_t *pool)
 
 	if (chunk->first_free)
 	{
-    /* If there's anything on the chunk's freelist, unlink it and use it. */
+		/* If there's anything on the chunk's freelist, unlink it and use it. */
 		allocated = chunk->first_free;
 		chunk->first_free = allocated->u.next_free;
 		allocated->u.next_free = NULL; /* For debugging; not really needed. */
 		assert(allocated->in_chunk == chunk);
 	} else
 	{
-    /* Otherwise, the chunk had better have some free space left on it. */
+		/* Otherwise, the chunk had better have some free space left on it. */
 		assert(chunk->next_mem + pool->item_alloc_size <=
 		       chunk->mem + chunk->mem_size);
 
-    /* Good, it did.  Let's carve off a bit of that free space, and use
-     * that. */
+		/* Good, it did.  Let's carve off a bit of that free space, and use
+		 * that. */
 		allocated = (void *)chunk->next_mem;
 		chunk->next_mem += pool->item_alloc_size;
 		allocated->in_chunk = chunk;
@@ -371,22 +371,22 @@ mp_pool_get(mp_pool_t *pool)
 
 	if (chunk->n_allocated == chunk->capacity)
 	{
-    /* This chunk just became full. */
+		/* This chunk just became full. */
 		assert(chunk == pool->used_chunks);
 		assert(chunk->prev == NULL);
 
-    /* Take it off the used list. */
+		/* Take it off the used list. */
 		pool->used_chunks = chunk->next;
 		if (chunk->next)
 			chunk->next->prev = NULL;
 
-    /* Put it on the full list. */
+		/* Put it on the full list. */
 		chunk->next = pool->full_chunks;
 		if (chunk->next)
 			chunk->next->prev = chunk;
 		pool->full_chunks = chunk;
 	}
-  /* And return the memory portion of the mp_allocated_t. */
+	/* And return the memory portion of the mp_allocated_t. */
 	return A2M(allocated);
 }
 
@@ -405,9 +405,9 @@ void mp_pool_release(void *item)
 
 	if (chunk->n_allocated == chunk->capacity)
 	{
-    /* This chunk was full and is about to be used. */
+		/* This chunk was full and is about to be used. */
 		mp_pool_t *pool = chunk->pool;
-    /* unlink from the full list  */
+		/* unlink from the full list  */
 		if (chunk->prev)
 			chunk->prev->next = chunk->next;
 		if (chunk->next)
@@ -415,7 +415,7 @@ void mp_pool_release(void *item)
 		if (chunk == pool->full_chunks)
 			pool->full_chunks = chunk->next;
 
-    /* link to the used list. */
+		/* link to the used list. */
 		chunk->next = pool->used_chunks;
 		chunk->prev = NULL;
 		if (chunk->next)
@@ -423,10 +423,10 @@ void mp_pool_release(void *item)
 		pool->used_chunks = chunk;
 	} else if (chunk->n_allocated == 1)
 	{
-    /* This was used and is about to be empty. */
+		/* This was used and is about to be empty. */
 		mp_pool_t *pool = chunk->pool;
 
-    /* Unlink from the used list */
+		/* Unlink from the used list */
 		if (chunk->prev)
 			chunk->prev->next = chunk->next;
 		if (chunk->next)
@@ -434,15 +434,15 @@ void mp_pool_release(void *item)
 		if (chunk == pool->used_chunks)
 			pool->used_chunks = chunk->next;
 
-    /* Link to the empty list */
+		/* Link to the empty list */
 		chunk->next = pool->empty_chunks;
 		chunk->prev = NULL;
 		if (chunk->next)
 			chunk->next->prev = chunk;
 		pool->empty_chunks = chunk;
 
-    /* Reset the guts of this chunk to defragment it, in case it gets
-     * used again. */
+		/* Reset the guts of this chunk to defragment it, in case it gets
+		 * used again. */
 		chunk->first_free = NULL;
 		chunk->next_mem = chunk->mem;
 
@@ -465,19 +465,19 @@ mp_pool_new(size_t item_size, size_t chunk_capacity)
   assert(SIZE_T_CEILING / item_size > chunk_capacity);
 */
 	pool = safe_alloc(sizeof(mp_pool_t));
-  /*
-   * First, we figure out how much space to allow per item. We'll want to
-   * use make sure we have enough for the overhead plus the item size.
-   */
+	/*
+	 * First, we figure out how much space to allow per item. We'll want to
+	 * use make sure we have enough for the overhead plus the item size.
+	 */
 	alloc_size = (size_t)(offsetof(mp_allocated_t, u.mem) + item_size);
-  /*
-   * If the item_size is less than sizeof(next_free), we need to make
-   * the allocation bigger.
-   */
+	/*
+	 * If the item_size is less than sizeof(next_free), we need to make
+	 * the allocation bigger.
+	 */
 	if (alloc_size < sizeof(mp_allocated_t))
 		alloc_size = sizeof(mp_allocated_t);
 
-  /* If we're not an even multiple of ALIGNMENT, round up. */
+	/* If we're not an even multiple of ALIGNMENT, round up. */
 	if (alloc_size % ALIGNMENT)
 	{
 		alloc_size = alloc_size + ALIGNMENT - (alloc_size % ALIGNMENT);
@@ -486,18 +486,18 @@ mp_pool_new(size_t item_size, size_t chunk_capacity)
 		alloc_size = ALIGNMENT;
 	assert((alloc_size % ALIGNMENT) == 0);
 
-  /*
-   * Now we figure out how many items fit in each chunk. We need to fit at
-   * least 2 items per chunk. No chunk can be more than MAX_CHUNK bytes long,
-   * or less than MIN_CHUNK.
-   */
+	/*
+	 * Now we figure out how many items fit in each chunk. We need to fit at
+	 * least 2 items per chunk. No chunk can be more than MAX_CHUNK bytes long,
+	 * or less than MIN_CHUNK.
+	 */
 	if (chunk_capacity > MAX_CHUNK)
 		chunk_capacity = MAX_CHUNK;
 
-  /*
-   * Try to be around a power of 2 in size, since that's what allocators like
-   * handing out. 512K-1 byte is a lot better than 512K+1 byte.
-   */
+	/*
+	 * Try to be around a power of 2 in size, since that's what allocators like
+	 * handing out. 512K-1 byte is a lot better than 512K+1 byte.
+	 */
 	chunk_capacity = (size_t)round_to_power_of_2(chunk_capacity);
 	while (chunk_capacity < alloc_size * 2 + CHUNK_OVERHEAD)
 		chunk_capacity *= 2;

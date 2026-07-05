@@ -55,9 +55,9 @@ MOD_UNLOAD()
  * cmd_connect() - Added by Jto 11 Feb 1989
  ***********************************************************************/
                                                                          /*
-   ** cmd_connect
-   **  parv[1] = servername
- */
+                                                                          ** cmd_connect
+                                                                          **  parv[1] = servername
+                                                                          */
 CMD_FUNC(cmd_connect)
 {
 	int retval;

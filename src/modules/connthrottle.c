@@ -49,15 +49,15 @@ typedef struct {
 
 typedef struct UCounter UCounter;
 struct UCounter {
-	ThrottleCounter local;  /**< Local counter */
-	ThrottleCounter global;  /**< Global counter */
-	int rejected_clients;  /**< Number of rejected clients this minute */
-	int allowed_except;  /**< Number of allowed clients - on except list */
-	int allowed_unknown_users; /**< Number of allowed clients - not on except list */
-	char disabled;   /**< Module disabled by oper? */
-	int throttling_this_minute; /**< Did we do any throttling this minute? */
+	ThrottleCounter local;          /**< Local counter */
+	ThrottleCounter global;         /**< Global counter */
+	int rejected_clients;           /**< Number of rejected clients this minute */
+	int allowed_except;             /**< Number of allowed clients - on except list */
+	int allowed_unknown_users;      /**< Number of allowed clients - not on except list */
+	char disabled;                  /**< Module disabled by oper? */
+	int throttling_this_minute;     /**< Did we do any throttling this minute? */
 	int throttling_previous_minute; /**< Did we do any throttling previous minute? */
-	int throttling_banner_displayed;/**< Big we-are-now-throttling banner displayed? */
+	int throttling_banner_displayed; /**< Big we-are-now-throttling banner displayed? */
 	time_t next_event;  /**< When is next event? (for "last 60 seconds" stats) */
 };
 UCounter *ucounter = NULL;
@@ -160,8 +160,8 @@ MOD_TEST()
 	cfg.except->reputation_score = 24;
 	cfg.except->identified = 1;
 	cfg.except->webirc = 0;
-	cfg.ipv6_unknown_users_limit[0] = 8; /* /56 */
-	cfg.ipv6_unknown_users_limit[1] = 32; /* /48 */
+	cfg.ipv6_unknown_users_limit[0] = 8;   /* /56 */
+	cfg.ipv6_unknown_users_limit[1] = 32;  /* /48 */
 	cfg.ipv6_unknown_users_limit[2] = 256; /* /32 */
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);

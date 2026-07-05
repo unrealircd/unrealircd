@@ -57,7 +57,7 @@ CMD_OVERRIDE_FUNC(rcmd_override);
 static ModuleInfo ModInf;
 RestrictedCommand *RestrictedCommandList = NULL;
 CmdMap conf_cmdmaps[] = {
-        // These are special cases in which we can't override the command, so they are handled through hooks instead
+    // These are special cases in which we can't override the command, so they are handled through hooks instead
     {"channel-message", "PRIVMSG"},
     {"channel-notice", "NOTICE"},
     {"channel-create", "JOIN"},

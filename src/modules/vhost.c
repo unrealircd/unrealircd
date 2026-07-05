@@ -34,13 +34,13 @@ ModuleHeader MOD_HEADER = {
 typedef struct ConfigItem_vhost ConfigItem_vhost;
 struct ConfigItem_vhost {
 	ConfigItem_vhost *prev, *next;
-	int auto_login;   /**< Auto-login users on connect? If they match 'auth' */
-	SecurityGroup *match;           /**< Match criteria for user */
-	char *login;                    /**< Login name for 'VHOST login pass' */
-	AuthConfig *auth;  /**< Password for 'VHOST login pass */
-	char *virtuser;   /**< Virtual ident to set */
-	char *virthost;                 /**< Virtual host to set */
-	SWhois *swhois;   /**< SWhois items to set */
+	int auto_login;       /**< Auto-login users on connect? If they match 'auth' */
+	SecurityGroup *match; /**< Match criteria for user */
+	char *login;          /**< Login name for 'VHOST login pass' */
+	AuthConfig *auth;     /**< Password for 'VHOST login pass */
+	char *virtuser;       /**< Virtual ident to set */
+	char *virthost;       /**< Virtual host to set */
+	SWhois *swhois;       /**< SWhois items to set */
 };
 
 /* Variables */

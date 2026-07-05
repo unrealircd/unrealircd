@@ -171,11 +171,11 @@ void check_ping(Client *client)
 		return; /* some recent command was executed */
 
 	if (
-	        /* If we have sent a ping */
+	    /* If we have sent a ping */
 	    (IsPingSent(client)
 	        /* And they had 2x ping frequency to respond */
 	     && ((TStime() - client->local->last_msg_received) >= (2 * ping))) ||
-	        /* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
+	    /* Or isn't registered and time spent is larger than ping (CONNECTTIMEOUT).. */
 	    (!IsRegistered(client) && (TStime() - client->local->fake_lag >= ping)))
 	{
 		if (IsServer(client) || IsConnecting(client) ||

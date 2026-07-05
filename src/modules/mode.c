@@ -1252,7 +1252,7 @@ CMD_FUNC(_cmd_umode)
 						}
 						goto def;
 					case UHALLOW_REJOIN:
-                                        /* Handled later */
+						/* Handled later */
 						goto def;
 				}
 				break;

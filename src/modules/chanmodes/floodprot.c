@@ -137,14 +137,14 @@ typedef struct ChannelFloodBlocks {
 ModDataInfo *md_channelflood_blocked = NULL;
 /* Friendly type names for the efunc/crule, indexed by enum Flood. KEEP IN SYNC. */
 static const char *channelfloodtype_names[NUMFLD] = {
-    "ctcp",  /* CHFLD_CTCP   */
-    "join",  /* CHFLD_JOIN   */
-    "knock", /* CHFLD_KNOCK  */
-    "msg",  /* CHFLD_MSG    */
-    "nick",  /* CHFLD_NICK   */
-    "text",  /* CHFLD_TEXT   */
+    "ctcp",   /* CHFLD_CTCP   */
+    "join",   /* CHFLD_JOIN   */
+    "knock",  /* CHFLD_KNOCK  */
+    "msg",    /* CHFLD_MSG    */
+    "nick",   /* CHFLD_NICK   */
+    "text",   /* CHFLD_TEXT   */
     "repeat", /* CHFLD_REPEAT */
-    "paste", /* CHFLD_PASTE  */
+    "paste",  /* CHFLD_PASTE  */
 };
 Cmode_t EXTMODE_FLOODLIMIT = 0L;
 Cmode_t EXTMODE_FLOOD_PROFILE = 0L;

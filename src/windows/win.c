@@ -145,7 +145,7 @@ int GetOSName(char *pszOS)
 	if (!(bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO *)&osvi)))
 		return -1;
 
-   // Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
+	// Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
 
 	pGNSI = (PGNSI)GetProcAddress(
 	    GetModuleHandle(TEXT("kernel32.dll")),
@@ -160,7 +160,7 @@ int GetOSName(char *pszOS)
 	{
 		StringCchCopy(pszOS, OSVER_SIZE, TEXT("Microsoft "));
 
-      // Test for the specific product.
+		// Test for the specific product.
 
 		if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 1)
 		{
@@ -258,7 +258,7 @@ int GetOSName(char *pszOS)
 			} else
 				StringCchCat(pszOS, OSVER_SIZE, TEXT("Windows Server 2003, "));
 
-         // Test for the server type.
+			// Test for the server type.
 			if (osvi.wProductType != VER_NT_WORKSTATION)
 			{
 				if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64)
@@ -322,7 +322,7 @@ int GetOSName(char *pszOS)
 			}
 		}
 
-       // Include service pack (if any) and build number.
+		// Include service pack (if any) and build number.
 
 		if (_tcslen(osvi.szCSDVersion) > 0)
 		{

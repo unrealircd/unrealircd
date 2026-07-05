@@ -766,7 +766,7 @@ static void send_who_reply(Client *client, Client *acptr,
 		sendnumeric(client, RPL_WHOREPLY,
 		            channel,       /* channel name */
 		            acptr->user->username, /* user name */
-		            host,      /* hostname */
+		            host,                  /* hostname */
 		            "hidden",              /* let's hide the server from normal users if the server is a uline and HIDE_ULINES is on */
 		            acptr->name,           /* nick */
 		            stat,                  /* status */
@@ -779,7 +779,7 @@ static void send_who_reply(Client *client, Client *acptr,
 		sendnumeric(client, RPL_WHOREPLY,
 		            channel,       /* channel name */
 		            acptr->user->username,      /* user name */
-		            host,           /* hostname */
+		            host,                       /* hostname */
 		            acptr->user->server,        /* server name */
 		            acptr->name,                /* nick */
 		            stat,                       /* status */

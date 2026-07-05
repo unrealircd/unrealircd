@@ -1793,7 +1793,7 @@ int check_certificate_expiry_ctx(SSL_CTX *ctx, char **errstr)
 		*errstr = errbuf;
 		return 1;
 	} else
-        /* or near-expiry? */
+		/* or near-expiry? */
 		if (((days_expiry < 0) || (seconds_expiry < 0)) && (days_expiry > -7))
 		{
 			snprintf(errbuf, sizeof(errbuf), "certificate will expire in %s", pretty_time_val(0 - duration));

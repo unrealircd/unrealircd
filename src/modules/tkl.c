@@ -2205,14 +2205,14 @@ void cmd_tkl_line(Client *client, int parc, const char *parv[], char *type)
 	char mo[64], mo2[64], reasonbuf[512];
 	char *p, *usermask, *hostmask;
 	const char *tkllayer[10] = {
-	    me.name,  /*0  server.name */
-	    NULL,   /*1  +|- */
-	    NULL,   /*2  G   */
-	    NULL,   /*3  user */
-	    NULL,   /*4  host */
-	    NULL,   /*5  set_by */
-	    "0",   /*6  expire_at */
-	    NULL,   /*7  set_at */
+	    me.name, /*0  server.name */
+	    NULL,    /*1  +|- */
+	    NULL,    /*2  G   */
+	    NULL,    /*3  user */
+	    NULL,    /*4  host */
+	    NULL,    /*5  set_by */
+	    "0",     /*6  expire_at */
+	    NULL,    /*7  set_at */
 	    "no reason", /*8  reason */
 	    NULL,
 	};
@@ -2551,16 +2551,16 @@ CMD_FUNC(cmd_eline)
 	const char *p, *bantypes = NULL, *reason = NULL;
 	char *usermask, *hostmask;
 	const char *tkllayer[11] = {
-	    me.name,  /*0  server.name */
-	    NULL,   /*1  +|- */
-	    NULL,   /*2  E   */
-	    NULL,   /*3  user */
-	    NULL,   /*4  host */
-	    NULL,   /*5  set_by */
-	    "0",   /*6  expire_at */
-	    "-",   /*7  set_at */
-	    "-",   /*8  ban types */
-	    "-",   /*9  reason */
+	    me.name, /*0  server.name */
+	    NULL,    /*1  +|- */
+	    NULL,    /*2  E   */
+	    NULL,    /*3  user */
+	    NULL,    /*4  host */
+	    NULL,    /*5  set_by */
+	    "0",     /*6  expire_at */
+	    "-",     /*7  set_at */
+	    "-",     /*8  ban types */
+	    "-",     /*9  reason */
 	    NULL,
 	};
 	TKLTypeTable *t;
@@ -2696,13 +2696,13 @@ void spamfilter_del_by_id(Client *client, const char *id)
 	char mo[32], mo2[32];
 	const char *tkllayer[13] = {
 	    me.name, /*  0 server.name */
-	    NULL,  /*  1 +|- */
-	    "F",  /*  2 F   */
-	    NULL,  /*  3 usermask (targets) */
-	    NULL,  /*  4 hostmask (action) */
-	    NULL,  /*  5 set_by */
-	    "0",  /*  6 expire_at */
-	    "0",  /*  7 set_at */
+	    NULL,    /*  1 +|- */
+	    "F",     /*  2 F   */
+	    NULL,    /*  3 usermask (targets) */
+	    NULL,    /*  4 hostmask (action) */
+	    NULL,    /*  5 set_by */
+	    "0",     /*  6 expire_at */
+	    "0",     /*  7 set_at */
 	    "",   /*  8 tkl time */
 	    "",   /*  9 tkl reason */
 	    "",   /* 10 match method */
@@ -2768,13 +2768,13 @@ CMD_FUNC(cmd_spamfilter)
 	char mo[32], mo2[32];
 	const char *tkllayer[13] = {
 	    me.name, /*  0 server.name */
-	    NULL,  /*  1 +|- */
-	    "F",  /*  2 F   */
-	    NULL,  /*  3 usermask (targets) */
-	    NULL,  /*  4 hostmask (action) */
-	    NULL,  /*  5 set_by */
-	    "0",  /*  6 expire_at */
-	    "0",  /*  7 set_at */
+	    NULL,    /*  1 +|- */
+	    "F",     /*  2 F   */
+	    NULL,    /*  3 usermask (targets) */
+	    NULL,    /*  4 hostmask (action) */
+	    NULL,    /*  5 set_by */
+	    "0",     /*  6 expire_at */
+	    "0",     /*  7 set_at */
 	    "",   /*  8 tkl time */
 	    "",   /*  9 tkl reason */
 	    "",   /* 10 match method */
@@ -3810,11 +3810,11 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 					if (tk != tmp && match_simple(tk->ptr.serverban->usermask, cname))
 					{
 						if ((*tk->ptr.serverban->hostmask >= '0') && (*tk->ptr.serverban->hostmask <= '9')
-						            /* the hostmask is an IP */
+						    /* the hostmask is an IP */
 						    && (match_simple(tk->ptr.serverban->hostmask, chost) || match_simple(tk->ptr.serverban->hostmask, cip)))
 							keep_shun = 1;
 						else
-							        /* the hostmask is not an IP */
+							/* the hostmask is not an IP */
 							if (match_simple(tk->ptr.serverban->hostmask, chost) && match_simple(tk->ptr.serverban->usermask, cname))
 								keep_shun = 1;
 					}
@@ -5718,10 +5718,10 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 				char ip[128], user[USERLEN + 3], mo[100], mo2[100];
 				const char *tkllayer[9] = {
 				    me.name, /*0  server.name */
-				    "+",  /*1  +|- */
-				    "?",  /*2  type */
-				    "*",  /*3  user */
-				    NULL,  /*4  host */
+				    "+",     /*1  +|- */
+				    "?",     /*2  type */
+				    "*",     /*3  user */
+				    NULL,    /*4  host */
 				    NULL,
 				    NULL,  /*6  expire_at */
 				    NULL,  /*7  set_at */

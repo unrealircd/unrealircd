@@ -65,30 +65,30 @@ struct mp_pool_t {
 	mp_pool_t *next;
 
 	/** Doubly-linked list of chunks in which no items have been allocated.
-   * The front of the list is the most recently emptied chunk. */
+	 * The front of the list is the most recently emptied chunk. */
 	struct mp_chunk_t *empty_chunks;
 
 	/** Doubly-linked list of chunks in which some items have been allocated,
-   * but which are not yet full. The front of the list is the chunk that has
-   * most recently been modified. */
+	 * but which are not yet full. The front of the list is the chunk that has
+	 * most recently been modified. */
 	struct mp_chunk_t *used_chunks;
 
 	/** Doubly-linked list of chunks in which no more items can be allocated.
-   * The front of the list is the chunk that has most recently become full. */
+	 * The front of the list is the chunk that has most recently become full. */
 	struct mp_chunk_t *full_chunks;
 
 	/** Length of <b>empty_chunks</b>. */
 	int n_empty_chunks;
 
 	/** Lowest value of <b>empty_chunks</b> since last call to
-   * mp_pool_clean(-1). */
+	 * mp_pool_clean(-1). */
 	int min_empty_chunks;
 
 	/** Size of each chunk (in items). */
 	int new_chunk_capacity;
 
 	/** Size to allocate for each item, including overhead and alignment
-   * padding. */
+	 * padding. */
 	size_t item_alloc_size;
 #ifdef MEMPOOL_STATS
 	/** Total number of items allocated ever. */

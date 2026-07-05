@@ -64,11 +64,11 @@ CMD_FUNC(cmd_sqline)
 	char mo[32];
 	const char *comment = (parc == 3) ? parv[2] : NULL;
 	const char *tkllayer[9] = {
-	    me.name,        /*0  server.name */
-	    "+",            /*1  +|- */
-	    "Q",            /*2  G   */
-	    "*",           /*3  user */
-	    parv[1],        /*4  host */
+	    me.name, /*0  server.name */
+	    "+",     /*1  +|- */
+	    "Q",     /*2  G   */
+	    "*",     /*3  user */
+	    parv[1], /*4  host */
 	    client->name,     /*5  setby */
 	    "0",            /*6  expire_at */
 	    NULL,           /*7  set_at */

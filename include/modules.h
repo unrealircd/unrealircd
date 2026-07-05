@@ -957,44 +957,44 @@ extern void RPCHandlerDel(RPCHandler *m);
 
 #ifndef GCC_TYPECHECKING
  /** Add a hook that returns an int.
- * @param module	The module adding the hook
- * @param hooktype	The hook type (HOOKTYPE_*)
- * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
- * @param func		The hook function to add
- * @returns The Hook pointer, or NULL on failure.
- * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
- *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
- */
+  * @param module	The module adding the hook
+  * @param hooktype	The hook type (HOOKTYPE_*)
+  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+  * @param func		The hook function to add
+  * @returns The Hook pointer, or NULL on failure.
+  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+  */
  #define HookAdd(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, func, NULL, NULL, NULL)
  /** Add a hook that returns void.
- * @param module	The module adding the hook
- * @param hooktype	The hook type (HOOKTYPE_*)
- * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
- * @param func		The hook function to add
- * @returns The Hook pointer, or NULL on failure.
- * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
- *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
- */
+  * @param module	The module adding the hook
+  * @param hooktype	The hook type (HOOKTYPE_*)
+  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+  * @param func		The hook function to add
+  * @returns The Hook pointer, or NULL on failure.
+  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+  */
  #define HookAddVoid(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, func, NULL, NULL)
  /** Add a hook that returns a string (char *).
- * @param module	The module adding the hook
- * @param hooktype	The hook type (HOOKTYPE_*)
- * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
- * @param func		The hook function to add
- * @returns The Hook pointer, or NULL on failure.
- * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
- *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
- */
+  * @param module	The module adding the hook
+  * @param hooktype	The hook type (HOOKTYPE_*)
+  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+  * @param func		The hook function to add
+  * @returns The Hook pointer, or NULL on failure.
+  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+  */
  #define HookAddString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, func, NULL)
  /** Add a hook that returns a const string (const char *).
- * @param module	The module adding the hook
- * @param hooktype	The hook type (HOOKTYPE_*)
- * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
- * @param func		The hook function to add
- * @returns The Hook pointer, or NULL on failure.
- * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
- *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
- */
+  * @param module	The module adding the hook
+  * @param hooktype	The hook type (HOOKTYPE_*)
+  * @param priority	Priority for hook execution order. Lower value = called first. Use 0 for normal.
+  * @param func		The hook function to add
+  * @returns The Hook pointer, or NULL on failure.
+  * @note Call this from MOD_INIT(), except for HOOKTYPE_CONFIGTEST and
+  *       HOOKTYPE_CONFIGPOSTTEST hooks which should be added in MOD_TEST().
+  */
  #define HookAddConstString(module, hooktype, priority, func) HookAddMain(module, hooktype, priority, NULL, NULL, NULL, func)
 #else
  #define HookAdd(module, hooktype, priority, func) \

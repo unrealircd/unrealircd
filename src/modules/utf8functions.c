@@ -5754,17 +5754,17 @@ int utf32_to_utf8(char *buf, uint32_t code)
 	}
 	if (code <= 0xFFFF)
 	{
-		buf[0] = 0xE0 | (code >> 12);  /* 1110xxxx */
-		buf[1] = 0x80 | ((code >> 6) & 0x3F);   /* 10xxxxxx */
-		buf[2] = 0x80 | (code & 0x3F);  /* 10xxxxxx */
+		buf[0] = 0xE0 | (code >> 12);         /* 1110xxxx */
+		buf[1] = 0x80 | ((code >> 6) & 0x3F); /* 10xxxxxx */
+		buf[2] = 0x80 | (code & 0x3F);        /* 10xxxxxx */
 		return 3;
 	}
 	if (code <= 0x10FFFF)
 	{
-		buf[0] = 0xF0 | (code >> 18);  /* 11110xxx */
-		buf[1] = 0x80 | ((code >> 12) & 0x3F);  /* 10xxxxxx */
-		buf[2] = 0x80 | ((code >> 6) & 0x3F);   /* 10xxxxxx */
-		buf[3] = 0x80 | (code & 0x3F);  /* 10xxxxxx */
+		buf[0] = 0xF0 | (code >> 18);          /* 11110xxx */
+		buf[1] = 0x80 | ((code >> 12) & 0x3F); /* 10xxxxxx */
+		buf[2] = 0x80 | ((code >> 6) & 0x3F);  /* 10xxxxxx */
+		buf[3] = 0x80 | (code & 0x3F);         /* 10xxxxxx */
 		return 4;
 	}
 	return 0;

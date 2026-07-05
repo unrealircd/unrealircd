@@ -1195,9 +1195,9 @@ struct CRuleNode {
 	crule_funcptr funcptr; /**< Evaluation function for this node. */
 	int numargs;           /**< Number of arguments. */
 	/** Array of arguments.  For operators, each arg
-   * is a tree element; for functions, each arg is
-   * a string.
-   */
+	 * is a tree element; for functions, each arg is
+	 * a string.
+	 */
 	void *arg[CR_MAXARGS];
 	int func_test_type;  /* for >, < and == */
 	int func_test_value; /* integer value to compare against */

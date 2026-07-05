@@ -564,11 +564,11 @@ int b64_decode(char const *src, unsigned char *target, size_t targsize)
 				return (-1);
 
 			case 2:  /* Valid, means one byte of info */
-                        /* Skip any number of spaces. */
+				/* Skip any number of spaces. */
 				for (; ch != '\0'; ch = *src++)
 					if (!isspace(ch))
 						break;
-                        /* Make sure there is another trailing = sign. */
+				/* Make sure there is another trailing = sign. */
 				if (ch != Pad64)
 					return (-1);
 				ch = *src++;  /* Skip the = */

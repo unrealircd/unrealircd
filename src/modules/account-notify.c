@@ -23,8 +23,8 @@
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER = {
-    "account-notify", /* Name of module */
-    "5.0",    /* Version */
+    "account-notify",     /* Name of module */
+    "5.0",                /* Version */
     "account-notify CAP", /* Short description of module */
     "UnrealIRCd Team",
     "unrealircd-6",
