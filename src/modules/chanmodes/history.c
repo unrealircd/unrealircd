@@ -277,7 +277,9 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 					{
 						int value, errs = 0;
-						if (h->owner && !(h->owner->flags & MODFLAG_TESTING) && !(h->owner->options & MOD_OPT_PERM))
+						if (h->owner &&
+						    !(h->owner->flags & MODFLAG_TESTING) &&
+						    !(h->owner->options & MOD_OPT_PERM))
 							continue;
 						value = (*(h->func.intfunc))(cf, cepp, CONFIG_SET_HISTORY_CHANNEL, &errs);
 						if (value == 2)

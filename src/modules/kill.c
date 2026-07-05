@@ -112,7 +112,8 @@ CMD_FUNC(cmd_kill)
 			continue;
 		}
 
-		if ((!MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:global", client, target, NULL, NULL)) || (MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:local", client, target, NULL, NULL)))
+		if ((!MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:global", client, target, NULL, NULL)) ||
+		    (MyConnect(target) && MyUser(client) && !ValidatePermissionsForPath("kill:local", client, target, NULL, NULL)))
 		{
 			sendnumeric(client, ERR_NOPRIVILEGES);
 			continue;

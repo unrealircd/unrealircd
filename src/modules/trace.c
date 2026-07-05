@@ -195,7 +195,8 @@ CMD_FUNC(cmd_trace)
 
 			case CLIENT_STATUS_SERVER:
 				sendnumeric(client, RPL_TRACESERVER, class, acptr->local->fd >= 0 ? link_s[acptr->local->fd] : -1,
-				            acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name, *(acptr->server->by) ? acptr->server->by : "*", "*", me.name,
+				            acptr->local->fd >= 0 ? link_u[acptr->local->fd] : -1, name,
+				            *(acptr->server->by) ? acptr->server->by : "*", "*", me.name,
 				            (long long)(now - acptr->local->last_msg_received));
 				cnt++;
 				break;

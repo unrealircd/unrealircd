@@ -111,7 +111,9 @@ CMD_FUNC(cmd_topic)
 
 	if (parc > 2 || SecretChannel(channel))
 	{
-		if (!IsMember(client, channel) && !IsServer(client) && !ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel, NULL) && !IsULine(client))
+		if (!IsMember(client, channel) && !IsServer(client) &&
+		    !ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel, NULL) &&
+		    !IsULine(client))
 		{
 			sendnumeric(client, ERR_NOTONCHANNEL, name);
 			return;

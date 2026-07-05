@@ -256,7 +256,8 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 	/* add to list and notify the person who got invited */
 	if (MyConnect(target))
 	{
-		if (IsUser(client) && (check_channel_access(client, channel, "oaq") || IsULine(client) || ValidatePermissionsForPath("channel:override:invite:self", client, NULL, channel, NULL)
+		if (IsUser(client) && (check_channel_access(client, channel, "oaq") || IsULine(client) ||
+		                       ValidatePermissionsForPath("channel:override:invite:self", client, NULL, channel, NULL)
 #ifdef OPEROVERRIDE_VERIFY
 		                       || (override && ValidatePermissionsForPath("channel:override:privsecret", client, NULL, channel, NULL) && client == target && (SecretChannel(channel) || HiddenChannel(channel)))
 #endif

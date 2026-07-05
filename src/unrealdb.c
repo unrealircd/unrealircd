@@ -230,7 +230,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 						goto unrealdb_open_fail;
 					}
 					/* SUCCESS = fallthrough */
-				} else if (str_starts_with_case_sensitive(buf, "UnrealIRCd-DB")) /* any other version than v1 = not supported by us */
+				} else if (str_starts_with_case_sensitive(buf, "UnrealIRCd-DB"))
 				{
 					/* We don't support this format, so refuse clearly */
 					unrealdb_set_error(c, UNREALDB_ERROR_HEADER,

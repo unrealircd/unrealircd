@@ -353,7 +353,9 @@ int send_list(Client *client)
 		if (numsend > 0)
 			for (channel = hash_get_chan_bucket(hashnum); channel; channel = channel->hnextch)
 			{
-				if (SecretChannel(channel) && !IsMember(client, channel) && !ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel, NULL))
+				if (SecretChannel(channel) && !IsMember(client, channel) &&
+				    !ValidatePermissionsForPath("channel:see:list:secret", client, NULL, channel,
+				                                NULL))
 					continue;
 
 				/* set::hide-list { deny-channel } */

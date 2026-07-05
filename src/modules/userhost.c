@@ -101,7 +101,9 @@ CMD_FUNC(cmd_userhost)
 			                : "",
 			            (acptr->user->away) ? '-' : '+',
 			            acptr->user->username,
-			            ((acptr != client) && !IsOper(client) && IsHidden(acptr) ? acptr->user->virthost : acptr->user->realhost));
+			            ((acptr != client) && !IsOper(client) && IsHidden(acptr)
+			                 ? acptr->user->virthost
+			                 : acptr->user->realhost));
 			w++;
 		}
 		if (p)

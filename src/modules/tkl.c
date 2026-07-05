@@ -3796,7 +3796,10 @@ void _tkl_check_local_remove_shun(TKL *tmp)
 			else
 				is_ip = 0;
 
-			if (is_ip == 0 ? (match_simple(tmp->ptr.serverban->hostmask, chost) && match_simple(tmp->ptr.serverban->usermask, cname)) : (match_simple(tmp->ptr.serverban->hostmask, chost) || match_simple(tmp->ptr.serverban->hostmask, cip)) && match_simple(tmp->ptr.serverban->usermask, cname))
+			if (is_ip == 0
+			        ? (match_simple(tmp->ptr.serverban->hostmask, chost) && match_simple(tmp->ptr.serverban->usermask, cname))
+			        : (match_simple(tmp->ptr.serverban->hostmask, chost) || match_simple(tmp->ptr.serverban->hostmask, cip)) &&
+			              match_simple(tmp->ptr.serverban->usermask, cname))
 			{
 				        /*
 					  before blindly marking this user as un-shunned, we need to check
@@ -4299,7 +4302,9 @@ TKL *_find_qline(Client *client, const char *name, int *ishold)
 		if (!TKLIsNameBan(tkl))
 			continue;
 
-		if (((*tkl->ptr.nameban->name == '#' && *name == '#') || (*tkl->ptr.nameban->name != '#' && *name != '#')) && match_simple(tkl->ptr.nameban->name, name))
+		if (((*tkl->ptr.nameban->name == '#' && *name == '#') || (*tkl->ptr.nameban->name != '#' &&
+		                                                          *name != '#')) &&
+		    match_simple(tkl->ptr.nameban->name, name))
 		{
 			points = 1;
 			break;
@@ -5953,7 +5958,9 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
                                  char no_stop_first_match)
 {
 	int hide_content = spamfilter_hide_content(target,
-	                                           tkl->ptr.spamfilter->show_message_content_on_hit ? tkl->ptr.spamfilter->show_message_content_on_hit : iConf.spamfilter_show_message_content_on_hit);
+	                                           tkl->ptr.spamfilter->show_message_content_on_hit
+	                                               ? tkl->ptr.spamfilter->show_message_content_on_hit
+	                                               : iConf.spamfilter_show_message_content_on_hit);
 	int stopped;
 	int highest_action;
 

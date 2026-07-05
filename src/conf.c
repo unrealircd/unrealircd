@@ -5567,7 +5567,10 @@ void conf_listen_configure(const char *ip, int port, SocketType socket_type, int
 	{
 		listen->tls_options = safe_alloc(sizeof(TLSOptions));
 		conf_tlsblock(conf, tlsconfig, listen->tls_options,
-		              ((options & LISTENER_SERVERSONLY) && tempiConf.server_linking_tls_options) ? tempiConf.server_linking_tls_options : tempiConf.tls_options);
+		              ((options & LISTENER_SERVERSONLY) &&
+		               tempiConf.server_linking_tls_options)
+		                  ? tempiConf.server_linking_tls_options
+		                  : tempiConf.tls_options);
 		listen->ssl_ctx = init_ctx(listen->tls_options, 1);
 	}
 	/* A serversonly listener with no tls-options of its own uses the shared
@@ -5779,7 +5782,9 @@ int _test_listen(ConfigFile *conf, ConfigEntry *ce)
 					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 					{
 						int value, errs = 0;
-						if (h->owner && !(h->owner->flags & MODFLAG_TESTING) && !(h->owner->options & MOD_OPT_PERM))
+						if (h->owner &&
+						    !(h->owner->flags & MODFLAG_TESTING) &&
+						    !(h->owner->options & MOD_OPT_PERM))
 						{
 							continue;
 						}
@@ -6632,7 +6637,9 @@ int _conf_link(ConfigFile *conf, ConfigEntry *ce)
 				{
 					link->tls_options = safe_alloc(sizeof(TLSOptions));
 					conf_tlsblock(conf, cepp, link->tls_options,
-					              tempiConf.server_linking_tls_options ? tempiConf.server_linking_tls_options : tempiConf.tls_options);
+					              tempiConf.server_linking_tls_options
+					                  ? tempiConf.server_linking_tls_options
+					                  : tempiConf.tls_options);
 					link->ssl_ctx = init_ctx(link->tls_options, 0);
 				}
 			}
@@ -8416,7 +8423,9 @@ int _test_set(ConfigFile *conf, ConfigEntry *ce)
 				             cep->file->filename, cep->line_number);
 				errors++;
 				continue;
-			} else if (match_simple("*@unrealircd.com", cep->value) || match_simple("*@unrealircd.org", cep->value) || match_simple("unreal-*@lists.sourceforge.net", cep->value))
+			} else if (match_simple("*@unrealircd.com", cep->value) ||
+			           match_simple("*@unrealircd.org", cep->value) ||
+			           match_simple("unreal-*@lists.sourceforge.net", cep->value))
 			{
 				config_error("%s:%i: set::kline-address may not be an UnrealIRCd Team address",
 				             cep->file->filename, cep->line_number);
@@ -8433,7 +8442,9 @@ int _test_set(ConfigFile *conf, ConfigEntry *ce)
 				             cep->file->filename, cep->line_number);
 				errors++;
 				continue;
-			} else if (match_simple("*@unrealircd.com", cep->value) || match_simple("*@unrealircd.org", cep->value) || match_simple("unreal-*@lists.sourceforge.net", cep->value))
+			} else if (match_simple("*@unrealircd.com", cep->value) ||
+			           match_simple("*@unrealircd.org", cep->value) ||
+			           match_simple("unreal-*@lists.sourceforge.net", cep->value))
 			{
 				config_error("%s:%i: set::gline-address may not be an UnrealIRCd Team address",
 				             cep->file->filename, cep->line_number);
@@ -8855,7 +8866,9 @@ int _test_set(ConfigFile *conf, ConfigEntry *ce)
 					for (h = Hooks[HOOKTYPE_CONFIGTEST]; h; h = h->next)
 					{
 						int value, errs = 0;
-						if (h->owner && !(h->owner->flags & MODFLAG_TESTING) && !(h->owner->options & MOD_OPT_PERM))
+						if (h->owner &&
+						    !(h->owner->flags & MODFLAG_TESTING) &&
+						    !(h->owner->options & MOD_OPT_PERM))
 							continue;
 						value = (*(h->func.intfunc))(conf, ceppp, CONFIG_SET_ANTI_FLOOD, &errs);
 						if (value == 2)
@@ -9002,7 +9015,8 @@ int _test_set(ConfigFile *conf, ConfigEntry *ce)
 									             cep4->file->filename, cep4->line_number);
 									errors++;
 								}
-							} else if (!strcmp(cep4->name, "ban-action") || !strcmp(cep4->name, "action"))
+							} else if (!strcmp(cep4->name, "ban-action") ||
+							           !strcmp(cep4->name, "action"))
 							{
 								CheckNull(cep4);
 								errors += test_ban_action_config(cep4);
