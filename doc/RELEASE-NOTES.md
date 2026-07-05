@@ -11,6 +11,8 @@ This is work in progress and may not always be a stable version.
 ### Fixes:
 
 ### Developers and protocol:
+* New wiki articles: [Dev:Coding guidelines](https://www.unrealircd.org/docs/Dev:Coding_guidelines)
+  and [Dev:Visual Studio Code](https://www.unrealircd.org/docs/Dev:Visual_Studio_Code).
 * After more than 25 years, the entire source code has been reformatted
   in one big clang-format commit ('make format'), giving the whole tree
   a single consistent style. Git blame on github.com is unaffected thanks
@@ -20,6 +22,9 @@ This is work in progress and may not always be a stable version.
   If you maintain a fork or local patches, then read the migration
   instructions in
   [this commit message](https://github.com/unrealircd/unrealircd/commit/e77eb9e923e84853c0fb2a154150f401a9602e0b).
+* All C code must now be formatted with clang-format version 21: run
+  `make format` **before committing** (or use clang-format in your editor).
+  CI will check for this and fail a PR containing unformatted code.
 
 UnrealIRCd 6.2.6
 -----------------
