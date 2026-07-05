@@ -630,15 +630,24 @@ struct HistoryResult {
 typedef struct HistoryBackend HistoryBackend;
 struct HistoryBackend {
 	HistoryBackend *prev, *next;
-	char *name;                                   /**< The name of the history backend (eg: "mem") */
-	int (*history_set_limit)(const char *object, int max_lines, long max_time); /**< Impose a limit on a history object */
-	int (*history_add)(const char *object, MessageTag *mtags, const char *line); /**< Add to history */
-	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);  /**< Request history */
-	int (*history_delete)(const char *object, HistoryFilter *filter, int *rejected_deletes);  /**< Delete lines from the history. Returns the number of matching lines and sets rejected_deletes if not NULL */
-	int (*history_destroy)(const char *object);  /**< Destroy history of this object completely */
-	int (*history_add_multiline)(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines); /**< Add multiline batch to history (optional, may be NULL) */
-	Module *owner;                                /**< Module introducing this */
-	char unloaded;                                /**< Internal flag to indicate module is being unloaded */
+	/** The name of the history backend (eg: "mem") */
+	char *name;
+	/** Impose a limit on a history object */
+	int (*history_set_limit)(const char *object, int max_lines, long max_time);
+	/** Add to history */
+	int (*history_add)(const char *object, MessageTag *mtags, const char *line);
+	/** Request history */
+	HistoryResult *(*history_request)(const char *object, HistoryFilter *filter);
+	/** Delete lines from the history. Returns the number of matching lines and sets rejected_deletes if not NULL */
+	int (*history_delete)(const char *object, HistoryFilter *filter, int *rejected_deletes);
+	/** Destroy history of this object completely */
+	int (*history_destroy)(const char *object);
+	/** Add multiline batch to history (optional, may be NULL) */
+	int (*history_add_multiline)(const char *object, MessageTag *mtags, const char *source, const char *cmd, const char *target, MLine *lines);
+	/** Module introducing this */
+	Module *owner;
+	/** Internal flag to indicate module is being unloaded */
+	char unloaded;
 };
 
 /** The struct used to register a history backend.

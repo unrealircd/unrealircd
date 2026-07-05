@@ -390,7 +390,8 @@ typedef enum ClientStatus {
 #define IsStartTLSHandshake(x)	((x)->status == CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)	/**< Currently doing a STARTTLS handshake */
 #define IsTLSAcceptHandshake(x)	((x)->status == CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)	/**< Currently doing a TLS handshake - incoming */
 #define IsTLSConnectHandshake(x)	((x)->status == CLIENT_STATUS_TLS_CONNECT_HANDSHAKE)	/**< Currently doing a TLS handshake - outgoing */
-#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))	/**< Currently doing a TLS handshake (incoming/outgoing/STARTTLS) */
+/** Currently doing a TLS handshake (incoming/outgoing/STARTTLS) */
+#define IsTLSHandshake(x) (IsTLSAcceptHandshake(x) || IsTLSConnectHandshake(x) | IsStartTLSHandshake(x))
 
 #define SetStartTLSHandshake(x)	((x)->status = CLIENT_STATUS_TLS_STARTTLS_HANDSHAKE)
 #define SetTLSAcceptHandshake(x)	((x)->status = CLIENT_STATUS_TLS_ACCEPT_HANDSHAKE)
@@ -1147,9 +1148,11 @@ struct CRuleNode {
   int flags;
   crule_funcptr funcptr; /**< Evaluation function for this node. */
   int numargs;           /**< Number of arguments. */
-  void *arg[CR_MAXARGS]; /**< Array of arguments.  For operators, each arg
-                            is a tree element; for functions, each arg is
-                            a string. */
+  /** Array of arguments.  For operators, each arg
+   * is a tree element; for functions, each arg is
+   * a string.
+   */
+  void *arg[CR_MAXARGS];
   int func_test_type;    /* for >, < and == */
   int func_test_value;   /* integer value to compare against */
 };
@@ -1513,9 +1516,11 @@ struct Client {
 	time_t lastnick;			/**< Timestamp on nick */
 	uint64_t flags;				/**< Client flags (one or more of CLIENT_FLAG_*) */
 	long umodes;				/**< Client usermodes (if user) */
-	Client *direction;			/**< Direction from which this client originated.
-	                                             This always points to a directly connected server or &me.
-	                                             It is never NULL */
+	/** Direction from which this client originated.
+	 * This always points to a directly connected server or &me.
+	 * It is never NULL
+	 */
+	Client *direction;
 	unsigned char hopcount;			/**< Number of servers to this, 0 means local client */
 	unsigned char known_user_cached;	/**< Cached as a "known user" */
 	char ident[USERLEN + 1];		/**< Ident of the user, if available. Otherwise set to "unknown". */

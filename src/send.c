@@ -342,8 +342,7 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	if (to->direction)
 		to = to->direction;
 	if (IsDeadSocket(to))
-		return;		/* This socket has already
-				   been marked as dead */
+		return; /* This socket has already been marked as dead */
 	if (to->local->fd < 0)
 	{
 		/* This is normal when 'to' was being closed (via exit_client
