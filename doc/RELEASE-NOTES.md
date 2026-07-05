@@ -11,6 +11,15 @@ This is work in progress and may not always be a stable version.
 ### Fixes:
 
 ### Developers and protocol:
+* After more than 25 years, the entire source code has been reformatted
+  in one big clang-format commit ('make format'), giving the whole tree
+  a single consistent style. Git blame on github.com is unaffected thanks
+  to `.git-blame-ignore-revs`. For local `git blame` to benefit as well,
+  run this once in your working copy:
+  `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+  If you maintain a fork or local patches, then read the git commit
+  message that added this release notes entry: it contains migration
+  instructions.
 
 UnrealIRCd 6.2.6
 -----------------
