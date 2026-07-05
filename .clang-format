@@ -46,7 +46,33 @@ AlignTrailingComments:
   OverEmptyLines: 0
 
 IndentCaseLabels: true                 # case labels are indented one level
-SpaceBeforeParens: ControlStatements   # "if (" but "call(" / "sizeof("
+
+# Our list_for_each* macros (include/list.h) are loops. Without this,
+# clang-format thinks they are function calls and then joins the loop
+# body onto the same line, like: list_for_each_entry(...) if (x) y();
+ForEachMacros:
+  - list_for_each
+  - list_for_each_prev
+  - list_for_each_safe
+  - list_for_each_prev_safe
+  - list_for_each_entry
+  - list_for_each_entry2
+  - list_for_each_entry_reverse
+  - list_for_each_entry_continue
+  - list_for_each_entry_continue_reverse
+  - list_for_each_entry_from
+  - list_for_each_entry_safe
+  - list_for_each_entry_safe_continue
+  - list_for_each_entry_safe_from
+  - list_for_each_entry_safe_reverse
+
+# "if (" but "call(" / "sizeof(". The foreach option is so the macros
+# above are written as "list_for_each_entry(" without a space, like a
+# function call, which is how the code already does it.
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterForeachMacros: false
 PointerAlignment: Right                # "type *name"
 DerivePointerAlignment: false
 BreakBeforeBinaryOperators: None       # wrap after && / ||, not before
