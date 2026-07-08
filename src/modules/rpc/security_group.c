@@ -70,6 +70,7 @@ RPC_CALL_FUNC(rpc_security_group_list)
 		json_t *item = json_object();
 		json_object_set_new(item, "name", json_string_unreal("unknown-users"));
 		json_object_set_new(item, "priority", json_integer(0));
+		json_object_set_new(item, "public", json_boolean(1));
 		json_object_set_new(item, "builtin", json_boolean(1));
 		json_array_append_new(list, item);
 	}
@@ -78,7 +79,7 @@ RPC_CALL_FUNC(rpc_security_group_list)
 	{
 		json_t *item = json_object();
 		json_expand_security_group(item, NULL, s, 0);
-		if (!strcmp(s->name, "known-users"))
+		if (s->builtin)
 			json_object_set_new(item, "builtin", json_boolean(1));
 		json_array_append_new(list, item);
 	}

@@ -2344,6 +2344,7 @@ struct SecurityGroup {
 	SecurityGroup *prev, *next;
 	int priority;
 	char name[SECURITYGROUPLEN + 1];
+	int builtin;
 	int public;
 	NameValuePrioList *printable_list;
 	int printable_list_counter;

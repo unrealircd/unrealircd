@@ -721,17 +721,20 @@ void set_security_group_defaults(void)
 	/* Default group: webirc */
 	s = add_security_group("webirc-users", 50);
 	s->public = 1;
+	s->builtin = 1;
 	s->webirc = 1;
 
 	/* Default group: websocket */
 	s = add_security_group("websocket-users", 51);
 	s->public = 1;
+	s->builtin = 1;
 	s->websocket = 1;
 
 	/* Default group: known-users */
 	s = add_security_group("known-users", 100);
 	known_users = s;
 	s->public = 1;
+	s->builtin = 1;
 	s->identified = 1;
 	s->reputation_score = 25;
 	s->webirc = 0;
@@ -739,6 +742,7 @@ void set_security_group_defaults(void)
 	/* Default group: tls-users */
 	s = add_security_group("tls-users", 300);
 	s->public = 1;
+	s->builtin = 1;
 	s->tls = 1;
 }
 
