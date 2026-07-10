@@ -31,7 +31,11 @@ void strrangetok(char *in, char *out, char tok, short first, short last)
 		{
 			tokcount++;
 			if (tokcount == first)
+			{
 				i++;
+				if (!in[i])
+					break; /* don't read past NUL */
+			}
 		}
 		if (tokcount >= first && (tokcount <= last || last == -1))
 		{
