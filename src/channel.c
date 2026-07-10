@@ -855,6 +855,10 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 		extban = findmod_by_bantype(mask, &nextbanstr);
 		if (!extban)
 		{
+			const char *p = strchr(mask, ':');
+			/* Reject adding empty "~something:" extban */
+			if ((what == MODE_ADD) && p && !p[1])
+				return NULL;
 			/* extended bantype not supported, what to do?
 			 * Here are the rules:
 			 * - if from a remote client/server: allow it (easy upgrading,
