@@ -351,6 +351,8 @@ int timedban_has_ban_expired(Ban *ban)
 		p1 = banstr + 6;
 	else
 		return 0; /* not for us */
+	if (!*p1)
+		return 1; /* only "~t:" / "~time:", don't read past NUL */
 	p2 = strchr(p1 + 1, ':'); /* skip time argument */
 	if (!p2)
 		return 0; /* invalid fmt */
