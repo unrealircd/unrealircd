@@ -1183,6 +1183,8 @@ void read_packet(int fd, int revents, void *data)
 	time_t now = TStime();
 	Hook *h;
 	int processdata;
+	long long loop_start = 0, max_ns = 0;
+	FloodSettings *fld;
 
 	/* Don't read from dead sockets */
 	if (IsDeadSocket(client))
@@ -1206,6 +1208,19 @@ void read_packet(int fd, int revents, void *data)
 	else
 		fd_setselect(fd, FD_SELECT_WRITE, NULL, client);
 
+	/* Calculate how long we may process this client's data before yielding.
+	 * Servers, opers and authenticated RPC clients are always exempt.
+	 */
+	if (!IsServer(client) && !IsOper(client) &&
+	    !(IsRPC(client) && client->rpc && client->rpc->rpc_user))
+	{
+		fld = get_floodsettings_for_user(client, FLD_MAX_PROCESSING_TIME);
+		if (fld->limit[FLD_MAX_PROCESSING_TIME] > 0)
+		{
+			max_ns = fld->limit[FLD_MAX_PROCESSING_TIME] * 1000000LL;
+			loop_start = monotime_ns();
+		}
+	}
 	while (1)
 	{
 		if (IsTLS(client) && client->local->ssl != NULL)
@@ -1280,6 +1295,10 @@ void read_packet(int fd, int revents, void *data)
 
 		/* bail on short read! */
 		if (length < sizeof(readbuf))
+			return;
+
+		/* If processing client data takes too much time, yield so we process the next client */
+		if (max_ns && (monotime_ns() - loop_start > max_ns))
 			return;
 	}
 }

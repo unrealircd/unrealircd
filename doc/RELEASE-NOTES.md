@@ -5,6 +5,11 @@ This is the git version (development version) for future UnrealIRCd 6.2.7.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* New [set::anti-flood](https://www.unrealircd.org/docs/Anti-flood_settings#max-processing-time)
+  setting `max-processing-time`: this limits how much time we spend on a
+  particular client in the I/O engine. This gives other clients a more fair
+  chance to get their commands read and processed. Defaults to 25ms for
+  unknown-users and 50ms for known-users.
 
 ### Changes:
 

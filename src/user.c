@@ -955,6 +955,7 @@ MODVAR const char *floodoption_names[] = {
     "lag-penalty",
     "vhost-flood",
     "multiline",
+    "max-processing-time",
     NULL,
 };
 
@@ -974,6 +975,7 @@ MODVAR const char *floodoption_shortnames[] = {
     NULL,            /* FLD_LAG_PENALTY: not counted (soft penalty, not a block) */
     "vhost",         /* FLD_VHOST */
     NULL,            /* FLD_MULTILINE: not counted */
+    NULL,            /* FLD_MAX_PROCESSING_TIME: not counted (soft yield) */
     NULL,
 };
 

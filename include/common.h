@@ -102,6 +102,7 @@ extern MODVAR int global_count, max_global_count;
 #ifdef _WIN32
 extern int gettimeofday(struct timeval *tp, void *tzp);
 #endif
+extern long long monotime_ns(void);
 
 #define PRECISE_CHECK
 

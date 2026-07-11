@@ -1890,6 +1890,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("10:15", i, "known-users", FLD_CONVERSATIONS); /* 10 users, new user every 15s */
 	config_parse_flood_generic("180:750", i, "known-users", FLD_LAG_PENALTY); /* 180 bytes / 750 msec */
 	config_parse_flood_generic("15:5250", i, "known-users", FLD_MULTILINE); /* max-lines=15, max-bytes=5250 */
+	config_parse_flood_generic("50:0", i, "known-users", FLD_MAX_PROCESSING_TIME); /* 50 msec */
 	/* - unknown-users */
 	config_parse_flood_generic("2:60", i, "unknown-users", FLD_NICK); /* NICK flood protection: max 2 per 60s */
 	config_parse_flood_generic("2:90", i, "unknown-users", FLD_JOIN); /* JOIN flood protection: max 2 per 90s */
@@ -1900,6 +1901,7 @@ void config_setdefaultsettings(Configuration *i)
 	config_parse_flood_generic("4:15", i, "unknown-users", FLD_CONVERSATIONS); /* 4 users, new user every 15s */
 	config_parse_flood_generic("90:1000", i, "unknown-users", FLD_LAG_PENALTY); /* 90 bytes / 1000 msec */
 	config_parse_flood_generic("7:1500", i, "unknown-users", FLD_MULTILINE); /* max-lines=7, max-bytes=1500 */
+	config_parse_flood_generic("25:0", i, "unknown-users", FLD_MAX_PROCESSING_TIME); /* 25 msec */
 
 	add_log_throttle_config(&i->log_throttle, "CONNTHROTTLE_IPV6_LIMIT", 100, 60, 0);
 	add_log_throttle_config(&i->log_throttle, "MAXPERIP_LIMIT", 100, 60, 0);
@@ -7983,6 +7985,15 @@ int _conf_set(ConfigFile *conf, ConfigEntry *ce)
 					} else if (!strcmp(ceppp->name, "knock-flood"))
 					{
 						config_parse_flood_generic(ceppp->value, &tempiConf, cepp->name, FLD_KNOCK);
+					} else if (!strcmp(ceppp->name, "max-processing-time"))
+					{
+						/* We use a hack here to make it fit our storage format */
+						char buf[32];
+						if (!strcmp(ceppp->value, "unlimited") || !strcmp(ceppp->value, "max"))
+							strlcpy(buf, ceppp->value, sizeof(buf));
+						else
+							snprintf(buf, sizeof(buf), "%s:0", ceppp->value);
+						config_parse_flood_generic(buf, &tempiConf, cepp->name, FLD_MAX_PROCESSING_TIME);
 					} else if (!strcmp(ceppp->name, "lag-penalty"))
 					{
 						lag_penalty = atoi(ceppp->value);
@@ -7999,7 +8010,7 @@ int _conf_set(ConfigFile *conf, ConfigEntry *ce)
 						tempiConf.throttle_period = period;
 					} else if (!strcmp(ceppp->name, "max-concurrent-conversations"))
 					{
-						/* We use a hack here to make it fit our storage format */
+						/* Again a hack: store 'users' in the limit and 'new-user-every' in the period */
 						char buf[64];
 						int users = 0;
 						long every = 0;
@@ -9141,6 +9152,18 @@ int _test_set(ConfigFile *conf, ConfigEntry *ce)
 					{
 						has_lag_penalty_bytes = 1;
 						CheckNull(ceppp);
+					} else if (!strcmp(ceppp->name, "max-processing-time"))
+					{
+						CheckNull(ceppp);
+						if (strcmp(ceppp->value, "unlimited") && strcmp(ceppp->value, "max"))
+						{
+							int v = atoi(ceppp->value);
+							if ((v < 1) || (v > 10000))
+							{
+								config_error("%s:%i: set::anti-flood::%s::max-processing-time: value is in msec, use 1-10000 or 'unlimited'", ceppp->file->filename, ceppp->line_number, cepp->name);
+								errors++;
+							}
+						}
 					} else if (!strcmp(ceppp->name, "connect-flood"))
 					{
 						int cnt, period;

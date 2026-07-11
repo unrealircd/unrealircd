@@ -1513,15 +1513,16 @@ typedef struct FloodCounter {
 /** This is the list of different flood counters that we keep for local clients. */
 /* IMPORTANT: If you change this, update floodoption_names[] in src/user.c too !!!!!!!!!!!! */
 typedef enum FloodOption {
-	FLD_NICK = 0,          /**< nick-flood */
-	FLD_JOIN = 1,          /**< join-flood */
-	FLD_AWAY = 2,          /**< away-flood */
-	FLD_INVITE = 3,        /**< invite-flood */
-	FLD_KNOCK = 4,         /**< knock-flood */
-	FLD_CONVERSATIONS = 5, /**< max-concurrent-conversations */
-	FLD_LAG_PENALTY = 6,   /**< lag-penalty / lag-penalty-bytes */
-	FLD_VHOST = 7,         /**< vhost-flood */
-	FLD_MULTILINE = 8,     /**< multiline max-lines / max-bytes */
+	FLD_NICK = 0,                /**< nick-flood */
+	FLD_JOIN = 1,                /**< join-flood */
+	FLD_AWAY = 2,                /**< away-flood */
+	FLD_INVITE = 3,              /**< invite-flood */
+	FLD_KNOCK = 4,               /**< knock-flood */
+	FLD_CONVERSATIONS = 5,       /**< max-concurrent-conversations */
+	FLD_LAG_PENALTY = 6,         /**< lag-penalty / lag-penalty-bytes */
+	FLD_VHOST = 7,               /**< vhost-flood */
+	FLD_MULTILINE = 8,           /**< multiline max-lines / max-bytes */
+	FLD_MAX_PROCESSING_TIME = 9, /**< max-processing-time */
 } FloodOption;
 #define MULTILINE_MAX_CONFIGURABLE_LINES 200    /**< Maximum configurable max-lines for multiline */
 #define MULTILINE_MAX_CONFIGURABLE_BYTES 131072 /**< Maximum configurable max-bytes for multiline (128KB) */
