@@ -319,6 +319,13 @@ CMD_FUNC(cmd_protoctl)
 			/* Send our PROTOCTL SERVERS= back if this was NOT a response */
 			if (*value != '*')
 				send_protoctl_servers(client, 1);
+
+			/* On an outgoing link we delayed our SERVER until now, so the
+			 * duplicate check above can reject a clashing link to the same
+			 * network before we introduce ourselves.
+			 */
+			if (IsHandshake(client) && !IsServerSent(client))
+				send_server_message(client);
 		} else if (!strcmp(name, "TS") && value && (IsServer(client) || IsEAuth(client)))
 		{
 			long t = atol(value);
@@ -383,10 +390,12 @@ CMD_FUNC(cmd_protoctl)
 
 	if (first_protoctl && IsHandshake(client) && client->server && !IsServerSent(client)) /* first & outgoing connection to server */
 	{
-		/* SERVER message moved from completed_connection() to here due to EAUTH/SERVERS PROTOCTL stuff,
-		 * which needed to be delayed until after both sides have received SERVERS=xx (..or not.. in case
-		 * of older servers).
+		/* Older servers do not send PROTOCTL SERVERS=, so we send our SERVER now.
+		 * Servers that do send it get their SERVER command later, from the SERVERS=
+		 * handler above, after we processed their list, so a clashing link to
+		 * the same network is rejected before we introduce ourselves.
 		 */
-		send_server_message(client);
+		if (client->server->features.protocol < 2351)
+			send_server_message(client);
 	}
 }

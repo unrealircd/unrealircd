@@ -14,6 +14,12 @@ This is work in progress and may not always be a stable version.
 ### Changes:
 
 ### Fixes:
+* Race condition in server linking. If a server was trying to link to
+  multiple servers at once, then the servers could clash causing a
+  connect+split. This could happen in the non-standard configuration where
+  [set::server-linking::autoconnect-strategy](https://www.unrealircd.org/docs/Set_block#set::server-linking)
+  was set to `parallel` instead of the default `sequential`. This change
+  means that `parallel` should now be safe to use.
 
 ### Developers and protocol:
 * New wiki articles: [Dev:Coding guidelines](https://www.unrealircd.org/docs/Dev:Coding_guidelines)
