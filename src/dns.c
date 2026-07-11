@@ -498,6 +498,14 @@ void unrealdns_cb_nametoip_link(void *arg, int status, int timeouts, struct host
 		return;
 	}
 
+	if (status == ARES_EDESTRUCTION)
+	{
+		/* Resolver is shutting down ('REHASH -dns'). We must end this request. */
+		r->linkblock->refcount--;
+		unrealdns_freeandremovereq(r);
+		return;
+	}
+
 	if ((status != 0) || !he->h_addr_list || !he->h_addr_list[0])
 	{
 		if (r->ipv6)
