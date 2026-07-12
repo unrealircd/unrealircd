@@ -1348,6 +1348,8 @@ int client_starttls(Client *client)
 	 */
 	SSL_CTX *ctx = (client->server && client->server->conf) ? tls_ctx_for_outgoing_link(client->server->conf) : ctx_client;
 
+	dbuf_delete(&client->local->recvQ, DBufLength(&client->local->recvQ)); /* drop any plaintext pipelined before TLS (as in cmd_starttls) */
+
 	if ((client->local->ssl = SSL_new(ctx)) == NULL)
 		goto fail_starttls;
 
