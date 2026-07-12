@@ -306,9 +306,9 @@ CMD_FUNC(cmd_protoctl)
 			aclient = find_pending_net_duplicates(client, &srv, &sid);
 			if (aclient)
 			{
-				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_LINKED", client,
+				unreal_log(ULOG_ERROR, "link", "LINK_DENIED_DUPLICATE_SID_PENDING", client,
 				           "Denied server $client: Server would (later) introduce SID $sid, "
-				           "but we already have SID $sid linked ($existing_client)\n"
+				           "but $existing_client is also currently linking in with the same SID.\n"
 				           "Possible race condition, just wait a moment for the network to synchronize...",
 				           log_data_string("sid", sid),
 				           log_data_client("existing_client", aclient));
