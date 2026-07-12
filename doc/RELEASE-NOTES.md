@@ -12,6 +12,11 @@ This is work in progress and may not always be a stable version.
   unknown-users and 50ms for known-users.
 
 ### Changes:
+* The [GeoIP](https://www.unrealircd.org/docs/GeoIP) engine was already
+  switched to `geoip_mmdb` in 6.2.4 for new installations. We now change
+  the default for existing installations as well. The old engine
+  `geoip_classic` is now deprecated and we will stop database updates
+  for classic somewhere in 2027.
 
 ### Fixes:
 * Race condition in server linking. If a server was trying to link to

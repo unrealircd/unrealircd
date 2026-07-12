@@ -49,6 +49,15 @@ if [ -z "$BINDIR" -o -z "$DATADIR" -o -z "$CONFDIR" -o -z "$MODULESDIR" -o -z "$
 	exit
 fi
 
+if [ "$QUICK" = "1" -a "$GEOIP" = "classic" ]; then
+	echo ""
+	echo "WARNING: You are using GeoIP engine 'classic', which is being phased out"
+	echo "         and will stop receiving database updates somewhere in 2027."
+	echo "         Please consider switching to 'mmdb'."
+	echo ""
+	echo "(Sleeping 10 seconds so you can read this message...)"
+	sleep 10
+fi
 
 mkdir -p $BASEPATH
 mkdir -p $TMPDIR
@@ -770,18 +779,30 @@ while [ -z "$TEST" ] ; do
 	esac
 done
 
+# Older library, same idea, convert...
+if [ "$GEOIP" = "libmaxminddb" ]; then
+	GEOIP="mmdb"
+fi
+
+if [ "$GEOIP" = "classic" ]; then
+	echo ""
+	echo "WARNING: You previously used GeoIP engine 'classic', which is being phased out."
+	echo "         Default changed to 'mmdb' for the question below."
+	GEOIP="mmdb"
+fi
+
 TEST=""
 while [ -z "$TEST" ] ; do
 	TEST="$GEOIP"
 	echo ""
 	echo "GeoIP is a feature that allows converting an IP address to a location (country)"
 	echo "Possible build options:"
-	echo "classic: This is the classic (OLD) geoip engine. Slowly being phased out."
+	echo "   mmdb: This uses the built-in mmdb library. It is the new default geoip engine."
 	echo "         It receives automatic updates."
-	echo "   mmdb: This uses the build-in mmdb library. It is the NEW geoip engine."
-	echo "         It receives automatic updates as well."
+	echo "classic: This is the classic geoip engine. It is DEPRECATED."
+	echo "         Somewhere in 2027 we will stop with database updates for 'classic'."
 	echo "   none: Don't build classic, and load neither classic nor mmdb by default."
-	echo "Choose one of: classic, mmdb, none"
+	echo "Choose one of: mmdb, classic, none"
 	echo $n "[$TEST] -> $c"
 	read cc
 	if [ -z "$cc" ] ; then
