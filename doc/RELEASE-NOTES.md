@@ -26,6 +26,8 @@ This is work in progress and may not always be a stable version.
   was set to `parallel` instead of the default `sequential`. This change
   means that `parallel` should now be safe to use.
 * The memory log, that JSON-RPC log.getall uses, was cleaned up too much.
+* Channel mode `+f` type `r` (repeat) has normalization (like ignoring
+  upper/lowercase and color), but this normalization was accidently ignored.
 
 ### Developers and protocol:
 * New wiki articles: [Dev:Coding guidelines](https://www.unrealircd.org/docs/Dev:Coding_guidelines)

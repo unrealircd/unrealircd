@@ -2011,7 +2011,7 @@ uint64_t gen_floodprot_msghash(const char *text)
 			plaintext += 7;
 	}
 
-	return siphash(text, floodprot_msghash_key);
+	return siphash(plaintext, floodprot_msghash_key);
 }
 
 // FIXME: REMARK: make sure you can only do a +f/-f once (latest in line wins).
