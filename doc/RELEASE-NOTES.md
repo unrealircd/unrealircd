@@ -25,6 +25,7 @@ This is work in progress and may not always be a stable version.
   [set::server-linking::autoconnect-strategy](https://www.unrealircd.org/docs/Set_block#set::server-linking)
   was set to `parallel` instead of the default `sequential`. This change
   means that `parallel` should now be safe to use.
+* The memory log, that JSON-RPC log.getall uses, was cleaned up too much.
 
 ### Developers and protocol:
 * New wiki articles: [Dev:Coding guidelines](https://www.unrealircd.org/docs/Dev:Coding_guidelines)

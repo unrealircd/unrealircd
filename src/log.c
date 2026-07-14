@@ -2271,15 +2271,9 @@ EVENT(memory_log_cleaner)
 	if (l->max_lines)
 	{
 		int to_delete = memory_log_entries - l->max_lines;
-		if (to_delete > 0)
-		{
-			/* Delete the oldest ### entries */
-			for (e = memory_log; e; e = e_next)
-			{
-				e_next = e->next;
-				free_memory_log_item(e);
-			}
-		}
+		/* Delete the oldest 'to_delete' entries (memory_log points to the oldest) */
+		while ((to_delete-- > 0) && memory_log)
+			free_memory_log_item(memory_log);
 	}
 
 	/* Now, erase by date/time */
