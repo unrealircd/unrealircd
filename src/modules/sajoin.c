@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_sajoin);
 
-#define MSG_SAJOIN 	"SAJOIN"	
+#define MSG_SAJOIN "SAJOIN"
 
-ModuleHeader MOD_HEADER
-  = {
-	"sajoin",
-	"5.0",
-	"command /sajoin", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sajoin",
+    "5.0",
+    "command /sajoin",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SAJOIN, cmd_sajoin, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SAJOIN, cmd_sajoin, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -58,13 +57,14 @@ static void log_sajoin(Client *client, MessageTag *mtags, Client *target, const 
 	if (issuer)
 	{
 		unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $issuer used SAJOIN to make $target join $channels",
-			   log_data_string("issuer", issuer),
-			   log_data_client("target", target),
-			   log_data_string("channels", channels));
-	} else {
+		           log_data_string("issuer", issuer),
+		           log_data_client("target", target),
+		           log_data_string("channels", channels));
+	} else
+	{
 		unreal_log(ULOG_INFO, "sacmds", "SAJOIN_COMMAND", client, "SAJOIN: $client used SAJOIN to make $target join $channels",
-			   log_data_client("target", target),
-			   log_data_string("channels", channels));
+		           log_data_client("target", target),
+		           log_data_string("channels", channels));
 	}
 }
 
@@ -97,7 +97,7 @@ CMD_FUNC(cmd_sajoin)
 	}
 
 	/* Is this user disallowed from operating on this victim at all? */
-	if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,NULL,NULL))
+	if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin", client, target, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -121,7 +121,7 @@ CMD_FUNC(cmd_sajoin)
 	{
 		char *name, *p = NULL;
 		int parted = 0;
-	
+
 		*jbuf = 0;
 
 		/* Now works like cmd_join */
@@ -168,7 +168,7 @@ CMD_FUNC(cmd_sajoin)
 			channel = make_channel(name);
 
 			/* If this _specific_ channel is not permitted, skip it */
-			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin",client,target,channel,NULL))
+			if (!IsULine(client) && !ValidatePermissionsForPath("sacmd:sajoin", client, target, channel, NULL))
 			{
 				sendnumeric(client, ERR_NOPRIVILEGES);
 				continue;
@@ -242,7 +242,7 @@ CMD_FUNC(cmd_sajoin)
 			i = HOOK_CONTINUE;
 			for (h = Hooks[HOOKTYPE_CAN_SAJOIN]; h; h = h->next)
 			{
-				i = (*(h->func.intfunc))(target,channel,client);
+				i = (*(h->func.intfunc))(target, channel, client);
 				if (i != HOOK_CONTINUE)
 					break;
 			}
@@ -284,7 +284,7 @@ CMD_FUNC(cmd_sajoin)
 				strlcat(jbuf, ",", sizeof jbuf);
 			strlcat(jbuf, name, sizeof jbuf);
 		}
-		
+
 		if (did_anything)
 		{
 			sendnotice(target, "*** You were forced to join %s", jbuf);

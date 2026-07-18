@@ -7,13 +7,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"chathistory",
-	"1.0",
-	"IRCv3 CHATHISTORY command",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "chathistory",
+    "1.0",
+    "IRCv3 CHATHISTORY command",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Structs */
@@ -26,6 +25,7 @@ struct ChatHistoryTarget {
 
 /* Forward declarations */
 CMD_FUNC(cmd_chathistory);
+int chathistory_end_mtag_is_ok(Client *client, const char *name, const char *value);
 
 /* Global variables */
 long CAP_CHATHISTORY = 0L;
@@ -35,13 +35,22 @@ long CAP_CHATHISTORY = 0L;
 MOD_INIT()
 {
 	ClientCapabilityInfo c;
+	ClientCapability *cap;
+	MessageTagHandlerInfo mtag;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	CommandAdd(modinfo->handle, "CHATHISTORY", cmd_chathistory, MAXPARA, CMD_USER);
 
 	memset(&c, 0, sizeof(c));
 	c.name = "draft/chathistory";
-	ClientCapabilityAdd(modinfo->handle, &c, &CAP_CHATHISTORY);
+	cap = ClientCapabilityAdd(modinfo->handle, &c, &CAP_CHATHISTORY);
+
+	memset(&mtag, 0, sizeof(mtag));
+	mtag.name = "draft/chathistory-end";
+	mtag.is_ok = chathistory_end_mtag_is_ok;
+	mtag.clicap_handler = cap;
+	MessageTagHandlerAdd(modinfo->handle, &mtag);
+
 	return MOD_SUCCESS;
 }
 
@@ -55,6 +64,14 @@ MOD_LOAD()
 MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
+}
+
+/** The draft/chathistory-end tag is server-generated only; reject it from clients */
+int chathistory_end_mtag_is_ok(Client *client, const char *name, const char *value)
+{
+	if (IsServer(client))
+		return 1;
+	return 0;
 }
 
 int chathistory_token(const char *str, char *token, char **store)
@@ -105,7 +122,8 @@ static void add_chathistory_target_list(ChatHistoryTarget *new, ChatHistoryTarge
 			new->next = x;
 			x->prev->next = new;
 			x->prev = new;
-		} else {
+		} else
+		{
 			/* We are the new head */
 			*list = new;
 			new->next = x;
@@ -149,7 +167,7 @@ static void chathistory_targets_send_line(Client *client, ChatHistoryTarget *r, 
 	}
 
 	sendto_one(client, mtags, ":%s CHATHISTORY TARGETS %s %s",
-		me.name, r->object, r->datetime);
+	           me.name, r->object, r->datetime);
 
 	if (mtags)
 		free_message_tags(mtags);
@@ -159,7 +177,7 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 {
 	Membership *mp;
 	HistoryResult *r;
-	char batch[BATCHLEN+1];
+	char batch[BATCHLEN + 1];
 	int sent = 0;
 	ChatHistoryTarget *targets = NULL, *targets_next;
 
@@ -188,18 +206,34 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 
 	/* 2. Now send it to the client */
 
+	/* Count total matching targets to determine end-of-pagination */
+	{
+		ChatHistoryTarget *t;
+		for (t = targets; t; t = t->next)
+			sent++;
+	}
+
 	batch[0] = '\0';
 	if (HasCapability(client, "batch"))
 	{
 		/* Start a new batch */
+		MessageTag *batch_open_mtags = NULL;
 		generate_batch_id(batch);
-		sendto_one(client, NULL, ":%s BATCH +%s draft/chathistory-targets", me.name, batch);
+		if (sent <= limit)
+		{
+			batch_open_mtags = safe_alloc(sizeof(MessageTag));
+			safe_strdup(batch_open_mtags->name, "draft/chathistory-end");
+		}
+		sendto_one(client, batch_open_mtags, ":%s BATCH +%s draft/chathistory-targets", me.name, batch);
+		if (batch_open_mtags)
+			free_message_tags(batch_open_mtags);
 	}
 
+	sent = 0;
 	for (; targets; targets = targets_next)
 	{
 		targets_next = targets->next;
-		if (++sent < limit)
+		if (sent++ < limit)
 			chathistory_targets_send_line(client, targets, batch);
 		safe_free(targets->datetime);
 		safe_free(targets->object);
@@ -213,7 +247,7 @@ void chathistory_targets(Client *client, HistoryFilter *filter, int limit)
 
 void send_empty_batch(Client *client, const char *target)
 {
-	char batch[BATCHLEN+1];
+	char batch[BATCHLEN + 1];
 
 	if (HasCapability(client, "batch"))
 	{
@@ -260,13 +294,13 @@ CMD_FUNC(cmd_chathistory)
 		if (!chathistory_token(parv[2], "timestamp", &filter->timestamp_a))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx",
-				me.name, parv[1], parv[3]);
+			           me.name, parv[1], parv[3]);
 			goto end;
 		}
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_b))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx",
-				me.name, parv[1], parv[4]);
+			           me.name, parv[1], parv[4]);
 			goto end;
 		}
 		limit = atoi(parv[4]);
@@ -285,14 +319,14 @@ CMD_FUNC(cmd_chathistory)
 	if (!channel)
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, not an existing channel",
-			me.name, parv[1], parv[2]);
+		           me.name, parv[1], parv[2]);
 		return;
 	}
 
 	if (!IsMember(client, channel))
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_TARGET %s %s :Messages could not be retrieved, you are not a member",
-			me.name, parv[1], parv[2]);
+		           me.name, parv[1], parv[2]);
 		return;
 	}
 
@@ -313,24 +347,22 @@ CMD_FUNC(cmd_chathistory)
 		    !chathistory_token(parv[3], "msgid", &filter->msgid_a))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
-				me.name, parv[1], parv[3]);
+			           me.name, parv[1], parv[3]);
 			goto end;
 		}
 		filter->limit = atoi(parv[4]);
-	} else
-	if (!strcasecmp(parv[1], "AFTER"))
+	} else if (!strcasecmp(parv[1], "AFTER"))
 	{
 		filter->cmd = HFC_AFTER;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
 		    !chathistory_token(parv[3], "msgid", &filter->msgid_a))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
-				me.name, parv[1], parv[3]);
+			           me.name, parv[1], parv[3]);
 			goto end;
 		}
 		filter->limit = atoi(parv[4]);
-	} else
-	if (!strcasecmp(parv[1], "LATEST"))
+	} else if (!strcasecmp(parv[1], "LATEST"))
 	{
 		filter->cmd = HFC_LATEST;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
@@ -338,24 +370,22 @@ CMD_FUNC(cmd_chathistory)
 		    strcmp(parv[3], "*"))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx or *",
-				me.name, parv[1], parv[3]);
+			           me.name, parv[1], parv[3]);
 			goto end;
 		}
 		filter->limit = atoi(parv[4]);
-	} else
-	if (!strcasecmp(parv[1], "AROUND"))
+	} else if (!strcasecmp(parv[1], "AROUND"))
 	{
 		filter->cmd = HFC_AROUND;
 		if (!chathistory_token(parv[3], "timestamp", &filter->timestamp_a) &&
 		    !chathistory_token(parv[3], "msgid", &filter->msgid_a))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
-				me.name, parv[1], parv[3]);
+			           me.name, parv[1], parv[3]);
 			goto end;
 		}
 		filter->limit = atoi(parv[4]);
-	} else
-	if (!strcasecmp(parv[1], "BETWEEN"))
+	} else if (!strcasecmp(parv[1], "BETWEEN"))
 	{
 		filter->cmd = HFC_BETWEEN;
 		if (BadPtr(parv[5]))
@@ -367,18 +397,19 @@ CMD_FUNC(cmd_chathistory)
 		    !chathistory_token(parv[3], "msgid", &filter->msgid_a))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
-				me.name, parv[1], parv[3]);
+			           me.name, parv[1], parv[3]);
 			goto end;
 		}
 		if (!chathistory_token(parv[4], "timestamp", &filter->timestamp_b) &&
 		    !chathistory_token(parv[4], "msgid", &filter->msgid_b))
 		{
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %s :Invalid parameter, must be timestamp=xxx or msgid=xxx",
-				me.name, parv[1], parv[4]);
+			           me.name, parv[1], parv[4]);
 			goto end;
 		}
 		filter->limit = atoi(parv[5]);
-	} else {
+	} else
+	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s :Invalid subcommand", me.name, parv[1]);
 		goto end;
 	}
@@ -386,7 +417,7 @@ CMD_FUNC(cmd_chathistory)
 	if (filter->limit <= 0)
 	{
 		sendto_one(client, NULL, ":%s FAIL CHATHISTORY INVALID_PARAMS %s %d :Specified limit is =<0",
-			me.name, parv[1], filter->limit);
+		           me.name, parv[1], filter->limit);
 		goto end;
 	}
 
@@ -395,14 +426,15 @@ CMD_FUNC(cmd_chathistory)
 
 	if ((r = history_request(channel->name, filter)))
 	{
-		if ((r->num_bytes*1.5) > get_sendq(client))
+		if ((r->num_bytes * 1.5) > get_sendq(client))
 		{
 			/* This would get rather close to max sendq. We reject
 			 * the request as to not cause "Max SendQ exceeded".
 			 */
 			sendto_one(client, NULL, ":%s FAIL CHATHISTORY MESSAGE_ERROR %s %s :History too large to deliver",
-				me.name, parv[1], channel->name);
-		} else {
+			           me.name, parv[1], channel->name);
+		} else
+		{
 			/* All ok, bump fake lag and add the result.
 			 * The fakelag bump under normal circumstances is tiny
 			 * at like 400ms worst-case without multiline. However, it
@@ -418,7 +450,7 @@ CMD_FUNC(cmd_chathistory)
 			if (fakelag_ms > 5000)
 				fakelag_ms = 5000;
 			add_fake_lag(client, fakelag_ms);
-			history_send_result(client, r);
+			history_send_result(client, r, r->reached_end);
 		}
 	}
 

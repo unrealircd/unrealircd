@@ -13,14 +13,13 @@
  #define CALLBACKTYPE_REPUTATION_STARTTIME 5
 #endif
 
-ModuleHeader MOD_HEADER
-  = {
-	"connthrottle",
-	CONNTHROTTLE_VERSION,
-	"Connection throttler - by Syzop",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "connthrottle",
+    CONNTHROTTLE_VERSION,
+    "Connection throttler - by Syzop",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 typedef struct {
 	int count;
@@ -50,16 +49,16 @@ typedef struct {
 
 typedef struct UCounter UCounter;
 struct UCounter {
-	ThrottleCounter local;		/**< Local counter */
-	ThrottleCounter global;		/**< Global counter */
-	int rejected_clients;		/**< Number of rejected clients this minute */
-	int allowed_except;		/**< Number of allowed clients - on except list */
-	int allowed_unknown_users;	/**< Number of allowed clients - not on except list */
-	char disabled;			/**< Module disabled by oper? */
-	int throttling_this_minute;	/**< Did we do any throttling this minute? */
-	int throttling_previous_minute;	/**< Did we do any throttling previous minute? */
-	int throttling_banner_displayed;/**< Big we-are-now-throttling banner displayed? */
-	time_t next_event;		/**< When is next event? (for "last 60 seconds" stats) */
+	ThrottleCounter local;          /**< Local counter */
+	ThrottleCounter global;         /**< Global counter */
+	int rejected_clients;           /**< Number of rejected clients this minute */
+	int allowed_except;             /**< Number of allowed clients - on except list */
+	int allowed_unknown_users;      /**< Number of allowed clients - not on except list */
+	char disabled;                  /**< Module disabled by oper? */
+	int throttling_this_minute;     /**< Did we do any throttling this minute? */
+	int throttling_previous_minute; /**< Did we do any throttling previous minute? */
+	int throttling_banner_displayed; /**< Big we-are-now-throttling banner displayed? */
+	time_t next_event;  /**< When is next event? (for "last 60 seconds" stats) */
 };
 UCounter *ucounter = NULL;
 
@@ -81,12 +80,12 @@ RPC_CALL_FUNC(rpc_connthrottle_reset);
 
 /* IPv6 wider-prefix bucket tracking (/56, /48, /32) */
 
-#define CT_NUM_TIERS 3
+#define CT_NUM_TIERS        3
 #define CT_BUCKET_HASH_SIZE 2048
 
 #ifdef DEBUGMODE
 /** Self-check of IPv6 CIDR limits every <this> msec */
-#define CONNTHROTTLE_CHECK 1000
+ #define CONNTHROTTLE_CHECK 1000
 #endif
 
 /* Per-client classification stored in our ModData slot.
@@ -94,10 +93,10 @@ RPC_CALL_FUNC(rpc_connthrottle_reset);
  * "this client has not been added to our buckets yet".
  */
 typedef enum {
-	CT_CATEGORY_NONE              = 0,
-	CT_CATEGORY_KNOWN_USERS       = 1,
+	CT_CATEGORY_NONE = 0,
+	CT_CATEGORY_KNOWN_USERS = 1,
 	CT_CATEGORY_EXCEPTED_UNKNOWNS = 2,
-	CT_CATEGORY_UNKNOWN_USERS     = 3,
+	CT_CATEGORY_UNKNOWN_USERS = 3,
 } ConnThrottleCategory;
 
 typedef struct ConnThrottleBucket ConnThrottleBucket;
@@ -114,7 +113,7 @@ struct ConnThrottleBucket {
 #endif
 };
 
-static const int ct_tier_prefix[CT_NUM_TIERS] = { 56, 48, 32 };
+static const int ct_tier_prefix[CT_NUM_TIERS] = {56, 48, 32};
 static ConnThrottleBucket **ct_bucket_hash[CT_NUM_TIERS];
 static char *siphashkey_ct_buckets = NULL;
 static ModDataInfo *connthrottle_md = NULL;
@@ -122,7 +121,7 @@ static ModDataInfo *connthrottle_md = NULL;
 /* Per-client classification cached in ModData. CT_CATEGORY_NONE means
  * "this client has not been added to our buckets yet" (or has been removed).
  */
-#define CT_CATEGORY(client)	moddata_client((client), connthrottle_md).l
+#define CT_CATEGORY(client) moddata_client((client), connthrottle_md).l
 
 static void ct_make_rawip(Client *client, int tier, char *out);
 static uint64_t ct_hash_bucket(const char *masked);
@@ -148,24 +147,26 @@ EVENT(ct_check);
 MOD_TEST()
 {
 	memset(&cfg, 0, sizeof(cfg));
-	
+
 	/* Defaults: */
-	cfg.local.count = 20; cfg.local.period = 60;
-	cfg.global.count = 30; cfg.global.period = 60;
-	cfg.start_delay = 180;		/* 3 minutes */
-	cfg.reputation_gathering = 7*86400;	/* 1 week */
+	cfg.local.count = 20;
+	cfg.local.period = 60;
+	cfg.global.count = 30;
+	cfg.global.period = 60;
+	cfg.start_delay = 180;  /* 3 minutes */
+	cfg.reputation_gathering = 7 * 86400; /* 1 week */
 	safe_strdup(cfg.reason, "Throttled: Too many users trying to connect, please wait a while and try again");
 	cfg.except = safe_alloc(sizeof(SecurityGroup));
 	cfg.except->reputation_score = 24;
 	cfg.except->identified = 1;
 	cfg.except->webirc = 0;
-	cfg.ipv6_unknown_users_limit[0] = 8;	/* /56 */
-	cfg.ipv6_unknown_users_limit[1] = 32;	/* /48 */
-	cfg.ipv6_unknown_users_limit[2] = 256;	/* /32 */
+	cfg.ipv6_unknown_users_limit[0] = 8;   /* /56 */
+	cfg.ipv6_unknown_users_limit[1] = 32;  /* /48 */
+	cfg.ipv6_unknown_users_limit[2] = 256; /* /32 */
 
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, ct_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, ct_config_posttest);
-	
+
 	return MOD_SUCCESS;
 }
 
@@ -187,7 +188,7 @@ MOD_INIT()
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "connthrottle_category";
 	mreq.type = MODDATATYPE_CLIENT;
-	mreq.sync = 0;	/* local only, no S2S sync */
+	mreq.sync = 0; /* local only, no S2S sync */
 	connthrottle_md = ModDataAdd(modinfo->handle, mreq);
 	if (!connthrottle_md)
 	{
@@ -207,7 +208,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_KNOWN_USER_CACHE_CHANGE, 0, ct_known_user_cache_change);
 	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, stats_connthrottle);
 
-	CommandAdd(modinfo->handle, MSG_THROTTLE, ct_throttle, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_THROTTLE, ct_throttle, MAXPARA, CMD_USER | CMD_SERVER);
 
 	/* RPC handlers */
 	memset(&r, 0, sizeof(r));
@@ -295,18 +296,17 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::connthrottle.. */
 	if (!ce || !ce->name || strcmp(ce->name, "connthrottle"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
-		} else
-		if (!strcmp(cep->name, "known-users"))
+		} else if (!strcmp(cep->name, "known-users"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -317,15 +317,13 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					if (cnt < 1)
 					{
 						config_error("%s:%i: set::connthrottle::known-users::minimum-reputation-score should be at least 1",
-							cepp->file->filename, cepp->line_number);
+						             cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
-				} else
-				if (!strcmp(cepp->name, "sasl-bypass"))
+				} else if (!strcmp(cepp->name, "sasl-bypass"))
 				{
-				} else
-				if (!strcmp(cepp->name, "webirc-bypass"))
+				} else if (!strcmp(cepp->name, "webirc-bypass"))
 				{
 				} else
 				{
@@ -334,8 +332,7 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					errors++;
 				}
 			}
-		} else
-		if (!strcmp(cep->name, "new-users"))
+		} else if (!strcmp(cep->name, "new-users"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -347,23 +344,22 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					    (cnt < 1) || (cnt > 2000000000) || (period > 2000000000))
 					{
 						config_error("%s:%i: set::connthrottle::new-users::local-throttle error. "
-							     "Syntax is <count>:<period> (eg 6:60), "
-							     "and count and period should be non-zero.",
-							     cepp->file->filename, cepp->line_number);
+						             "Syntax is <count>:<period> (eg 6:60), "
+						             "and count and period should be non-zero.",
+						             cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
-				} else
-				if (!strcmp(cepp->name, "global-throttle"))
+				} else if (!strcmp(cepp->name, "global-throttle"))
 				{
 					int cnt, period;
 					if (!config_parse_flood(cepp->value, &cnt, &period) ||
 					    (cnt < 1) || (cnt > 2000000000) || (period > 2000000000))
 					{
 						config_error("%s:%i: set::connthrottle::new-users::global-throttle error. "
-							     "Syntax is <count>:<period> (eg 6:60), "
-							     "and count and period should be non-zero.",
-							     cepp->file->filename, cepp->line_number);
+						             "Syntax is <count>:<period> (eg 6:60), "
+						             "and count and period should be non-zero.",
+						             cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
@@ -374,8 +370,7 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					errors++;
 				}
 			}
-		} else
-		if (!strcmp(cep->name, "disabled-when"))
+		} else if (!strcmp(cep->name, "disabled-when"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -386,12 +381,11 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					if ((cnt < 0) || (cnt > 3600))
 					{
 						config_error("%s:%i: set::connthrottle::disabled-when::start-delay should be in range 0-3600",
-							cepp->file->filename, cepp->line_number);
+						             cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
-				} else
-				if (!strcmp(cepp->name, "reputation-gathering"))
+				} else if (!strcmp(cepp->name, "reputation-gathering"))
 				{
 				} else
 				{
@@ -400,12 +394,10 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					errors++;
 				}
 			}
-		} else
-		if (!strcmp(cep->name, "reason"))
+		} else if (!strcmp(cep->name, "reason"))
 		{
 			CheckNull(cep);
-		} else
-		if (!strcmp(cep->name, "ipv6-unknown-users-limit"))
+		} else if (!strcmp(cep->name, "ipv6-unknown-users-limit"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -441,12 +433,12 @@ int ct_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		} else
 		{
 			config_error("%s:%i: unknown directive set::connthrottle::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -458,18 +450,17 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::connthrottle.. */
 	if (!ce || !ce->name || strcmp(ce->name, "connthrottle"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &cfg.except);
-		} else
-		if (!strcmp(cep->name, "known-users"))
+		} else if (!strcmp(cep->name, "known-users"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -480,8 +471,7 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 				else if (!strcmp(cepp->name, "webirc-bypass"))
 					cfg.except->webirc = config_checkval(cepp->value, CFG_YESNO);
 			}
-		} else
-		if (!strcmp(cep->name, "new-users"))
+		} else if (!strcmp(cep->name, "new-users"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -490,8 +480,7 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 				else if (!strcmp(cepp->name, "global-throttle"))
 					config_parse_flood(cepp->value, &cfg.global.count, &cfg.global.period);
 			}
-		} else
-		if (!strcmp(cep->name, "disabled-when"))
+		} else if (!strcmp(cep->name, "disabled-when"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -500,14 +489,12 @@ int ct_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 				else if (!strcmp(cepp->name, "reputation-gathering"))
 					cfg.reputation_gathering = config_checkval(cepp->value, CFG_TIME);
 			}
-		} else
-		if (!strcmp(cep->name, "reason"))
+		} else if (!strcmp(cep->name, "reason"))
 		{
 			safe_free(cfg.reason);
-			cfg.reason = safe_alloc(strlen(cep->value)+16);
+			cfg.reason = safe_alloc(strlen(cep->value) + 16);
 			sprintf(cfg.reason, "Throttled: %s", cep->value);
-		} else
-		if (!strcmp(cep->name, "ipv6-unknown-users-limit"))
+		} else if (!strcmp(cep->name, "ipv6-unknown-users-limit"))
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
@@ -580,11 +567,11 @@ EVENT(connthrottle_evt)
 	ucounter->throttling_banner_displayed = 0; /* reset */
 }
 
-#define THROT_LOCAL 1
+#define THROT_LOCAL  1
 #define THROT_GLOBAL 2
 int ct_pre_lconnect(Client *client)
 {
-	int throttle=0;
+	int throttle = 0;
 	int score;
 
 	if (me.local->creationtime + cfg.start_delay > TStime())
@@ -603,11 +590,11 @@ int ct_pre_lconnect(Client *client)
 	/* If we reach this then the user is NEW */
 
 	/* +1 global client would reach global limit? */
-	if ((TStime() - ucounter->global.t < cfg.global.period) && (ucounter->global.count+1 > cfg.global.count))
+	if ((TStime() - ucounter->global.t < cfg.global.period) && (ucounter->global.count + 1 > cfg.global.count))
 		throttle |= THROT_GLOBAL;
 
 	/* +1 local client would reach local limit? */
-	if ((TStime() - ucounter->local.t < cfg.local.period) && (ucounter->local.count+1 > cfg.local.count))
+	if ((TStime() - ucounter->local.t < cfg.local.period) && (ucounter->local.count + 1 > cfg.local.count))
 		throttle |= THROT_LOCAL;
 
 	if (throttle)
@@ -640,7 +627,8 @@ void bump_connect_counter(int local_connect)
 		{
 			ucounter->local.t = TStime();
 			ucounter->local.count = 1;
-		} else {
+		} else
+		{
 			ucounter->local.count++;
 		}
 	}
@@ -650,7 +638,8 @@ void bump_connect_counter(int local_connect)
 	{
 		ucounter->global.t = TStime();
 		ucounter->global.count = 1;
-	} else {
+	} else
+	{
 		ucounter->global.count++;
 	}
 }
@@ -750,7 +739,7 @@ void ct_off(Client *client)
 
 	ucounter->disabled = 1;
 	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_MODULE_DISABLED", client,
-		   "[ConnThrottle] $client.details DISABLED the connthrottle module.");
+	           "[ConnThrottle] $client.details DISABLED the connthrottle module.");
 }
 
 void ct_on(Client *client)
@@ -759,7 +748,7 @@ void ct_on(Client *client)
 		return; /* Already on */
 
 	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_MODULE_ENABLED", client,
-		   "[ConnThrottle] $client.details ENABLED the connthrottle module.");
+	           "[ConnThrottle] $client.details ENABLED the connthrottle module.");
 	ucounter->disabled = 0;
 }
 
@@ -767,7 +756,7 @@ void ct_reset(Client *client)
 {
 	memset(ucounter, 0, sizeof(UCounter));
 	unreal_log(ULOG_WARNING, "connthrottle", "CONNTHROTTLE_RESET", client,
-		   "[ConnThrottle] $client.details did a RESET on the statistics/counters.");
+	           "[ConnThrottle] $client.details did a RESET on the statistics/counters.");
 }
 
 CMD_FUNC(ct_throttle)
@@ -788,8 +777,7 @@ CMD_FUNC(ct_throttle)
 	{
 		sendnotice(client, "STATUS:");
 		sendnotice(client, "%s", ct_module_status_text());
-	} else
-	if (!strcasecmp(parv[1], "OFF"))
+	} else if (!strcasecmp(parv[1], "OFF"))
 	{
 		if (ucounter->disabled == 1)
 		{
@@ -797,8 +785,7 @@ CMD_FUNC(ct_throttle)
 			return;
 		}
 		ct_off(client);
-	} else
-	if (!strcasecmp(parv[1], "ON"))
+	} else if (!strcasecmp(parv[1], "ON"))
 	{
 		if (ucounter->disabled == 0)
 		{
@@ -806,8 +793,7 @@ CMD_FUNC(ct_throttle)
 			return;
 		}
 		ct_on(client);
-	} else
-	if (!strcasecmp(parv[1], "RESET"))
+	} else if (!strcasecmp(parv[1], "RESET"))
 	{
 		ct_reset(client);
 	} else
@@ -877,14 +863,14 @@ static void ct_check_walk_one(Client *client)
 
 	category = CT_CATEGORY(client);
 	if (category == CT_CATEGORY_NONE)
-		return;	/* not in our buckets */
+		return; /* not in our buckets */
 	if (!IsIPV6(client) || !client->ip)
 	{
 		unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_CHECK_NO_IP", client,
 		           "[BUG] connthrottle counter check: client has category but no IPv6 IP");
-#ifdef DEBUGMODE
+ #ifdef DEBUGMODE
 		abort();
-#endif
+ #endif
 		return;
 	}
 	for (tier = 0; tier < CT_NUM_TIERS; tier++)
@@ -896,17 +882,24 @@ static void ct_check_walk_one(Client *client)
 			unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_CHECK_NO_BUCKET", client,
 			           "[BUG] connthrottle counter check: client has category but no bucket at /$prefix",
 			           log_data_integer("prefix", ct_tier_prefix[tier]));
-#ifdef DEBUGMODE
+ #ifdef DEBUGMODE
 			abort();
-#endif
+ #endif
 			continue;
 		}
 		switch (category)
 		{
-			case CT_CATEGORY_KNOWN_USERS:       b->check_known++;    break;
-			case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->check_excepted++; break;
-			case CT_CATEGORY_UNKNOWN_USERS:     b->check_unknown++;  break;
-			case CT_CATEGORY_NONE:              break;	/* unreachable per filter */
+			case CT_CATEGORY_KNOWN_USERS:
+				b->check_known++;
+				break;
+			case CT_CATEGORY_EXCEPTED_UNKNOWNS:
+				b->check_excepted++;
+				break;
+			case CT_CATEGORY_UNKNOWN_USERS:
+				b->check_unknown++;
+				break;
+			case CT_CATEGORY_NONE:
+				break; /* unreachable per filter */
 		}
 	}
 }
@@ -933,9 +926,9 @@ EVENT(ct_check)
 		{
 			for (b = ct_bucket_hash[tier][i]; b; b = b->next)
 			{
-				if (b->check_known    != b->known_users ||
+				if (b->check_known != b->known_users ||
 				    b->check_excepted != b->excepted_unknowns ||
-				    b->check_unknown  != b->unknown_users)
+				    b->check_unknown != b->unknown_users)
 				{
 					unreal_log(ULOG_ERROR, "connthrottle", "BUG_CT_CHECK_DRIFT", NULL,
 					           "[BUG] connthrottle bucket counter drift at /$prefix: "
@@ -948,9 +941,9 @@ EVENT(ct_check)
 					           log_data_integer("exp_k", b->check_known),
 					           log_data_integer("exp_e", b->check_excepted),
 					           log_data_integer("exp_u", b->check_unknown));
-#ifdef DEBUGMODE
+ #ifdef DEBUGMODE
 					abort();
-#endif
+ #endif
 				}
 			}
 		}
@@ -1100,10 +1093,17 @@ static void ct_bucket_increment(ConnThrottleBucket *b, ConnThrottleCategory cate
 {
 	switch (category)
 	{
-		case CT_CATEGORY_NONE:              break;	/* not classified: no-op */
-		case CT_CATEGORY_KNOWN_USERS:       b->known_users++;       break;
-		case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->excepted_unknowns++; break;
-		case CT_CATEGORY_UNKNOWN_USERS:     b->unknown_users++;     break;
+		case CT_CATEGORY_NONE:
+			break; /* not classified: no-op */
+		case CT_CATEGORY_KNOWN_USERS:
+			b->known_users++;
+			break;
+		case CT_CATEGORY_EXCEPTED_UNKNOWNS:
+			b->excepted_unknowns++;
+			break;
+		case CT_CATEGORY_UNKNOWN_USERS:
+			b->unknown_users++;
+			break;
 	}
 }
 
@@ -1111,10 +1111,17 @@ static void ct_bucket_decrement(ConnThrottleBucket *b, ConnThrottleCategory cate
 {
 	switch (category)
 	{
-		case CT_CATEGORY_NONE:              break;	/* not classified: no-op */
-		case CT_CATEGORY_KNOWN_USERS:       b->known_users--;       break;
-		case CT_CATEGORY_EXCEPTED_UNKNOWNS: b->excepted_unknowns--; break;
-		case CT_CATEGORY_UNKNOWN_USERS:     b->unknown_users--;     break;
+		case CT_CATEGORY_NONE:
+			break; /* not classified: no-op */
+		case CT_CATEGORY_KNOWN_USERS:
+			b->known_users--;
+			break;
+		case CT_CATEGORY_EXCEPTED_UNKNOWNS:
+			b->excepted_unknowns--;
+			break;
+		case CT_CATEGORY_UNKNOWN_USERS:
+			b->unknown_users--;
+			break;
 	}
 	if ((b->known_users < 0) || (b->excepted_unknowns < 0) || (b->unknown_users < 0))
 	{
@@ -1251,13 +1258,13 @@ const char *ct_allow_client(Client *client, ConfigItem_allow *aconf)
 		if (b && (b->unknown_users > effective_limit))
 		{
 			unreal_log(ULOG_INFO, "connthrottle", "CONNTHROTTLE_IPV6_LIMIT", client,
-			    "Client $client.name with IP $client.ip rejected: connthrottle ipv6-unknown-users-limit (cidr-$prefix_len, max $max) exceeded for $prefix_addr/$prefix_len ($unknown_users unknown / $excepted_users excepted / $known_users known)",
-			    log_data_string("prefix_addr", format_ipv6_addr(masked)),
-			    log_data_integer("prefix_len", ct_tier_prefix[tier]),
-			    log_data_integer("max", effective_limit),
-			    log_data_integer("unknown_users", b->unknown_users),
-			    log_data_integer("excepted_users", b->excepted_unknowns),
-			    log_data_integer("known_users", b->known_users));
+			           "Client $client.name with IP $client.ip rejected: connthrottle ipv6-unknown-users-limit (cidr-$prefix_len, max $max) exceeded for $prefix_addr/$prefix_len ($unknown_users unknown / $excepted_users excepted / $known_users known)",
+			           log_data_string("prefix_addr", format_ipv6_addr(masked)),
+			           log_data_integer("prefix_len", ct_tier_prefix[tier]),
+			           log_data_integer("max", effective_limit),
+			           log_data_integer("unknown_users", b->unknown_users),
+			           log_data_integer("excepted_users", b->excepted_unknowns),
+			           log_data_integer("known_users", b->known_users));
 			return format_ipv6_prefix_reject_message(
 			    iConf.reject_message_too_many_new_connections_ipv6_range,
 			    masked, ct_tier_prefix[tier]);
@@ -1276,7 +1283,7 @@ int ct_remote_connect_buckets(Client *client)
 	ConnThrottleCategory category;
 
 	if (IsULine(client))
-		return 0;	/* U-lined service: skip */
+		return 0; /* U-lined service: skip */
 	if (!IsIPV6(client) || !client->ip)
 		return 0;
 	if (CT_CATEGORY(client) != CT_CATEGORY_NONE)
@@ -1355,7 +1362,7 @@ static void ct_buckets_rebuild(void)
 	list_for_each_entry(client, &client_list, client_node)
 	{
 		if (!IsUser(client) || IsULine(client))
-			continue;	/* only regular IRC users; skip servers, services, pre-registration */
+			continue; /* only regular IRC users; skip servers, services, pre-registration */
 		if (!IsIPV6(client) || !client->ip)
 			continue;
 		category = ct_classify(client);
@@ -1365,7 +1372,7 @@ static void ct_buckets_rebuild(void)
 	list_for_each_entry(client, &unknown_list, lclient_node)
 	{
 		if (!IsUser(client) || IsULine(client))
-			continue;	/* only regular IRC users; skip servers, services, pre-registration */
+			continue; /* only regular IRC users; skip servers, services, pre-registration */
 		if (!IsIPV6(client) || !client->ip)
 			continue;
 		category = ct_classify(client);

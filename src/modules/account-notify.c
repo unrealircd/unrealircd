@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"account-notify",	/* Name of module */
-	"5.0", 			/* Version */
-	"account-notify CAP",	/* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "account-notify",     /* Name of module */
+    "5.0",                /* Version */
+    "account-notify CAP", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_ACCOUNT_NOTIFY = 0L;
@@ -67,10 +66,10 @@ int account_notify_account_login(Client *client, MessageTag *recv_mtags)
 	MessageTag *mtags = NULL;
 	new_message(client, recv_mtags, &mtags);
 	sendto_local_common_channels(client, client,
-				     CAP_ACCOUNT_NOTIFY, mtags,
-				     ":%s ACCOUNT %s",
-				     client->name,
-				     IsLoggedIn(client) ? client->user->account : "*");
+	                             CAP_ACCOUNT_NOTIFY, mtags,
+	                             ":%s ACCOUNT %s",
+	                             client->name,
+	                             IsLoggedIn(client) ? client->user->account : "*");
 	free_message_tags(mtags);
 	return 0;
 }

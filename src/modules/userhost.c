@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_userhost);
 
-#define MSG_USERHOST 	"USERHOST"	
+#define MSG_USERHOST "USERHOST"
 
-ModuleHeader MOD_HEADER
-  = {
-	"userhost",
-	"5.0",
-	"command /userhost", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "userhost",
+    "5.0",
+    "command /userhost",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -62,12 +61,12 @@ MOD_UNLOAD()
 #define MAXUSERHOSTREPLIES 5
 CMD_FUNC(cmd_userhost)
 {
-	char *p;		/* scratch end pointer */
-	char *cn;		/* current name */
+	char *p;  /* scratch end pointer */
+	char *cn;  /* current name */
 	Client *acptr;
 	char request[BUFSIZE];
 	char response[MAXUSERHOSTREPLIES][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
-	int i;			/* loop counter */
+	int i;   /* loop counter */
 	int w;
 
 	if (parc < 2)
@@ -95,15 +94,16 @@ CMD_FUNC(cmd_userhost)
 		if ((acptr = find_user(cn, NULL)))
 		{
 			ircsnprintf(response[w], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30,
-                            "%s%s=%c%s@%s",
-			    acptr->name,
-			    (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
-				? "*" : "",
-			    (acptr->user->away) ? '-' : '+',
-			    acptr->user->username,
-			    ((acptr != client) && !IsOper(client)
-			    && IsHidden(acptr) ? acptr->user->virthost :
-			    acptr->user->realhost));
+			            "%s%s=%c%s@%s",
+			            acptr->name,
+			            (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
+			                ? "*"
+			                : "",
+			            (acptr->user->away) ? '-' : '+',
+			            acptr->user->username,
+			            ((acptr != client) && !IsOper(client) && IsHidden(acptr)
+			                 ? acptr->user->virthost
+			                 : acptr->user->realhost));
 			w++;
 		}
 		if (p)

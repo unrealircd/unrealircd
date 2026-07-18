@@ -20,20 +20,19 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/nokick",
-	"4.2",
-	"Channel Mode +Q",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/nokick",
+    "4.2",
+    "Channel Mode +Q",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NOKICK;
 
-#define IsNoKick(channel)    (channel->mode.mode & EXTCMODE_NOKICK)
+#define IsNoKick(channel) (channel->mode.mode & EXTCMODE_NOKICK)
 
-int nokick_check (Client *client, Client *target, Channel *channel, const char *comment, const char *client_member_modes, const char *target_member_modes, const char **reject_reason);
+int nokick_check(Client *client, Client *target, Channel *channel, const char *comment, const char *client_member_modes, const char *target_member_modes, const char **reject_reason);
 
 MOD_TEST()
 {
@@ -49,10 +48,10 @@ MOD_INIT()
 	req.letter = 'Q';
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOKICK);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_KICK, 0, nokick_check);
 
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -67,7 +66,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nokick_check (Client *client, Client *target, Channel *channel, const char *comment, const char *client_member_modes, const char *target_member_modes, const char **reject_reason)
+int nokick_check(Client *client, Client *target, Channel *channel, const char *comment, const char *client_member_modes, const char *target_member_modes, const char **reject_reason)
 {
 	static char errmsg[256];
 
@@ -82,4 +81,3 @@ int nokick_check (Client *client, Client *target, Channel *channel, const char *
 
 	return EX_ALLOW;
 }
-

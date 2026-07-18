@@ -14,22 +14,22 @@ typedef struct DNSReq DNSReq;
  */
 struct DNSReq {
 	DNSReq *prev, *next;
-	char *name;			/**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
-	char ipv6;			/**< Resolving for ipv6 or ipv4? */
-	DNSReqType type;		/**< DNS Request type (DNSREQ_*) */
-	Client *client;			/**< Client the request is for, NULL if client died OR unavailable */
-	ConfigItem_link *linkblock;	/**< Linkblock */
+	char *name;                 /**< Name being resolved (only for DNSREQ_LINKCONF and DNSREQ_CONNECT) */
+	char ipv6;                  /**< Resolving for ipv6 or ipv4? */
+	DNSReqType type;            /**< DNS Request type (DNSREQ_*) */
+	Client *client;             /**< Client the request is for, NULL if client died OR unavailable */
+	ConfigItem_link *linkblock; /**< Linkblock */
 };
 
 typedef struct DNSCache DNSCache;
 
 /** DNS Cache entry - used in src/dns.c */
 struct DNSCache {
-	DNSCache *prev, *next;		/**< Previous and next in linked list */
-	DNSCache *hprev, *hnext;	/**< Previous and next in hash list */
-	char *name;			/**< The hostname */
-	char *ip;			/**< The IP address */
-	time_t expires;			/**< When record expires */
+	DNSCache *prev, *next;   /**< Previous and next in linked list */
+	DNSCache *hprev, *hnext; /**< Previous and next in hash list */
+	char *name;              /**< The hostname */
+	char *ip;                /**< The IP address */
+	time_t expires;          /**< When record expires */
 };
 
 typedef struct DNSStats DNSStats;
@@ -41,11 +41,11 @@ struct DNSStats {
 };
 
 /** Time to keep cache records. */
-#define DNS_CACHE_TTL			600
-#define DNS_NEGCACHE_TTL		60
+#define DNS_CACHE_TTL    600
+#define DNS_NEGCACHE_TTL 60
 
 /** Size of the DNS cache hash table. */
-#define DNS_HASH_SIZE	4096
+#define DNS_HASH_SIZE 4096
 
 /** Max # of entries we want in our cache.
  * This:
@@ -58,7 +58,7 @@ struct DNSStats {
  * Note that in most situations there will be far
  * fewer items, as the TTL is rather short.
  */
-#define DNS_MAX_ENTRIES	DNS_HASH_SIZE
+#define DNS_MAX_ENTRIES DNS_HASH_SIZE
 
 extern ares_channel resolver_channel_client;
 extern ares_channel resolver_channel_https;
@@ -69,4 +69,3 @@ extern void init_resolver(int);
 struct hostent *unrealdns_doclient(Client *cptr);
 
 extern void unreal_gethostbyname_api(const char *name, int family, const char *callbackname, void *arg);
-

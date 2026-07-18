@@ -21,7 +21,7 @@
 #include <dbghelp.h>
 
 #ifndef IRCDTOTALVERSION
-#define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
+ #define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
 extern OSVERSIONINFO VerInfo;
@@ -31,11 +31,10 @@ extern char *buildid;
 extern char *extraflags;
 
 /* crappy, but safe :p */
-typedef BOOL (WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType,
-										CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
-										CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
-										CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam
-										);
+typedef BOOL(WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType,
+                                        CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+                                        CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
+                                        CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
 
 /* Runs a stack trace 
@@ -44,7 +43,7 @@ typedef BOOL (WINAPI *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hF
  * Returns:
  *  The stack trace with function and line number information
  */
-__inline char *StackTrace(EXCEPTION_POINTERS *e) 
+__inline char *StackTrace(EXCEPTION_POINTERS *e)
 {
 	static char buffer[5000];
 	char curmodule[256];
@@ -53,7 +52,7 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	DWORD dwDisp32;
 	int frame;
 	HANDLE hProcess = GetCurrentProcess();
-	IMAGEHLP_SYMBOL64 *pSym = safe_alloc(sizeof(IMAGEHLP_SYMBOL64)+500);
+	IMAGEHLP_SYMBOL64 *pSym = safe_alloc(sizeof(IMAGEHLP_SYMBOL64) + 500);
 	IMAGEHLP_LINE64 pLine;
 	IMAGEHLP_MODULE64 pMod;
 	STACKFRAME64 Stack;
@@ -73,7 +72,7 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 
 	/* Initialize symbol retrieval system */
 	SymInitialize(hProcess, NULL, TRUE);
-	SymSetOptions(SYMOPT_LOAD_LINES|SYMOPT_UNDNAME);
+	SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
 	pSym->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
 	pSym->MaxNameLength = 500;
 
@@ -85,17 +84,17 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 	sprintf(buffer, "\tModule: %s\n", pMod.ModuleName);
 
 	/* Walk through the stack */
-	for (frame = 0; ; frame++) 
+	for (frame = 0;; frame++)
 	{
 		char buf[500];
 		if (!StackWalk64(IMAGE_FILE_MACHINE_AMD64, GetCurrentProcess(), GetCurrentThread(),
-			&Stack, &context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
+		                 &Stack, &context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
 			break;
 
 		memset(&pMod, 0, sizeof(pMod));
 		pMod.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
 		SymGetModuleInfo64(hProcess, Stack.AddrPC.Offset, &pMod);
-		if (strcmp(curmodule, pMod.ModuleName)) 
+		if (strcmp(curmodule, pMod.ModuleName))
 		{
 			strcpy(curmodule, pMod.ModuleName);
 			sprintf(buf, "\tModule: %s\n", pMod.ModuleName);
@@ -106,13 +105,12 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
 		pLine.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 		SymGetLineFromAddr64(hProcess, Stack.AddrPC.Offset, &dwDisp32, &pLine);
 		SymGetSymFromAddr64(hProcess, Stack.AddrPC.Offset, &dwDisp, pSym);
-		sprintf(buf, "\t\t#%d %s:%d: %s\n", frame, pLine.FileName, pLine.LineNumber, 
+		sprintf(buf, "\t\t#%d %s:%d: %s\n", frame, pLine.FileName, pLine.LineNumber,
 		        pSym->Name);
 		strcat(buffer, buf);
 	}
 	strcat(buffer, "End of Stack trace\n");
 	return buffer;
-
 }
 
 /* Retrieves the values of several registers
@@ -121,45 +119,45 @@ __inline char *StackTrace(EXCEPTION_POINTERS *e)
  * Returns:
  *  The values of the registers as a string.
  */
-__inline char *GetRegisters(CONTEXT *context) 
+__inline char *GetRegisters(CONTEXT *context)
 {
 	static char buffer[1024];
 
 	sprintf(buffer,
-		"\tRAX=%p"
-		"\tRBX=%p"
-		"\tRCX=%p"
-		"\tRDX=%p\n"
-		"\tRSI=%p"
-		"\tRDI=%p"
-		"\tRBP=%p"
-		"\tRSP=%p\n"
-		"\tR8=%p"
-		"\tR9=%p"
-		"\tR10=%p"
-		"\tR11=%p\n"
-		"\tR12=%p"
-		"\tR13=%p"
-		"\tR14=%p"
-		"\tR15=%p\n"
-		"\tRIP=%p\n",
-		(void *)context->Rax,
-		(void *)context->Rbx,
-		(void *)context->Rcx,
-		(void *)context->Rdx,
-		(void *)context->Rsi,
-		(void *)context->Rdi,
-		(void *)context->Rbp,
-		(void *)context->Rsp,
-		(void *)context->R8,
-		(void *)context->R9,
-		(void *)context->R10,
-		(void *)context->R11,
-		(void *)context->R12,
-		(void *)context->R13,
-		(void *)context->R14,
-		(void *)context->R15,
-		(void *)context->Rip);
+	        "\tRAX=%p"
+	        "\tRBX=%p"
+	        "\tRCX=%p"
+	        "\tRDX=%p\n"
+	        "\tRSI=%p"
+	        "\tRDI=%p"
+	        "\tRBP=%p"
+	        "\tRSP=%p\n"
+	        "\tR8=%p"
+	        "\tR9=%p"
+	        "\tR10=%p"
+	        "\tR11=%p\n"
+	        "\tR12=%p"
+	        "\tR13=%p"
+	        "\tR14=%p"
+	        "\tR15=%p\n"
+	        "\tRIP=%p\n",
+	        (void *)context->Rax,
+	        (void *)context->Rbx,
+	        (void *)context->Rcx,
+	        (void *)context->Rdx,
+	        (void *)context->Rsi,
+	        (void *)context->Rdi,
+	        (void *)context->Rbp,
+	        (void *)context->Rsp,
+	        (void *)context->R8,
+	        (void *)context->R9,
+	        (void *)context->R10,
+	        (void *)context->R11,
+	        (void *)context->R12,
+	        (void *)context->R13,
+	        (void *)context->R14,
+	        (void *)context->R15,
+	        (void *)context->Rip);
 
 	return buffer;
 }
@@ -170,9 +168,9 @@ __inline char *GetRegisters(CONTEXT *context)
  * Returns:
  *  The exception code represented as a string
  */
-__inline char *GetException(DWORD code) 
+__inline char *GetException(DWORD code)
 {
-	switch (code) 
+	switch (code)
 	{
 		case EXCEPTION_ACCESS_VIOLATION:
 			return "Access Violation";
@@ -221,30 +219,30 @@ __inline char *GetException(DWORD code)
 
 void StartCrashReporter(void)
 {
-	char fname[MAX_PATH], fnamewarg[MAX_PATH+32];
+	char fname[MAX_PATH], fnamewarg[MAX_PATH + 32];
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
-	
+
 	memset(&pi, 0, sizeof(pi));
 	memset(&si, 0, sizeof(si));
-	
+
 	GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
-	
+
 	snprintf(fnamewarg, sizeof(fnamewarg), "\"%s\" %s", fname, "-R");
 	CreateProcess(fname, fnamewarg, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 }
 
 void StartUnrealAgain(void)
 {
-	char fname[MAX_PATH], fnamewarg[MAX_PATH+32];
+	char fname[MAX_PATH], fnamewarg[MAX_PATH + 32];
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
-	
+
 	memset(&pi, 0, sizeof(pi));
 	memset(&si, 0, sizeof(si));
-	
+
 	GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
-	
+
 	snprintf(fnamewarg, sizeof(fnamewarg), "\"%s\"", fname);
 	CreateProcess(fname, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 }
@@ -259,7 +257,7 @@ void StartUnrealAgain(void)
  *  If not running in service mode, a message box is displayed, 
  *   else output is written to service.log
  */
-LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e) 
+LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 {
 	MEMORYSTATUSEX memStats;
 	char file[512], text[1024], minidumpf[512];
@@ -274,19 +272,19 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 	fd = fopen(file, "w");
 	GlobalMemoryStatusEx(&memStats);
 	fprintf(fd, "Generated at %s\nOS: %s\n%s[%s%s%s] (%s) on %s\n"
-		    "-----------------\nMemory Information:\n"
-		    "\tPhysical: (Available:%lluMB/Total:%lluMB)\n"
-		    "\tVirtual: (Available:%lluMB/Total:%lluMB)\n"
-		    "-----------------\nException:\n\t%s\n-----------------\n"
-		    "Backup Buffer:\n\t%s\n-----------------\nRegisters:\n"
-		    "%s-----------------\nStack Trace:\n%s",
-		     asctime(gmtime(&timet)), OSName,
-			 IRCDTOTALVERSION,
-		     serveropts, extraflags ? extraflags : "", tainted ? "3" : "",
-		     buildid, me.name, memStats.ullAvailPhys/1048576, memStats.ullTotalPhys/1048576,
-		     memStats.ullAvailVirtual/1048576, memStats.ullTotalVirtual/1048576,
-		     GetException(e->ExceptionRecord->ExceptionCode), backupbuf,
-		     GetRegisters(e->ContextRecord), StackTrace(e));
+	            "-----------------\nMemory Information:\n"
+	            "\tPhysical: (Available:%lluMB/Total:%lluMB)\n"
+	            "\tVirtual: (Available:%lluMB/Total:%lluMB)\n"
+	            "-----------------\nException:\n\t%s\n-----------------\n"
+	            "Backup Buffer:\n\t%s\n-----------------\nRegisters:\n"
+	            "%s-----------------\nStack Trace:\n%s",
+	        asctime(gmtime(&timet)), OSName,
+	        IRCDTOTALVERSION,
+	        serveropts, extraflags ? extraflags : "", tainted ? "3" : "",
+	        buildid, me.name, memStats.ullAvailPhys / 1048576, memStats.ullTotalPhys / 1048576,
+	        memStats.ullAvailVirtual / 1048576, memStats.ullTotalVirtual / 1048576,
+	        GetException(e->ExceptionRecord->ExceptionCode), backupbuf,
+	        GetRegisters(e->ContextRecord), StackTrace(e));
 
 	sprintf(text, "UnrealIRCd has encountered a fatal error. Debugging information has been dumped to %s.", file);
 	fclose(fd);
@@ -327,21 +325,21 @@ LONG __stdcall ExceptionFilter(EXCEPTION_POINTERS *e)
 		}
 	}
 #endif
-	
+
 	if (!IsService)
 	{
 		MessageBox(NULL, text, "Fatal Error", MB_OK);
 		StartCrashReporter();
-	}
-	else 
+	} else
 	{
 		FILE *fd = fopen("logs\\service.log", "a");
 
 		if (fd)
 		{
 			fprintf(fd, "UnrealIRCd has encountered a fatal error. Debugging information "
-					"has been dumped to unrealircd.%d.core, please file a bug and upload "
-					"this file to https://bugs.unrealircd.org/.", getpid());
+			            "has been dumped to unrealircd.%d.core, please file a bug and upload "
+			            "this file to https://bugs.unrealircd.org/.",
+			        getpid());
 			fclose(fd);
 		}
 	}
@@ -360,11 +358,9 @@ void GotSigAbort(int signal)
 }
 
 /* Initializes the exception handler */
-void InitDebug(void) 
+void InitDebug(void)
 {
 	SetUnhandledExceptionFilter(&ExceptionFilter);
 	_set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 	signal(SIGABRT, GotSigAbort);
 }
-
-

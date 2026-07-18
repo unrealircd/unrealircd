@@ -8,14 +8,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"md",
-	"5.0",
-	"command /MD (S2S only)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "md",
+    "5.0",
+    "command /MD (S2S only)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 CMD_FUNC(cmd_md);
 void _broadcast_md_client(ModDataInfo *mdi, Client *client, ModData *md);
@@ -35,7 +34,7 @@ void _send_moddata_channel(Client *srv, Channel *channel);
 void _send_moddata_members(Client *srv);
 void _broadcast_moddata_client(Client *client);
 
-extern MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE+1];
+extern MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE + 1];
 
 MOD_TEST()
 {
@@ -61,7 +60,7 @@ MOD_TEST()
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "MD", cmd_md, MAXPARA, CMD_SERVER|CMD_BIGLINES);
+	CommandAdd(modinfo->handle, "MD", cmd_md, MAXPARA, CMD_SERVER | CMD_BIGLINES);
 	return MOD_SUCCESS;
 }
 
@@ -149,8 +148,7 @@ CMD_FUNC(cmd_md)
 		}
 		/* Pass on to other servers */
 		broadcast_md_client_cmd(client->direction, client, target, varname, value);
-	} else
-	if (!strcmp(type, "channel"))
+	} else if (!strcmp(type, "channel"))
 	{
 		Channel *channel = find_channel(objname);
 		md = findmoddata_byname(varname, MODDATATYPE_CHANNEL);
@@ -166,8 +164,7 @@ CMD_FUNC(cmd_md)
 		}
 		/* Pass on to other servers */
 		broadcast_md_channel_cmd(client->direction, client, channel, varname, value);
-	} else
-	if (!strcmp(type, "member"))
+	} else if (!strcmp(type, "member"))
 	{
 		Client *target;
 		Channel *channel;
@@ -214,8 +211,7 @@ CMD_FUNC(cmd_md)
 		}
 		/* Pass on to other servers */
 		broadcast_md_member_cmd(client->direction, client, channel, target, varname, value);
-	} else
-	if (!strcmp(type, "membership"))
+	} else if (!strcmp(type, "membership"))
 	{
 		Client *target;
 		Channel *channel;
@@ -257,8 +253,7 @@ CMD_FUNC(cmd_md)
 		}
 		/* Pass on to other servers */
 		broadcast_md_membership_cmd(client->direction, client, target, channel, varname, value);
-	} else
-	if (!strcmp(type, "globalvar"))
+	} else if (!strcmp(type, "globalvar"))
 	{
 		/* objname is ignored */
 		md = findmoddata_byname(varname, MODDATATYPE_GLOBAL_VARIABLE);
@@ -282,12 +277,11 @@ void _broadcast_md_client_cmd(Client *except, Client *sender, Client *client, co
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
-			sender->id, "client", client->id, varname, value);
-	}
-	else
+		              sender->id, "client", client->id, varname, value);
+	} else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
-			sender->id, "client", client->id, varname);
+		              sender->id, "client", client->id, varname);
 	}
 }
 
@@ -295,10 +289,10 @@ void _broadcast_md_channel_cmd(Client *except, Client *sender, Channel *channel,
 {
 	if (value)
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s :%s",
-			sender->id, "channel", channel->name, varname, value);
+		              sender->id, "channel", channel->name, varname, value);
 	else
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s %s",
-			sender->id, "channel", channel->name, varname);
+		              sender->id, "channel", channel->name, varname);
 }
 
 void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, Client *client, const char *varname, const char *value)
@@ -306,12 +300,11 @@ void _broadcast_md_member_cmd(Client *except, Client *sender, Channel *channel, 
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->id, "member", channel->name, client->id, varname, value);
-	}
-	else
+		              sender->id, "member", channel->name, client->id, varname, value);
+	} else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->id, "member", channel->name, client->id, varname);
+		              sender->id, "member", channel->name, client->id, varname);
 	}
 }
 
@@ -320,12 +313,11 @@ void _broadcast_md_membership_cmd(Client *except, Client *sender, Client *client
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s :%s",
-			sender->id, "membership", client->id, channel->name, varname, value);
-	}
-	else
+		              sender->id, "membership", client->id, channel->name, varname, value);
+	} else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s:%s %s",
-			sender->id, "membership", client->id, channel->name, varname);
+		              sender->id, "membership", client->id, channel->name, varname);
 	}
 }
 
@@ -334,12 +326,11 @@ void _broadcast_md_globalvar_cmd(Client *except, Client *sender, const char *var
 	if (value)
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s :%s",
-			sender->id, "globalvar", varname, value);
-	}
-	else
+		              sender->id, "globalvar", varname, value);
+	} else
 	{
 		sendto_server(except, 0, 0, NULL, ":%s MD %s %s",
-			sender->id, "globalvar", varname);
+		              sender->id, "globalvar", varname);
 	}
 }
 
@@ -348,7 +339,7 @@ void _broadcast_md_globalvar_cmd(Client *except, Client *sender, const char *var
  * @param client The affected client
  * @param md     The ModData. May be NULL for unset.
  */
- 
+
 void _broadcast_md_client(ModDataInfo *mdi, Client *client, ModData *md)
 {
 	const char *value = md ? mdi->serialize(md) : NULL;
@@ -396,7 +387,7 @@ void _send_moddata_client(Client *srv, Client *client)
 			const char *value = mdi->serialize(&moddata_client(client, mdi));
 			if (value)
 				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
-					me.id, "client", client->id, mdi->name, value);
+				           me.id, "client", client->id, mdi->name, value);
 		}
 	}
 }
@@ -469,7 +460,7 @@ void _send_moddata_channel(Client *srv, Channel *channel)
 			const char *value = mdi->serialize(&moddata_channel(channel, mdi));
 			if (value)
 				sendto_one(srv, NULL, ":%s MD %s %s %s :%s",
-					me.id, "channel", channel->name, mdi->name, value);
+				           me.id, "channel", channel->name, mdi->name, value);
 		}
 	}
 }
@@ -496,7 +487,7 @@ void _send_moddata_members(Client *srv)
 					const char *value = mdi->serialize(&moddata_member(m, mdi));
 					if (value)
 						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
-							me.id, "member", channel->name, client->id, mdi->name, value);
+						           me.id, "member", channel->name, client->id, mdi->name, value);
 				}
 			}
 		}
@@ -520,7 +511,7 @@ void _send_moddata_members(Client *srv)
 					const char *value = mdi->serialize(&moddata_membership(m, mdi));
 					if (value)
 						sendto_one(srv, NULL, ":%s MD %s %s:%s %s :%s",
-							me.id, "membership", client->id, m->channel->name, mdi->name, value);
+						           me.id, "membership", client->id, m->channel->name, mdi->name, value);
 				}
 			}
 		}

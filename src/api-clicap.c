@@ -27,7 +27,7 @@
  * If exceeded, the caps just won't be stored and will be re-added safely. --k4be
  */
 
-#define MAXCLICAPS ((int)(sizeof(long)*8 - 1 + ADVERTISEONLYCAPS)) /* how many cap bits will fit in `long`? */
+#define MAXCLICAPS ((int)(sizeof(long) * 8 - 1 + ADVERTISEONLYCAPS)) /* how many cap bits will fit in `long`? */
 static char *old_caps[MAXCLICAPS]; /**< List of old CAP names - used for /rehash */
 int old_caps_proto[MAXCLICAPS]; /**< List of old CAP protocol values - used for /rehash */
 
@@ -116,7 +116,7 @@ long clicap_allocate_cap(void)
 	ClientCapability *clicap;
 
 	/* The first bit (v=1) is used by the "invert" marker */
-	for (v=2; v; v <<= 1)
+	for (v = 2; v; v <<= 1)
 	{
 		unsigned char found = 0;
 		for (clicap = clicaps; clicap; clicap = clicap->next)
@@ -172,12 +172,14 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 		if (clicap->unloaded)
 		{
 			clicap->unloaded = 0;
-		} else {
+		} else
+		{
 			if (module)
 				module->errorcode = MODERR_EXISTS;
 			return NULL;
 		}
-	} else {
+	} else
+	{
 		long v = 0;
 
 		/* Allocate a bit, but only if the module needs it.
@@ -204,6 +206,7 @@ ClientCapability *ClientCapabilityAdd(Module *module, ClientCapabilityInfo *clic
 	/* Add or update the following fields: */
 	clicap->owner = module;
 	clicap->flags = clicap_request->flags;
+	clicap->minimum_cap_version = clicap_request->minimum_cap_version;
 	clicap->visible = clicap_request->visible;
 	clicap->parameter = clicap_request->parameter;
 
@@ -255,7 +258,6 @@ void unload_clicap_commit(ClientCapability *clicap)
 	safe_free(clicap->name);
 	safe_free(clicap);
 	clicap_update_affecting();
-
 }
 /** Remove a client capability.
  * @param clicap The client capability to remove.
@@ -267,8 +269,10 @@ void ClientCapabilityDel(ClientCapability *clicap)
 	if (clicap->owner)
 	{
 		ModuleObject *mobj;
-		for (mobj = clicap->owner->objects; mobj; mobj = mobj->next) {
-			if (mobj->type == MOBJ_CLICAP && mobj->object.clicap == clicap) {
+		for (mobj = clicap->owner->objects; mobj; mobj = mobj->next)
+		{
+			if (mobj->type == MOBJ_CLICAP && mobj->object.clicap == clicap)
+			{
 				DelListItem(mobj, clicap->owner->objects);
 				safe_free(mobj);
 				break;
@@ -301,13 +305,13 @@ void clicap_pre_rehash(void)
 	ClientCapability *clicap;
 	int i = 0;
 
-	for (i=0; i < MAXCLICAPS; i++)
+	for (i = 0; i < MAXCLICAPS; i++)
 	{
 		safe_free(old_caps[i]);
 		old_caps_proto[i] = 0;
 	}
 
-	for (i=0, clicap = clicaps; clicap; clicap = clicap->next)
+	for (i = 0, clicap = clicaps; clicap; clicap = clicap->next)
 	{
 		if (i == MAXCLICAPS)
 		{

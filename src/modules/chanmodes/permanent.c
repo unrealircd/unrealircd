@@ -19,14 +19,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/permanent",
-	"4.2",
-	"Permanent channel mode (+P)", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/permanent",
+    "4.2",
+    "Permanent channel mode (+P)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 static Cmode_t EXTMODE_PERMANENT = 0L;
 
@@ -34,7 +33,7 @@ static int permanent_channel_destroy(Channel *channel, int *should_destroy)
 {
 	if (channel->mode.mode & EXTMODE_PERMANENT)
 		*should_destroy = 0;
-	
+
 	return 0;
 }
 
@@ -62,14 +61,14 @@ int permanent_chanmode(Client *client, Channel *channel, MessageTag *mtags, cons
 		sub1_from_channel(channel);
 		*destroy_channel = 1;
 	}
-	
+
 	return 0;
 }
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
@@ -97,4 +96,3 @@ MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
-

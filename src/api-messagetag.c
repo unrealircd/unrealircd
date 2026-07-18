@@ -53,17 +53,17 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 	if ((mreq->flags & MTAG_HANDLER_FLAGS_NO_CAP_NEEDED) && mreq->clicap_handler)
 	{
 		unreal_log(ULOG_ERROR, "module", "MESSAGETAGHANDLERADD_API_ERROR", NULL,
-			   "MessageTagHandlerAdd() from module $module_name: "
-			   ".flags is set to MTAG_HANDLER_FLAGS_NO_CAP_NEEDED "
-			   "but a .clicap_handler is passed as well. These options are mutually "
-			   "exclusive, choose one or the other.",
-			   log_data_string("module_name", module->header->name));
+		           "MessageTagHandlerAdd() from module $module_name: "
+		           ".flags is set to MTAG_HANDLER_FLAGS_NO_CAP_NEEDED "
+		           "but a .clicap_handler is passed as well. These options are mutually "
+		           "exclusive, choose one or the other.",
+		           log_data_string("module_name", module->header->name));
 		abort();
 	} else if (!(mreq->flags & MTAG_HANDLER_FLAGS_NO_CAP_NEEDED) && !mreq->clicap_handler)
 	{
 		unreal_log(ULOG_ERROR, "module", "MESSAGETAGHANDLERADD_API_ERROR", NULL,
-			   "MessageTagHandlerAdd() from module $module_name: "
-			   "no .clicap_handler is passed. If the "
+		           "MessageTagHandlerAdd() from module $module_name: "
+		           "no .clicap_handler is passed. If the "
 		           "message tag really does not require a cap then you must "
 		           "set .flags to MTAG_HANDLER_FLAGS_NO_CAP_NEEDED",
 		           log_data_string("module_name", module->header->name));
@@ -76,12 +76,14 @@ MessageTagHandler *MessageTagHandlerAdd(Module *module, MessageTagHandlerInfo *m
 		if (m->unloaded)
 		{
 			m->unloaded = 0;
-		} else {
+		} else
+		{
 			if (module)
 				module->errorcode = MODERR_EXISTS;
 			return NULL;
 		}
-	} else {
+	} else
+	{
 		/* New message tag handler */
 		m = safe_alloc(sizeof(MessageTagHandler));
 		safe_strdup(m->name, mreq->name);
@@ -137,7 +139,8 @@ void MessageTagHandlerDel(MessageTagHandler *m)
 	if (m->owner)
 	{
 		ModuleObject *mobj;
-		for (mobj = m->owner->objects; mobj; mobj = mobj->next) {
+		for (mobj = m->owner->objects; mobj; mobj = mobj->next)
+		{
 			if (mobj->type == MOBJ_MTAG && mobj->object.mtag == m)
 			{
 				DelListItem(mobj, m->owner->objects);

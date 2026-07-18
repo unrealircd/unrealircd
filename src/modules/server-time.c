@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"server-time",
-	"5.0",
-	"server-time CAP",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "server-time",
+    "5.0",
+    "server-time CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_SERVER_TIME = 0L;

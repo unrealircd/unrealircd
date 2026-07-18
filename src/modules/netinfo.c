@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_netinfo);
 
-#define MSG_NETINFO 	"NETINFO"	
+#define MSG_NETINFO "NETINFO"
 
-ModuleHeader MOD_HEADER
-  = {
-	"netinfo",
-	"5.0",
-	"command /netinfo", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "netinfo",
+    "5.0",
+    "command /netinfo",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -69,9 +68,9 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_netinfo)
 {
-	long 		lmax;
-	long 		endsync, protocol;
-	char		buf[512];
+	long lmax;
+	long endsync, protocol;
+	char buf[512];
 
 	if (parc < 9)
 		return;

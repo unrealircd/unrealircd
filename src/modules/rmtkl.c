@@ -20,14 +20,14 @@
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER = {
-	"rmtkl",
-	"1.4",
-	"Adds /rmtkl command to easily remove *-Lines in bulk",
-	"Gottem and the UnrealIRCd Team",
-	"unrealircd-6",
+    "rmtkl",
+    "1.4",
+    "Adds /rmtkl command to easily remove *-Lines in bulk",
+    "Gottem and the UnrealIRCd Team",
+    "unrealircd-6",
 };
 
-#define IsParam(x) (parc > (x) && !BadPtr(parv[(x)]))
+#define IsParam(x)    (parc > (x) && !BadPtr(parv[(x)]))
 #define IsNotParam(x) (parc <= (x) || BadPtr(parv[(x)]))
 
 typedef struct {
@@ -44,37 +44,37 @@ int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, const char *uhma
 CMD_FUNC(rmtkl);
 
 TKLType tkl_types[] = {
-	{ TKL_KILL, 'k', "K-Line", "server-ban:kline:remove" },
-	{ TKL_ZAP, 'z',	"Z-Line", "server-ban:zline:local:remove" },
-	{ TKL_KILL | TKL_GLOBAL, 'G', "G-Line", "server-ban:gline:remove" },
-	{ TKL_ZAP | TKL_GLOBAL, 'Z', "Global Z-Line", "server-ban:zline:global:remove" },
-	{ TKL_SHUN | TKL_GLOBAL, 's', "Shun", "server-ban:shun:remove" },
+    {TKL_KILL, 'k', "K-Line", "server-ban:kline:remove"},
+    {TKL_ZAP, 'z', "Z-Line", "server-ban:zline:local:remove"},
+    {TKL_KILL | TKL_GLOBAL, 'G', "G-Line", "server-ban:gline:remove"},
+    {TKL_ZAP | TKL_GLOBAL, 'Z', "Global Z-Line", "server-ban:zline:global:remove"},
+    {TKL_SHUN | TKL_GLOBAL, 's', "Shun", "server-ban:shun:remove"},
 //	{ TKL_SPAMF | TKL_GLOBAL, 'F', "Global Spamfilter", "server-ban:spamfilter:remove" }, TODO: re-add spamfilter support
-	{ 0, 0, "Unknown *-Line", 0 },
+    {0, 0, "Unknown *-Line", 0},
 };
 
 static const char *rmtkl_help[] = {
-	"*** \002Help on /rmtkl\002 *** ",
-	"Removes all TKLs matching the given conditions from the local server, or the entire",
-	"network if it's a global-type ban.",
-	"Syntax:",
-	"    \002/rmtkl\002 \037user@host\037 \037type\037 [\037comment\037] [\037-skipperm\037] [\037-silent\037]",
-	"The \037user@host\037 field is a wildcard mask to match the target of a ban.",
-	"The \037type\037 field may contain any number of the following characters:",
-	"    k, z, G, Z, s, F and *",
-	"    These correspond to (local) K-Line, (local) Z-Line, G-Line, Global Z-Line, (global) Shun and (global) Spamfilter",
-	"    (asterisk includes every type besides F)",
-	"The \037comment\037 field is also a wildcard mask to match the reason text of a ban. If specified, it must always",
-	"come \037before\037 the options starting with \002-\002.",
-	"Examples:",
-	"    - \002/rmtkl * *\002",
-	"        [remove \037all\037 supported TKLs except spamfilters]",
-	"    - \002/rmtkl *@*.mx GZ\002 * -skipperm",
-	"        [remove all Mexican G/Z-Lines while skipping over permanent ones]",
+    "*** \002Help on /rmtkl\002 *** ",
+    "Removes all TKLs matching the given conditions from the local server, or the entire",
+    "network if it's a global-type ban.",
+    "Syntax:",
+    "    \002/rmtkl\002 \037user@host\037 \037type\037 [\037comment\037] [\037-skipperm\037] [\037-silent\037]",
+    "The \037user@host\037 field is a wildcard mask to match the target of a ban.",
+    "The \037type\037 field may contain any number of the following characters:",
+    "    k, z, G, Z, s, F and *",
+    "    These correspond to (local) K-Line, (local) Z-Line, G-Line, Global Z-Line, (global) Shun and (global) Spamfilter",
+    "    (asterisk includes every type besides F)",
+    "The \037comment\037 field is also a wildcard mask to match the reason text of a ban. If specified, it must always",
+    "come \037before\037 the options starting with \002-\002.",
+    "Examples:",
+    "    - \002/rmtkl * *\002",
+    "        [remove \037all\037 supported TKLs except spamfilters]",
+    "    - \002/rmtkl *@*.mx GZ\002 * -skipperm",
+    "        [remove all Mexican G/Z-Lines while skipping over permanent ones]",
 /*	"    - \002/rmtkl * * *Zombie*\002",
 	"        [remove all non-spamfilter bans having \037Zombie\037 in the reason field]", TODO: re-add spamfilter support  */
-	"*** \002End of help\002 ***",
-	NULL
+    "*** \002End of help\002 ***",
+    NULL,
 };
 
 MOD_INIT()
@@ -126,7 +126,8 @@ static TKLType *find_TKLType_by_flag(char flag)
 	return t;
 }
 
-void rmtkl_check_options(const char *param, int *skipperm, int *silent) {
+void rmtkl_check_options(const char *param, int *skipperm, int *silent)
+{
 	if (!strcasecmp("-skipperm", param))
 		*skipperm = 1;
 	if (!strcasecmp("-silent", param))
@@ -154,8 +155,7 @@ int rmtkl_tryremove(Client *client, TKLType *tkltype, TKL *tkl, const char *uhma
 		if (!match_simple(uhmask, tkl->reason))
 			return 0;
 #endif
-	} else
-	if (TKLIsServerBan(tkl))
+	} else if (TKLIsServerBan(tkl))
 	{
 		if (!match_simple(uhmask, make_user_host(tkl->ptr.serverban->usermask, tkl->ptr.serverban->hostmask)))
 			return 0;
@@ -261,7 +261,8 @@ CMD_FUNC(rmtkl)
 	sendto_server(NULL, 0, 0, NULL, "%s", broadcast);
 
 	// Loop over all supported types
-	for (tkltype = tkl_types; tkltype->type; tkltype++) {
+	for (tkltype = tkl_types; tkltype->type; tkltype++)
+	{
 		if (!strchr(types, tkltype->flag))
 			continue;
 

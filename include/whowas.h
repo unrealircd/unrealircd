@@ -32,16 +32,16 @@
  * $Id$
  */
 
-#ifndef	__whowas_include__
+#ifndef __whowas_include__
 #define __whowas_include__
 
 /* NOTE: Don't reorder values of these, as they are used in whowasdb */
 typedef enum WhoWasEvent {
-    WHOWAS_EVENT_QUIT=0,
-    WHOWAS_EVENT_NICK_CHANGE=1,
-    WHOWAS_EVENT_SERVER_TERMINATING=2
+	WHOWAS_EVENT_QUIT = 0,
+	WHOWAS_EVENT_NICK_CHANGE = 1,
+	WHOWAS_EVENT_SERVER_TERMINATING = 2
 } WhoWasEvent;
-#define WHOWAS_LOWEST_EVENT 0
+#define WHOWAS_LOWEST_EVENT  0
 #define WHOWAS_HIGHEST_EVENT 2
 
 /*
@@ -69,8 +69,8 @@ void off_history(Client *);
 **	one found...
 */
 Client *get_history(const char *, time_t);
-					/* Nick name */
-					/* Time limit in seconds */
+/* Nick name */
+/* Time limit in seconds */
 
 /*
 ** for debugging...counts related structures stored in whowas array.

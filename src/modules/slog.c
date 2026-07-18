@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"slog",
-	"5.0",
-	"S2S logging", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "slog",
+    "5.0",
+    "S2S logging",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 CMD_FUNC(cmd_slog);
@@ -43,7 +42,7 @@ MOD_TEST()
 }
 
 MOD_INIT()
-{	
+{
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
 	CommandAdd(modinfo->handle, "SLOG", cmd_slog, MAXPARA, CMD_SERVER);

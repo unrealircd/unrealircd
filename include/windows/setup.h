@@ -22,25 +22,25 @@
 #ifndef __setup_include__
 #define __setup_include__
 
-#undef  SYSSYSLOGH
+#undef SYSSYSLOGH
 #define NOINDEX
-#undef  TIMES_2
-#undef  GETRUSAGE_2
-#define CONFDIR "conf"
-#define MODULESDIR "modules"
-#define LOGDIR "logs"
+#undef TIMES_2
+#undef GETRUSAGE_2
+#define CONFDIR     "conf"
+#define MODULESDIR  "modules"
+#define LOGDIR      "logs"
 #define PERMDATADIR "data"
-#define CACHEDIR "cache"
-#define TMPDIR "tmp"
-#define PIDFILE PERMDATADIR"/unrealircd.pid"
-#define CONTROLFILE PERMDATADIR"/unrealircd.ctl"
+#define CACHEDIR    "cache"
+#define TMPDIR      "tmp"
+#define PIDFILE     PERMDATADIR "/unrealircd.pid"
+#define CONTROLFILE PERMDATADIR "/unrealircd.ctl"
 #define NO_U_TYPES
 #define NEED_U_INT32_T
-#define strcasecmp _stricmp
+#define strcasecmp  _stricmp
 #define strncasecmp _strnicmp
 #define HAVE_EXPLICIT_BZERO
 #define HAVE_STRNLEN
-#define explicit_bzero(a,b) SecureZeroMemory(a,b)
+#define explicit_bzero(a, b) SecureZeroMemory(a, b)
 #define HAS_ASN1_TIME_diff
 #define HAS_SSL_CTX_SET1_CURVES_LIST
 #define HAS_SSL_CTX_SET_MIN_PROTO_VERSION
@@ -60,7 +60,7 @@
 
 /* We require Windows 7 or later */
 #define NTDDI_VERSION 0x06010000
-#define _WIN32_WINNT 0x0601
+#define _WIN32_WINNT  0x0601
 
 /* What geoip engine to use */
 #define GEOIP_ENGINE "geoip_mmdb"
@@ -72,7 +72,7 @@
 #define UNREAL_VERSION_MAJOR 2
 
 /* Minor version number (e.g.: 1 for Unreal3.2.1) */
-#define UNREAL_VERSION_MINOR 6
+#define UNREAL_VERSION_MINOR 7
 
 /* Version suffix such as a beta marker or release candidate marker. (e.g.:
    -rcX for unrealircd-3.2.9-rcX) */

@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"tls_cipher",
-	"5.0",
-	"Store and retrieve TLS cipher string",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "tls_cipher",
+    "5.0",
+    "Store and retrieve TLS cipher string",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 void tls_cipher_free(ModData *m);
@@ -28,10 +27,10 @@ ModDataInfo *tls_cipher_md; /* Module Data structure which we acquire */
 
 MOD_INIT()
 {
-ModDataInfo mreq;
+	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "tls_cipher";
 	mreq.free = tls_cipher_free;

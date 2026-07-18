@@ -26,17 +26,16 @@
 
 CMD_FUNC(cmd_svsnoop);
 
-#define MSG_SVSNOOP 	"SVSNOOP"	
+#define MSG_SVSNOOP "SVSNOOP"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"svsnoop",
-	"5.0",
-	"command /svsnoop", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svsnoop",
+    "5.0",
+    "command /svsnoop",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -86,8 +85,7 @@ CMD_FUNC(cmd_svsnoop)
 					remove_oper_privileges(acptr, 1);
 				}
 			}
-		}
-		else
+		} else
 		{
 			SVSNOOP = 0;
 			unreal_log(ULOG_INFO, "svsnoop", "SVSNOOP_ENABLED", client,

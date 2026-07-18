@@ -143,7 +143,7 @@ void parse_client_queued(Client *client)
 		{
 			run_deferred_rule_only_spamfilters(client);
 		}
-		
+
 		if (IsDead(client))
 			return;
 	}
@@ -220,12 +220,12 @@ void parse(Client *cptr, char *buffer, int length)
 
 #if defined(RAWCMDLOGGING)
 	unreal_log(ULOG_INFO, "rawtraffic", "TRAFFIC_IN", cptr,
-		   "<- $client: $data",
-		   log_data_string("data", backupbuf));
+	           "<- $client: $data",
+	           log_data_string("data", backupbuf));
 #endif
 
 	/* This poisons unused para elements that code should never access */
-	for (i = 0; i < MAXPARA+2; i++)
+	for (i = 0; i < MAXPARA + 2; i++)
 		para[i] = (char *)DEADBEEF_ADDR;
 
 	/* First, skip any whitespace */
@@ -353,7 +353,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			ch++;
 	}
 
-	RunHookReturn(HOOKTYPE_PRE_COMMAND, !=0, from, mtags, ch);
+	RunHookReturn(HOOKTYPE_PRE_COMMAND, != 0, from, mtags, ch);
 
 	if (*ch == '\0')
 	{
@@ -366,7 +366,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	bytes = strlen(ch);
 
 	/* Now let's figure out the command (or numeric)... */
-	s = strchr(ch, ' ');	/* s -> End of the command code */
+	s = strchr(ch, ' '); /* s -> End of the command code */
 	len = (s) ? (s - ch) : 0;
 
 	/* An early "guard": check for oversized command name
@@ -377,8 +377,8 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	{
 		ch[510] = '\0';
 		sendto_one(from, NULL, ":%s %d %s %s :Unknown command",
-				       me.name, ERR_UNKNOWNCOMMAND,
-				       from->name, ch);
+		           me.name, ERR_UNKNOWNCOMMAND,
+		           from->name, ch);
 		ircstats.is_unco++;
 		return;
 	}
@@ -391,8 +391,7 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 		paramcount = MAXPARA;
 		ircstats.is_num++;
 		parse_addlag(cptr, bytes, mtags_bytes);
-	}
-	else
+	} else
 	{
 		/* Command (eg: PRIVMSG) */
 		int flags = 0;
@@ -441,14 +440,14 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 			 */
 			if (IsShunned(cptr))
 				return;
-				
+
 			if (ch[0] != '\0')
 			{
 				if (IsUser(from))
 				{
 					sendto_one(from, NULL, ":%s %d %s %s :Unknown command",
-					                       me.name, ERR_UNKNOWNCOMMAND,
-					                       from->name, ch);
+					           me.name, ERR_UNKNOWNCOMMAND,
+					           from->name, ch);
 				}
 			}
 			ircstats.is_unco++;
@@ -567,34 +566,36 @@ static void parse2(Client *cptr, Client **fromptr, MessageTag *mtags, int mtags_
 	memset(&clictx, 0, sizeof(clictx));
 	clictx.cmd = cmptr;
 	clictx.fake_lag_added_msec = lag_added;
-	if ((cmptr->flags & CMD_TEXTANALYSIS) && MyUser(from) && (i>1))
+	if ((cmptr->flags & CMD_TEXTANALYSIS) && MyUser(from) && (i > 1))
 	{
 		memset(&text_analysis_storage, 0, sizeof(text_analysis_storage));
 		clictx.textanalysis = &text_analysis_storage;
-		RunHook(HOOKTYPE_ANALYZE_TEXT, from, para[i-1], clictx.textanalysis);
+		RunHook(HOOKTYPE_ANALYZE_TEXT, from, para[i - 1], clictx.textanalysis);
 	}
 
 	/* Now ready to execute the command */
 #ifndef DEBUGMODE
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		(*cmptr->aliasfunc) (&clictx, from, mtags, i, (const char **)para, cmptr->cmd);
-	} else {
+		(*cmptr->aliasfunc)(&clictx, from, mtags, i, (const char **)para, cmptr->cmd);
+	} else
+	{
 		if (!cmptr->overriders)
-			(*cmptr->func) (&clictx, from, mtags, i, (const char **)para);
+			(*cmptr->func)(&clictx, from, mtags, i, (const char **)para);
 		else
-			(*cmptr->overriders->func) (cmptr->overriders, &clictx, from, mtags, i, (const char **)para);
+			(*cmptr->overriders->func)(cmptr->overriders, &clictx, from, mtags, i, (const char **)para);
 	}
 #else
 	then = clock();
 	if (cmptr->flags & CMD_ALIAS)
 	{
-		(*cmptr->aliasfunc) (&clictx, from, mtags, i, (const char **)para, cmptr->cmd);
-	} else {
+		(*cmptr->aliasfunc)(&clictx, from, mtags, i, (const char **)para, cmptr->cmd);
+	} else
+	{
 		if (!cmptr->overriders)
-			(*cmptr->func) (&clictx, from, mtags, i, (const char **)para);
+			(*cmptr->func)(&clictx, from, mtags, i, (const char **)para);
 		else
-			(*cmptr->overriders->func) (cmptr->overriders, &clictx, from, mtags, i, (const char **)para);
+			(*cmptr->overriders->func)(cmptr->overriders, &clictx, from, mtags, i, (const char **)para);
 	}
 	if (!IsDead(cptr))
 	{
@@ -621,8 +622,7 @@ static void ban_handshake_data_flooder(Client *client)
 		 * affect any other connections from the same IP address.
 		 */
 		exit_client(client, NULL, "Handshake data flood detected");
-	}
-	else
+	} else
 	{
 		/* take_action also takes care of removing any other clients with same host/ip */
 		take_action(client, iConf.handshake_data_flood_ban_action, "Handshake data flood detected", iConf.handshake_data_flood_ban_time, 0, NULL);
@@ -652,12 +652,12 @@ long parse_addlag(Client *client, int command_bytes, int mtags_bytes)
 #ifdef FAKELAG_CONFIGURABLE
 	    !(client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG)) &&
 #endif
-	    !ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
+	    !ValidatePermissionsForPath("immune:lag", client, NULL, NULL, NULL))
 	{
 		FloodSettings *settings = get_floodsettings_for_user(client, FLD_LAG_PENALTY);
 		int lag_penalty = settings->period[FLD_LAG_PENALTY];
 		int lag_penalty_bytes = settings->limit[FLD_LAG_PENALTY];
-		long msec = (1 + (command_bytes/lag_penalty_bytes) + (mtags_bytes/lag_penalty_bytes)) * lag_penalty;
+		long msec = (1 + (command_bytes / lag_penalty_bytes) + (mtags_bytes / lag_penalty_bytes)) * lag_penalty;
 
 		client->local->fake_lag_msec += msec;
 
@@ -676,8 +676,12 @@ long parse_addlag(Client *client, int command_bytes, int mtags_bytes)
  */
 void add_fake_lag(Client *client, long msec)
 {
-	if (!MyConnect(client))
+	if (!MyConnect(client) || IsNoFakeLag(client))
 		return;
+#ifdef FAKELAG_CONFIGURABLE
+	if (client->local->class && (client->local->class->options & CLASS_OPT_NOFAKELAG))
+		return;
+#endif
 
 	client->local->fake_lag_msec += msec;
 	client->local->fake_lag += (client->local->fake_lag_msec / 1000);
@@ -700,8 +704,7 @@ void subtract_fake_lag(Client *client, long msec)
 	if (total >= 0)
 	{
 		client->local->fake_lag_msec = (int)total;
-	}
-	else
+	} else
 	{
 		/* Readjust to whole seconds */
 		long secs = (-total + 999) / 1000;
@@ -721,7 +724,7 @@ static int client_lagged_up(Client *client)
 		return 0;
 	if (IsServer(client))
 		return 0;
-	if (ValidatePermissionsForPath("immune:lag",client,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:lag", client, NULL, NULL, NULL))
 		return 0;
 	if (client->local->fake_lag - TStime() < 10)
 		return 0;
@@ -783,7 +786,7 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 			if (ret < 0)
 			{
 				unreal_log(ULOG_WARNING, "link", "STARTTLS_FAILED", client,
-					   "Switching from plaintext to TLS via STARTTLS failed for server $client, this is unusual.");
+				           "Switching from plaintext to TLS via STARTTLS failed for server $client, this is unusual.");
 				reject_insecure_server(client);
 				return ret;
 			}
@@ -825,24 +828,22 @@ static int do_numeric(int numeric, Client *client, MessageTag *recv_mtags, int p
 					if (skip)
 					{
 						sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s %s",
-						    client->name, numeric, acptr->name, skip+1);
+						                  client->name, numeric, acptr->name, skip + 1);
 					} /* else.. malformed (no content) */
-				} else {
+				} else
+				{
 					sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
-					    client->name, numeric, buffer);
+					                  client->name, numeric, buffer);
 				}
-			}
-			else if (IsServer(acptr) && acptr->direction != client->direction)
+			} else if (IsServer(acptr) && acptr->direction != client->direction)
 				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
-				    client->name, numeric, buffer);
-		}
-		else if ((acptr = find_server_quick(nick)))
+				                  client->name, numeric, buffer);
+		} else if ((acptr = find_server_quick(nick)))
 		{
 			if (!IsMe(acptr) && acptr->direction != client->direction)
 				sendto_prefix_one(acptr, client, recv_mtags, ":%s %d %s",
-				    client->name, numeric, buffer);
-		}
-		else if ((channel = find_channel(nick)))
+				                  client->name, numeric, buffer);
+		} else if ((channel = find_channel(nick)))
 		{
 			sendto_channel(channel, client, client->direction,
 			               0, 0, SEND_ALL, recv_mtags,
@@ -877,7 +878,7 @@ static void remove_unknown(Client *client, char *sender)
 	 */
 	if ((isdigit(*sender) && strlen(sender) <= SIDLEN) || strchr(sender, '.'))
 		sendto_one(client, NULL, ":%s SQUIT %s :Unknown prefix (%s) from %s",
-		    me.id, sender, sender, client->name);
+		           me.id, sender, sender, client->name);
 	else
 		sendto_one(client, NULL, ":%s KILL %s :Ghost user", me.id, sender);
 }

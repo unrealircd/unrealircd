@@ -22,16 +22,15 @@
 CMD_FUNC(cmd_time);
 
 /* Place includes here */
-#define MSG_TIME	"TIME"
+#define MSG_TIME "TIME"
 
-ModuleHeader MOD_HEADER
-  = {
-	"time",	/* Name of module */
-	"5.0", /* Version */
-	"command /time", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "time", /* Name of module */
+    "5.0", /* Version */
+    "command /time", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 
 /* This is called on module init, before Server Ready */

@@ -26,16 +26,15 @@ typedef int (*bqcmp)(const void *, const void *);
 
 CMD_FUNC(cmd_cap);
 
-#define MSG_CAP 	"CAP"
+#define MSG_CAP "CAP"
 
-ModuleHeader MOD_HEADER
-  = {
-	"cap",	/* Name of module */
-	"5.0", /* Version */
-	"command /cap", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "cap", /* Name of module */
+    "5.0", /* Version */
+    "command /cap", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int cap_is_handshake_finished(Client *client);
@@ -48,9 +47,9 @@ long CAP_NOTIFY = 0L;
 MOD_INIT()
 {
 	ClientCapabilityInfo c;
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, MSG_CAP, cmd_cap, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_NOLAG);
+	CommandAdd(modinfo->handle, MSG_CAP, cmd_cap, MAXPARA, CMD_UNREGISTERED | CMD_USER | CMD_NOLAG);
 
 	/* This first cap is special, in the sense that it is hidden
 	 * and indicates a cap exchange is in progress.
@@ -100,7 +99,7 @@ static ClientCapability *clicap_find(Client *client, const char *data, int *nega
 		return NULL;
 
 	/* skip any whitespace */
-	while(*p && isspace(*p))
+	while (*p && isspace(*p))
 		p++;
 
 	if (BadPtr(p))
@@ -125,7 +124,7 @@ static ClientCapability *clicap_find(Client *client, const char *data, int *nega
 	cap = ClientCapabilityFind(p, client);
 	if (!s)
 		*finished = 1;
-	
+
 	p = s; /* point to next token for next iteration */
 
 	if (cap && (cap->flags & CLICAP_FLAGS_ADVERTISE_ONLY))
@@ -146,7 +145,7 @@ static void clicap_generate(Client *client, const char *subcmd, int flags)
 	int buflen = 0;
 	int curlen, mlen;
 
-	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.name,	BadPtr(client->name) ? "*" : client->name, subcmd);
+	mlen = snprintf(buf, BUFSIZE, ":%s CAP %s %s", me.name, BadPtr(client->name) ? "*" : client->name, subcmd);
 
 	p = capbuf;
 	buflen = mlen;
@@ -164,6 +163,9 @@ static void clicap_generate(Client *client, const char *subcmd, int flags)
 
 		if (cap->visible && !cap->visible(client))
 			continue; /* hidden */
+
+		if (cap->minimum_cap_version && (client->local->cap_protocol < cap->minimum_cap_version))
+			continue; /* skip: doesn't meet minimum CAP version */
 
 		if (flags)
 		{
@@ -256,13 +258,13 @@ static void cap_req(Client *client, const char *arg)
 		return;
 
 	buflen = snprintf(buf, sizeof(buf), ":%s CAP %s ACK",
-			  me.name, BadPtr(client->name) ? "*" : client->name);
+	                  me.name, BadPtr(client->name) ? "*" : client->name);
 
 	pbuf[0][0] = '\0';
 	plen = 0;
 
-	for(cap = clicap_find(client, arg, &negate, &finished, &errors); cap;
-	    cap = clicap_find(client, NULL, &negate, &finished, &errors))
+	for (cap = clicap_find(client, arg, &negate, &finished, &errors); cap;
+	     cap = clicap_find(client, NULL, &negate, &finished, &errors))
 	{
 		/* filled the first array, but cant send it in case the
 		 * request fails.  one REQ should never fill more than two
@@ -281,8 +283,7 @@ static void cap_req(Client *client, const char *arg)
 			plen++;
 
 			capdel |= cap->cap;
-		}
-		else
+		} else
 		{
 			capadd |= cap->cap;
 		}
@@ -306,8 +307,7 @@ static void cap_req(Client *client, const char *arg)
 	{
 		sendto_one(client, NULL, "%s * :%s", buf, pbuf[0]);
 		sendto_one(client, NULL, "%s :%s", buf, pbuf[1]);
-	}
-	else
+	} else
 		sendto_one(client, NULL, "%s :%s", buf, pbuf[0]);
 
 	client->local->caps |= capadd;
@@ -320,10 +320,10 @@ struct clicap_cmd {
 };
 
 static struct clicap_cmd clicap_cmdtable[] = {
-	{ "END",	cap_end		},
-	{ "LIST",	cap_list	},
-	{ "LS",		cap_ls		},
-	{ "REQ",	cap_req		},
+    {"END", cap_end},
+    {"LIST", cap_list},
+    {"LS", cap_ls},
+    {"REQ", cap_req},
 };
 
 static int clicap_cmd_search(const char *command, struct clicap_cmd *entry)
@@ -377,8 +377,8 @@ CMD_FUNC(cmd_cap)
 	}
 
 	if (!(cmd = bsearch(parv[1], clicap_cmdtable,
-			   sizeof(clicap_cmdtable) / sizeof(struct clicap_cmd),
-			   sizeof(struct clicap_cmd), (bqcmp) clicap_cmd_search)))
+	                    sizeof(clicap_cmdtable) / sizeof(struct clicap_cmd),
+	                    sizeof(struct clicap_cmd), (bqcmp)clicap_cmd_search)))
 	{
 		sendnumeric(client, ERR_INVALIDCAPCMD, parv[1]);
 

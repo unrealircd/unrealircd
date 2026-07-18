@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"creationtime",
-	"6.1",
-	"Store and retrieve creation time of clients",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "creationtime",
+    "6.1",
+    "Store and retrieve creation time of clients",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 void creationtime_free(ModData *m);
@@ -25,7 +24,11 @@ int creationtime_whois(Client *client, Client *target);
 
 ModDataInfo *creationtime_md; /* Module Data structure which we acquire */
 
-#define SetCreationTime(x,y)	do { moddata_client(x, creationtime_md).ll = y; } while(0)
+#define SetCreationTime(x, y) \
+	do \
+	{ \
+		moddata_client(x, creationtime_md).ll = y; \
+	} while (0)
 
 MOD_INIT()
 {

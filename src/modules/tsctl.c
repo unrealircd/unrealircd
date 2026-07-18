@@ -20,20 +20,19 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"tsctl",	/* Name of module */
-	"5.0", /* Version */
-	"command /tsctl", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "tsctl", /* Name of module */
+    "5.0", /* Version */
+    "command /tsctl", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 CMD_FUNC(cmd_tsctl);
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, "TSCTL", cmd_tsctl, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "TSCTL", cmd_tsctl, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -50,7 +49,7 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_tsctl)
 {
-	if (!ValidatePermissionsForPath("server:tsctl:view",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:tsctl:view", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -67,7 +66,7 @@ CMD_FUNC(cmd_tsctl)
 		struct timeval currenttime_tv;
 		gettimeofday(&currenttime_tv, NULL);
 		sendnotice(client, "*** Server=%s TStime=%lld.%ld",
-			me.name, (long long)currenttime_tv.tv_sec, (long)currenttime_tv.tv_usec);
+		           me.name, (long long)currenttime_tv.tv_sec, (long)currenttime_tv.tv_usec);
 		sendto_server(client, 0, 0, NULL, ":%s TSCTL alltime", client->id);
 		return;
 	}

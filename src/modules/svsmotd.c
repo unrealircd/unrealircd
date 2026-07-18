@@ -26,16 +26,15 @@
 
 CMD_FUNC(cmd_svsmotd);
 
-#define MSG_SVSMOTD 	"SVSMOTD"	
+#define MSG_SVSMOTD "SVSMOTD"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svsmotd",
-	"5.0",
-	"command /svsmotd", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svsmotd",
+    "5.0",
+    "command /svsmotd",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {

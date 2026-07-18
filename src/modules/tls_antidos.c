@@ -10,17 +10,16 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"tls_antidos",
-	"5.0",
-	"TLS Renegotiation DoS protection",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "tls_antidos",
+    "5.0",
+    "TLS Renegotiation DoS protection",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 #define HANDSHAKE_LIMIT_COUNT 3
-#define HANDSHAKE_LIMIT_SECS 300
+#define HANDSHAKE_LIMIT_SECS  300
 
 typedef struct SAD SAD;
 struct SAD {
@@ -41,14 +40,14 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, 0, tls_antidos_handshake);
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM, 1);
 	/* Note that we cannot be MOD_OPT_PERM_RELOADABLE as we use OpenSSL functions to register
 	 * an index and callback function.
 	 */
-	
+
 	tls_antidos_index = SSL_get_ex_new_index(0, "tls_antidos", NULL, NULL, tls_antidos_free);
-	
+
 	return MOD_SUCCESS;
 }
 
@@ -69,7 +68,7 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 	{
 		SAD *e = SSL_get_ex_data(ssl, tls_antidos_index);
 		Client *client = e->client;
-		
+
 		if (IsServer(client) || IsDeadSocket(client))
 			return; /* if it's a server, or already pending to be killed off then we don't care */
 
@@ -77,7 +76,8 @@ void ssl_info_callback(const SSL *ssl, int where, int ret)
 		{
 			e->ts = TStime();
 			e->n = 1;
-		} else {
+		} else
+		{
 			e->n++;
 			if (e->n >= HANDSHAKE_LIMIT_COUNT)
 			{

@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_part);
 
-#define MSG_PART 	"PART"	
+#define MSG_PART "PART"
 
-ModuleHeader MOD_HEADER
-  = {
-	"part",
-	"5.0",
-	"command /part", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "part",
+    "5.0",
+    "command /part",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -68,7 +67,7 @@ CMD_FUNC(cmd_part)
 	int n;
 	int ntargets = 0;
 	int maxtargets = max_targets_for_command("PART");
-	
+
 	if (parc < 2 || parv[1][0] == '\0')
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "PART");
@@ -133,7 +132,8 @@ CMD_FUNC(cmd_part)
 			continue;
 		}
 
-		if (!ValidatePermissionsForPath("channel:override:banpartmsg",client,NULL,channel,NULL) && !check_channel_access(client, channel, "oaq")) {
+		if (!ValidatePermissionsForPath("channel:override:banpartmsg", client, NULL, channel, NULL) && !check_channel_access(client, channel, "oaq"))
+		{
 			/* Banned? No comment allowed ;) */
 			if (comment && is_banned(client, channel, BANCHK_MSG, &comment, NULL))
 				comment = NULL;
@@ -144,7 +144,8 @@ CMD_FUNC(cmd_part)
 		if (MyConnect(client))
 		{
 			Hook *tmphook;
-			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_PART]; tmphook; tmphook = tmphook->next) {
+			for (tmphook = Hooks[HOOKTYPE_PRE_LOCAL_PART]; tmphook; tmphook = tmphook->next)
+			{
 				comment = (*(tmphook->func.stringfunc))(client, channel, comment);
 				if (!comment)
 					break;
@@ -156,7 +157,7 @@ CMD_FUNC(cmd_part)
 
 		/* Send to other servers... */
 		sendto_server(client, 0, 0, mtags, ":%s PART %s :%s",
-			client->id, channel->name, comment ? comment : "");
+		              client->id, channel->name, comment ? comment : "");
 
 		if (invisible_user_in_channel(client, channel))
 		{
@@ -164,33 +165,31 @@ CMD_FUNC(cmd_part)
 			if (!comment)
 			{
 				sendto_channel(channel, client, client,
-					       "ho", 0,
-					       SEND_LOCAL, mtags,
-					       ":%s PART %s",
-					       client->name, channel->name);
+				               "ho", 0,
+				               SEND_LOCAL, mtags,
+				               ":%s PART %s",
+				               client->name, channel->name);
 				if (MyUser(client))
 				{
 					sendto_one(client, mtags, ":%s!%s@%s PART %s",
-						client->name, client->user->username, GetHost(client), channel->name);
+					           client->name, client->user->username, GetHost(client), channel->name);
 				}
-			}
-			else
+			} else
 			{
 				sendto_channel(channel, client, client,
-					       "ho", 0,
-					       SEND_LOCAL, mtags,
-					       ":%s PART %s %s",
-					       client->name, channel->name, comment);
+				               "ho", 0,
+				               SEND_LOCAL, mtags,
+				               ":%s PART %s %s",
+				               client->name, channel->name, comment);
 				if (MyUser(client))
 				{
 					sendto_one(client, mtags,
-						":%s!%s@%s PART %s %s",
-						client->name, client->user->username, GetHost(client),
-						channel->name, comment);
+					           ":%s!%s@%s PART %s %s",
+					           client->name, client->user->username, GetHost(client),
+					           channel->name, comment);
 				}
 			}
-		}
-		else
+		} else
 		{
 			/* Show PART to all users in channel */
 			if (!comment)
@@ -198,7 +197,8 @@ CMD_FUNC(cmd_part)
 				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s",
 				               client->name, channel->name);
-			} else {
+			} else
+			{
 				sendto_channel(channel, client, NULL, 0, 0, SEND_LOCAL, mtags,
 				               ":%s PART %s :%s",
 				               client->name, channel->name, comment);

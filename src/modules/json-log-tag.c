@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"json-log-tag",
-	"5.0",
-	"unrealircd.org/json-log tag for S2S and ircops",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "json-log-tag",
+    "5.0",
+    "unrealircd.org/json-log tag for S2S and ircops",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_JSON_LOG = 0L;
@@ -54,6 +53,7 @@ MOD_INIT()
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "unrealircd.org/json-log";
+	cap.minimum_cap_version = 302;
 	c = ClientCapabilityAdd(modinfo->handle, &cap, &CAP_JSON_LOG);
 
 	memset(&mtag, 0, sizeof(mtag));

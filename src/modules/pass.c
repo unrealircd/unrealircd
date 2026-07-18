@@ -24,21 +24,20 @@
 
 CMD_FUNC(cmd_pass);
 
-#define MSG_PASS 	"PASS"	
+#define MSG_PASS "PASS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"pass",
-	"5.0",
-	"command /pass", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "pass",
+    "5.0",
+    "command /pass",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PASS, cmd_pass, 1, CMD_UNREGISTERED|CMD_USER|CMD_SERVER);
-	
+	CommandAdd(modinfo->handle, MSG_PASS, cmd_pass, 1, CMD_UNREGISTERED | CMD_USER | CMD_SERVER);
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -77,8 +76,8 @@ CMD_FUNC(cmd_pass)
 	}
 
 	/* Store the password */
-	safe_strldup(client->local->passwd, password, PASSWDLEN+1);
+	safe_strldup(client->local->passwd, password, PASSWDLEN + 1);
 
 	/* note: the original non-truncated password is supplied as 2nd parameter. */
-	RunHookReturn(HOOKTYPE_LOCAL_PASS, !=0, client, password);
+	RunHookReturn(HOOKTYPE_LOCAL_PASS, != 0, client, password);
 }

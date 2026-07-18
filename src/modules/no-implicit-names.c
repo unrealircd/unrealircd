@@ -19,17 +19,16 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"no-implicit-names",
-	"1.0",
-	"Opt out of receiving an implicit NAMES list on JOIN", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "no-implicit-names",
+    "1.0",
+    "Opt out of receiving an implicit NAMES list on JOIN",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 #define NO_IMPLICIT_NAMES_CAP_DRAFT "draft/no-implicit-names"
-#define NO_IMPLICIT_NAMES_CAP "no-implicit-names"
+#define NO_IMPLICIT_NAMES_CAP       "no-implicit-names"
 
 long CAP_NO_IMPLICIT_NAMES_DRAFT = 0L;
 long CAP_NO_IMPLICIT_NAMES = 0L;
@@ -40,24 +39,15 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	/** We only add the draft/ version for now */
 	memset(&cap, 0, sizeof(cap));
 	cap.name = NO_IMPLICIT_NAMES_CAP_DRAFT;
 	if (!ClientCapabilityAdd(modinfo->handle, &cap, &CAP_NO_IMPLICIT_NAMES_DRAFT))
-	{
 		return MOD_FAILED;
-	}
 
-	/** This is for the future :D
-	 * If you add this, then also update
-	 * _join_channel in src/modules/join.c to check for it,
-	 * as it is currently commented out there as well.
-	 */
-	/**
 	memset(&cap, 0, sizeof(cap));
 	cap.name = NO_IMPLICIT_NAMES_CAP;
-	ClientCapabilityAdd(modinfo->handle, &cap, &CAP_NO_IMPLICIT_NAMES);
-	*/
+	if (!ClientCapabilityAdd(modinfo->handle, &cap, &CAP_NO_IMPLICIT_NAMES))
+		return MOD_FAILED;
 
 	return MOD_SUCCESS;
 }
@@ -71,4 +61,3 @@ MOD_UNLOAD()
 {
 	return MOD_SUCCESS;
 }
-

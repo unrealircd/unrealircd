@@ -4,13 +4,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"ident_lookup",
-	"1.0",
-	"Ident lookups (RFC1413)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "ident_lookup",
+    "1.0",
+    "Ident lookups (RFC1413)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -105,7 +104,7 @@ static int ident_lookup_connect(Client *client)
 		ident_lookup_failed(client);
 		return 0;
 	}
-	if (++OpenFiles >= maxclients+1)
+	if (++OpenFiles >= maxclients + 1)
 	{
 		unreal_log(ULOG_FATAL, "io", "IDENT_ERROR_MAXCLIENTS", client,
 		           "Cannot do ident connection for $client.details: All connections in use");
@@ -144,8 +143,8 @@ static void ident_lookup_send(int fd, int revents, void *data)
 	Client *client = data;
 
 	ircsnprintf(authbuf, sizeof(authbuf), "%d , %d\r\n",
-		get_client_port(client),
-		get_server_port(client));
+	            get_client_port(client),
+	            get_server_port(client));
 
 	if (WRITE_SOCK(client->local->authfd, authbuf, strlen(authbuf)) != strlen(authbuf))
 	{
@@ -170,7 +169,7 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 	char buf[512];
 	int len;
 
-	len = READ_SOCK(client->local->authfd, buf, sizeof(buf)-1);
+	len = READ_SOCK(client->local->authfd, buf, sizeof(buf) - 1);
 
 	/* We received a response. We don't bother with fragmentation
 	 * since that is not going to happen for such a short string.
@@ -199,7 +198,8 @@ static void ident_lookup_receive(int fd, int revents, void *userdata)
 		strlcpy(client->ident, ident, USERLEN + 1);
 		SetIdentSuccess(client);
 		ircstats.is_asuc++;
-	} else {
+	} else
+	{
 		ircstats.is_abad++;
 	}
 	return;
@@ -248,7 +248,7 @@ static char *ident_lookup_parse(Client *client, char *buf)
 		return NULL;
 
 	/*  <username> */
-	buf = p+1;
+	buf = p + 1;
 	skip_whitespace(&buf);
 
 	/* Username */
@@ -257,7 +257,7 @@ static char *ident_lookup_parse(Client *client, char *buf)
 		if (!strchr("~^", *buf) && (*buf > 32))
 			break;
 	// B) Stop at the end, IOTW stop at newline, space, etc.
-	for (p=buf; *p; p++)
+	for (p = buf; *p; p++)
 	{
 		if (strchr("\n\r@:", *p) || (*p <= 32))
 		{

@@ -19,21 +19,20 @@
  *   $Id$
  */
 
-#ifndef	__channel_include__
+#ifndef __channel_include__
 #define __channel_include__
-#define CREATE 1		/* whether a channel should be
-				   created or just tested for existance */
+#define CREATE 1 /* whether a channel should be created or just tested for existance */
 
-#define	MODEBUFLEN	200
-#define MAXBANLEN	200 /* Maximum length of a complete ban */
+#define MODEBUFLEN 200
+#define MAXBANLEN  200 /* Maximum length of a complete ban */
 
-#define ChannelExists(n)	(find_channel(n))
+#define ChannelExists(n) (find_channel(n))
 
 /* NOTE: Timestamps will be added to MODE-commands, so never make
  * RESYNCMODES and MODEPARAMS higher than MAXPARA-3. DALnet servers
  * before Dreamforge aren't safe with more than six. -Donwulff
  */
 #include "msg.h"
-#define	MAXMODEPARAMS	(MAXPARA_USER-3)	/* Maximum modes processed */
+#define MAXMODEPARAMS (MAXPARA_USER - 3) /* Maximum modes processed */
 
 #endif

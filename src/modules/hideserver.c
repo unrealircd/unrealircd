@@ -33,40 +33,39 @@ ConfigItem_ulines *HiddenServers;
 
 static struct
 {
-	unsigned	disable_map : 1;
-	unsigned	disable_links : 1;
-	char		*map_deny_message;
-	char		*links_deny_message;
+	unsigned disable_map : 1;
+	unsigned disable_links : 1;
+	char *map_deny_message;
+	char *links_deny_message;
 } Settings;
 
-static ModuleInfo	*MyModInfo;
-#define MyMod		MyModInfo->handle
-#define SAVE_MODINFO	MyModInfo = modinfo;
+static ModuleInfo *MyModInfo;
+#define MyMod        MyModInfo->handle
+#define SAVE_MODINFO MyModInfo = modinfo;
 
 static int lmax = 0;
 static int umax = 0;
 
 static int dcount(int n)
 {
-   int cnt = 0;
+	int cnt = 0;
 
-   while (n != 0)
-   {
-	   n = n/10;
-	   cnt++;
-   }
+	while (n != 0)
+	{
+		n = n / 10;
+		cnt++;
+	}
 
-   return cnt;
+	return cnt;
 }
 
-ModuleHeader MOD_HEADER
-  = {
-	"hideserver",
-	"5.0",
-	"Hide servers from /MAP & /LINKS",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "hideserver",
+    "5.0",
+    "Hide servers from /MAP & /LINKS",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 static void InitConf()
 {
@@ -75,7 +74,7 @@ static void InitConf()
 
 static void FreeConf()
 {
-	ConfigItem_ulines	*h, *next;
+	ConfigItem_ulines *h, *next;
 
 	safe_free(Settings.map_deny_message);
 	safe_free(Settings.links_deny_message);
@@ -141,17 +140,15 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				if (!strcmp(cep->name, "hide"))
 				{
 					/* No checking needed */
-				}
-				else if (!cep->value)
+				} else if (!cep->value)
 				{
 					config_error("%s:%i: %s::%s without value",
-						cep->file->filename,
-						cep->line_number,
-						ce->name, cep->name);
+					             cep->file->filename,
+					             cep->line_number,
+					             ce->name, cep->name);
 					errors++;
 					continue;
-				}
-				else if (!strcmp(cep->name, "disable-map"))
+				} else if (!strcmp(cep->name, "disable-map"))
 					;
 				else if (!strcmp(cep->name, "disable-links"))
 					;
@@ -162,7 +159,7 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				else
 				{
 					config_error("%s:%i: unknown directive hideserver::%s",
-						cep->file->filename, cep->line_number, cep->name);
+					             cep->file->filename, cep->line_number, cep->name);
 					errors++;
 				}
 			}
@@ -176,8 +173,8 @@ static int cb_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-	ConfigEntry		*cep, *cepp;
-	ConfigItem_ulines	*ca;
+	ConfigEntry *cep, *cepp;
+	ConfigItem_ulines *ca;
 
 	if (type == CONFIG_MAIN)
 	{
@@ -192,12 +189,10 @@ static int cb_conf(ConfigFile *cf, ConfigEntry *ce, int type)
 				else if (!strcmp(cep->name, "map-deny-message"))
 				{
 					safe_strdup(Settings.map_deny_message, cep->value);
-				}
-				else if (!strcmp(cep->name, "links-deny-message"))
+				} else if (!strcmp(cep->name, "links-deny-message"))
 				{
 					safe_strdup(Settings.links_deny_message, cep->value);
-				}
-				else if (!strcmp(cep->name, "hide"))
+				} else if (!strcmp(cep->name, "hide"))
 				{
 					for (cepp = cep->items; cepp; cepp = cepp->next)
 					{
@@ -237,7 +232,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 {
 	static char prompt[64];
 	char *p = &prompt[prompt_length];
-	int  cnt = 0;
+	int cnt = 0;
 	Client *acptr;
 
 	*p = '\0';
@@ -261,9 +256,10 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 		if (IsOper(client))
 			snprintf(sid, sizeof(sid), " [%s]", server->id);
 		sendnumeric(client, RPL_MAP, prompt, server->name, tbuf, umax,
-			server->server->users, (double)(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-			(server->server->users * 100.0 / irccounts.clients),
-			IsOper(client) ? sid : "");
+		            server->server->users, (double)(lmax < 10) ? 4 : (lmax == 100) ? 6
+		                                                                           : 5,
+		            (server->server->users * 100.0 / irccounts.clients),
+		            IsOper(client) ? sid : "");
 		cnt = 0;
 	}
 
@@ -281,7 +277,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		if (acptr->uplink != server ||
- 		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)))
+		    (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL)))
 			continue;
 		if (FindHiddenServer(acptr->name))
 			break;
@@ -291,7 +287,7 @@ static void dump_map(Client *client, Client *server, char *mask, int prompt_leng
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
-		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
+		if (IsULine(acptr) && HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL))
 			continue;
 		if (FindHiddenServer(acptr->name))
 			break;
@@ -315,7 +311,7 @@ void dump_flat_map(Client *client, Client *server, int length)
 	Client *acptr;
 	int cnt = 0, len = 0, hide_ulines;
 
-	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL)) ? 1 : 0;
+	hide_ulines = (HIDE_ULINES && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL)) ? 1 : 0;
 
 	len = length - strlen(server->name) + 3;
 	if (len < 0)
@@ -328,8 +324,9 @@ void dump_flat_map(Client *client, Client *server, int length)
 		tbuf[len--] = '-';
 
 	sendnumeric(client, RPL_MAP, "", server->name, tbuf, umax, server->server->users,
-		(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-		(server->server->users * 100.0 / irccounts.clients), "");
+	            (lmax < 10) ? 4 : (lmax == 100) ? 6
+	                                            : 5,
+	            (server->server->users * 100.0 / irccounts.clients), "");
 
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
@@ -361,8 +358,9 @@ void dump_flat_map(Client *client, Client *server, int length)
 			tbuf[len--] = '-';
 
 		sendnumeric(client, RPL_MAP, buf, acptr->name, tbuf, umax, acptr->server->users,
-			(lmax < 10) ? 4 : (lmax == 100) ? 6 : 5,
-			(acptr->server->users * 100.0 / irccounts.clients), "");
+		            (lmax < 10) ? 4 : (lmax == 100) ? 6
+		                                            : 5,
+		            (acptr->server->users * 100.0 / irccounts.clients), "");
 	}
 }
 
@@ -383,7 +381,7 @@ CMD_OVERRIDE_FUNC(override_map)
 
 	if (parc < 2)
 		parv[1] = "*";
-	
+
 	if (IsOper(client))
 	{
 		CALL_NEXT_COMMAND_OVERRIDE();
@@ -417,14 +415,14 @@ CMD_OVERRIDE_FUNC(override_map)
 		longest = 60;
 	longest += 2;
 
-	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map",client,NULL,NULL,NULL))
+	if (FLAT_MAP && !ValidatePermissionsForPath("server:info:map:real-map", client, NULL, NULL, NULL))
 		dump_flat_map(client, &me, longest);
 	else
 		dump_map(client, &me, "*", 0, longest);
 
 	avg_users = irccounts.clients * 1.0 / irccounts.servers;
 	sendnumeric(client, RPL_MAPUSERS, irccounts.servers, (irccounts.servers > 1 ? "s" : ""), irccounts.clients,
-		(irccounts.clients > 1 ? "s" : ""), avg_users);
+	            (irccounts.clients > 1 ? "s" : ""), avg_users);
 	sendnumeric(client, RPL_MAPEND);
 }
 
@@ -451,16 +449,16 @@ CMD_OVERRIDE_FUNC(override_links)
 	list_for_each_entry(acptr, &global_server_list, client_node)
 	{
 		/* Some checks */
-		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines",client,NULL,NULL,NULL))
+		if (HIDE_ULINES && IsULine(acptr) && !ValidatePermissionsForPath("server:info:map:ulines", client, NULL, NULL, NULL))
 			continue;
 		if (FindHiddenServer(acptr->name))
 			continue;
 		if (flat)
 			sendnumeric(client, RPL_LINKS, acptr->name, me.name,
-			    1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
+			            1, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 		else
 			sendnumeric(client, RPL_LINKS, acptr->name, acptr->uplink ? acptr->uplink->name : me.name,
-			    acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
+			            acptr->hopcount, (acptr->info[0] ? acptr->info : "(Unknown Location)"));
 	}
 
 	sendnumeric(client, RPL_ENDOFLINKS, "*");

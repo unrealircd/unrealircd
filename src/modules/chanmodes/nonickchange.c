@@ -20,20 +20,19 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/nonickchange",
-	"4.2",
-	"Channel Mode +N",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/nonickchange",
+    "4.2",
+    "Channel Mode +N",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NONICKCHANGE;
 
-#define IsNoNickChange(channel)    (channel->mode.mode & EXTCMODE_NONICKCHANGE)
+#define IsNoNickChange(channel) (channel->mode.mode & EXTCMODE_NONICKCHANGE)
 
-int nonickchange_check (Client *client, Channel *channel);
+int nonickchange_check(Client *client, Channel *channel);
 
 MOD_TEST()
 {
@@ -42,17 +41,17 @@ MOD_TEST()
 
 MOD_INIT()
 {
-CmodeInfo req;
+	CmodeInfo req;
 
 	memset(&req, 0, sizeof(req));
 	req.paracount = 0;
 	req.letter = 'N';
 	req.is_ok = extcmode_default_requirehalfop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NONICKCHANGE);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_CHAN_PERMIT_NICK_CHANGE, 0, nonickchange_check);
 
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -67,15 +66,12 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int nonickchange_check (Client *client, Channel *channel)
+int nonickchange_check(Client *client, Channel *channel)
 {
-	if (!IsOper(client) && !IsULine(client)
-		&& IsNoNickChange(channel)
-		&& !check_channel_access(client, channel, "oaq"))
+	if (!IsOper(client) && !IsULine(client) && IsNoNickChange(channel) && !check_channel_access(client, channel, "oaq"))
 	{
 		return HOOK_DENY;
 	}
 
 	return HOOK_ALLOW;
 }
-

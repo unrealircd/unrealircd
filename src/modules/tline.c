@@ -26,14 +26,13 @@
 
 CMD_FUNC(cmd_tline);
 
-ModuleHeader MOD_HEADER
-  = {
-	"tline",
-	"1.0",
-	"TLINE command to show amount of clients matching a server ban mask",
-	"UnrealIRCd team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "tline",
+    "1.0",
+    "TLINE command to show amount of clients matching a server ban mask",
+    "UnrealIRCd team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -95,9 +94,9 @@ CMD_FUNC(cmd_tline)
 	}
 
 	sendnotice(client,
-	    "*** TLINE: Users matching mask '%s': global: %d/%d (%.2f%%), local: %d/%d (%.2f%%).",
-	    serverban, matching_clients, irccounts.clients,
-	    (double)matching_clients / irccounts.clients * 100,
-	    matching_lclients, irccounts.me_clients,
-	    (double)matching_lclients / irccounts.me_clients * 100);
+	           "*** TLINE: Users matching mask '%s': global: %d/%d (%.2f%%), local: %d/%d (%.2f%%).",
+	           serverban, matching_clients, irccounts.clients,
+	           (double)matching_clients / irccounts.clients * 100,
+	           matching_lclients, irccounts.me_clients,
+	           (double)matching_lclients / irccounts.me_clients * 100);
 }

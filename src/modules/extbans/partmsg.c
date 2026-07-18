@@ -19,13 +19,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/partmsg",
-	"4.2",
-	"ExtBan ~partmsg - Ban/exempt Part/Quit message",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/partmsg",
+    "4.2",
+    "ExtBan ~partmsg - Ban/exempt Part/Quit message",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 int extban_partmsg_is_banned(BanContext *b);
@@ -69,6 +68,6 @@ int extban_partmsg_is_banned(BanContext *b)
 {
 	if (ban_check_mask(b))
 		b->msg = NULL;
-	
+
 	return 0;
 }

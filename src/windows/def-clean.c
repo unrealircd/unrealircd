@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	FILE *fd, *fdout;
 	char buf[1024];
 
@@ -13,13 +14,13 @@ int main(int argc, char *argv[]) {
 
 	if (!(fd = fopen(argv[1], "r")))
 		exit(2);
-	
+
 	if (!(fdout = fopen(argv[2], "w")))
 		exit(3);
 
 	while (fgets(buf, 1023, fd))
 	{
-		if (*buf == '\t') 
+		if (*buf == '\t')
 		{
 			char *symbol = strtok(buf, " ");
 
@@ -28,12 +29,10 @@ int main(int argc, char *argv[]) {
 			if (!strncmp(symbol, "\t_xmm@", 6))
 				continue;
 
-			fprintf(fdout, "%s\r\n", symbol);	
-		
-		}
-		else
-			fprintf(fdout, "%s", buf);
+			fprintf(fdout, "%s\r\n", symbol);
 
+		} else
+			fprintf(fdout, "%s", buf);
 	}
 	return 0;
 }

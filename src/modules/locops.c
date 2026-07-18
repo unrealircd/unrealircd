@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_locops);
 
-#define MSG_LOCOPS 	"LOCOPS"	
+#define MSG_LOCOPS "LOCOPS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"locops",
-	"5.0",
-	"command /locops", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "locops",
+    "5.0",
+    "command /locops",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -65,7 +64,7 @@ CMD_FUNC(cmd_locops)
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "LOCOPS");
 		return;
 	}
-	if (MyUser(client) && !ValidatePermissionsForPath("chat:locops",client,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("chat:locops", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;

@@ -47,7 +47,7 @@ char extchmstr[4][64];
 static void make_cmodestr(void);
 static char previous_chanmodes[256];
 static char previous_prefix[256];
-static Cmode *ParamTable[MAXPARAMMODES+1];
+static Cmode *ParamTable[MAXPARAMMODES + 1];
 static void unload_extcmode_commit(Cmode *cmode);
 
 /** Create the strings that are used for CHANMODES=a,b,c,d in numeric 005 */
@@ -56,29 +56,29 @@ void make_extcmodestr()
 	char *p;
 	Cmode *cm;
 	int i;
-	
+
 	extchmstr[0][0] = extchmstr[1][0] = extchmstr[2][0] = extchmstr[3][0] = '\0';
-	
+
 	/* type 1: lists (like b/e) */
 	/* [NOT IMPLEMENTED IN EXTCMODES] */
 
 	/* type 2: 1 par to set/unset (has .unset_with_param) */
 	p = extchmstr[1];
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if (cm->paracount && cm->letter && cm->unset_with_param && (cm->type != CMODE_MEMBER))
 			*p++ = cm->letter;
 	*p = '\0';
 
 	/* type 3: 1 param to set, 0 params to unset (does not have .unset_with_param) */
 	p = extchmstr[2];
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if (cm->paracount && cm->letter && !cm->unset_with_param)
 			*p++ = cm->letter;
 	*p = '\0';
-	
+
 	/* type 4: paramless modes */
 	p = extchmstr[3];
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if (!cm->paracount && cm->letter)
 			*p++ = cm->letter;
 	*p = '\0';
@@ -97,7 +97,7 @@ static void make_cmodestr(void)
 		p++;
 		tab++;
 	}
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if (cm->letter)
 			*p++ = cm->letter;
 	*p = '\0';
@@ -134,9 +134,9 @@ void extcmodes_check_for_changed_channel_modes(void)
 		strlcpy(previous_chanmodes, chanmodes, sizeof(previous_chanmodes));
 		return; /* not booted yet. then we are done here. */
 	}
-	
+
 	ISupportSetValue(isup, chanmodes);
-	
+
 	if (*previous_chanmodes && strcmp(chanmodes, previous_chanmodes))
 	{
 		unreal_log(ULOG_INFO, "mode", "CHANNEL_MODES_CHANGED", NULL,
@@ -161,7 +161,7 @@ void make_prefix(char **isupport_prefix, char **isupport_statusmsg)
 
 	*prefix = *prefix_prefix = *prefix_modes = '\0';
 
-	for (n=0, cm=channelmodes; cm && n < ARRAY_SIZEOF(rank)-1; cm = cm->next)
+	for (n = 0, cm = channelmodes; cm && n < ARRAY_SIZEOF(rank) - 1; cm = cm->next)
 	{
 		if ((cm->type == CMODE_MEMBER) && cm->letter)
 		{
@@ -176,9 +176,9 @@ void make_prefix(char **isupport_prefix, char **isupport_statusmsg)
 	{
 		int i, j;
 		/* Now sort the damn thing */
-		for (i=0; i < n; i++)
+		for (i = 0; i < n; i++)
 		{
-			for (j=i+1; j < n; j++)
+			for (j = i + 1; j < n; j++)
 			{
 				if (rank[i] < rank[j])
 				{
@@ -314,7 +314,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 	int existing = 0;
 	Cmode *cm;
 
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 	{
 		if (cm->letter == req.letter)
 		{
@@ -323,7 +323,8 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 				cm->unloaded = 0;
 				existing = 1;
 				break;
-			} else {
+			} else
+			{
 				if (module)
 					module->errorcode = MODERR_EXISTS;
 				return NULL;
@@ -338,10 +339,10 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 
 		if (req.type == CMODE_NORMAL)
 		{
-			for (l = 1; l < ULLONG_MAX/2; l *= 2)
+			for (l = 1; l < ULLONG_MAX / 2; l *= 2)
 			{
 				found = 0;
-				for (cm=channelmodes; cm; cm = cm->next)
+				for (cm = channelmodes; cm; cm = cm->next)
 				{
 					if (cm->mode == l)
 					{
@@ -356,7 +357,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 			if (found)
 			{
 				unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
-					   "CmodeAdd: out of space!!!");
+				           "CmodeAdd: out of space!!!");
 				if (module)
 					module->errorcode = MODERR_NOSPACE;
 				return NULL;
@@ -371,15 +372,16 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 			    !req.unset_with_param || !req.rank)
 			{
 				unreal_log(ULOG_ERROR, "module", "CMODEADD_API_ERROR", NULL,
-					   "CmodeAdd(): module is missing required information. "
-					   "Module: $module_name",
-					   log_data_string("module_name", module->header->name));
+				           "CmodeAdd(): module is missing required information. "
+				           "Module: $module_name",
+				           log_data_string("module_name", module->header->name));
 				module->errorcode = MODERR_INVALID;
 				return NULL;
 			}
 			cm = safe_alloc(sizeof(Cmode));
 			cm->letter = req.letter;
-		} else {
+		} else
+		{
 			abort();
 		}
 		channelmode_add_sorted(cm);
@@ -391,8 +393,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 		{
 			/* Re-use parameter slot of the module with the same modechar that is unloading */
 			paraslot = cm->param_slot;
-		}
-		else
+		} else
 		{
 			/* Allocate a new one */
 			for (paraslot = 0; ParamTable[paraslot]; paraslot++)
@@ -400,7 +401,7 @@ Cmode *CmodeAdd(Module *module, CmodeInfo req, Cmode_t *mode)
 				if (paraslot == MAXPARAMMODES - 1)
 				{
 					unreal_log(ULOG_ERROR, "module", "CHANNEL_MODE_OUT_OF_SPACE", NULL,
-						   "CmodeAdd: out of space!!! Place 2.");
+					           "CmodeAdd: out of space!!! Place 2.");
 					if (module)
 						module->errorcode = MODERR_NOSPACE;
 					return NULL;
@@ -455,8 +456,10 @@ void CmodeDel(Cmode *cmode)
 	if (cmode->owner)
 	{
 		ModuleObject *cmodeobj;
-		for (cmodeobj = cmode->owner->objects; cmodeobj; cmodeobj = cmodeobj->next) {
-			if (cmodeobj->type == MOBJ_CMODE && cmodeobj->object.cmode == cmode) {
+		for (cmodeobj = cmode->owner->objects; cmodeobj; cmodeobj = cmodeobj->next)
+		{
+			if (cmodeobj->type == MOBJ_CMODE && cmodeobj->object.cmode == cmode)
+			{
 				DelListItem(cmodeobj, cmode->owner->objects);
 				safe_free(cmodeobj);
 				break;
@@ -468,7 +471,6 @@ void CmodeDel(Cmode *cmode)
 		cmode->unloaded = 1;
 	else
 		unload_extcmode_commit(cmode);
-
 }
 
 /** @} */
@@ -498,11 +500,11 @@ static void unload_extcmode_commit(Cmode *cmode)
 
 					new_message(&me, NULL, &mtags);
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-						       ":%s MODE %s -%c",
-						       me.name, channel->name, cmode->letter);
+					               ":%s MODE %s -%c",
+					               me.name, channel->name, cmode->letter);
 					sendto_server(NULL, 0, 0, mtags,
-						":%s MODE %s -%c 0",
-						me.id, channel->name, cmode->letter);
+					              ":%s MODE %s -%c 0",
+					              me.id, channel->name, cmode->letter);
 					free_message_tags(mtags);
 
 					channel->mode.mode &= ~cmode->mode;
@@ -522,18 +524,19 @@ static void unload_extcmode_commit(Cmode *cmode)
 					{
 						const char *param = cmode->get_param(GETPARASTRUCT(channel, cmode->letter));
 						sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-							       ":%s MODE %s -%c %s",
-							       me.name, channel->name, cmode->letter, param);
+						               ":%s MODE %s -%c %s",
+						               me.name, channel->name, cmode->letter, param);
 						sendto_server(NULL, 0, 0, mtags,
-							":%s MODE %s -%c %s 0",
-							me.id, channel->name, cmode->letter, param);
-					} else {
+						              ":%s MODE %s -%c %s 0",
+						              me.id, channel->name, cmode->letter, param);
+					} else
+					{
 						sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-							       ":%s MODE %s -%c",
-							       me.name, channel->name, cmode->letter);
+						               ":%s MODE %s -%c",
+						               me.name, channel->name, cmode->letter);
 						sendto_server(NULL, 0, 0, mtags,
-							":%s MODE %s -%c 0",
-							me.id, channel->name, cmode->letter);
+						              ":%s MODE %s -%c 0",
+						              me.id, channel->name, cmode->letter);
 					}
 					free_message_tags(mtags);
 
@@ -543,8 +546,7 @@ static void unload_extcmode_commit(Cmode *cmode)
 			}
 			extcmode_para_delslot(cmode, cmode->param_slot);
 		}
-	} else
-	if (cmode->type == CMODE_MEMBER)
+	} else if (cmode->type == CMODE_MEMBER)
 	{
 		for (channel = channels; channel; channel = channel->nextch)
 		{
@@ -557,11 +559,11 @@ static void unload_extcmode_commit(Cmode *cmode)
 
 					new_message(&me, NULL, &mtags);
 					sendto_channel(channel, &me, NULL, 0, 0, SEND_LOCAL, mtags,
-						       ":%s MODE %s -%c %s",
-						       me.name, channel->name, cmode->letter, m->client->name);
+					               ":%s MODE %s -%c %s",
+					               me.name, channel->name, cmode->letter, m->client->name);
 					sendto_server(NULL, 0, 0, mtags,
-						":%s MODE %s -%c %s 0",
-						me.id, channel->name, cmode->letter, m->client->id);
+					              ":%s MODE %s -%c %s 0",
+					              me.id, channel->name, cmode->letter, m->client->id);
 					free_message_tags(mtags);
 					del_member_mode(m->client, channel, cmode->letter);
 				}
@@ -578,7 +580,7 @@ void unload_all_unused_extcmodes(void)
 {
 	Cmode *cm, *cm_next;
 
-	for (cm=channelmodes; cm; cm = cm_next)
+	for (cm = channelmodes; cm; cm = cm_next)
 	{
 		cm_next = cm->next;
 		if (cm->letter && cm->unloaded)
@@ -586,7 +588,6 @@ void unload_all_unused_extcmodes(void)
 			unload_extcmode_commit(cm);
 		}
 	}
-
 }
 
 /** @defgroup ChannelModeAPI Channel mode API
@@ -729,7 +730,7 @@ int module_has_extcmode_param_mode(Module *mod)
 {
 	Cmode *cm;
 
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->letter) && (cm->owner == mod) && (cm->paracount))
 			return 1;
 
@@ -862,7 +863,7 @@ Cmode *find_channel_mode_handler(char letter)
 {
 	Cmode *cm;
 
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if (cm->letter == letter)
 			return cm;
 	return NULL;
@@ -895,7 +896,7 @@ void addlettertomstring(char *str, char letter)
 	my_rank = cm->rank;
 
 	n = strlen(str);
-	if (n >= MEMBERMODESLEN-1)
+	if (n >= MEMBERMODESLEN - 1)
 		return; // panic!
 
 	for (p = str; *p; p++)
@@ -907,14 +908,14 @@ void addlettertomstring(char *str, char letter)
 		{
 			/* We need to insert us here */
 			n = strlen(p);
-			memmove(p+1, p, n+1); // +1 for NUL byte
+			memmove(p + 1, p, n + 1); // +1 for NUL byte
 			*p = letter;
 			return;
 		}
 	}
 	/* We should be at the end */
 	str[n] = letter;
-	str[n+1] = '\0';
+	str[n + 1] = '\0';
 }
 
 void add_member_mode_fast(Member *mb, Membership *mbs, char letter)
@@ -981,7 +982,7 @@ char sjoin_prefix_to_mode(char s)
 		return 'I';
 
 	/* Now the dynamic ones (+vhoaq): */
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->sjoin_prefix == s) && (cm->type == CMODE_MEMBER))
 			return cm->letter;
 
@@ -1006,7 +1007,7 @@ char mode_to_sjoin_prefix(char s)
 		return '\'';
 
 	/* Now the dynamic ones (+vhoaq): */
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->letter == s) && (cm->type == CMODE_MEMBER))
 			return cm->sjoin_prefix;
 
@@ -1040,7 +1041,7 @@ char mode_to_prefix(char s)
 		return '\0';
 
 	/* Now the dynamic ones (+vhoaq): */
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->letter == s) && (cm->type == CMODE_MEMBER))
 			return cm->prefix;
 
@@ -1074,7 +1075,7 @@ char prefix_to_mode(char s)
 		return '\0';
 
 	/* Now the dynamic ones (+vhoaq): */
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->prefix == s) && (cm->type == CMODE_MEMBER))
 			return cm->letter;
 
@@ -1085,7 +1086,7 @@ char prefix_to_mode(char s)
 char rank_to_mode(int rank)
 {
 	Cmode *cm;
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->type == CMODE_MEMBER) && (cm->rank == rank))
 			return cm->letter;
 	return '\0';
@@ -1094,7 +1095,7 @@ char rank_to_mode(int rank)
 int mode_to_rank(char mode)
 {
 	Cmode *cm;
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->type == CMODE_MEMBER) && (cm->letter == mode))
 			return cm->rank;
 	return '\0';
@@ -1103,7 +1104,7 @@ int mode_to_rank(char mode)
 int prefix_to_rank(char prefix)
 {
 	Cmode *cm;
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->type == CMODE_MEMBER) && (cm->prefix == prefix))
 			return cm->rank;
 	return '\0';
@@ -1112,7 +1113,7 @@ int prefix_to_rank(char prefix)
 char rank_to_prefix(int rank)
 {
 	Cmode *cm;
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->type == CMODE_MEMBER) && (cm->rank == rank))
 			return cm->prefix;
 	return '\0';
@@ -1168,9 +1169,9 @@ void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf
 	if (!rank)
 		return; /* zero matches */
 
-	for (cm=channelmodes; cm; cm = cm->next)
-	if ((cm->type == CMODE_MEMBER) && (cm->rank >= rank))
-		strlcat_letter(buf, cm->letter, buflen);
+	for (cm = channelmodes; cm; cm = cm->next)
+		if ((cm->type == CMODE_MEMBER) && (cm->rank >= rank))
+			strlcat_letter(buf, cm->letter, buflen);
 }
 
 /** @} */

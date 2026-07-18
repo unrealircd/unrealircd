@@ -23,21 +23,20 @@
 CMD_FUNC(cmd_lag);
 
 /* Place includes here */
-#define MSG_LAG         "LAG"   /* Lag detect */
+#define MSG_LAG "LAG"   /* Lag detect */
 
-ModuleHeader MOD_HEADER
-  = {
-	"lag",	/* Name of module */
-	"5.0", /* Version */
-	"command /lag", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "lag", /* Name of module */
+    "5.0", /* Version */
+    "command /lag", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LAG, cmd_lag, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_LAG, cmd_lag, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -60,7 +59,7 @@ MOD_UNLOAD()
 
 CMD_FUNC(cmd_lag)
 {
-	if (!ValidatePermissionsForPath("server:info:lag",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:info:lag", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;

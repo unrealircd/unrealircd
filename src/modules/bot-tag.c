@@ -27,14 +27,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"bot-tag",
-	"5.0",
-	"bot message tag",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "bot-tag",
+    "5.0",
+    "bot message tag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 int bottag_mtag_is_ok(Client *client, const char *name, const char *value);
 void mtag_add_bottag(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature);

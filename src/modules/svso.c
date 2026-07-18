@@ -4,13 +4,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"svso",
-	"6.0.0",
-	"Grant oper privileges via SVSO services command",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "svso",
+    "6.0.0",
+    "Grant oper privileges via SVSO services command",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -20,7 +19,7 @@ MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, "SVSO", cmd_svso, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "SVSO", cmd_svso, MAXPARA, CMD_USER | CMD_SERVER);
 	return MOD_SUCCESS;
 }
 
@@ -119,7 +118,6 @@ CMD_FUNC(cmd_svso)
 		if (!was_hidden_oper)
 			irccounts.operators--;
 		VERIFY_OPERCOUNT(acptr, "svso");
-
 	}
 
 	if (vhost && !valid_vhost(vhost))

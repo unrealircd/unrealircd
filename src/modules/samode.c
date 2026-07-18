@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_samode);
 
-#define MSG_SAMODE 	"SAMODE"	
+#define MSG_SAMODE "SAMODE"
 
-ModuleHeader MOD_HEADER
-  = {
-	"samode",
-	"5.0",
-	"command /samode", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "samode",
+    "5.0",
+    "command /samode",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {

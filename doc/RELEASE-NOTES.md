@@ -1,13 +1,63 @@
-UnrealIRCd 6.2.6-git
+UnrealIRCd 6.2.7-git
 =================
 
-This is the git version (development version) for future UnrealIRCd 6.2.6.
+This is the git version (development version) for future UnrealIRCd 6.2.7.
 This is work in progress and may not always be a stable version.
 
-This version enables multiline by default, adds TKL IDs and tracking of
+### Enhancements:
+* New [set::anti-flood](https://www.unrealircd.org/docs/Anti-flood_settings#max-processing-time)
+  setting `max-processing-time`: this limits how much time we spend on a
+  particular client in the I/O engine. This gives other clients a more fair
+  chance to get their commands read and processed. Defaults to 25ms for
+  unknown-users and 50ms for known-users.
+
+### Changes:
+* The [GeoIP](https://www.unrealircd.org/docs/GeoIP) engine was already
+  switched to `geoip_mmdb` in 6.2.4 for new installations. We now change
+  the default for existing installations as well. The old engine
+  `geoip_classic` is now deprecated and we will stop database updates
+  for classic somewhere in 2027.
+
+### Fixes:
+* Race condition in server linking. If a server was trying to link to
+  multiple servers at once, then the servers could clash causing a
+  connect+split. This could happen in the non-standard configuration where
+  [set::server-linking::autoconnect-strategy](https://www.unrealircd.org/docs/Set_block#set::server-linking)
+  was set to `parallel` instead of the default `sequential`. This change
+  means that `parallel` should now be safe to use.
+* The memory log, that JSON-RPC log.getall uses, was cleaned up too much.
+* Channel mode `+f` type `r` (repeat) has normalization (like ignoring
+  upper/lowercase and color), but this normalization was accidently ignored.
+
+### Developers and protocol:
+* New wiki articles: [Dev:Coding guidelines](https://www.unrealircd.org/docs/Dev:Coding_guidelines)
+  and [Dev:Visual Studio Code](https://www.unrealircd.org/docs/Dev:Visual_Studio_Code).
+* After more than 25 years, the entire source code has been reformatted
+  in one big clang-format commit ('make format'), giving the whole tree
+  a single consistent style. Git blame on github.com is unaffected thanks
+  to `.git-blame-ignore-revs`. For local `git blame` to benefit as well,
+  run this once in your working copy:
+  `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+  If you maintain a fork or local patches, then read the migration
+  instructions in
+  [this commit message](https://github.com/unrealircd/unrealircd/commit/e77eb9e923e84853c0fb2a154150f401a9602e0b).
+* All C code must now be formatted with clang-format version 21: run
+  `make format` **before committing** (or use clang-format in your editor).
+  CI will check for this and fail a PR containing unformatted code.
+
+UnrealIRCd 6.2.6
+-----------------
+
+UnrealIRCd 6.2.6 enables multiline by default, adds TKL IDs and tracking of
 hit counts on *LINES/Spamfilter. New crule functions were added to fetch
 server flood counts. Guidance to admins for server linking with 'spkifp'
 has been improved.
+
+A crash bug in the multiline implementation in 6.2.4/6.2.5/6.2.6-rc1
+has been fixed as well. Note that multiline was not enabled by default
+in 6.2.4/6.2.5. If you *only* want to fix that issue then it is possible
+to run the following command on *NIX to patch it without a server restart:
+`./unrealircd hot-patch multiline-62x-crash`
 
 ### Enhancements:
 * [IRCv3 draft/multiline](https://ircv3.net/specs/extensions/multiline)
@@ -98,8 +148,14 @@ has been improved.
 * We now have `./unrealircd mkcert` which replaces `make pem`
   certificate/key generation.
 * Translation updates: `help.fr.conf`
+* CHATHISTORY now sends a `draft/chathistory-end` if the end of history
+  has been reached ([a recent spec improvement](https://github.com/unrealircd/unrealircd/pull/337)).
+* The IRCv3 [reply](https://ircv3.net/specs/client-tags/reply) client tag
+  and [no-implicit-names](https://ircv3.net/specs/extensions/no-implicit-names)
+  extensions have been ratified. During the transition period we support both.
 
 ### Fixes:
+* A crash if multiline was enabled
 * The following config items previously raised a config error:
   allow channel::except, deny channel::except and spamfilter::except.
 * deny channel::mask with a [Mask item](https://www.unrealircd.org/docs/Mask_item)
@@ -115,6 +171,12 @@ has been improved.
   telling the server "does not support remote JSON-RPC".
 
 ### Developers and protocol:
+* If you use `CAP LS` instead of `CAP LS 302` then you will now miss various
+  capabilities. We had to trim it down because only 302 and later allow
+  responses that span multiple lines. If your client is still not using 302
+  then please do so soon (the IRCv3 spec is from Nov'2017). For this first
+  change, you won't miss out much, but somewhere in the future this can
+  become a real problem for you.
 * URL API: The OutgoingWebRequest `max_size` (introduced last release) now
   also caps file-backed downloads. Default for file-backed when left at 0
   is 50MB (`DOWNLOAD_MAX_SIZE_FILE_BACKED`). For memory-backed, it stays

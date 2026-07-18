@@ -20,18 +20,17 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/noexternalmsgs",
-	"6.0",
-	"Channel Mode +n",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/noexternalmsgs",
+    "6.0",
+    "Channel Mode +n",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NO_EXTERNAL_MESSAGES;
 
-#define IsNoExternalMessages(channel)    (channel->mode.mode & EXTCMODE_NO_EXTERNAL_MESSAGES)
+#define IsNoExternalMessages(channel) (channel->mode.mode & EXTCMODE_NO_EXTERNAL_MESSAGES)
 
 int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
 
@@ -64,7 +63,7 @@ MOD_UNLOAD()
 
 int noexternalmsgs_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
-	if (IsNoExternalMessages(channel) && !IsMember(client,channel))
+	if (IsNoExternalMessages(channel) && !IsMember(client, channel))
 	{
 		/* Channel does not accept external messages (+n).
 		 * Reject, unless HOOKTYPE_CAN_BYPASS_NO_EXTERNAL_MSGS tells otherwise.

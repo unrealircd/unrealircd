@@ -20,18 +20,17 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/inviteonly",
-	"6.0",
-	"Channel Mode +i",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/inviteonly",
+    "6.0",
+    "Channel Mode +i",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_INVITE_ONLY;
 
-#define IsInviteOnly(channel)    (channel->mode.mode & EXTCMODE_INVITE_ONLY)
+#define IsInviteOnly(channel) (channel->mode.mode & EXTCMODE_INVITE_ONLY)
 
 int inviteonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
 
@@ -62,7 +61,7 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-int inviteonly_can_join (Client *client, Channel *channel, const char *key, char **errmsg)
+int inviteonly_can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
 	if (IsInviteOnly(channel))
 	{

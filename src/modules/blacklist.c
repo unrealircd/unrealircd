@@ -19,13 +19,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"blacklist",
-	"5.0",
-	"Check connecting users against DNS Blacklists",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "blacklist",
+    "5.0",
+    "Check connecting users against DNS Blacklists",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* In this module and the config syntax I tried to 'abstract' things
@@ -40,13 +39,18 @@ static long BLACKLIST_RECHECK_TIME_FIRST = 120;
 /* After that, check every <this>: */
 static long BLACKLIST_RECHECK_TIME = 900;
 
-#define LastBLCheck(x)	(moddata_local_client(x, blacklistrecheck_md).l)
-#define SetLastBLCheck(x, y)	do { moddata_local_client(x, blacklistrecheck_md).l = y; } while(0)
+#define LastBLCheck(x) (moddata_local_client(x, blacklistrecheck_md).l)
+#define SetLastBLCheck(x, y) \
+	do \
+	{ \
+		moddata_local_client(x, blacklistrecheck_md).l = y; \
+	} while (0)
 
 /* Types */
 
 typedef enum {
-	DNSBL_RECORD=1, DNSBL_BITMASK=2
+	DNSBL_RECORD = 1,
+	DNSBL_BITMASK = 2
 } DNSBLType;
 
 typedef struct DNSBL DNSBL;
@@ -57,8 +61,7 @@ struct DNSBL {
 };
 
 typedef union BlacklistBackend BlacklistBackend;
-union BlacklistBackend
-{
+union BlacklistBackend {
 	DNSBL *dns;
 };
 
@@ -124,8 +127,12 @@ void blacklist_set_handshake_delay(void);
 void blacklist_free_bluser_if_able(BLUser *bl);
 EVENT(blacklist_recheck);
 
-#define SetBLUser(x, y)	do { moddata_local_client(x, blacklist_md).ptr = y; } while(0)
-#define BLUSER(x)	((BLUser *)moddata_local_client(x, blacklist_md).ptr)
+#define SetBLUser(x, y) \
+	do \
+	{ \
+		moddata_local_client(x, blacklist_md).ptr = y; \
+	} while (0)
+#define BLUSER(x) ((BLUser *)moddata_local_client(x, blacklist_md).ptr)
 
 MOD_TEST()
 {
@@ -142,7 +149,7 @@ MOD_INIT()
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "blacklist";
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
@@ -225,7 +232,7 @@ void blacklist_set_handshake_delay(void)
 Blacklist *blacklist_find_block_by_dns(char *name)
 {
 	Blacklist *d;
-	
+
 	for (d = conf_blacklist; d; d = d->next)
 		if ((d->backend_type == BLACKLIST_BACKEND_DNS) && !strcmp(name, d->backend->dns->name))
 			return d;
@@ -256,7 +263,7 @@ void delete_blacklist_block(Blacklist *e)
 			safe_free(e->backend->dns);
 		}
 	}
-	
+
 	safe_free(e->backend);
 
 	safe_free(e->name);
@@ -269,24 +276,24 @@ void delete_blacklist_block(Blacklist *e)
 
 int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-	ConfigEntry	*cep, *cepp, *ceppp;
+	ConfigEntry *cep, *cepp, *ceppp;
 	int errors = 0;
 	char has_reason = 0, has_ban_time = 0, has_action = 0;
 	char has_dns_type = 0, has_dns_reply = 0, has_dns_name = 0, has_recheck = 0;
 
 	if (type != CONFIG_MAIN)
 		return 0;
-	
+
 	if (!ce)
 		return 0;
-	
+
 	if (strcmp(ce->name, "blacklist"))
 		return 0; /* not interested in non-blacklist stuff.. */
-	
+
 	if (!ce->value)
 	{
 		config_error("%s:%i: blacklist block without name (use: blacklist somename { })",
-			ce->file->filename, ce->line_number);
+		             ce->file->filename, ce->line_number);
 		*errs = 1;
 		return -1;
 	}
@@ -304,8 +311,8 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					{
 						/* this is an error (not a warning) */
 						config_error("%s:%i: blacklist block may contain only one blacklist::dns::reply item. "
-									 "You can specify multiple replies by using: reply { 1; 2; 4; };",
-									 cepp->file->filename, cepp->line_number);
+						             "You can specify multiple replies by using: reply { 1; 2; 4; };",
+						             cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
@@ -319,8 +326,8 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					if (cepp->value && cepp->items)
 					{
 						config_error("%s:%i: blacklist::dns::reply must be either using format 'reply 1;' or "
-									 "'reply { 1; 2; 4; }; but not both formats at the same time.",
-									 cepp->file->filename, cepp->line_number);
+						             "'reply { 1; 2; 4; }; but not both formats at the same time.",
+						             cepp->file->filename, cepp->line_number);
 						errors++;
 						continue;
 					}
@@ -329,46 +336,43 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 						if (atoi(cepp->value) <= 0)
 						{
 							config_error("%s:%i: blacklist::dns::reply must be >0",
-								cepp->file->filename, cepp->line_number);
+							             cepp->file->filename, cepp->line_number);
 							errors++;
 							continue;
 						}
 					}
 					if (cepp->items)
 					{
-						for (ceppp = cepp->items; ceppp; ceppp=ceppp->next)
+						for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 						{
 							if (atoi(ceppp->name) <= 0)
 							{
 								config_error("%s:%i: all items in blacklist::dns::reply must be >0",
-									cepp->file->filename, cepp->line_number);
+								             cepp->file->filename, cepp->line_number);
 								errors++;
 							}
 						}
 					}
-				} else
-				if (!cepp->value)
+				} else if (!cepp->value)
 				{
 					config_error_empty(cepp->file->filename, cepp->line_number,
-						"blacklist::dns", cepp->name);
+					                   "blacklist::dns", cepp->name);
 					errors++;
 					continue;
-				} else
-				if (!strcmp(cepp->name, "name"))
+				} else if (!strcmp(cepp->name, "name"))
 				{
 					if (has_dns_name)
 					{
 						config_warn_duplicate(cepp->file->filename,
-							cepp->line_number, "blacklist::dns::name");
+						                      cepp->line_number, "blacklist::dns::name");
 					}
 					has_dns_name = 1;
-				} else
-				if (!strcmp(cepp->name, "type"))
+				} else if (!strcmp(cepp->name, "type"))
 				{
 					if (has_dns_type)
 					{
 						config_warn_duplicate(cepp->file->filename,
-							cepp->line_number, "blacklist::dns::type");
+						                      cepp->line_number, "blacklist::dns::type");
 					}
 					has_dns_type = 1;
 					if (!strcmp(cepp->value, "record"))
@@ -378,68 +382,61 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					else
 					{
 						config_error("%s:%i: unknown blacklist::dns::type '%s', must be either 'record' or 'bitmask'",
-							cepp->file->filename, cepp->line_number, cepp->value);
+						             cepp->file->filename, cepp->line_number, cepp->value);
 						errors++;
 					}
 				}
 			}
-		} else
-		if (!strcmp(cep->name, "except"))
+		} else if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
-		} else
-		if (!cep->value)
+		} else if (!cep->value)
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
-				"blacklist", cep->name);
+			                   "blacklist", cep->name);
 			errors++;
 			continue;
-		}
-		else if (!strcmp(cep->name, "action"))
+		} else if (!strcmp(cep->name, "action"))
 		{
 			if (has_action)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "blacklist::action");
+				                      cep->line_number, "blacklist::action");
 				continue;
 			}
 			has_action = 1;
 			errors += test_ban_action_config(cep);
-		}
-		else if (!strcmp(cep->name, "ban-time"))
+		} else if (!strcmp(cep->name, "ban-time"))
 		{
 			if (has_ban_time)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "blacklist::ban-time");
+				                      cep->line_number, "blacklist::ban-time");
 				continue;
 			}
 			has_ban_time = 1;
-		}
-		else if (!strcmp(cep->name, "reason"))
+		} else if (!strcmp(cep->name, "reason"))
 		{
 			if (has_reason)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "blacklist::reason");
+				                      cep->line_number, "blacklist::reason");
 				continue;
 			}
 			has_reason = 1;
-		}
-		else if (!strcmp(cep->name, "recheck"))
+		} else if (!strcmp(cep->name, "recheck"))
 		{
 			if (has_recheck)
 			{
 				config_warn_duplicate(cep->file->filename,
-					cep->line_number, "blacklist::recheck");
+				                      cep->line_number, "blacklist::recheck");
 				continue;
 			}
 			has_recheck = 1;
-		}
-		else
+		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
-				"blacklist", cep->name);
+			                     "blacklist", cep->name);
 			errors++;
 		}
 	}
@@ -447,35 +444,35 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	if (!has_action)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"blacklist::action");
+		                     "blacklist::action");
 		errors++;
 	}
 
 	if (!has_reason)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"blacklist::reason");
+		                     "blacklist::reason");
 		errors++;
 	}
 
 	if (!has_dns_name)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"blacklist::dns::name");
+		                     "blacklist::dns::name");
 		errors++;
 	}
 
 	if (!has_dns_type)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"blacklist::dns::type");
+		                     "blacklist::dns::type");
 		errors++;
 	}
 
 	if (!has_dns_reply)
 	{
 		config_error_missing(ce->file->filename, ce->line_number,
-			"blacklist::dns::reply");
+		                     "blacklist::dns::reply");
 		errors++;
 	}
 
@@ -487,10 +484,10 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	Blacklist *d = NULL;
-	
+
 	if (type != CONFIG_MAIN)
 		return 0;
-	
+
 	if (!ce || !ce->name || strcmp(ce->name, "blacklist"))
 		return 0; /* not interested */
 
@@ -499,7 +496,7 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 	/* set some defaults */
 	d->ban_time = 3600;
 	d->recheck = 1;
-	
+
 	/* assume dns for now ;) */
 	d->backend_type = BLACKLIST_BACKEND_DNS;
 	d->backend = safe_alloc(sizeof(BlacklistBackend));
@@ -516,11 +513,10 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 					if (cepp->value)
 					{
 						/* single reply */
-						d->backend->dns->reply = safe_alloc(sizeof(int)*2);
+						d->backend->dns->reply = safe_alloc(sizeof(int) * 2);
 						d->backend->dns->reply[0] = atoi(cepp->value);
 						d->backend->dns->reply[1] = 0;
-					} else
-					if (cepp->items)
+					} else if (cepp->items)
 					{
 						/* (potentially) multiple reply values */
 						int cnt = 0;
@@ -529,12 +525,12 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 							if (ceppp->name)
 								cnt++;
 						}
-						
+
 						if (cnt == 0)
 							abort(); /* impossible */
-						
-						d->backend->dns->reply = safe_alloc(sizeof(int)*(cnt+1));
-						
+
+						d->backend->dns->reply = safe_alloc(sizeof(int) * (cnt + 1));
+
 						cnt = 0;
 						for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
 						{
@@ -542,44 +538,37 @@ int blacklist_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 						}
 						d->backend->dns->reply[cnt] = 0;
 					}
-				} else
-				if (!strcmp(cepp->name, "type"))
+				} else if (!strcmp(cepp->name, "type"))
 				{
 					if (!strcmp(cepp->value, "record"))
 						d->backend->dns->type = DNSBL_RECORD;
 					else if (!strcmp(cepp->value, "bitmask"))
 						d->backend->dns->type = DNSBL_BITMASK;
-				} else
-				if (!strcmp(cepp->name, "name"))
+				} else if (!strcmp(cepp->name, "name"))
 				{
 					safe_strdup(d->backend->dns->name, cepp->value);
 				}
 			}
-		}
-		else if (!strcmp(cep->name, "action"))
+		} else if (!strcmp(cep->name, "action"))
 		{
 			parse_ban_action_config(cep, &d->action);
-		}
-		else if (!strcmp(cep->name, "ban-time"))
+		} else if (!strcmp(cep->name, "ban-time"))
 		{
 			d->ban_time = config_checkval(cep->value, CFG_TIME);
-		}
-		else if (!strcmp(cep->name, "reason"))
+		} else if (!strcmp(cep->name, "reason"))
 		{
 			safe_strdup(d->reason, cep->value);
-		}
-		else if (!strcmp(cep->name, "except"))
+		} else if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &d->except);
-		}
-		else if (!strcmp(cep->name, "recheck"))
+		} else if (!strcmp(cep->name, "recheck"))
 		{
 			d->recheck = config_checkval(cep->value, CFG_YESNO);
 		}
 	}
 
 	AddListItem(d, conf_blacklist);
-	
+
 	return 0;
 }
 
@@ -591,11 +580,11 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::blacklist.. */
 	if (!ce || !ce->name || strcmp(ce->name, "blacklist"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "recheck-time-first"))
@@ -604,7 +593,7 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 			if (!cep->value)
 			{
 				config_error("%s:%i: set::blacklist::recheck-time-first with no value",
-					cep->file->filename, cep->line_number);
+				             cep->file->filename, cep->line_number);
 				errors++;
 				continue;
 			}
@@ -621,17 +610,16 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 			if (v < 60)
 			{
 				config_error("%s:%i: set::blacklist::recheck-time-first cannot be less than 60 seconds",
-					cep->file->filename, cep->line_number);
+				             cep->file->filename, cep->line_number);
 				errors++;
 			}
-		} else
-		if (!strcmp(cep->name, "recheck-time"))
+		} else if (!strcmp(cep->name, "recheck-time"))
 		{
 			int v;
 			if (!cep->value)
 			{
 				config_error("%s:%i: set::blacklist::recheck-time with no value",
-					cep->file->filename, cep->line_number);
+				             cep->file->filename, cep->line_number);
 				errors++;
 				continue;
 			}
@@ -641,19 +629,19 @@ int blacklist_set_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 				if (v < 60)
 				{
 					config_error("%s:%i: set::blacklist::recheck-time cannot be less than 60 seconds",
-						cep->file->filename, cep->line_number);
+					             cep->file->filename, cep->line_number);
 					errors++;
 				}
 			}
 		} else
 		{
 			config_error("%s:%i: unknown directive set::blacklist::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -665,11 +653,11 @@ int blacklist_set_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::blacklist.. */
 	if (!ce || !ce->name || strcmp(ce->name, "blacklist"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "recheck-time"))
@@ -739,7 +727,7 @@ int blacklist_start_check(Client *client, int recheck)
 		if (bl->backend_type == BLACKLIST_BACKEND_DNS)
 			blacklist_dns_request(client, bl);
 	}
-	
+
 	return 0;
 }
 
@@ -748,7 +736,7 @@ int blacklist_dns_request(Client *client, Blacklist *d)
 	char buf[256], wbuf[128];
 	unsigned int e[8];
 	char *ip = GetIP(client);
-	
+
 	if (!ip)
 		return 0;
 
@@ -759,16 +747,15 @@ int blacklist_dns_request(Client *client, Blacklist *d)
 		/* IPv4 */
 		if (sscanf(ip, "%u.%u.%u.%u", &e[0], &e[1], &e[2], &e[3]) != 4)
 			return 0;
-	
+
 		snprintf(buf, sizeof(buf), "%u.%u.%u.%u.%s", e[3], e[2], e[1], e[0], d->backend->dns->name);
-	} else
-	if (strchr(ip, ':'))
+	} else if (strchr(ip, ':'))
 	{
 		/* IPv6 */
 		int i;
 		BLUSER(client)->is_ipv6 = 1;
 		if (sscanf(ip, "%x:%x:%x:%x:%x:%x:%x:%x",
-		    &e[0], &e[1], &e[2], &e[3], &e[4], &e[5], &e[6], &e[7]) != 8)
+		           &e[0], &e[1], &e[2], &e[3], &e[4], &e[5], &e[6], &e[7]) != 8)
 		{
 			return 0;
 		}
@@ -776,21 +763,20 @@ int blacklist_dns_request(Client *client, Blacklist *d)
 		for (i = 7; i >= 0; i--)
 		{
 			snprintf(wbuf, sizeof(wbuf), "%x.%x.%x.%x.",
-				(unsigned int)(e[i] & 0xf),
-				(unsigned int)((e[i] >> 4) & 0xf),
-				(unsigned int)((e[i] >> 8) & 0xf),
-				(unsigned int)((e[i] >> 12) & 0xf));
+			         (unsigned int)(e[i] & 0xf),
+			         (unsigned int)((e[i] >> 4) & 0xf),
+			         (unsigned int)((e[i] >> 8) & 0xf),
+			         (unsigned int)((e[i] >> 12) & 0xf));
 			strlcat(buf, wbuf, sizeof(buf));
 		}
 		strlcat(buf, d->backend->dns->name, sizeof(buf));
-	}
-	else
+	} else
 		return 0; /* unknown IP format */
 
 	BLUSER(client)->refcnt++; /* one (more) blacklist result remaining */
-	
+
 	unreal_gethostbyname_api(buf, AF_INET, "blacklist_resolver_callback", BLUSER(client));
-	
+
 	return 0;
 }
 
@@ -850,7 +836,7 @@ char *getdnsblname(char *p, Client *client)
 		{
 			dots++;
 			if (dots == dots_count)
-				return p+1;
+				return p + 1;
 		}
 	}
 	return NULL;
@@ -870,12 +856,12 @@ int blacklist_parse_reply(struct hostent *he, int entry)
 	*ipbuf = '\0';
 	if (!inet_ntop(AF_INET, he->h_addr_list[entry], ipbuf, sizeof(ipbuf)))
 		return 0;
-	
+
 	p = strrchr(ipbuf, '.');
 	if (!p)
 		return 0;
-	
-	return atoi(p+1);
+
+	return atoi(p + 1);
 }
 
 /** Take the actual ban action.
@@ -908,10 +894,10 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 
 	if (IsUser(client))
 		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s (%s) matches blacklist %s (%s/reply=%d)",
-			GetIP(client), client->name, bl->name, bl->backend->dns->name, reply);
+		         GetIP(client), client->name, bl->name, bl->backend->dns->name, reply);
 	else
 		snprintf(opernotice, sizeof(opernotice), "[Blacklist] IP %s matches blacklist %s (%s/reply=%d)",
-			GetIP(client), bl->name, bl->backend->dns->name, reply);
+		         GetIP(client), bl->name, bl->backend->dns->name, reply);
 
 	snprintf(reply_num, sizeof(reply_num), "%d", reply);
 
@@ -934,7 +920,8 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 			safe_strdup(blu->save_blacklist_dns_name, bl->backend->dns->name);
 			blu->save_blacklist_dns_reply = reply;
 		}
-	} else {
+	} else
+	{
 		/* Otherwise, execute the action immediately */
 		blacklist_action(client, opernotice, bl->action, banbuf, bl->ban_time, bl->name, bl->backend->dns->name, reply);
 	}
@@ -947,27 +934,27 @@ void blacklist_process_result(Client *client, int status, struct hostent *he)
 	int reply;
 	int i;
 	int replycnt;
-	
+
 	if ((status != 0) || (he->h_length != 4) || !he->h_name)
 		return; /* invalid reply */
-	
+
 	domain = getdnsblname(he->h_name, client);
 	if (!domain)
 		return; /* odd */
 	bl = blacklist_find_block_by_dns(domain);
 	if (!bl)
 		return; /* possibly just rehashed and the blacklist block is gone now */
-	
+
 	/* walk through all replies for this record... until we have a hit */
-	for (replycnt=0; he->h_addr_list[replycnt]; replycnt++)
+	for (replycnt = 0; he->h_addr_list[replycnt]; replycnt++)
 	{
 		reply = blacklist_parse_reply(he, replycnt);
 
 		for (i = 0; bl->backend->dns->reply[i]; i++)
 		{
 			if ((bl->backend->dns->reply[i] == -1) ||
-				( (bl->backend->dns->type == DNSBL_BITMASK) && (reply & bl->backend->dns->reply[i]) ) ||
-				( (bl->backend->dns->type == DNSBL_RECORD) && (bl->backend->dns->reply[i] == reply) ) )
+			    ((bl->backend->dns->type == DNSBL_BITMASK) && (reply & bl->backend->dns->reply[i])) ||
+			    ((bl->backend->dns->type == DNSBL_RECORD) && (bl->backend->dns->reply[i] == reply)))
 			{
 				blacklist_hit(client, bl, reply);
 				return;
@@ -1043,9 +1030,9 @@ EVENT(blacklist_recheck)
 			/* First time: check after 60 seconds already */
 			blacklist_recheck_user(client);
 		} else /* After that, check every <...> seconds */
-		if (last_check && (TStime() - last_check) >= BLACKLIST_RECHECK_TIME)
-		{
-			blacklist_recheck_user(client);
-		}
+			if (last_check && (TStime() - last_check) >= BLACKLIST_RECHECK_TIME)
+			{
+				blacklist_recheck_user(client);
+			}
 	}
 }

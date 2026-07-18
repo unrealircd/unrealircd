@@ -32,13 +32,13 @@
  * textbans set.
  * UPDATE: The speed impact for 15 bans per channel is 42 usec PEAK.
  */
-#define MAX_EXTBANT_PER_CHAN     15 /* Max number of ~T bans in a channel. */
+#define MAX_EXTBANT_PER_CHAN 15 /* Max number of ~T bans in a channel. */
 
 /** Max length of a ban.
  * NOTE: This is mainly for 'cosmetic' purposes. Lowering it does not
  *       decrease CPU usage for text processing.
  */
-#define MAX_LENGTH               150 /* Max length of a ban */
+#define MAX_LENGTH 150 /* Max length of a ban */
 
 /** Allow user@host in the textban? This changes the syntax! */
 #undef UHOSTFEATURE
@@ -57,14 +57,13 @@
 /** Which censor replace word to use when CENSORFEATURE is enabled. */
 #define CENSORWORD "<censored>"
 
-ModuleHeader MOD_HEADER
-  = {
-	"extbans/textban",
-	"2.2",
-	"ExtBan ~textban",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "extbans/textban",
+    "2.2",
+    "ExtBan ~textban",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 const char *extban_modeT_conv_param(BanContext *b, Extban *extban);
@@ -111,8 +110,8 @@ MOD_UNLOAD()
 static char *my_strcasestr(char *haystack, char *needle)
 {
 	int i;
-	int nlength = strlen (needle);
-	int hlength = strlen (haystack);
+	int nlength = strlen(needle);
+	int hlength = strlen(haystack);
 
 	if (nlength > hlength)
 		return NULL;
@@ -122,14 +121,14 @@ static char *my_strcasestr(char *haystack, char *needle)
 		return haystack;
 	for (i = 0; i <= (hlength - nlength); i++)
 	{
-		if (strncasecmp (haystack + i, needle, nlength) == 0)
+		if (strncasecmp(haystack + i, needle, nlength) == 0)
 			return haystack + i;
 	}
 	return NULL; /* not found */
 }
 
-#define TEXTBAN_WORD_LEFT	0x1
-#define TEXTBAN_WORD_RIGHT	0x2
+ #define TEXTBAN_WORD_LEFT  0x1
+ #define TEXTBAN_WORD_RIGHT 0x2
 
 /* textban_replace:
  * a fast replace routine written by Syzop used for replacing.
@@ -149,7 +148,7 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 	int cleaned = 0;
 
 	replacew = CENSORWORD;
-	replacen = sizeof(CENSORWORD)-1;
+	replacen = sizeof(CENSORWORD) - 1;
 
 	while (1)
 	{
@@ -159,12 +158,14 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 		if (searchn == -1)
 			searchn = strlen(badword);
 		/* Hunt for start of word */
- 		if (pold > line)
- 		{
-			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--);
+		if (pold > line)
+		{
+			for (startw = pold; (!iswseperator(*startw) && (startw != line)); startw--)
+				;
 			if (iswseperator(*startw))
 				startw++; /* Don't point at the space/seperator but at the word! */
-		} else {
+		} else
+		{
 			startw = pold;
 		}
 
@@ -179,9 +180,10 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 		 * Fix for bug #4909: word will be at least 'searchn' long so we can skip
 		 * 'searchn' bytes and avoid stopping half-way the badword.
 		 */
-		for (endw = pold+searchn; ((*endw != '\0') && (!iswseperator(*endw))); endw++);
+		for (endw = pold + searchn; ((*endw != '\0') && (!iswseperator(*endw))); endw++)
+			;
 
-		if (!(type & TEXTBAN_WORD_RIGHT) && (pold+searchn != endw))
+		if (!(type & TEXTBAN_WORD_RIGHT) && (pold + searchn != endw))
 		{
 			/* not matched */
 			pold++;
@@ -226,7 +228,8 @@ int textban_replace(int type, char *badword, char *line, char *buf)
 	{
 		strncpy(pnew, poldx, c_eol - pnew);
 		*(c_eol) = '\0';
-	} else {
+	} else
+	{
 		*pnew = '\0';
 	}
 	return cleaned;
@@ -238,10 +241,10 @@ unsigned int counttextbans(Channel *channel)
 	Ban *ban;
 	unsigned int cnt = 0;
 
-	for (ban = channel->banlist; ban; ban=ban->next)
+	for (ban = channel->banlist; ban; ban = ban->next)
 		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'T') && (ban->banstr[2] == ':'))
 			cnt++;
-	for (ban = channel->exlist; ban; ban=ban->next)
+	for (ban = channel->exlist; ban; ban = ban->next)
 		if ((ban->banstr[0] == '~') && (ban->banstr[1] == 'T') && (ban->banstr[2] == ':'))
 			cnt++;
 	return cnt;
@@ -257,7 +260,7 @@ int extban_modeT_is_ok(BanContext *b)
 
 	/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
 	if ((b->what == MODE_ADD) && (b->is_ok_check == EXBCHK_PARAM) &&
-	     MyUser(b->client) && !IsOper(b->client) &&
+	    MyUser(b->client) && !IsOper(b->client) &&
 	    ((n = counttextbans(b->channel)) >= MAX_EXTBANT_PER_CHAN))
 	{
 		/* We check the # of bans in the channel, may not exceed MAX_EXTBANT_PER_CHAN */
@@ -274,20 +277,20 @@ char *conv_pattern_asterisks(const char *pattern)
 	char missing_prefix = 0, missing_suffix = 0;
 	if (*pattern != '*')
 		missing_prefix = 1;
-	if (*pattern && (pattern[strlen(pattern)-1] != '*'))
+	if (*pattern && (pattern[strlen(pattern) - 1] != '*'))
 		missing_suffix = 1;
 	snprintf(buf, sizeof(buf), "%s%s%s",
-		missing_prefix ? "*" : "",
-		pattern,
-		missing_suffix ? "*" : "");
+	         missing_prefix ? "*" : "",
+	         pattern,
+	         missing_suffix ? "*" : "");
 	return buf;
 }
 
 /** Ban callbacks */
 const char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[MAX_LENGTH+1];
-	char para[MAX_LENGTH+1], *action, *text, *p;
+	static char retbuf[MAX_LENGTH + 1];
+	char para[MAX_LENGTH + 1], *action, *text, *p;
 #ifdef UHOSTFEATURE
 	char *uhost;
 	int ap = 0;
@@ -354,9 +357,9 @@ const char *extban_modeT_conv_param(BanContext *b, Extban *extban)
 		return NULL; /* unknown action */
 
 	/* check the string.. */
-	for (p=text; *p; p++)
+	for (p = text; *p; p++)
 	{
-		if ((*p == '\003') || (*p == '\002') || 
+		if ((*p == '\003') || (*p == '\002') ||
 		    (*p == '\037') || (*p == '\026') ||
 		    (*p == ' '))
 		{
@@ -387,21 +390,20 @@ int textban_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 		return HOOK_CONTINUE;
 
 	/* Now we have to manually walk the banlist and check if things match */
-	for (ban = channel->banlist; ban; ban=ban->next)
+	for (ban = channel->banlist; ban; ban = ban->next)
 	{
 		const char *banstr = ban->banstr;
 
 		/* Pretend time does not exist... */
 		if (!strncmp(banstr, "~t:", 3))
 		{
-			banstr = strchr(banstr+3, ':');
+			banstr = strchr(banstr + 3, ':');
 			if (!banstr)
 				continue;
 			banstr++;
-		}
-		else if (!strncmp(banstr, "~time:", 6))
+		} else if (!strncmp(banstr, "~time:", 6))
 		{
-			banstr = strchr(banstr+6, ':');
+			banstr = strchr(banstr + 6, ':');
 			if (!banstr)
 				continue;
 			banstr++;
@@ -424,7 +426,7 @@ int textban_check_ban(Client *client, Channel *channel, const char *ban, const c
 	static char retbuf[512];
 	char filtered[512]; /* temp input buffer */
 	long fl;
-	int cleaned=0;
+	int cleaned = 0;
 	const char *p;
 #ifdef UHOSTFEATURE
 	char buf[512], uhost[USERLEN + HOSTLEN + 16];
@@ -462,7 +464,7 @@ int textban_check_ban(Client *client, Channel *channel, const char *ban, const c
 	{
 		if (!strncasecmp(p, "block:", 6))
 		{
-			if (match_simple(p+6, filtered))
+			if (match_simple(p + 6, filtered))
 			{
 				if (errmsg)
 					*errmsg = "Message blocked due to a text ban";
@@ -472,7 +474,7 @@ int textban_check_ban(Client *client, Channel *channel, const char *ban, const c
 #ifdef CENSORFEATURE
 		else if (!strncasecmp(p, "censor:", 7))
 		{
-			parse_word(p+7, &word, &type);
+			parse_word(p + 7, &word, &type);
 			if (textban_replace(type, word, filtered, tmp))
 			{
 				strlcpy(filtered, tmp, sizeof(filtered));

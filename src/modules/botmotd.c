@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_botmotd);
 
-#define MSG_BOTMOTD 	"BOTMOTD"	
+#define MSG_BOTMOTD "BOTMOTD"
 
-ModuleHeader MOD_HEADER
-  = {
-	"botmotd",
-	"5.0",
-	"command /botmotd", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "botmotd",
+    "5.0",
+    "command /botmotd",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_BOTMOTD, cmd_botmotd, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_BOTMOTD, cmd_botmotd, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

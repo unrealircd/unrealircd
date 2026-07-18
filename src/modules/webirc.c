@@ -19,13 +19,12 @@
 #include "unrealircd.h"
 
 /* Module header */
-ModuleHeader MOD_HEADER
-= {
-	"webirc",
-	"5.0",
-	"WebIRC/CGI:IRC Support",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "webirc",
+    "5.0",
+    "WebIRC/CGI:IRC Support",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Global variables */
@@ -39,11 +38,23 @@ void webirc_md_unserialize(const char *str, ModData *m);
 void webirc_md_free(ModData *md);
 int webirc_secure_connect(Client *client);
 
-#define IsWEBIRC(x)			(moddata_client(x, webirc_md).l)
-#define IsWEBIRCSecure(x)	(moddata_client(x, webirc_md).l == 2)
-#define ClearWEBIRC(x)		do { moddata_client(x, webirc_md).l = 0; } while(0)
-#define SetWEBIRC(x)		do { moddata_client(x, webirc_md).l = 1; } while(0)
-#define SetWEBIRCSecure(x)	do { moddata_client(x, webirc_md).l = 2; } while(0)
+#define IsWEBIRC(x)       (moddata_client(x, webirc_md).l)
+#define IsWEBIRCSecure(x) (moddata_client(x, webirc_md).l == 2)
+#define ClearWEBIRC(x) \
+	do \
+	{ \
+		moddata_client(x, webirc_md).l = 0; \
+	} while (0)
+#define SetWEBIRC(x) \
+	do \
+	{ \
+		moddata_client(x, webirc_md).l = 1; \
+	} while (0)
+#define SetWEBIRCSecure(x) \
+	do \
+	{ \
+		moddata_client(x, webirc_md).l = 2; \
+	} while (0)
 
 #define MSG_WEBIRC "WEBIRC"
 
@@ -53,7 +64,7 @@ MOD_INIT()
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "webirc";
 	mreq.type = MODDATATYPE_CLIENT;
@@ -73,7 +84,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
 
 	CommandAdd(modinfo->handle, MSG_WEBIRC, cmd_webirc, MAXPARA, CMD_UNREGISTERED);
-		
+
 	return MOD_SUCCESS;
 }
 
@@ -125,8 +136,8 @@ ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType ty
 					error = "CGI:IRC -- Invalid password";
 				else
 					return e; /* Found matching block, return straight away */
-			} else
-			if (type == PROXY_WEBIRC_PASS) {
+			} else if (type == PROXY_WEBIRC_PASS)
+			{
 				return e; /* The PROXY_WEBIRC_PASS type has no password checking */
 			}
 		}
@@ -140,8 +151,8 @@ ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType ty
 	return NULL;
 }
 
-#define WEBIRC_STRING     "WEBIRC_"
-#define WEBIRC_STRINGLEN  (sizeof(WEBIRC_STRING)-1)
+#define WEBIRC_STRING    "WEBIRC_"
+#define WEBIRC_STRINGLEN (sizeof(WEBIRC_STRING) - 1)
 
 /* Does the CGI:IRC host spoofing work */
 void dowebirc(Client *client, const char *ip, const char *host, const char *options)
@@ -157,7 +168,7 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 
 	if (!set_client_ip(client, ip))
 		return; /* Failed, client exited */
-		
+
 	/* Update client->local->hostp */
 	/* (free old) */
 	if (client->local->hostp)
@@ -250,7 +261,7 @@ int webirc_local_pass(Client *client, const char *password)
 				return HOOK_DENY;
 			}
 			*host++ = '\0';
-		
+
 			dowebirc(client, ip, host, NULL);
 			return HOOK_DENY;
 		}

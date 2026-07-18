@@ -1,0 +1,86 @@
+# UnrealIRCd code style for clang-format. We use clang-format v21.
+# This tries to match our existing style as much as possible.
+
+BasedOnStyle: LLVM
+
+# Indentation: tabs to indent (width 8), spaces to align.
+UseTab: ForIndentation
+IndentWidth: 8
+TabWidth: 8
+
+# Braces: Allman for functions and control flow; attached (K&R) for
+# struct/union/enum. 'else' stays cuddled to the closing brace ("} else") with
+# the block's '{' on the next line.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: false
+  AfterControlStatement: Always
+  AfterEnum: false
+  AfterExternBlock: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: true
+  BeforeElse: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: false
+
+# Indent #define etc. inside #if blocks (one space per level), as the code already does.
+IndentPPDirectives: BeforeHash
+PPIndentWidth: 1
+
+# Keep existing #define-value column alignment (not declarations).
+AlignConsecutiveMacros:
+  Enabled: true
+# Trailing comments: leave them wherever they are, don't align and don't
+# un-align. Exception: in include/ they ARE aligned automatically, see
+# include/.clang-format. We don't want alignment in .c files because one
+# long line would drag the comments of all surrounding lines far to the
+# right (clang-format can't align "only when reasonable").
+AlignTrailingComments:
+  Kind: Leave
+  OverEmptyLines: 0
+
+IndentCaseLabels: true                 # case labels are indented one level
+
+# Our list_for_each* macros (include/list.h) are loops. Without this,
+# clang-format thinks they are function calls and then joins the loop
+# body onto the same line, like: list_for_each_entry(...) if (x) y();
+ForEachMacros:
+  - list_for_each
+  - list_for_each_prev
+  - list_for_each_safe
+  - list_for_each_prev_safe
+  - list_for_each_entry
+  - list_for_each_entry2
+  - list_for_each_entry_reverse
+  - list_for_each_entry_continue
+  - list_for_each_entry_continue_reverse
+  - list_for_each_entry_from
+  - list_for_each_entry_safe
+  - list_for_each_entry_safe_continue
+  - list_for_each_entry_safe_from
+  - list_for_each_entry_safe_reverse
+
+# "if (" but "call(" / "sizeof(". The foreach option is so the macros
+# above are written as "list_for_each_entry(" without a space, like a
+# function call, which is how the code already does it.
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterForeachMacros: false
+PointerAlignment: Right                # "type *name"
+DerivePointerAlignment: false
+BreakBeforeBinaryOperators: None       # wrap after && / ||, not before
+AllowShortFunctionsOnASingleLine: None
+AllowShortEnumsOnASingleLine: false
+SortIncludes: Never
+SeparateDefinitionBlocks: Leave
+AlignEscapedNewlines: DontAlign        # don't pad macro \ continuations
+ColumnLimit: 0                         # never re-wrap lines on width
+MaxEmptyLinesToKeep: 2
+ReflowComments: false                  # leave comments as-is

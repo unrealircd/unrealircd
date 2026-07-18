@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_opermotd);
 
-#define MSG_OPERMOTD 	"OPERMOTD"	
+#define MSG_OPERMOTD "OPERMOTD"
 
-ModuleHeader MOD_HEADER
-  = {
-	"opermotd",
-	"5.0",
-	"command /opermotd", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "opermotd",
+    "5.0",
+    "command /opermotd",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_OPERMOTD, cmd_opermotd, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_OPERMOTD, cmd_opermotd, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -60,7 +59,7 @@ CMD_FUNC(cmd_opermotd)
 	MOTDLine *motdline;
 	ConfigItem_tld *tld;
 
-	if (!ValidatePermissionsForPath("server:opermotd",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:opermotd", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -83,7 +82,7 @@ CMD_FUNC(cmd_opermotd)
 	while (motdline)
 	{
 		sendnumeric(client, RPL_MOTD,
-			   motdline->line);
+		            motdline->line);
 		motdline = motdline->next;
 	}
 	sendnumericfmt(client, RPL_ENDOFMOTD, ":End of /OPERMOTD command.");

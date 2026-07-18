@@ -57,3 +57,35 @@ jobs:
 
       - name: Run tests
         run: extras/build-tests/nix/run-tests
+
+  format-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        #uses: actions/checkout@v4
+        #no, pin to v4.2.2 for security reasons:
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        #and we don't need the credentials later..
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      # We pin clang-format to major version 21 because different versions
+      # format slightly differently (which would cause false failures).
+      # This must match the version developers use, see also the comment
+      # at the top of the .clang-format file.
+      - name: Install clang-format 21
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt-llvm-org.asc >/dev/null
+          echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main" | sudo tee /etc/apt/sources.list.d/llvm21.list
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-format-21
+
+      # Same check as 'make format-check' in Makefile.in (we cannot use
+      # that directly here because 'make' requires ./configure to have run).
+      - name: Check code formatting
+        run: |
+          clang-format-21 --version
+          clang-format-21 --dry-run --Werror `git ls-files src include | grep -E '\.(c|h)$' | grep -vE 'crypt_blowfish|openssl_hostname_validation'`

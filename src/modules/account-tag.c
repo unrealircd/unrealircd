@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"account-tag",
-	"5.0",
-	"account-tag CAP",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "account-tag",
+    "5.0",
+    "account-tag CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Variables */
 long CAP_ACCOUNT_TAG = 0L;

@@ -58,25 +58,25 @@ char *strtoken(char **save, char *str, char *fs)
 	char *pos, *tmp;
 
 	if (str)
-		pos = str;	/* new string scan */
+		pos = str; /* new string scan */
 	else
 		pos = *save; /* keep last position across calls */
 
 	while (pos && *pos && strchr(fs, *pos) != NULL)
-		pos++;		/* skip leading separators */
+		pos++;  /* skip leading separators */
 
 	if (!pos || !*pos)
-		return (pos = *save = NULL);	/* string contains only sep's */
+		return (pos = *save = NULL); /* string contains only sep's */
 
-	tmp = pos;		/* now, keep position of the token */
+	tmp = pos;  /* now, keep position of the token */
 
 	while (*pos && strchr(fs, *pos) == NULL)
-		pos++;		/* skip content of the token */
+		pos++;  /* skip content of the token */
 
 	if (*pos)
-		*pos++ = '\0';	/* remove first sep after the token */
+		*pos++ = '\0'; /* remove first sep after the token */
 	else
-		pos = NULL;	/* end of string */
+		pos = NULL; /* end of string */
 
 	*save = pos;
 	return (tmp);
@@ -101,8 +101,9 @@ char *strtoken_noskip(char **save, char *str, char *fs)
 
 	if (str)
 	{
-		pos = str;	/* new string scan */
-	} else {
+		pos = str; /* new string scan */
+	} else
+	{
 		if (*save == NULL)
 		{
 			/* We reached the end of the string */
@@ -122,7 +123,8 @@ char *strtoken_noskip(char **save, char *str, char *fs)
 		/* Next call is end of string */
 		*save = NULL;
 		*pos++ = '\0';
-	} else {
+	} else
+	{
 		*pos++ = '\0';
 		*save = pos;
 	}
@@ -206,7 +208,7 @@ void stripcrlf(char *c)
 #ifndef HAVE_STRNLEN
 size_t strnlen(const char *s, size_t maxlen)
 {
-	const char *end = memchr (s, 0, maxlen);
+	const char *end = memchr(s, 0, maxlen);
 	return end ? (size_t)(end - s) : maxlen;
 }
 #endif
@@ -269,11 +271,12 @@ size_t strlcat(char *dst, const char *src, size_t size)
 	if (len1 + len2 >= size)
 		len2 = size - (len1 + 1);
 
-	if (len2 > 0) {
+	if (len2 > 0)
+	{
 		memcpy(dst + len1, src, len2);
 		dst[len1 + len2] = 0;
 	}
-	
+
 	return ret;
 }
 #endif
@@ -289,11 +292,12 @@ size_t strlncat(char *dst, const char *src, size_t size, size_t n)
 
 	if (size <= len1)
 		return size;
-		
+
 	if (len1 + len2 >= size)
 		len2 = size - (len1 + 1);
 
-	if (len2 > 0) {
+	if (len2 > 0)
+	{
 		memcpy(dst + len1, src, len2);
 		dst[len1 + len2] = 0;
 	}
@@ -306,10 +310,10 @@ size_t strlncat(char *dst, const char *src, size_t size, size_t n)
 void strlcat_letter(char *buf, char c, size_t buflen)
 {
 	int n = strlen(buf);
-	if (!buflen || (n >= buflen-1))
+	if (!buflen || (n >= buflen - 1))
 		return;
 	buf[n] = c;
-	buf[n+1] = '\0';
+	buf[n + 1] = '\0';
 }
 
 /** Copies a string and ensure the new buffer is at most 'max' size, including NUL.
@@ -330,10 +334,10 @@ char *strldup(const char *src, size_t max)
 		return NULL;
 
 	n = strlen(src);
-	if (n > max-1)
-		n = max-1;
+	if (n > max - 1)
+		n = max - 1;
 
-	ptr = safe_alloc(n+1);
+	ptr = safe_alloc(n + 1);
 	memcpy(ptr, src, n);
 	ptr[n] = '\0';
 
@@ -420,7 +424,8 @@ int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t 
 	u_char output[4];
 	size_t i;
 
-	while (2 < srclength) {
+	while (2 < srclength)
+	{
 		input[0] = *src++;
 		input[1] = *src++;
 		input[2] = *src++;
@@ -438,14 +443,15 @@ int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t 
 		target[datalength++] = Base64[output[2]];
 		target[datalength++] = Base64[output[3]];
 	}
-    
+
 	/* Now we worry about padding. */
-	if (0 != srclength) {
+	if (0 != srclength)
+	{
 		/* Get what's left. */
 		input[0] = input[1] = input[2] = '\0';
 		for (i = 0; i < srclength; i++)
 			input[i] = *src++;
-	
+
 		output[0] = input[0] >> 2;
 		output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
 		output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
@@ -462,7 +468,7 @@ int b64_encode(unsigned char const *src, size_t srclength, char *target, size_t 
 	}
 	if (datalength >= targsize)
 		return (-1);
-	target[datalength] = '\0';	/* Returned value doesn't count \0. */
+	target[datalength] = '\0'; /* Returned value doesn't count \0. */
 	return (datalength);
 }
 
@@ -481,59 +487,65 @@ int b64_decode(char const *src, unsigned char *target, size_t targsize)
 	state = 0;
 	tarindex = 0;
 
-	while ((ch = *src++) != '\0') {
-		if (isspace(ch))	/* Skip whitespace anywhere. */
+	while ((ch = *src++) != '\0')
+	{
+		if (isspace(ch)) /* Skip whitespace anywhere. */
 			continue;
 
 		if (ch == Pad64)
 			break;
 
 		pos = strchr(Base64, ch);
-		if (pos == 0) 		/* A non-base64 character. */
+		if (pos == 0)   /* A non-base64 character. */
 			return (-1);
 
-		switch (state) {
-		case 0:
-			if (target) {
-				if ((size_t)tarindex >= targsize)
-					return (-1);
-				target[tarindex] = (pos - Base64) << 2;
-			}
-			state = 1;
-			break;
-		case 1:
-			if (target) {
-				if ((size_t)tarindex + 1 >= targsize)
-					return (-1);
-				target[tarindex]   |=  (pos - Base64) >> 4;
-				target[tarindex+1]  = ((pos - Base64) & 0x0f)
-							<< 4 ;
-			}
-			tarindex++;
-			state = 2;
-			break;
-		case 2:
-			if (target) {
-				if ((size_t)tarindex + 1 >= targsize)
-					return (-1);
-				target[tarindex]   |=  (pos - Base64) >> 2;
-				target[tarindex+1]  = ((pos - Base64) & 0x03)
-							<< 6;
-			}
-			tarindex++;
-			state = 3;
-			break;
-		case 3:
-			if (target) {
-				if ((size_t)tarindex >= targsize)
-					return (-1);
-				target[tarindex] |= (pos - Base64);
-			}
-			tarindex++;
-			state = 0;
-			break;
-		default:
-			abort();
+		switch (state)
+		{
+			case 0:
+				if (target)
+				{
+					if ((size_t)tarindex >= targsize)
+						return (-1);
+					target[tarindex] = (pos - Base64) << 2;
+				}
+				state = 1;
+				break;
+			case 1:
+				if (target)
+				{
+					if ((size_t)tarindex + 1 >= targsize)
+						return (-1);
+					target[tarindex] |= (pos - Base64) >> 4;
+					target[tarindex + 1] = ((pos - Base64) & 0x0f)
+					                       << 4;
+				}
+				tarindex++;
+				state = 2;
+				break;
+			case 2:
+				if (target)
+				{
+					if ((size_t)tarindex + 1 >= targsize)
+						return (-1);
+					target[tarindex] |= (pos - Base64) >> 2;
+					target[tarindex + 1] = ((pos - Base64) & 0x03)
+					                       << 6;
+				}
+				tarindex++;
+				state = 3;
+				break;
+			case 3:
+				if (target)
+				{
+					if ((size_t)tarindex >= targsize)
+						return (-1);
+					target[tarindex] |= (pos - Base64);
+				}
+				tarindex++;
+				state = 0;
+				break;
+			default:
+				abort();
 		}
 	}
 
@@ -542,44 +554,48 @@ int b64_decode(char const *src, unsigned char *target, size_t targsize)
 	 * on a byte boundary, and/or with erroneous trailing characters.
 	 */
 
-	if (ch == Pad64) {		/* We got a pad char. */
-		ch = *src++;		/* Skip it, get next. */
-		switch (state) {
-		case 0:		/* Invalid = in first position */
-		case 1:		/* Invalid = in second position */
-			return (-1);
-
-		case 2:		/* Valid, means one byte of info */
-			/* Skip any number of spaces. */
-			for (; ch != '\0'; ch = *src++)
-				if (!isspace(ch))
-					break;
-			/* Make sure there is another trailing = sign. */
-			if (ch != Pad64)
+	if (ch == Pad64)
+	{
+		/* We got a pad char. */
+		ch = *src++;  /* Skip it, get next. */
+		switch (state)
+		{
+			case 0:  /* Invalid = in first position */
+			case 1:  /* Invalid = in second position */
 				return (-1);
-			ch = *src++;		/* Skip the = */
-			/* Fall through to "single trailing =" case. */
-			/* FALLTHROUGH */
 
-		case 3:		/* Valid, means two bytes of info */
-			/*
+			case 2:  /* Valid, means one byte of info */
+				/* Skip any number of spaces. */
+				for (; ch != '\0'; ch = *src++)
+					if (!isspace(ch))
+						break;
+				/* Make sure there is another trailing = sign. */
+				if (ch != Pad64)
+					return (-1);
+				ch = *src++;  /* Skip the = */
+                        /* Fall through to "single trailing =" case. */
+                        /* FALLTHROUGH */
+
+			case 3:  /* Valid, means two bytes of info */
+                        /*
 			 * We know this char is an =.  Is there anything but
 			 * whitespace after it?
 			 */
-			for (; ch != '\0'; ch = *src++)
-				if (!isspace(ch))
-					return (-1);
+				for (; ch != '\0'; ch = *src++)
+					if (!isspace(ch))
+						return (-1);
 
-			/*
+                        /*
 			 * Now make sure for cases 2 and 3 that the "extra"
 			 * bits that slopped past the last full byte were
 			 * zeros.  If we don't check them, they become a
 			 * subliminal channel.
 			 */
-			if (target && target[tarindex] != 0)
-				return (-1);
+				if (target && target[tarindex] != 0)
+					return (-1);
 		}
-	} else {
+	} else
+	{
 		/*
 		 * We ended by seeing the end of the string.  Make sure we
 		 * have no partial bytes lying around.
@@ -637,13 +653,11 @@ static int compare_right(char const *a, char const *b)
 		{
 			if (!bias)
 				bias = -1;
-		} else
-		if (*a > *b)
+		} else if (*a > *b)
 		{
 			if (!bias)
 				bias = +1;
-		} else
-		if (!*a && !*b)
+		} else if (!*a && !*b)
 			return bias;
 	}
 
@@ -682,7 +696,8 @@ static int strnatcmp0(char const *a, char const *b, int fold_case)
 	ai = bi = 0;
 	while (1)
 	{
-		ca = a[ai]; cb = b[bi];
+		ca = a[ai];
+		cb = b[bi];
 
 		/* skip over leading spaces or zeros */
 		while (isspace(ca))
@@ -692,15 +707,16 @@ static int strnatcmp0(char const *a, char const *b, int fold_case)
 			cb = b[++bi];
 
 		/* process run of digits */
-		if (isdigit(ca)  &&  isdigit(cb))
+		if (isdigit(ca) && isdigit(cb))
 		{
 			fractional = (ca == '0' || cb == '0');
 			if (fractional)
 			{
-				if ((result = compare_left(a+ai, b+bi)) != 0)
+				if ((result = compare_left(a + ai, b + bi)) != 0)
 					return result;
-			} else {
-				if ((result = compare_right(a+ai, b+bi)) != 0)
+			} else
+			{
+				if ((result = compare_right(a + ai, b + bi)) != 0)
 					return result;
 			}
 		}
@@ -813,7 +829,7 @@ void *safe_alloc_sensitive(size_t size)
 	void *p;
 	if (size == 0)
 		return NULL;
-	p = sodium_malloc(((size/32)*32)+32);
+	p = sodium_malloc(((size / 32) * 32) + 32);
 	if (!p)
 		outofmemory(size);
 	memset(p, 0, size);
@@ -823,7 +839,7 @@ void *safe_alloc_sensitive(size_t size)
 /** Safely duplicate a string */
 char *our_strdup_sensitive(const char *str)
 {
-	char *ret = safe_alloc_sensitive(strlen(str)+1);
+	char *ret = safe_alloc_sensitive(strlen(str) + 1);
 	if (!ret)
 		outofmemory(strlen(str));
 	strcpy(ret, str); /* safe, see above */
@@ -838,7 +854,7 @@ char *unreal_mktemp(const char *dir, const char *suffix)
 {
 	FILE *fd;
 	unsigned int i;
-	static char tempbuf[PATH_MAX+1];
+	static char tempbuf[PATH_MAX + 1];
 
 	for (i = 500; i > 0; i--)
 	{
@@ -849,8 +865,8 @@ char *unreal_mktemp(const char *dir, const char *suffix)
 		fclose(fd);
 	}
 	config_error("Unable to create temporary file in directory '%s': %s",
-		dir, strerror(errno)); /* eg: permission denied :p */
-	return NULL; 
+	             dir, strerror(errno)); /* eg: permission denied :p */
+	return NULL;
 }
 
 /** Returns the path portion of the given path/file
@@ -858,7 +874,7 @@ char *unreal_mktemp(const char *dir, const char *suffix)
  */
 char *unreal_getpathname(const char *filepath, char *path)
 {
-	const char *end = filepath+strlen(filepath);
+	const char *end = filepath + strlen(filepath);
 
 	while (*end != '\\' && *end != '/' && end > filepath)
 		end--;
@@ -866,7 +882,7 @@ char *unreal_getpathname(const char *filepath, char *path)
 		path = NULL;
 	else
 	{
-		int size = end-filepath;
+		int size = end - filepath;
 		if (size >= PATH_MAX)
 			path = NULL;
 		else
@@ -889,7 +905,7 @@ const char *unreal_getfilename(const char *path)
 	if (!len)
 		return NULL;
 
-	end = path+len-1;
+	end = path + len - 1;
 	if (*end == '\\' || *end == '/')
 		return NULL;
 
@@ -933,10 +949,10 @@ int unreal_create_directory_structure(const char *dname, mode_t mode)
 		int lastresult;
 		char buf[512], *p;
 		strlcpy(buf, dname, sizeof(buf)); /* work on a copy */
-		for (p=strchr(buf+1, '/'); p; p=strchr(p+1, '/'))
+		for (p = strchr(buf + 1, '/'); p; p = strchr(p + 1, '/'))
 		{
 			*p = '\0';
-			unreal_mkdir(buf,mode);
+			unreal_mkdir(buf, mode);
 			*p = '/';
 		}
 		/* Finally, try the complete path */
@@ -956,7 +972,7 @@ int unreal_create_directory_structure(const char *dname, mode_t mode)
  */
 int unreal_create_directory_structure_for_file(const char *fname, mode_t mode)
 {
-	char buf[PATH_MAX+1];
+	char buf[PATH_MAX + 1];
 	const char *path = unreal_getpathname(fname, buf);
 	if (!path)
 		return 0;
@@ -973,18 +989,18 @@ const char *unreal_getmodfilename(const char *path)
 	char *p;
 	char *name = NULL;
 	char *directory = NULL;
-	
+
 	if (BadPtr(path))
 		return path;
-	
+
 	strlcpy(buf, path, sizeof(buf));
-	
+
 	/* Backtrack... */
 	for (p = buf + strlen(buf); p >= buf; p--)
 	{
 		if ((*p == '/') || (*p == '\\'))
 		{
-			name = p+1;
+			name = p + 1;
 			*p = '\0';
 			directory = buf; /* fallback */
 			for (; p >= buf; p--)
@@ -998,15 +1014,15 @@ const char *unreal_getmodfilename(const char *path)
 			break;
 		}
 	}
-	
+
 	if (!name)
 		name = buf;
-	
+
 	if (!directory || !strcmp(directory, "modules"))
 		snprintf(ret, sizeof(ret), "%s", name);
 	else
 		snprintf(ret, sizeof(ret), "%s.%s", directory, name);
-	
+
 	return ret;
 }
 
@@ -1015,9 +1031,9 @@ const char *unreal_getmodfilename(const char *path)
  */
 const char *unreal_mkcache(const char *url)
 {
-	static char tempbuf[PATH_MAX+1];
+	static char tempbuf[PATH_MAX + 1];
 	char tmp2[128];
-	
+
 	snprintf(tempbuf, PATH_MAX, "%s/%s", CACHEDIR, sha256hash(tmp2, url, strlen(url)));
 	return tempbuf;
 }
@@ -1050,7 +1066,7 @@ int unreal_copyfile(const char *src, const char *dest)
 #ifndef _WIN32
 	srcfd = open(src, O_RDONLY);
 #else
-	srcfd = open(src, _O_RDONLY|_O_BINARY);
+	srcfd = open(src, _O_RDONLY | _O_BINARY);
 #endif
 
 	if (srcfd < 0)
@@ -1060,13 +1076,13 @@ int unreal_copyfile(const char *src, const char *dest)
 	}
 
 #ifndef _WIN32
-#if defined(DEFAULT_PERMISSIONS) && (DEFAULT_PERMISSIONS != 0)
-	destfd  = open(dest, O_WRONLY|O_CREAT, DEFAULT_PERMISSIONS);
+ #if defined(DEFAULT_PERMISSIONS) && (DEFAULT_PERMISSIONS != 0)
+	destfd = open(dest, O_WRONLY | O_CREAT, DEFAULT_PERMISSIONS);
+ #else
+	destfd = open(dest, O_WRONLY | O_CREAT, S_IRUSR | S_IXUSR);
+ #endif /* DEFAULT_PERMISSIONS */
 #else
-	destfd  = open(dest, O_WRONLY|O_CREAT, S_IRUSR | S_IXUSR);
-#endif /* DEFAULT_PERMISSIONS */
-#else
-	destfd = open(dest, _O_BINARY|_O_WRONLY|_O_CREAT, _S_IWRITE);
+	destfd = open(dest, _O_BINARY | _O_WRONLY | _O_CREAT, _S_IWRITE);
 #endif /* _WIN32 */
 	if (destfd < 0)
 	{
@@ -1079,15 +1095,15 @@ int unreal_copyfile(const char *src, const char *dest)
 		if (write(destfd, buf, len) != len)
 		{
 			config_error("Write error to file '%s': %s [not enough free hd space / quota? need several mb's!]",
-				dest, strerror(ERRNO));
-			cancel_copy(srcfd,destfd,dest);
+			             dest, strerror(ERRNO));
+			cancel_copy(srcfd, destfd, dest);
 			return 0;
 		}
 
 	if (len < 0) /* very unusual.. perhaps an I/O error */
 	{
 		config_error("Read error from file '%s': %s", src, strerror(errno));
-		cancel_copy(srcfd,destfd,dest);
+		cancel_copy(srcfd, destfd, dest);
 		return 0;
 	}
 
@@ -1120,13 +1136,13 @@ void unreal_setfilemodtime(const char *filename, time_t mtime)
 	FILETIME mTime;
 	LONGLONG llValue;
 	HANDLE hFile = CreateFile(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-				  FILE_ATTRIBUTE_NORMAL, NULL);
+	                          FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return;
 	llValue = (mtime * 10000000LL) + 116444736000000000LL;
 	mTime.dwLowDateTime = (long)llValue;
 	mTime.dwHighDateTime = llValue >> 32;
-	
+
 	SetFileTime(hFile, &mTime, &mTime, &mTime);
 	CloseHandle(hFile);
 #endif
@@ -1147,7 +1163,7 @@ time_t unreal_getfilemodtime(const char *filename)
 	ULARGE_INTEGER fullTime;
 	time_t result;
 	HANDLE hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-				  FILE_ATTRIBUTE_NORMAL, NULL);
+	                          FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return 0;
 	if (!GetFileTime(hFile, NULL, NULL, &cTime))
@@ -1163,8 +1179,8 @@ time_t unreal_getfilemodtime(const char *filename)
 	fullTime.HighPart = cTime.dwHighDateTime;
 	fullTime.QuadPart -= 116444736000000000;
 	fullTime.QuadPart /= 10000000;
-	
-	return fullTime.LowPart;	
+
+	return fullTime.LowPart;
 #endif
 }
 
@@ -1179,8 +1195,8 @@ int unreal_touch(const char *filename, time_t mtime)
 	return 1;
 }
 
-#ifndef	AF_INET6
-#define	AF_INET6	AF_MAX+1	/* just to let this compile */
+#ifndef AF_INET6
+ #define AF_INET6 AF_MAX + 1 /* just to let this compile */
 #endif
 
 /** Encode an IP string (eg: "1.2.3.4") to a BASE64 encoded value for S2S traffic */
@@ -1197,17 +1213,14 @@ const char *encode_ip(const char *ip)
 		/* IPv6 (likely) */
 		inet_pton(AF_INET6, ip, addrbuf);
 		/* hack for IPv4-in-IPv6 (::ffff:1.2.3.4) */
-		if (addrbuf[0] == 0 && addrbuf[1] == 0 && addrbuf[2] == 0 && addrbuf[3] == 0
-		    && addrbuf[4] == 0 && addrbuf[5] == 0 && addrbuf[6] == 0
-			&& addrbuf[7] == 0 && addrbuf[8] == 0 && addrbuf[9] == 0
-			&& addrbuf[10] == 0xff && addrbuf[11] == 0xff)
+		if (addrbuf[0] == 0 && addrbuf[1] == 0 && addrbuf[2] == 0 && addrbuf[3] == 0 && addrbuf[4] == 0 && addrbuf[5] == 0 && addrbuf[6] == 0 && addrbuf[7] == 0 && addrbuf[8] == 0 && addrbuf[9] == 0 && addrbuf[10] == 0xff && addrbuf[11] == 0xff)
 		{
 			b64_encode(&addrbuf[12], sizeof(struct in_addr), retbuf, sizeof(retbuf));
-		} else {
+		} else
+		{
 			b64_encode(addrbuf, 16, retbuf, sizeof(retbuf));
 		}
-	}
-	else
+	} else
 	{
 		/* IPv4 */
 		inet_pton(AF_INET, ip, addrbuf);
@@ -1235,15 +1248,15 @@ const char *decode_ip(const char *buf)
 /* IPv6 stuff */
 
 #ifndef IN6ADDRSZ
-#define	IN6ADDRSZ	16
+ #define IN6ADDRSZ 16
 #endif
 
 #ifndef INT16SZ
-#define	INT16SZ		 2
+ #define INT16SZ 2
 #endif
 
 #ifndef INADDRSZ
-#define	INADDRSZ	 4
+ #define INADDRSZ 4
 #endif
 
 #ifdef _WIN32
@@ -1254,6 +1267,7 @@ struct u_WSA_errors {
 };
 
 /* Must be sorted ascending by error code */
+/* clang-format off */
 struct u_WSA_errors WSAErrors[] = {
  { WSAEINTR,              "Interrupted system call" },
  { WSAEBADF,              "Bad file number" },
@@ -1309,15 +1323,16 @@ struct u_WSA_errors WSAErrors[] = {
  { WSASYSCALLFAILURE,     "System call failure" },
  { 0,NULL}
 };
+/* clang-format on */
 
 /** Get socket error string */
 const char *sock_strerror(int error)
 {
 	static char unkerr[64];
 	int start = 0;
-	int stop = sizeof(WSAErrors)/sizeof(WSAErrors[0])-1;
+	int stop = sizeof(WSAErrors) / sizeof(WSAErrors[0]) - 1;
 	int mid;
-	
+
 	if (!error)
 		return "No error";
 
@@ -1330,14 +1345,14 @@ const char *sock_strerror(int error)
 	 */
 	while (start <= stop)
 	{
-		mid = (start+stop)/2;
+		mid = (start + stop) / 2;
 		if (WSAErrors[mid].error_code > error)
-			stop = mid-1;
-		
+			stop = mid - 1;
+
 		else if (WSAErrors[mid].error_code < error)
-			start = mid+1;
+			start = mid + 1;
 		else
-			return WSAErrors[mid].error_string;	
+			return WSAErrors[mid].error_string;
 	}
 	snprintf(unkerr, sizeof(unkerr), "Unknown Error: %d", error);
 	return unkerr;
@@ -1357,7 +1372,7 @@ void buildvarstring(const char *inbuf, char *outbuf, size_t len, const char *nam
 	NameValuePrioList *list = NULL;
 	int i;
 
-	for (i=0; name[i]; i++)
+	for (i = 0; name[i]; i++)
 		add_nvplist(&list, 0, name[i], value[i]);
 
 	buildvarstring_nvp(inbuf, outbuf, len, list, 0);
@@ -1377,32 +1392,28 @@ char *xmlescape(const char *i, char *buf, int bufsize)
 			strcpy(o, "&quot;");
 			o += 6;
 			bufsize -= 6;
-		} else
-		if (*i == '\'')
+		} else if (*i == '\'')
 		{
 			if (bufsize <= 6)
 				break;
 			strcpy(o, "&apos;");
 			o += 6;
 			bufsize -= 6;
-		} else
-		if (*i == '<')
+		} else if (*i == '<')
 		{
 			if (bufsize <= 4)
 				break;
 			strcpy(o, "&lt;");
 			o += 4;
 			bufsize -= 4;
-		} else
-		if (*i == '>')
+		} else if (*i == '>')
 		{
 			if (bufsize <= 4)
 				break;
 			strcpy(o, "&gt;");
 			o += 4;
 			bufsize -= 4;
-		} else
-		if (*i == '&')
+		} else if (*i == '&')
 		{
 			if (bufsize <= 5)
 				break;
@@ -1461,10 +1472,11 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 				i--;
 				goto literal;
 			}
-			
+
 			/* find termination */
-			for (p=i; validvarcharacter(*p); p++);
-			
+			for (p = i; validvarcharacter(*p); p++)
+				;
+
 			/* find variable name in list */
 			strlncpy(varname, i, sizeof(varname), p - i);
 			n = find_nvplist(list, varname);
@@ -1489,7 +1501,8 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 							o--;
 							left++;
 						}
-					} else {
+					} else
+					{
 						strlcpy(o, output, left);
 						left -= strlen(output); /* may become <0 */
 						if (left <= 0)
@@ -1515,7 +1528,7 @@ void buildvarstring_nvp(const char *inbuf, char *outbuf, size_t len, NameValuePr
 			i = p - 1;
 			continue;
 		}
-literal:
+	literal:
 		if (!left)
 			break;
 		*o++ = *i;
@@ -1532,7 +1545,7 @@ const char *pcre2_version(void)
 	static char buf[256];
 
 	strlcpy(buf, "PCRE2 ", sizeof(buf));
-	pcre2_config(PCRE2_CONFIG_VERSION, buf+6);
+	pcre2_config(PCRE2_CONFIG_VERSION, buf + 6);
 	return buf;
 }
 
@@ -1543,22 +1556,44 @@ int gettimeofday(struct timeval *tp, void *tzp)
 {
 	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
 	// until 00:00:00 January 1, 1970
-	static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
+	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
 
 	SYSTEMTIME system_time;
 	FILETIME file_time;
 	uint64_t time;
 
-	GetSystemTime( &system_time );
-	SystemTimeToFileTime( &system_time, &file_time );
-	time =  ((uint64_t)file_time.dwLowDateTime )      ;
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((uint64_t)file_time.dwLowDateTime);
 	time += ((uint64_t)file_time.dwHighDateTime) << 32;
 
-	tp->tv_sec  = (long) ((time - EPOCH) / 10000000L);
-	tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
 	return 0;
 }
 #endif
+
+/** Monotonic clock in nanoseconds. Unlike gettimeofday() this never jumps
+ * backward/forward on clock changes, so safe for time measurements
+ * (eg used for set::max-client-processing-time)
+ */
+long long monotime_ns(void)
+{
+#ifdef _WIN32
+	static LARGE_INTEGER freq;
+	LARGE_INTEGER cnt;
+	if (freq.QuadPart == 0)
+		QueryPerformanceFrequency(&freq);
+	QueryPerformanceCounter(&cnt);
+	/* Split the divide so cnt*1e9 cannot overflow */
+	return (cnt.QuadPart / freq.QuadPart) * 1000000000LL +
+	       ((cnt.QuadPart % freq.QuadPart) * 1000000000LL) / freq.QuadPart;
+#else
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (long long)ts.tv_sec * 1000000000LL + ts.tv_nsec;
+#endif
+}
 
 /** Get the numer of characters per line that fit on the terminal (the width) */
 int get_terminal_width(void)
@@ -1573,8 +1608,8 @@ int get_terminal_width(void)
 }
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 
 /** Like strftime() but easier. */
@@ -1596,7 +1631,7 @@ char *unreal_strftime(const char *str)
 }
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
 
 /** Convert a string to lowercase - with separate input/output buffer */
@@ -1660,7 +1695,7 @@ int str_ends_with_case_sensitive(const char *haystack, const char *needle)
 	if (haystacklen < needlelen)
 		return 0;
 
-	return !strncmp(haystack+haystacklen-needlelen, needle, needlelen) ? 1 : 0;
+	return !strncmp(haystack + haystacklen - needlelen, needle, needlelen) ? 1 : 0;
 }
 
 /** Checks if a string starts with a certain substring - case insensitive version.
@@ -1680,5 +1715,5 @@ int str_ends_with_case_insensitive(const char *haystack, const char *needle)
 	if (haystacklen < needlelen)
 		return 0;
 
-	return !strncasecmp(haystack+haystacklen-needlelen, needle, needlelen) ? 1 : 0;
+	return !strncasecmp(haystack + haystacklen - needlelen, needle, needlelen) ? 1 : 0;
 }

@@ -21,22 +21,21 @@
 
 CMD_FUNC(cmd_svskill);
 
-#define MSG_SVSKILL	"SVSKILL"
+#define MSG_SVSKILL "SVSKILL"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svskill",	/* Name of module */
-	"5.0", /* Version */
-	"command /svskill", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svskill", /* Name of module */
+    "5.0", /* Version */
+    "command /svskill", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSKILL, cmd_svskill, MAXPARA, CMD_SERVER|CMD_USER);
+	CommandAdd(modinfo->handle, MSG_SVSKILL, cmd_svskill, MAXPARA, CMD_SERVER | CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

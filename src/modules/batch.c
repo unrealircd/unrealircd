@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"batch",
-	"5.0",
-	"Batch CAP", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "batch",
+    "5.0",
+    "Batch CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 CMD_FUNC(cmd_batch);
@@ -57,7 +56,7 @@ MOD_INIT()
 	mtag.clicap_handler = c;
 	MessageTagHandlerAdd(modinfo->handle, &mtag);
 
-	CommandAdd(modinfo->handle, "BATCH", cmd_batch, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, "BATCH", cmd_batch, MAXPARA, CMD_USER | CMD_SERVER);
 	return MOD_SUCCESS;
 }
 
@@ -116,7 +115,8 @@ CMD_FUNC(cmd_batch)
 		parv[1] = "BATCH";
 		concat_params(buf, sizeof(buf), parc, parv);
 		sendto_prefix_one(target, client, recv_mtags, ":%s %s", client->name, buf);
-	} else {
+	} else
+	{
 		/* Relay the batch message to the server */
 		concat_params(buf, sizeof(buf), parc, parv);
 		sendto_prefix_one(target, client, recv_mtags, ":%s BATCH %s", client->name, buf);

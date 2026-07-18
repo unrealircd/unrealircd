@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/message",
-	"1.0.0",
-	"message.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/message",
+    "1.0.0",
+    "message.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 void rpc_send_privmsgnotice(json_t *request, json_t *params, Client *client, int is_notice)
@@ -166,7 +165,7 @@ RPC_CALL_FUNC(rpc_message_standardreply)
 
 	if (context)
 		sendto_one(acptr, NULL, ":%s %s * %s %s :%s", me.name, type, code, context, description);
-	
+
 	else
 		sendto_one(acptr, NULL, ":%s %s * %s :%s", me.name, type, code, description);
 

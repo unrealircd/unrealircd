@@ -20,24 +20,23 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"staff",
-	"3.8",
-	"/STAFF command",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "staff",
+    "3.8",
+    "/STAFF command",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
-#define MSG_STAFF	"STAFF"
+#define MSG_STAFF "STAFF"
 
-#define DEF_STAFF_FILE   CONFDIR "/network.staff"
-#define STAFF_FILE       (staff_file ? staff_file : DEF_STAFF_FILE)
+#define DEF_STAFF_FILE CONFDIR "/network.staff"
+#define STAFF_FILE     (staff_file ? staff_file : DEF_STAFF_FILE)
 
-#define RPL_STAFF        ":%s 700 %s :- %s"
-#define RPL_STAFFSTART   ":%s 701 %s :- %s IRC Network Staff Information -"
-#define RPL_ENDOFSTAFF   ":%s 702 %s :End of /STAFF command."
-#define RPL_NOSTAFF      ":%s 703 %s :Network Staff File is missing"
+#define RPL_STAFF      ":%s 700 %s :- %s"
+#define RPL_STAFFSTART ":%s 701 %s :- %s IRC Network Staff Information -"
+#define RPL_ENDOFSTAFF ":%s 702 %s :End of /STAFF command."
+#define RPL_NOSTAFF    ":%s 703 %s :Network Staff File is missing"
 
 /* Forward declarations */
 static void unload_motd_file(MOTDFile *list);

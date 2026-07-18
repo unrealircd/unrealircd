@@ -20,16 +20,15 @@
 
 #include "unrealircd.h"
 
-#define MSG_OPER        "OPER"  /* OPER */
+#define MSG_OPER "OPER"  /* OPER */
 
-ModuleHeader MOD_HEADER
-  = {
-	"oper",	/* Name of module */
-	"5.0", /* Version */
-	"command /oper", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "oper", /* Name of module */
+    "5.0", /* Version */
+    "command /oper", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 CMD_FUNC(cmd_oper);
@@ -65,7 +64,7 @@ void set_oper_host(Client *client, const char *host)
 {
 	char uhost[HOSTLEN + USERLEN + 1];
 	char *p;
-	char newhost[HOSTLEN+1];
+	char newhost[HOSTLEN + 1];
 
 	*newhost = '\0';
 	unreal_expand_string(host, newhost, sizeof(newhost), NULL, 0, client);
@@ -94,7 +93,7 @@ void set_oper_host(Client *client, const char *host)
 	safe_strdup(client->user->virthost, host);
 	if (MyConnect(client))
 		sendto_server(NULL, 0, 0, NULL, ":%s SETHOST :%s", client->id, client->user->virthost);
-	client->umodes |= UMODE_SETHOST|UMODE_HIDE;
+	client->umodes |= UMODE_SETHOST | UMODE_HIDE;
 }
 
 int _make_oper(Client *client, const char *operblock_name, const char *operclass, ConfigItem_class *clientclass, long modes, const char *snomask, const char *vhost, const char *autojoin_channels)
@@ -126,12 +125,10 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 	if (vhost)
 	{
 		set_oper_host(client, vhost);
-	} else
-	if (iConf.oper_vhost)
+	} else if (iConf.oper_vhost)
 	{
 		set_oper_host(client, iConf.oper_vhost);
-	} else
-	if (IsHidden(client) && !client->user->virthost)
+	} else if (IsHidden(client) && !client->user->virthost)
 	{
 		/* +x has just been set by modes-on-oper and no vhost. cloak the oper! */
 		safe_strdup(client->user->virthost, client->user->cloakedhost);
@@ -140,9 +137,9 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 	userhost_changed(client);
 
 	unreal_log(ULOG_INFO, "oper", "OPER_SUCCESS", client,
-		   "$client.details is now an IRC Operator [oper-block: $oper_block] [operclass: $operclass]",
-		   log_data_string("oper_block", operblock_name),
-		   log_data_string("operclass", operclass));
+	           "$client.details is now an IRC Operator [oper-block: $oper_block] [operclass: $operclass]",
+	           log_data_string("oper_block", operblock_name),
+	           log_data_string("operclass", operclass));
 
 	/* set oper snomasks */
 	if (snomask)
@@ -168,7 +165,7 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 
 	if (SHOWOPERMOTD == 1)
 	{
-		const char *args[1] = { NULL };
+		const char *args[1] = {NULL};
 		do_cmd(client, NULL, "OPERMOTD", 1, args);
 	}
 
@@ -176,9 +173,9 @@ int _make_oper(Client *client, const char *operblock_name, const char *operclass
 	{
 		char *chans = strdup(autojoin_channels);
 		const char *args[3] = {
-			client->name,
-			chans,
-			NULL
+		    client->name,
+		    chans,
+		    NULL,
 		};
 		do_cmd(client, NULL, "JOIN", 3, args);
 		safe_free(chans);
@@ -212,7 +209,7 @@ CMD_FUNC(cmd_oper)
 	if (SVSNOOP)
 	{
 		sendnotice(client,
-		    "*** This server is in NOOP mode, you cannot /oper");
+		           "*** This server is in NOOP mode, you cannot /oper");
 		return;
 	}
 
@@ -284,7 +281,7 @@ CMD_FUNC(cmd_oper)
 		sendnumeric(client, ERR_PASSWDMISMATCH);
 		if (FAILOPER_WARN)
 			sendnotice(client,
-			    "*** Your attempt has been logged.");
+			           "*** Your attempt has been logged.");
 		unreal_log(ULOG_ERROR, "oper", "OPER_FAILED", client,
 		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "Authentication failed"),
@@ -327,7 +324,7 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnumeric(client, ERR_NOOPERHOST);
 		sendnotice(client, "Your maximum number of concurrent oper logins has been reached (%d)",
-			operblock->maxlogins);
+		           operblock->maxlogins);
 		unreal_log(ULOG_WARNING, "oper", "OPER_FAILED", client,
 		           "Failed OPER attempt by $client.details [reason: $reason] [oper-block: $oper_block]",
 		           log_data_string("reason", "oper::maxlogins limit reached"),
@@ -357,8 +354,8 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice_multiline(client, iConf.plaintext_policy_oper_message);
 		unreal_log(ULOG_WARNING, "oper", "OPER_UNSAFE", client,
-			   "Insecure (non-TLS) connection used to OPER up by $client.details [oper-block: $oper_block]",
-			   log_data_string("oper_block", parv[1]),
+		           "Insecure (non-TLS) connection used to OPER up by $client.details [oper-block: $oper_block]",
+		           log_data_string("oper_block", parv[1]),
 		           log_data_string("warn_type", "NO_TLS"));
 	}
 
@@ -367,8 +364,8 @@ CMD_FUNC(cmd_oper)
 	{
 		sendnotice(client, "%s", outdated_tls_client_build_string(iConf.outdated_tls_policy_oper_message, client));
 		unreal_log(ULOG_WARNING, "oper", "OPER_UNSAFE", client,
-			   "Outdated TLS protocol/cipher used to OPER up by $client.details [oper-block: $oper_block]",
-			   log_data_string("oper_block", parv[1]),
+		           "Outdated TLS protocol/cipher used to OPER up by $client.details [oper-block: $oper_block]",
+		           log_data_string("oper_block", parv[1]),
 		           log_data_string("warn_type", "OUTDATED_TLS_PROTOCOL_OR_CIPHER"));
 	}
 }

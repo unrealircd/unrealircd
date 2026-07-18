@@ -51,24 +51,24 @@
 #define UNREALDB_WRITE_V1
 
 /* If a key is specified, it must be this size */
-#define UNREALDB_KEY_LEN	crypto_secretstream_xchacha20poly1305_KEYBYTES
+#define UNREALDB_KEY_LEN crypto_secretstream_xchacha20poly1305_KEYBYTES
 
 /** Default 'time cost' for Argon2id */
-#define UNREALDB_ARGON2_DEFAULT_TIME_COST             4
+#define UNREALDB_ARGON2_DEFAULT_TIME_COST 4
 /** Default 'memory cost' for Argon2id. Note that 15 means 1<<15=32M */
-#define UNREALDB_ARGON2_DEFAULT_MEMORY_COST           15
+#define UNREALDB_ARGON2_DEFAULT_MEMORY_COST 15
 /** Default 'parallelism cost' for Argon2id. */
-#define UNREALDB_ARGON2_DEFAULT_PARALLELISM_COST      2
+#define UNREALDB_ARGON2_DEFAULT_PARALLELISM_COST 2
 
 #ifdef _WIN32
 /* Ignore this warning on Windows as it is a false positive */
-#pragma warning(disable : 6029)
+ #pragma warning(disable : 6029)
 #endif
 
 /* Forward declarations - only used for internal (static) functions, of course */
 static SecretCache *find_secret_cache(Secret *secr, UnrealDBConfig *cfg);
 static void unrealdb_add_to_secret_cache(Secret *secr, UnrealDBConfig *cfg);
-static void unrealdb_set_error(UnrealDB *c, UnrealDBError errcode, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf,3,4)));
+static void unrealdb_set_error(UnrealDB *c, UnrealDBError errcode, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 
 UnrealDBError unrealdb_last_error_code;
 static char *unrealdb_last_error_string = NULL;
@@ -112,11 +112,11 @@ static int unrealdb_kdf(UnrealDB *c, Secret *secr)
 	}
 	/* Need to run argon2 to generate key */
 	if (argon2id_hash_raw(c->config->t_cost,
-			      1 << c->config->m_cost,
-			      c->config->p_cost,
-			      secr->password, strlen(secr->password),
-			      c->config->salt, c->config->saltlen,
-			      c->config->key, c->config->keylen) != ARGON2_OK)
+	                      1 << c->config->m_cost,
+	                      c->config->p_cost,
+	                      secr->password, strlen(secr->password),
+	                      c->config->salt, c->config->saltlen,
+	                      c->config->key, c->config->keylen) != ARGON2_OK)
 	{
 		/* out of memory or some other very unusual error */
 		unrealdb_set_error(c, UNREALDB_ERROR_INTERNAL, "Could not generate argon2 hash - out of memory or something weird?");
@@ -164,7 +164,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 	UnrealDB *c = safe_alloc_sensitive(sizeof(UnrealDB));
 	char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
 	char buf[32]; /* don't change this */
-	Secret *secr=NULL;
+	Secret *secr = NULL;
 	SecretCache *dbcache;
 	int cached = 0;
 	char *err;
@@ -216,8 +216,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 				{
 					unrealdb_set_error(c, UNREALDB_ERROR_CRYPTED, "file is encrypted but no password provided");
 					goto unrealdb_open_fail;
-				} else
-				if (!strcmp(buf, "UnrealIRCd-DB-v1"))
+				} else if (!strcmp(buf, "UnrealIRCd-DB-v1"))
 				{
 					/* Skip over the 32 byte header, directly to the creationtime */
 					if (fseek(c->fd, 32L, SEEK_SET) < 0)
@@ -231,14 +230,13 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 						goto unrealdb_open_fail;
 					}
 					/* SUCCESS = fallthrough */
-				} else
-				if (str_starts_with_case_sensitive(buf, "UnrealIRCd-DB")) /* any other version than v1 = not supported by us */
+				} else if (str_starts_with_case_sensitive(buf, "UnrealIRCd-DB"))
 				{
 					/* We don't support this format, so refuse clearly */
 					unrealdb_set_error(c, UNREALDB_ERROR_HEADER,
-							   "Unsupported version of database. Is this database perhaps created on "
-							   "a new version of UnrealIRCd and are you trying to use it on an older "
-							   "UnrealIRCd version? (Downgrading is not supported!)");
+					                   "Unsupported version of database. Is this database perhaps created on "
+					                   "a new version of UnrealIRCd and are you trying to use it on an older "
+					                   "UnrealIRCd version? (Downgrading is not supported!)");
 					goto unrealdb_open_fail;
 				} else
 				{
@@ -247,7 +245,8 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 					/* SUCCESS = fallthrough */
 				}
 			}
-		} else {
+		} else
+		{
 #ifdef UNREALDB_WRITE_V1
 			/* WRITE */
 			memset(buf, 0, sizeof(buf));
@@ -287,7 +286,8 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			/* Use first found cached config for this secret */
 			c->config = unrealdb_copy_config(secr->cache->config);
 			cached = 1;
-		} else {
+		} else
+		{
 			/* Create a new config */
 			c->config = safe_alloc(sizeof(UnrealDBConfig));
 			c->config->kdf = UNREALDB_KDF_ARGON2ID;
@@ -318,7 +318,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			unrealdb_set_error(c, UNREALDB_ERROR_IO, "Unable to write header (2)");
 			goto unrealdb_open_fail;
 		}
-		
+
 		if (cached)
 		{
 #ifdef DEBUGMODE
@@ -357,7 +357,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 	} else
 	{
 		char *validate = NULL;
-		
+
 		/* Read file header */
 		if (fread(buf, 1, sizeof(buf), c->fd) != sizeof(buf))
 		{
@@ -379,7 +379,7 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header is corrupt/unknown/invalid");
 			goto unrealdb_open_fail;
 		}
-		if (c->config->kdf != UNREALDB_KDF_ARGON2ID) 
+		if (c->config->kdf != UNREALDB_KDF_ARGON2ID)
 		{
 			unrealdb_set_error(c, UNREALDB_ERROR_HEADER, "Header contains unknown KDF 0x%x", (int)c->config->kdf);
 			goto unrealdb_open_fail;
@@ -423,7 +423,8 @@ UnrealDB *unrealdb_open(const char *filename, UnrealDBMode mode, char *secret_bl
 			           "Cache hit for '$secret_block' while reading",
 			           log_data_string("secret_block", secr->name));
 #endif
-		} else {
+		} else
+		{
 #ifdef DEBUGMODE
 			unreal_log(ULOG_DEBUG, "unrealdb", "DEBUG_UNREALDB_CACHE_MISS", NULL,
 			           "Cache miss for '$secret_block' while reading, need to run argon2",
@@ -542,13 +543,13 @@ char *unrealdb_test_db(const char *filename, char *secret_block)
 		if (unrealdb_get_error_code() == UNREALDB_ERROR_PASSWORD)
 		{
 			snprintf(buf, sizeof(buf), "Incorrect password specified in secret block '%s' for file %s",
-				secret_block, filename);
+			         secret_block, filename);
 			return buf;
 		}
 		if (unrealdb_get_error_code() == UNREALDB_ERROR_CRYPTED)
 		{
 			snprintf(buf, sizeof(buf), "File '%s' is encrypted but no secret block provided for it",
-				filename);
+			         filename);
 			return buf;
 		}
 		return NULL;
@@ -597,7 +598,8 @@ static int unrealdb_write(UnrealDB *c, const void *wbuf, int len)
 		return 1;
 	}
 
-	do {
+	do
+	{
 		if (c->buflen + len < UNREALDB_CRYPT_FILE_CHUNK_SIZE)
 		{
 			/* New data fits in new buffer. Then we are done with writing.
@@ -633,7 +635,7 @@ static int unrealdb_write(UnrealDB *c, const void *wbuf, int len)
 		}
 		/* Buffer is now flushed for sure */
 		c->buflen = 0;
-	} while(len > 0);
+	} while (len > 0);
 
 	return 1;
 }
@@ -663,12 +665,13 @@ int unrealdb_write_str(UnrealDB *c, const char *x)
 		if (stringlen >= 0xffff)
 		{
 			unrealdb_set_error(c, UNREALDB_ERROR_API,
-					   "unrealdb_write_str(): string has length %d, while maximum allowed is 65534",
-					   stringlen);
+			                   "unrealdb_write_str(): string has length %d, while maximum allowed is 65534",
+			                   stringlen);
 			return 0;
 		}
 		len = stringlen;
-	} else {
+	} else
+	{
 		len = 0xffff;
 	}
 
@@ -771,7 +774,7 @@ static int unrealdb_read(UnrealDB *c, void *rbuf, int len)
 		if (rlen < len)
 		{
 			unrealdb_set_error(c, UNREALDB_ERROR_IO, "Short read - premature end of file (want:%d, got:%d bytes)",
-				len, (int)rlen);
+			                   len, (int)rlen);
 			return 0;
 		}
 		return 1;
@@ -795,7 +798,8 @@ static int unrealdb_read(UnrealDB *c, void *rbuf, int len)
 		abort();
 
 	/* If we get here then we need to read some data */
-	do {
+	do
+	{
 		rlen = fread(buf_in, 1, sizeof(buf_in), c->fd);
 		if (rlen == 0)
 		{
@@ -818,15 +822,16 @@ static int unrealdb_read(UnrealDB *c, void *rbuf, int len)
 			memcpy(buf, c->buf, out_len);
 			buf += out_len;
 			len -= out_len;
-		} else {
+		} else
+		{
 			/* This is the only (or last) block we need, we are satisfied */
 			memcpy(buf, c->buf, len);
 			c->buflen = out_len - len;
 			if (c->buflen > 0)
-				memmove(c->buf, c->buf+len, c->buflen);
+				memmove(c->buf, c->buf + len, c->buflen);
 			return 1; /* Done */
 		}
-	} while(!feof(c->fd));
+	} while (!feof(c->fd));
 
 	unrealdb_set_error(c, UNREALDB_ERROR_IO, "Short read - premature end of file?");
 	return 0;
@@ -994,7 +999,7 @@ void unrealdb_test_simple(void)
 	fprintf(stderr, "All good.\n");
 }
 
-#define UNREALDB_SPEED_TEST_BYTES 100000000
+ #define UNREALDB_SPEED_TEST_BYTES 100000000
 void unrealdb_test_speed(char *key)
 {
 	UnrealDB *c;
@@ -1149,9 +1154,9 @@ static void unrealdb_add_to_secret_cache(Secret *secr, UnrealDBConfig *cfg)
 }
 
 #ifdef DEBUGMODE
-#define UNREALDB_EXPIRE_SECRET_CACHE_AFTER	1200
+ #define UNREALDB_EXPIRE_SECRET_CACHE_AFTER 1200
 #else
-#define UNREALDB_EXPIRE_SECRET_CACHE_AFTER	86400
+ #define UNREALDB_EXPIRE_SECRET_CACHE_AFTER 86400
 #endif
 
 /** Expire cached secret entries (previous Argon2 runs) */

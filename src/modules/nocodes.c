@@ -20,13 +20,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"nocodes",	/* Name of module */
-	"1.3", /* Version */
-	"Strip/block color/bold/underline/italic/reverse - by Syzop", /* Short description of module */
-	"UnrealIRCd Team", /* Author */
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "nocodes", /* Name of module */
+    "1.3", /* Version */
+    "Strip/block color/bold/underline/italic/reverse - by Syzop", /* Short description of module */
+    "UnrealIRCd Team", /* Author */
+    "unrealircd-6",
 };
 
 int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx);
@@ -80,8 +79,7 @@ int nocodes_can_send_to_channel(Client *client, Channel *channel, Membership *lp
 		strlcpy(retbuf, StripControlCodes(*msg), sizeof(retbuf));
 		*msg = retbuf;
 		return HOOK_CONTINUE;
-	} else
-	if (has_channel_mode(channel, 'c'))
+	} else if (has_channel_mode(channel, 'c'))
 	{
 		if (!has_controlcodes(*msg))
 			return HOOK_CONTINUE;

@@ -20,24 +20,32 @@
 #include "unrealircd.h"
 
 /* Function to return a group of tokens -- codemastr */
-void strrangetok(char *in, char *out, char tok, short first, short last) {
+void strrangetok(char *in, char *out, char tok, short first, short last)
+{
 	int i = 0, tokcount = 0, j = 0;
 	first--;
 	last--;
-	while(in[i]) {
-		if (in[i] == tok) {
+	while (in[i])
+	{
+		if (in[i] == tok)
+		{
 			tokcount++;
 			if (tokcount == first)
+			{
 				i++;
+				if (!in[i])
+					break; /* don't read past NUL */
+			}
 		}
-		if (tokcount >= first && (tokcount <= last || last == -1)) {
+		if (tokcount >= first && (tokcount <= last || last == -1))
+		{
 			out[j] = in[i];
 			j++;
 		}
 		i++;
 	}
 	out[j] = 0;
-}			
+}
 
 /* cmd_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
@@ -49,13 +57,13 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 	int ret;
 	char request[BUFSIZE];
 
-	if (!(alias = find_alias(cmd))) 
+	if (!(alias = find_alias(cmd)))
 	{
 		sendto_one(client, NULL, ":%s %d %s %s :Unknown command",
-			me.name, ERR_UNKNOWNCOMMAND, client->name, cmd);
+		           me.name, ERR_UNKNOWNCOMMAND, client->name, cmd);
 		return;
 	}
-	
+
 	/* If it isn't an ALIAS_COMMAND, we require a paramter ... We check ALIAS_COMMAND LATER */
 	if (alias->type != ALIAS_COMMAND && (parc < 2 || *parv[1] == '\0'))
 	{
@@ -63,48 +71,42 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 		return;
 	}
 
-	if (alias->type == ALIAS_SERVICES) 
+	if (alias->type == ALIAS_SERVICES)
 	{
 		if (SERVICES_NAME && (acptr = find_user(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
-				alias->nick, SERVICES_NAME, parv[1]);
-		}
-		else
+			           alias->nick, SERVICES_NAME, parv[1]);
+		} else
 			sendnumeric(client, ERR_SERVICESDOWN, alias->nick);
-	}
-	else if (alias->type == ALIAS_STATS) 
+	} else if (alias->type == ALIAS_STATS)
 	{
 		if (STATS_SERVER && (acptr = find_user(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
 			sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
-				alias->nick, STATS_SERVER, parv[1]);
-		}
-		else
+			           alias->nick, STATS_SERVER, parv[1]);
+		} else
 			sendnumeric(client, ERR_SERVICESDOWN, alias->nick);
-	}
-	else if (alias->type == ALIAS_NORMAL) 
+	} else if (alias->type == ALIAS_NORMAL)
 	{
-		if ((acptr = find_user(alias->nick, NULL))) 
+		if ((acptr = find_user(alias->nick, NULL)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
 			if (MyUser(acptr))
-				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name, 
-					client->user->username, GetHost(client),
-					alias->nick, parv[1]);
+				sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name,
+				           client->user->username, GetHost(client),
+				           alias->nick, parv[1]);
 			else
 				sendto_one(acptr, NULL, ":%s PRIVMSG %s :%s", client->name,
-					alias->nick, parv[1]);
-		}
-		else
+				           alias->nick, parv[1]);
+		} else
 			sendnumeric(client, ERR_NOSUCHNICK, alias->nick);
-	}
-	else if (alias->type == ALIAS_CHANNEL)
+	} else if (alias->type == ALIAS_CHANNEL)
 	{
 		Channel *channel;
 		if ((channel = find_channel(alias->nick)))
@@ -118,7 +120,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 			{
 				new_message(client, NULL, &mtags);
 				sendto_channel(channel, client, client->direction,
-				               NULL, 0, SEND_ALL|SKIP_DEAF, mtags,
+				               NULL, 0, SEND_ALL | SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
 				               client->name, channel->name, parv[1]);
 				free_message_tags(mtags);
@@ -128,9 +130,8 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 		if (IsDead(client))
 			return;
 		sendnumeric(client, ERR_CANNOTDOCOMMAND,
-				cmd, "You may not use this command at this time");
-	}
-	else if (alias->type == ALIAS_COMMAND) 
+		            cmd, "You may not use this command at this time");
+	} else if (alias->type == ALIAS_COMMAND)
 	{
 		ConfigItem_alias_format *format;
 		char *ptr = "";
@@ -153,42 +154,41 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 				memset(current, 0, sizeof(current));
 				memset(output, 0, sizeof(output));
 
-				while(format->parameters[i] && j < 500) 
+				while (format->parameters[i] && j < 500)
 				{
 					k = 0;
-					if (format->parameters[i] == '%') 
+					if (format->parameters[i] == '%')
 					{
 						i++;
-						if (format->parameters[i] == '%') 
+						if (format->parameters[i] == '%')
 							output[j++] = '%';
-						else if (isdigit(format->parameters[i])) 
+						else if (isdigit(format->parameters[i]))
 						{
-							for(; isdigit(format->parameters[i]) && k < 2; i++, k++) {
+							for (; isdigit(format->parameters[i]) && k < 2; i++, k++)
+							{
 								nums[k] = format->parameters[i];
 							}
 							nums[k] = 0;
 							i--;
-							if (format->parameters[i+1] == '-') {
-								strrangetok(ptr, current, ' ', atoi(nums),0);
+							if (format->parameters[i + 1] == '-')
+							{
+								strrangetok(ptr, current, ' ', atoi(nums), 0);
 								i++;
-							}
-							else 
+							} else
 								strrangetok(ptr, current, ' ', atoi(nums), atoi(nums));
 							if (!*current)
 								continue;
-							if (j + strlen(current)+1 >= 500)
+							if (j + strlen(current) + 1 >= 500)
 								break;
 							strlcat(output, current, sizeof output);
 							j += strlen(current);
-							
-						}
-						else if (format->parameters[i] == 'n' ||
-							 format->parameters[i] == 'N')
+
+						} else if (format->parameters[i] == 'n' ||
+						           format->parameters[i] == 'N')
 						{
 							strlcat(output, client->name, sizeof output);
 							j += strlen(client->name);
-						}
-						else 
+						} else
 						{
 							output[j++] = '%';
 							output[j++] = format->parameters[i];
@@ -205,47 +205,43 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 					sendnumeric(client, ERR_NEEDMOREPARAMS, cmd);
 					return;
 				}
-				
-				if (format->type == ALIAS_SERVICES) 
+
+				if (format->type == ALIAS_SERVICES)
 				{
 					if (SERVICES_NAME && (acptr = find_user(format->nick, NULL)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
-							format->nick, SERVICES_NAME, output);
+						           format->nick, SERVICES_NAME, output);
 					} else
 						sendnumeric(client, ERR_SERVICESDOWN, format->nick);
-				}
-				else if (format->type == ALIAS_STATS) 
+				} else if (format->type == ALIAS_STATS)
 				{
 					if (STATS_SERVER && (acptr = find_user(format->nick, NULL)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
 						sendto_one(acptr, NULL, ":%s PRIVMSG %s@%s :%s", client->name,
-							format->nick, STATS_SERVER, output);
+						           format->nick, STATS_SERVER, output);
 					} else
 						sendnumeric(client, ERR_SERVICESDOWN, format->nick);
-				}
-				else if (format->type == ALIAS_NORMAL) 
+				} else if (format->type == ALIAS_NORMAL)
 				{
-					if ((acptr = find_user(format->nick, NULL))) 
+					if ((acptr = find_user(format->nick, NULL)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
 						if (MyUser(acptr))
-							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name, 
-							client->user->username, IsHidden(client) ? client->user->virthost : client->user->realhost,
-							format->nick, output);
+							sendto_one(acptr, NULL, ":%s!%s@%s PRIVMSG %s :%s", client->name,
+							           client->user->username, IsHidden(client) ? client->user->virthost : client->user->realhost,
+							           format->nick, output);
 						else
 							sendto_one(acptr, NULL, ":%s PRIVMSG %s :%s", client->name,
-								format->nick, output);
-					}
-					else
+							           format->nick, output);
+					} else
 						sendnumeric(client, ERR_NOSUCHNICK, format->nick);
-				}
-				else if (format->type == ALIAS_CHANNEL)
+				} else if (format->type == ALIAS_CHANNEL)
 				{
 					Channel *channel;
 					if ((channel = find_channel(format->nick)))
@@ -255,11 +251,11 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 						/* FIXME: when can_send_to_channel() gets 'int flags', pass
 					 * alias->spamfilter ? 0 : CAN_SEND_SKIP_SPAMFILTER
 					 */
-					if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
+						if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 						{
 							new_message(client, NULL, &mtags);
 							sendto_channel(channel, client, client->direction,
-							               NULL, 0, SEND_ALL|SKIP_DEAF, mtags,
+							               NULL, 0, SEND_ALL | SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
 							               client->name, channel->name, parv[1]);
 							free_message_tags(mtags);
@@ -269,13 +265,12 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 					if (IsDead(client))
 						return;
 					sendnumeric(client, ERR_CANNOTDOCOMMAND, cmd,
-						"You may not use this command at this time");
-				}
-				else if (format->type == ALIAS_REAL)
+					            "You may not use this command at this time");
+				} else if (format->type == ALIAS_REAL)
 				{
 					int ret;
 					char mybuf[500];
-					
+
 					snprintf(mybuf, sizeof(mybuf), "%s %s", format->nick, output);
 
 					if (recursive_alias)

@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_close);
 
-#define MSG_CLOSE 	"CLOSE"	
+#define MSG_CLOSE "CLOSE"
 
-ModuleHeader MOD_HEADER
-  = {
-	"close",
-	"5.0",
-	"command /close", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "close",
+    "5.0",
+    "command /close",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -58,9 +57,9 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_close)
 {
 	Client *target, *next;
-	int  closed = 0;
+	int closed = 0;
 
-	if (!ValidatePermissionsForPath("server:close",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:close", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -69,7 +68,7 @@ CMD_FUNC(cmd_close)
 	list_for_each_entry_safe(target, next, &unknown_list, lclient_node)
 	{
 		sendnumeric(client, RPL_CLOSING,
-		    get_client_name(target, TRUE), target->status);
+		            get_client_name(target, TRUE), target->status);
 		exit_client(target, NULL, "Oper Closing");
 		closed++;
 	}

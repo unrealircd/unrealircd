@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"max-unknown-connections-per-ip",
-	"6.0.0",
-	"set::max-unknown-connections-per-ip",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "max-unknown-connections-per-ip",
+    "6.0.0",
+    "set::max-unknown-connections-per-ip",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declaration */
 int max_unknown_connections_accept(Client *client);
@@ -56,7 +55,7 @@ static int check_too_many_unknown_connections(Client *client)
 			{
 				continue;
 			}
-			if (!strcmp(client->ip,GetIP(c)))
+			if (!strcmp(client->ip, GetIP(c)))
 			{
 				cnt++;
 				if (cnt > iConf.max_unknown_connections_per_ip)

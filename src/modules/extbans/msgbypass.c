@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/msgbypass",
-	"4.2",
-	"ExtBan ~msgbypass - bypass +m/+n/+c/+S/+T (msgbypass)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/msgbypass",
+    "4.2",
+    "ExtBan ~msgbypass - bypass +m/+n/+c/+S/+T (msgbypass)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -36,7 +35,7 @@ const char *msgbypass_extban_conv_param(BanContext *b, Extban *extban);
 MOD_INIT()
 {
 	ExtbanInfo req;
-	
+
 	memset(&req, 0, sizeof(req));
 	req.letter = 'm';
 	req.name = "msgbypass";
@@ -50,7 +49,7 @@ MOD_INIT()
 	}
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	return MOD_SUCCESS;
 }
 
@@ -78,7 +77,7 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 	b->channel = channel;
 	b->ban_check_types = BANCHK_MSG;
 	b->ban_type = EXBTYPE_EXCEPT;
-	for (ban = channel->exlist; ban; ban=ban->next)
+	for (ban = channel->exlist; ban; ban = ban->next)
 	{
 		char *type;
 		char *matchby;
@@ -100,7 +99,7 @@ int msgbypass_can_bypass(Client *client, Channel *channel, BypassChannelMessageR
 			if (!matchby)
 				continue;
 			matchby++;
-			
+
 			b->banstr = matchby;
 			if (ban_check_mask(b))
 			{
@@ -131,15 +130,15 @@ int msgbypass_extban_type_ok(char *type)
 #define MAX_LENGTH 128
 const char *msgbypass_extban_conv_param(BanContext *b, Extban *extban)
 {
-	static char retbuf[MAX_LENGTH+1];
-	char para[MAX_LENGTH+1];
-	char tmpmask[MAX_LENGTH+1];
+	static char retbuf[MAX_LENGTH + 1];
+	char para[MAX_LENGTH + 1];
+	char tmpmask[MAX_LENGTH + 1];
 	char *type; /**< Type, such as 'external' */
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	const char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
-	
+
 	/* ~m:type:n!u@h   for direct matching
 	 * ~m:type:~x:.... when calling another bantype
 	 */
@@ -178,7 +177,7 @@ int msgbypass_extban_syntax(Client *client, int checkt, char *reason)
 
 int msgbypass_extban_is_ok(BanContext *b)
 {
-	static char para[MAX_LENGTH+1];
+	static char para[MAX_LENGTH + 1];
 	char *type; /**< Type, such as 'external' */
 	char *matchby; /**< Matching method, such as 'n!u@h' */
 	char *newmask; /**< Cleaned matching method, such as 'n!u@h' */
@@ -186,7 +185,7 @@ int msgbypass_extban_is_ok(BanContext *b)
 	/* Always permit deletion */
 	if (b->what == MODE_DEL)
 		return 1;
-	
+
 	if (b->ban_type != EXBTYPE_EXCEPT)
 	{
 		if (b->is_ok_check == EXBCHK_PARAM)
@@ -195,7 +194,7 @@ int msgbypass_extban_is_ok(BanContext *b)
 	}
 
 	strlcpy(para, b->banstr, sizeof(para)); /* work on a copy (and truncate it) */
-	
+
 	/* ~m:type:n!u@h   for direct matching
 	 * ~m:type:~x:.... when calling another bantype
 	 */
@@ -221,4 +220,3 @@ int msgbypass_extban_is_ok(BanContext *b)
 
 	return 1; /* OK */
 }
-

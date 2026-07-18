@@ -21,18 +21,17 @@
 
 CMD_FUNC(noinvite);
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/noinvite",
-	"4.2",
-	"Channel Mode +V",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/noinvite",
+    "4.2",
+    "Channel Mode +V",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 Cmode_t EXTCMODE_NOINVITE;
 
-#define IsNoInvite(channel)    (channel->mode.mode & EXTCMODE_NOINVITE)
+#define IsNoInvite(channel) (channel->mode.mode & EXTCMODE_NOINVITE)
 
 int noinvite_pre_knock(Client *client, Channel *channel, const char **reason);
 int noinvite_pre_invite(Client *client, Client *target, Channel *channel, int *override);
@@ -51,10 +50,10 @@ MOD_INIT()
 	req.letter = 'V';
 	req.is_ok = extcmode_default_requirechop;
 	CmodeAdd(modinfo->handle, req, &EXTCMODE_NOINVITE);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_KNOCK, 0, noinvite_pre_knock);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_INVITE, 0, noinvite_pre_invite);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -86,10 +85,11 @@ int noinvite_pre_invite(Client *client, Client *target, Channel *channel, int *o
 {
 	if (MyUser(client) && IsNoInvite(channel))
 	{
-		if (ValidatePermissionsForPath("channel:override:invite:noinvite",client,NULL,channel,NULL) && client == target)
+		if (ValidatePermissionsForPath("channel:override:invite:noinvite", client, NULL, channel, NULL) && client == target)
 		{
 			*override = 1;
-		} else {
+		} else
+		{
 			sendnumeric(client, ERR_NOINVITE, channel->name);
 			return HOOK_DENY;
 		}

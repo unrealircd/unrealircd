@@ -19,7 +19,7 @@
 
 #include "unrealircd.h"
 
-SERVICE_STATUS IRCDStatus; 
+SERVICE_STATUS IRCDStatus;
 SERVICE_STATUS_HANDLE IRCDStatusHandle;
 
 /* Signal to rehash */
@@ -41,20 +41,20 @@ void SetServiceStop(int code)
 	IRCDStatus.dwWin32ExitCode = code;
 	IRCDStatus.dwServiceSpecificExitCode = code;
 	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
-}	
+}
 
 /* Handles the service messages
  * Parameters:
  *  opcode - The message to process
  */
-VOID WINAPI IRCDCtrlHandler(DWORD opcode) 
+VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 {
 	DWORD status;
 	int i;
 	Client *acptr;
 
 	/* Stopping */
-	if (opcode == SERVICE_CONTROL_STOP) 
+	if (opcode == SERVICE_CONTROL_STOP)
 	{
 		IRCDStatus.dwCurrentState = SERVICE_STOP_PENDING;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
@@ -75,20 +75,20 @@ VOID WINAPI IRCDCtrlHandler(DWORD opcode)
 		SetServiceStop(0);
 	}
 	/* Rehash */
-	else if (opcode == IRCD_SERVICE_CONTROL_REHASH) 
+	else if (opcode == IRCD_SERVICE_CONTROL_REHASH)
 	{
 		request_rehash(NULL);
 	}
 
 	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
-} 
+}
 
 /* Entry point function
  * Parameters:
  *  dwArgc   - Argument count
  *  lpszArgv - Arguments
  */
-VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv) 
+VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 {
 	DWORD error = 0;
 	char path[MAX_PATH], *folder;
@@ -98,13 +98,13 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	/* Initialize the service structure */
 	IRCDStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 	IRCDStatus.dwCurrentState = SERVICE_START_PENDING;
-	IRCDStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP|SERVICE_ACCEPT_SHUTDOWN;
+	IRCDStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
 	IRCDStatus.dwWin32ExitCode = NO_ERROR;
 	IRCDStatus.dwServiceSpecificExitCode = 0;
 	IRCDStatus.dwCheckPoint = 0;
 	IRCDStatus.dwWaitHint = 0;
- 
-	GetModuleFileName(NULL,path,MAX_PATH);
+
+	GetModuleFileName(NULL, path, MAX_PATH);
 	folder = strrchr(path, '\\');
 	*folder = 0;
 	chdir(path);
@@ -115,24 +115,24 @@ VOID WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 	chdir("..");
 
 	/* Register the service controller */
-	IRCDStatusHandle = RegisterServiceCtrlHandler("UnrealIRCd", IRCDCtrlHandler); 
- 
+	IRCDStatusHandle = RegisterServiceCtrlHandler("UnrealIRCd", IRCDCtrlHandler);
+
 	GetOSName(OSName);
 
 	InitDebug();
 	init_winsock();
 
 	/* Initialize the IRCd */
-	if ((error = InitUnrealIRCd(dwArgc, lpszArgv)) != 1) 
+	if ((error = InitUnrealIRCd(dwArgc, lpszArgv)) != 1)
 	{
 		SetServiceStop(error);
 		return;
 	}
-	
+
 	/* Go into the running state */
 	IRCDStatus.dwCurrentState = SERVICE_RUNNING;
 	IRCDStatus.dwCheckPoint = 0;
-	IRCDStatus.dwWaitHint = 0;  
+	IRCDStatus.dwWaitHint = 0;
 	SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 
 	SocketLoop(0);

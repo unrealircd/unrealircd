@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_admin);
 
-#define MSG_ADMIN 	"ADMIN"	
+#define MSG_ADMIN "ADMIN"
 
-ModuleHeader MOD_HEADER
-  = {
-	"admin",
-	"5.0",
-	"command /admin", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "admin",
+    "5.0",
+    "command /admin",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_ADMIN, cmd_admin, MAXPARA, CMD_USER|CMD_SHUN|CMD_VIRUS);
+	CommandAdd(modinfo->handle, MSG_ADMIN, cmd_admin, MAXPARA, CMD_USER | CMD_SHUN | CMD_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }

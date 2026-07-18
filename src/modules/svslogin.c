@@ -26,18 +26,17 @@
 
 CMD_FUNC(cmd_svslogin);
 
-ModuleHeader MOD_HEADER
-  = {
-	"svslogin",
-	"6.0",
-	"command /SVSLOGIN", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svslogin",
+    "6.0",
+    "command /SVSLOGIN",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSLOGIN, cmd_svslogin, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSLOGIN, cmd_svslogin, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -84,7 +83,8 @@ CMD_FUNC(cmd_svslogin)
 		user_account_login(recv_mtags, target);
 		if (MyConnect(target) && IsDead(target))
 			return; /* was killed due to *LINE on ~a probably */
-	} else {
+	} else
+	{
 		/* It is perfectly normal for target to be NULL as this
 		 * happens during registration phase (pre-connect).
 		 * It just means we cannot set any properties for this user,

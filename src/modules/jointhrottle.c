@@ -23,14 +23,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"jointhrottle",
-	"5.0",
-	"Join flood protection (set::anti-flood::join-flood)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "jointhrottle",
+    "5.0",
+    "Join flood protection (set::anti-flood::join-flood)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 ModuleInfo *ModInfo = NULL;
 
@@ -40,7 +39,7 @@ typedef struct JoinFlood JoinFlood;
 
 struct JoinFlood {
 	JoinFlood *prev, *next;
-	char name[CHANNELLEN+1];
+	char name[CHANNELLEN + 1];
 	time_t firstjoin;
 	unsigned short numjoins;
 };
@@ -79,7 +78,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_CAN_JOIN, 0, jointhrottle_can_join);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, jointhrottle_local_join);
-	
+
 	return MOD_SUCCESS;
 }
 
@@ -103,10 +102,10 @@ static int isjthrottled(Client *client, Channel *channel)
 		return 0;
 
 	/* Grab user<->chan entry.. */
-	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
+	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e = e->next)
 		if (!strcasecmp(e->name, channel->name))
 			break;
-	
+
 	if (!e)
 		return 0; /* Not present, so cannot be throttled */
 
@@ -126,23 +125,23 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *channel)
 
 	if (!MyUser(client))
 		return;
-		
+
 	/* Grab user<->chan entry.. */
-	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
+	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e = e->next)
 		if (!strcasecmp(e->name, channel->name))
 			break;
-	
+
 	if (!e)
 	{
 		/* Allocate one */
 		e = jointhrottle_addentry(client, channel);
 		e->firstjoin = TStime();
 		e->numjoins = 1;
-	} else
-	if ((TStime() - e->firstjoin) < iConf.floodsettings->period[FLD_JOIN]) /* still valid? */
+	} else if ((TStime() - e->firstjoin) < iConf.floodsettings->period[FLD_JOIN]) /* still valid? */
 	{
 		e->numjoins++;
-	} else {
+	} else
+	{
 		/* reset :p */
 		e->firstjoin = TStime();
 		e->numjoins = 1;
@@ -151,7 +150,7 @@ static void jointhrottle_increase_usercounter(Client *client, Channel *channel)
 
 int jointhrottle_can_join(Client *client, Channel *channel, const char *key, char **errmsg)
 {
-	if (!ValidatePermissionsForPath("immune:join-flood",client,NULL,channel,NULL) && isjthrottled(client, channel))
+	if (!ValidatePermissionsForPath("immune:join-flood", client, NULL, channel, NULL) && isjthrottled(client, channel))
 	{
 		flood_blocked_increment(client, FLD_JOIN);
 		*errmsg = STR_ERR_TOOMANYJOINS;
@@ -178,7 +177,7 @@ JoinFlood *jointhrottle_addentry(Client *client, Channel *channel)
 	if (!IsUser(client))
 		abort();
 
-	for (e=moddata_local_client(client, jointhrottle_md).ptr; e; e=e->next)
+	for (e = moddata_local_client(client, jointhrottle_md).ptr; e; e = e->next)
 		if (!strcasecmp(e->name, channel->name))
 			abort(); /* already exists -- should never happen */
 #endif
@@ -203,7 +202,7 @@ EVENT(jointhrottle_cleanup_structs)
 {
 	Client *client;
 	JoinFlood *jf, *jf_next;
-	
+
 	list_for_each_entry(client, &lclient_list, lclient_node)
 	{
 		if (!MyUser(client))
@@ -212,7 +211,7 @@ EVENT(jointhrottle_cleanup_structs)
 		for (jf = moddata_local_client(client, jointhrottle_md).ptr; jf; jf = jf_next)
 		{
 			jf_next = jf->next;
-			
+
 			if (jf->firstjoin + iConf.floodsettings->period[FLD_JOIN] > TStime())
 				continue; /* still valid entry */
 			if (moddata_local_client(client, jointhrottle_md).ptr == jf)
@@ -221,7 +220,8 @@ EVENT(jointhrottle_cleanup_structs)
 				moddata_local_client(client, jointhrottle_md).ptr = jf->next; /* could be set to NULL now */
 				if (jf->next)
 					jf->next->prev = NULL;
-			} else {
+			} else
+			{
 				/* change non-head entries */
 				jf->prev->next = jf->next; /* could be set to NULL now */
 				if (jf->next)
@@ -243,7 +243,7 @@ void jointhrottle_md_free(ModData *m)
 	{
 		j_next = j->next;
 		safe_free(j);
-	}	
+	}
 
 	m->ptr = NULL;
 }

@@ -26,16 +26,15 @@
 
 CMD_FUNC(cmd_svslusers);
 
-#define MSG_SVSLUSERS 	"SVSLUSERS"	
+#define MSG_SVSLUSERS "SVSLUSERS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svslusers",
-	"5.0",
-	"command /svslusers", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svslusers",
+    "5.0",
+    "command /svslusers",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -64,16 +63,16 @@ MOD_UNLOAD()
 */
 CMD_FUNC(cmd_svslusers)
 {
-        if (!IsSvsCmdOk(client) || parc < 4)
-		return;  
-        if (hunt_server(client, NULL, "SVSLUSERS", 1, parc, parv) == HUNTED_ISME)
-        {
+	if (!IsSvsCmdOk(client) || parc < 4)
+		return;
+	if (hunt_server(client, NULL, "SVSLUSERS", 1, parc, parv) == HUNTED_ISME)
+	{
 		int temp;
 		temp = atoi(parv[2]);
 		if (temp >= 0)
 			irccounts.global_max = temp;
 		temp = atoi(parv[3]);
-		if (temp >= 0) 
+		if (temp >= 0)
 			irccounts.me_max = temp;
-        }
+	}
 }

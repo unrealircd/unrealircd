@@ -46,20 +46,20 @@ static mp_pool_t *channel_pool = NULL;
  * These are +ntmispklr and also the list modes +vhoaq and +beI.
  */
 CoreChannelModeTable corechannelmodetable[] = {
-	{MODE_BAN, 'b', 1, 1},
-	{MODE_EXCEPT, 'e', 1, 1},	/* exception ban */
-	{MODE_INVEX, 'I', 1, 1},	/* invite-only exception */
-	{0x0, 0x0, 0x0, 0x0}
+    {MODE_BAN, 'b', 1, 1},
+    {MODE_EXCEPT, 'e', 1, 1}, /* exception ban */
+    {MODE_INVEX, 'I', 1, 1}, /* invite-only exception */
+    {0x0, 0x0, 0x0, 0x0},
 };
 
 /** The advertised supported channel modes in the 004 numeric */
 char cmodestring[512];
 
 /** Returns 1 if the IRCOp can override or is a remote connection */
-inline int op_can_override(const char *acl, Client *client, Channel *channel, void* extra)
+inline int op_can_override(const char *acl, Client *client, Channel *channel, void *extra)
 {
 #ifndef NO_OPEROVERRIDE
-	if (MyUser(client) && !(ValidatePermissionsForPath(acl,client,NULL,channel,extra)))
+	if (MyUser(client) && !(ValidatePermissionsForPath(acl, client, NULL, channel, extra)))
 		return 0;
 	return 1;
 #else
@@ -113,11 +113,11 @@ Membership *find_membership_link(Membership *lp, Channel *ptr)
 static Member *make_member(void)
 {
 	Member *lp;
-	unsigned int	i;
+	unsigned int i;
 
 	if (freemember == NULL)
 	{
-		for (i = 1; i <= (4072/sizeof(Member)); ++i)
+		for (i = 1; i <= (4072 / sizeof(Member)); ++i)
 		{
 			lp = safe_alloc(sizeof(Member));
 			AddListItem(lp, freemember);
@@ -144,11 +144,11 @@ static void free_member(Member *lp)
 static Membership *make_membership(void)
 {
 	Membership *m = NULL;
-	unsigned int	i;
+	unsigned int i;
 
 	if (freemembership == NULL)
 	{
-		for (i = 1; i <= (4072/sizeof(Membership)); i++)
+		for (i = 1; i <= (4072 / sizeof(Membership)); i++)
 		{
 			m = safe_alloc(sizeof(Membership));
 			AddListItem(m, freemembership);
@@ -203,7 +203,8 @@ Client *find_chasing(Client *client, const char *user, int *chasing)
 		*chasing = 1;
 	if (!IsServer(who))
 		return who;
-	else return NULL;
+	else
+		return NULL;
 }
 
 /** Return 1 if the bans are identical, taking into account special handling for extbans */
@@ -298,8 +299,8 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 	}
 
 	/* Update/set if this ban is new or older than existing one */
-	safe_strldup(ban->banstr, banid, MAXBANLEN+1); /* cAsE may differ, use oldest version of it */
-	safe_strldup(ban->who, setby, NICKLEN+USERLEN+HOSTLEN+4);
+	safe_strldup(ban->banstr, banid, MAXBANLEN + 1); /* cAsE may differ, use oldest version of it */
+	safe_strldup(ban->who, setby, NICKLEN + USERLEN + HOSTLEN + 4);
 	ban->when = seton;
 	return isnew ? 1 : 0;
 }
@@ -310,7 +311,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 int add_listmode(Ban **list, Client *client, Channel *channel, const char *banid)
 {
 	char *setby = client->name;
-	char nuhbuf[NICKLEN+USERLEN+HOSTLEN+4];
+	char nuhbuf[NICKLEN + USERLEN + HOSTLEN + 4];
 
 	if (IsUser(client) && (iConf.ban_setter == SETTER_NICK_USER_HOST))
 		setby = make_nick_user_host_r(nuhbuf, sizeof(nuhbuf), client->name, client->user->username, GetHost(client));
@@ -373,12 +374,12 @@ inline int ban_check_mask(BanContext *b)
 		if (!extban || !(extban->is_banned_events & b->ban_check_types))
 		{
 			return 0;
-		} else {
+		} else
+		{
 			b->banstr = nextbanstr;
 			return extban->is_banned(b);
 		}
-	}
-	else
+	} else
 	{
 		/* Is a n!u@h mask. */
 		return match_user(b->banstr, b->client, MATCH_CHECK_ALL);
@@ -396,7 +397,7 @@ inline int ban_check_mask(BanContext *b)
 Ban *is_banned_with_nick(Client *client, Channel *channel, int type, const char *nick, const char **msg, const char **errmsg)
 {
 	Ban *ban, *ex;
-	char savednick[NICKLEN+1];
+	char savednick[NICKLEN + 1];
 	BanContext *b = safe_alloc(sizeof(BanContext));
 
 	/* It's not really doable to pass 'nick' to all the ban layers,
@@ -490,7 +491,7 @@ int ban_exists_ignore_time(Ban *lst, const char *str)
 		if (!strncmp(lst->banstr, "~time:", 6))
 		{
 			/* Special treatment for ~time:xx: */
-			p = strchr(lst->banstr+6, ':');
+			p = strchr(lst->banstr + 6, ':');
 			if (p)
 			{
 				p++;
@@ -588,12 +589,13 @@ int remove_user_from_channel_withmb(Client *client, Channel *channel, Membership
 		if (MyUser(client))
 		{
 			unreal_log(ULOG_INFO, "part", "LOCAL_CLIENT_PART", client,
-				   "User $client left $channel",
-				   log_data_channel("channel", channel));
-		} else {
+			           "User $client left $channel",
+			           log_data_channel("channel", channel));
+		} else
+		{
 			unreal_log(ULOG_INFO, "part", "REMOTE_CLIENT_PART", client,
-				   "User $client left $channel",
-				   log_data_channel("channel", channel));
+			           "User $client left $channel",
+			           log_data_channel("channel", channel));
 		}
 	}
 
@@ -633,7 +635,7 @@ int has_channel_mode(Channel *channel, char mode)
 {
 	Cmode *cm;
 
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->letter == mode) && (channel->mode.mode & cm->mode))
 			return 1;
 
@@ -645,7 +647,7 @@ int has_channel_mode_raw(Cmode_t m, char mode)
 {
 	Cmode *cm;
 
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 		if ((cm->letter == mode) && (m & cm->mode))
 			return 1;
 
@@ -657,11 +659,11 @@ Cmode_t get_extmode_bitbychar(char m)
 {
 	Cmode *cm;
 
-	for (cm=channelmodes; cm; cm = cm->next)
-                if (cm->letter == m)
-                        return cm->mode;
+	for (cm = channelmodes; cm; cm = cm->next)
+		if (cm->letter == m)
+			return cm->mode;
 
-        return 0;
+	return 0;
 }
 
 /** Write the "simple" list of channel modes for channel channel onto buffer mbuf with the parameters in pbuf.
@@ -683,7 +685,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 		return;
 
 	if (!client || IsMember(client, channel) || IsServer(client) || IsMe(client) || IsULine(client) ||
-	    ValidatePermissionsForPath("channel:see:mode:remote",client,NULL,channel,NULL))
+	    ValidatePermissionsForPath("channel:see:mode:remote", client, NULL, channel, NULL))
 	{
 		show_mode_parameters = 1;
 	}
@@ -691,7 +693,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 	*pbuf = '\0';
 	strlcpy(mbuf, "+", mbuf_size);
 
-	for (cm=channelmodes; cm; cm = cm->next)
+	for (cm = channelmodes; cm; cm = cm->next)
 	{
 		if (cm->letter &&
 		    !(hide_local_modes && cm->local) &&
@@ -712,7 +714,7 @@ void channel_modes(Client *client, char *mbuf, char *pbuf, size_t mbuf_size, siz
 
 	/* Remove the trailing space from the parameters -- codemastr */
 	if (*pbuf)
-		pbuf[strlen(pbuf)-1]='\0';
+		pbuf[strlen(pbuf) - 1] = '\0';
 }
 
 /** Make a pretty mask from the input string - only used by SILENCE
@@ -732,8 +734,7 @@ char *pretty_mask(const char *mask_in)
 		*host++ = '\0';
 		if (!user)
 			return make_nick_user_host(NULL, cp, host);
-	}
-	else if (!user && strchr(cp, '.'))
+	} else if (!user && strchr(cp, '.'))
 	{
 		return make_nick_user_host(NULL, NULL, cp);
 	}
@@ -797,16 +798,15 @@ const char *convert_regular_ban(char *mask, char *buf, size_t buflen)
 	{
 		*host++ = '\0';
 		if (!user)
-			return make_nick_user_host_r(buf, buflen, NULL, trim_str(mask,USERLEN), trim_str(host,HOSTLEN));
-	}
-	else if (!user && (strchr(mask, '.') || strchr(mask, ':')))
+			return make_nick_user_host_r(buf, buflen, NULL, trim_str(mask, USERLEN), trim_str(host, HOSTLEN));
+	} else if (!user && (strchr(mask, '.') || strchr(mask, ':')))
 	{
 		/* 1.2.3.4 -> *!*@1.2.3.4 (and the same for IPv6) */
-		return make_nick_user_host_r(buf, buflen, NULL, NULL, trim_str(mask,HOSTLEN));
+		return make_nick_user_host_r(buf, buflen, NULL, NULL, trim_str(mask, HOSTLEN));
 	}
 
 	/* regular nick!user@host with the auto-trimming feature */
-	return make_nick_user_host_r(buf, buflen, trim_str(mask,NICKLEN), trim_str(user,USERLEN), trim_str(host,HOSTLEN));
+	return make_nick_user_host_r(buf, buflen, trim_str(mask, NICKLEN), trim_str(user, USERLEN), trim_str(host, HOSTLEN));
 }
 
 /** Make a proper ban mask.
@@ -829,7 +829,8 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 	static char mask[512];
 
 	/* Strip any ':' at beginning since that would cause a desync */
-	for (; (*mask_in && (*mask_in == ':')); mask_in++);
+	for (; (*mask_in && (*mask_in == ':')); mask_in++)
+		;
 	if (!*mask_in)
 		return NULL;
 
@@ -854,6 +855,10 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 		extban = findmod_by_bantype(mask, &nextbanstr);
 		if (!extban)
 		{
+			const char *p = strchr(mask, ':');
+			/* Reject adding empty "~something:" extban */
+			if ((what == MODE_ADD) && p && !p[1])
+				return NULL;
 			/* extended bantype not supported, what to do?
 			 * Here are the rules:
 			 * - if from a remote client/server: allow it (easy upgrading,
@@ -890,7 +895,7 @@ const char *clean_ban_mask(const char *mask_in, int what, ExtbanType ban_type, C
 		}
 		/* else, do some basic sanity checks and cut it off at 80 bytes */
 		if ((mask[1] != ':') || (mask[2] == '\0'))
-		    return NULL; /* require a ":<char>" after extban type */
+			return NULL; /* require a ":<char>" after extban type */
 		if (strlen(mask) > 80)
 			mask[80] = '\0';
 		return mask;
@@ -947,8 +952,7 @@ int valid_channelname(const char *cname)
 			if (*p < 33 || *p == ',' || *p == ':')
 				return 0;
 		}
-	} else
-	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ASCII)
+	} else if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ASCII)
 	{
 		/* The strict setting: only allow ASCII 32-128, except some chars */
 		for (p = cname; *p; p++)
@@ -956,8 +960,7 @@ int valid_channelname(const char *cname)
 			if (*p < 33 || *p == ',' || *p == ':' || *p > 127)
 				return 0;
 		}
-	} else
-	if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_UTF8)
+	} else if (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_UTF8)
 	{
 		/* Only allow UTF8, and also disallow some chars */
 		for (p = cname; *p; p++)
@@ -994,7 +997,7 @@ Channel *make_channel(const char *name)
 	Channel *channel;
 	int len;
 	char *p;
-	char namebuf[CHANNELLEN+1];
+	char namebuf[CHANNELLEN + 1];
 
 	if (BadPtr(name))
 		return NULL;
@@ -1135,8 +1138,8 @@ void set_channel_mlock(Client *client, Channel *channel, const char *newmlock, i
 	if (propagate)
 	{
 		sendto_server(client, 0, 0, NULL, ":%s MLOCK %lld %s :%s",
-			      client->id, (long long)channel->creationtime, channel->name,
-			      BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
+		              client->id, (long long)channel->creationtime, channel->name,
+		              BadPtr(channel->mode_lock) ? "" : channel->mode_lock);
 	}
 }
 
@@ -1169,7 +1172,7 @@ int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in
 		pm->what = MODE_ADD;
 	}
 
-	while(1)
+	while (1)
 	{
 		if (*pm->modebuf == '\0')
 			return 0;
@@ -1178,14 +1181,12 @@ int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in
 			pm->what = MODE_ADD;
 			pm->modebuf++;
 			continue;
-		}
-		else if (*pm->modebuf == '-')
+		} else if (*pm->modebuf == '-')
 		{
 			pm->what = MODE_DEL;
 			pm->modebuf++;
 			continue;
-		}
-		else
+		} else
 		{
 			CoreChannelModeTable *tab = &corechannelmodetable[0];
 			Cmode *cm;
@@ -1210,10 +1211,11 @@ int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in
 				{
 					eatparam = 1;
 				}
-			} else {
+			} else
+			{
 				/* EXTENDED CHANNEL MODE */
 				int found = 0;
-				for (cm=channelmodes; cm; cm = cm->next)
+				for (cm = channelmodes; cm; cm = cm->next)
 				{
 					if (cm->letter == *pm->modebuf)
 					{
@@ -1244,7 +1246,8 @@ int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in
 				if (pm->parabuf && *pm->parabuf)
 				{
 					const char *start, *end;
-					for (; *pm->parabuf == ' '; pm->parabuf++); /* skip whitespace */
+					for (; *pm->parabuf == ' '; pm->parabuf++)
+						; /* skip whitespace */
 					start = pm->parabuf;
 					if (*pm->parabuf == '\0')
 					{
@@ -1259,15 +1262,15 @@ int parse_chanmode(ParseMode *pm, const char *modebuf_in, const char *parabuf_in
 						if (end - start + 1 > sizeof(pm->buf))
 							end = start + sizeof(pm->buf); /* 'never' reached */
 						strlcpy(pm->buf, start, end - start + 1);
-					}
-					else
+					} else
 					{
 						strlcpy(pm->buf, start, sizeof(pm->buf));
 						pm->parabuf = pm->parabuf + strlen(pm->parabuf); /* point to \0 at end */
 					}
 					stripcrlf(pm->buf); /* needed for unreal_server_compat.c */
 					pm->param = pm->buf;
-				} else {
+				} else
+				{
 					pm->modebuf++;
 					continue; /* invalid, got mode but no parameter available */
 				}
@@ -1413,7 +1416,8 @@ void set_user_invisible(Client *client, Channel *channel, int invisible)
 	{
 		m->memb_flags |= MEMB_FLAG_INVISIBLE;
 		m->related->memb_flags |= MEMB_FLAG_INVISIBLE;
-	} else {
+	} else
+	{
 		m->memb_flags &= ~MEMB_FLAG_INVISIBLE;
 		m->related->memb_flags &= ~MEMB_FLAG_INVISIBLE;
 	}
@@ -1431,12 +1435,12 @@ void send_invalid_channelname(Client *client, const char *channelname)
 	if (*channelname != '#')
 	{
 		reason = "Channel name must start with a hash mark (#)";
-	} else
-	if (strlen(channelname) > CHANNELLEN)
+	} else if (strlen(channelname) > CHANNELLEN)
 	{
 		reason = "Channel name is too long";
-	} else {
-		switch(iConf.allowed_channelchars)
+	} else
+	{
+		switch (iConf.allowed_channelchars)
 		{
 			case ALLOWED_CHANNELCHARS_ASCII:
 				reason = "Channel name contains illegal characters (must be ASCII)";
@@ -1463,7 +1467,7 @@ int is_extended_ban(const char *str)
 
 	if (*str != '~')
 		return 0;
-	for (p = str+1; *p; p++)
+	for (p = str + 1; *p; p++)
 	{
 		if (!isalnum(*p))
 		{
@@ -1505,7 +1509,7 @@ void free_multilinemode(MultiLineMode *m)
 	int i;
 	if (m == NULL)
 		return;
-	for (i=0; i < m->numlines; i++)
+	for (i = 0; i < m->numlines; i++)
 	{
 		safe_free(m->modeline[i]);
 		safe_free(m->paramline[i]);

@@ -27,16 +27,15 @@ CMD_FUNC(cmd_names);
 long CAP_MULTI_PREFIX = 0L;
 long CAP_USERHOST_IN_NAMES = 0L;
 
-#define MSG_NAMES 	"NAMES"
+#define MSG_NAMES "NAMES"
 
-ModuleHeader MOD_HEADER
-  = {
-	"names",
-	"5.0",
-	"command /names", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "names",
+    "5.0",
+    "command /names",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -48,7 +47,7 @@ MOD_INIT()
 	c.name = "userhost-in-names";
 	ClientCapabilityAdd(modinfo->handle, &c, &CAP_USERHOST_IN_NAMES);
 
-	CommandAdd(modinfo->handle, MSG_NAMES, cmd_names, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_NAMES, cmd_names, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -85,7 +84,7 @@ CMD_FUNC(cmd_names)
 	Member *cm;
 	int idx, flag = 1, spos;
 	const char *para = parv[1], *s;
-	char nuhBuffer[NICKLEN+USERLEN+HOSTLEN+3];
+	char nuhBuffer[NICKLEN + USERLEN + HOSTLEN + 3];
 	char buf[BUFSIZE];
 	char can_see_invisible;
 
@@ -99,14 +98,14 @@ CMD_FUNC(cmd_names)
 	{
 		if (*s == ',')
 		{
-			sendnumeric(client, ERR_TOOMANYTARGETS, s+1, 1, "NAMES");
+			sendnumeric(client, ERR_TOOMANYTARGETS, s + 1, 1, "NAMES");
 			return;
 		}
 	}
 
 	channel = find_channel(para);
 
-	if (!channel || (!ShowChannel(client, channel) && !ValidatePermissionsForPath("channel:see:names:secret",client,NULL,channel,NULL)))
+	if (!channel || (!ShowChannel(client, channel) && !ValidatePermissionsForPath("channel:see:names:secret", client, NULL, channel, NULL)))
 	{
 		sendnumeric(client, RPL_ENDOFNAMES, para);
 		return;
@@ -137,9 +136,9 @@ CMD_FUNC(cmd_names)
 	   LAST /names call get stuck in there.. - lucas */
 	buf[idx] = '\0';
 
-	spos = idx;		/* starting point in buffer for names! */
+	spos = idx;  /* starting point in buffer for names! */
 
-	can_see_invisible = ValidatePermissionsForPath("channel:see:names:invisible",client,NULL,channel,NULL);
+	can_see_invisible = ValidatePermissionsForPath("channel:see:names:invisible", client, NULL, channel, NULL);
 
 	for (cm = channel->members; cm; cm = cm->next)
 	{
@@ -156,18 +155,21 @@ CMD_FUNC(cmd_names)
 			char c = mode_to_prefix(*cm->member_modes);
 			if (c)
 				buf[idx++] = c;
-		} else {
+		} else
+		{
 			/* NAMES reply with all rights included (multi-prefix / NAMESX) */
 			strcpy(&buf[idx], modes_to_prefix(cm->member_modes));
 			idx += strlen(&buf[idx]);
 		}
 
-		if (!uhnames) {
+		if (!uhnames)
+		{
 			s = acptr->name;
-		} else {
+		} else
+		{
 			strlcpy(nuhBuffer,
 			        make_nick_user_host(acptr->name, acptr->user->username, GetHost(acptr)),
-				bufLen + 1);
+			        bufLen + 1);
 			s = nuhBuffer;
 		}
 		/* 's' is intialized above to point to either acptr->name (normal),

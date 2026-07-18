@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_knock);
 
-#define MSG_KNOCK 	"KNOCK"	
+#define MSG_KNOCK "KNOCK"
 
-ModuleHeader MOD_HEADER
-  = {
-	"knock",
-	"5.0",
-	"command /knock", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "knock",
+    "5.0",
+    "command /knock",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -133,7 +132,7 @@ CMD_FUNC(cmd_knock)
 		return;
 
 	if (MyUser(client) &&
-	    !ValidatePermissionsForPath("immune:knock-flood",client,NULL,NULL,NULL) &&
+	    !ValidatePermissionsForPath("immune:knock-flood", client, NULL, NULL, NULL) &&
 	    flood_limit_exceeded(client, FLD_KNOCK))
 	{
 		sendnumeric(client, ERR_CANNOTKNOCK, parv[1], "You are KNOCK flooding");
@@ -154,7 +153,7 @@ CMD_FUNC(cmd_knock)
 	if (MyUser(client))
 		sendnotice(client, "Knocked on %s", channel->name);
 
-        RunHook(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
+	RunHook(HOOKTYPE_KNOCK, client, channel, mtags, parv[2]);
 
 	free_message_tags(mtags);
 }

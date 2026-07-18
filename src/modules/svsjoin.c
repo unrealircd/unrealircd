@@ -22,21 +22,20 @@
 CMD_FUNC(cmd_svsjoin);
 
 /* Place includes here */
-#define MSG_SVSJOIN       "SVSJOIN"
+#define MSG_SVSJOIN "SVSJOIN"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svsjoin",	/* Name of module */
-	"5.0", /* Version */
-	"command /svsjoin", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svsjoin", /* Name of module */
+    "5.0", /* Version */
+    "command /svsjoin", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSJOIN, cmd_svsjoin, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSJOIN, cmd_svsjoin, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -50,7 +49,7 @@ MOD_LOAD()
 /* Called when module is unloaded */
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /* cmd_svsjoin() - Lamego - Wed Jul 21 20:04:48 1999
@@ -78,20 +77,20 @@ CMD_FUNC(cmd_svsjoin)
 			parv[2] = NULL;
 			do_cmd(target, NULL, "JOIN", 2, parv);
 			/* NOTE: 'target' may be killed if we ever implement spamfilter join channel target */
-		} else {
+		} else
+		{
 			parv[2] = parv[3];
 			parv[3] = NULL;
 			do_cmd(target, NULL, "JOIN", 3, parv);
 			/* NOTE: 'target' may be killed if we ever implement spamfilter join channel target */
 		}
-	}
-	else
+	} else
 	{
 		if (parc == 3)
 			sendto_one(target, NULL, ":%s SVSJOIN %s %s", client->name,
-			    parv[1], parv[2]);
+			           parv[1], parv[2]);
 		else
 			sendto_one(target, NULL, ":%s SVSJOIN %s %s %s", client->name,
-				parv[1], parv[2], parv[3]);
+			           parv[1], parv[2], parv[3]);
 	}
 }

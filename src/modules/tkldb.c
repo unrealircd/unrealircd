@@ -20,11 +20,11 @@
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER = {
-	"tkldb",
-	"1.10",
-	"Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "tkldb",
+    "1.10",
+    "Stores active TKL entries (*-Lines) persistently/across IRCd restarts",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 #define TKLDB_MAGIC 0x10101010
@@ -49,46 +49,54 @@ ModuleHeader MOD_HEADER = {
  */
 
 #define FreeTKLRead() \
- 	do { \
+	do \
+	{ \
 		/* Some of these might be NULL */ \
 		if (tkl) \
 			free_tkl(tkl); \
-	} while(0)
+	} while (0)
 
 #define WARN_WRITE_ERROR(fname) \
-	do { \
+	do \
+	{ \
 		unreal_log(ULOG_ERROR, "tkldb", "TKLDB_FILE_WRITE_ERROR", NULL, \
-			   "[tkldb] Error writing to temporary database file $filename: $system_error", \
-			   log_data_string("filename", fname), \
-			   log_data_string("system_error", unrealdb_get_error_string())); \
-	} while(0)
+		           "[tkldb] Error writing to temporary database file $filename: $system_error", \
+		           log_data_string("filename", fname), \
+		           log_data_string("system_error", unrealdb_get_error_string())); \
+	} while (0)
 
 #define R_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_warn("[tkldb] Read error from database file '%s' (possible corruption): %s", cfg.database, unrealdb_get_error_string()); \
 			unrealdb_close(db); \
 			FreeTKLRead(); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 #define W_SAFE(x) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			WARN_WRITE_ERROR(tmpfname); \
 			unrealdb_close(db); \
 			return 0; \
 		} \
-	} while(0)
+	} while (0)
 
 #define IsMDErr(x, y, z) \
-	do { \
-		if (!(x)) { \
+	do \
+	{ \
+		if (!(x)) \
+		{ \
 			config_error("A critical error occurred when registering ModData for %s: %s", MOD_HEADER.name, ModuleGetErrorStr((z)->handle)); \
 			return MOD_FAILED; \
 		} \
-	} while(0)
+	} while (0)
 
 /* Structs */
 struct cfgstruct {
@@ -207,13 +215,11 @@ int tkldb_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		{
 			config_error("%s:%i: blank set::tkldb::%s without value", cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "database"))
+		} else if (!strcmp(cep->name, "database"))
 		{
 			convert_to_absolute_path(&cep->value, PERMDATADIR);
 			safe_strdup(test.database, cep->value);
-		} else
-		if (!strcmp(cep->name, "db-secret"))
+		} else if (!strcmp(cep->name, "db-secret"))
 		{
 			const char *err;
 			if ((err = unrealdb_test_secret(cep->value)))
@@ -383,7 +389,7 @@ int write_tkldb(void)
 #ifdef BENCHMARK
 	gettimeofday(&tv_beta, NULL);
 	config_status("[tkldb] Benchmark: SAVE DB: %lld microseconds",
-		(long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
+	              (long long)(((tv_beta.tv_sec - tv_alpha.tv_sec) * 1000000) + (tv_beta.tv_usec - tv_alpha.tv_usec)));
 #endif
 	return 1;
 }
@@ -419,8 +425,7 @@ int write_tkline(UnrealDB *db, const char *tmpfname, TKL *tkl)
 		W_SAFE(unrealdb_write_str(db, usermask));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.serverban->hostmask));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.serverban->reason));
-	} else
-	if (TKLIsBanException(tkl))
+	} else if (TKLIsBanException(tkl))
 	{
 		char *usermask = tkl->ptr.banexception->usermask;
 		if (tkl->ptr.banexception->subtype & TKL_SUBTYPE_SOFT)
@@ -432,15 +437,13 @@ int write_tkline(UnrealDB *db, const char *tmpfname, TKL *tkl)
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.banexception->hostmask));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.banexception->bantypes));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.banexception->reason));
-	} else
-	if (TKLIsNameBan(tkl))
+	} else if (TKLIsNameBan(tkl))
 	{
 		char *hold = tkl->ptr.nameban->hold ? "H" : "*";
 		W_SAFE(unrealdb_write_str(db, hold));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.nameban->name));
 		W_SAFE(unrealdb_write_str(db, tkl->ptr.nameban->reason));
-	} else
-	if (TKLIsSpamfilter(tkl))
+	} else if (TKLIsSpamfilter(tkl))
 	{
 		char *match_type = unreal_match_method_valtostr(tkl->ptr.spamfilter->match->type);
 		char *target = spamfilter_target_inttostring(tkl->ptr.spamfilter->target);
@@ -488,8 +491,7 @@ int read_tkldb(void)
 			/* Database does not exist. Could be first boot */
 			config_warn("[tkldb] No database present at '%s', will start a new one", cfg.database);
 			return 1;
-		} else
-		if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
+		} else if (unrealdb_get_error_code() == UNREALDB_ERROR_NOTCRYPTED)
 		{
 			/* Re-open as unencrypted */
 			db = unrealdb_open(cfg.database, UNREALDB_MODE_READ, NULL);
@@ -529,7 +531,7 @@ int read_tkldb(void)
 	if (version > tkldb_version)
 	{
 		config_warn("[tkldb] Database '%s' has version %lu while we only support %lu. Did you just downgrade UnrealIRCd? Sorry this is not suported",
-			cfg.database, (unsigned long)tkldb_version, (unsigned long)version);
+		            cfg.database, (unsigned long)tkldb_version, (unsigned long)version);
 		unrealdb_close(db);
 		return 0;
 	}
@@ -600,8 +602,9 @@ int read_tkldb(void)
 			if (*str == '%')
 			{
 				softban = 1;
-				safe_strdup(tkl->ptr.serverban->usermask, str+1);
-			} else {
+				safe_strdup(tkl->ptr.serverban->usermask, str + 1);
+			} else
+			{
 				safe_strdup(tkl->ptr.serverban->usermask, str);
 			}
 			safe_free(str);
@@ -626,14 +629,13 @@ int read_tkldb(void)
 			if (!do_not_add)
 			{
 				added = tkl_add_serverban(tkl->type, tkl->ptr.serverban->usermask,
-				                  tkl->ptr.serverban->hostmask,
-				                  NULL,
-				                  tkl->ptr.serverban->reason,
-				                  tkl->set_by, tkl->expire_at,
-				                  tkl->set_at, softban, 0);
+				                          tkl->ptr.serverban->hostmask,
+				                          NULL,
+				                          tkl->ptr.serverban->reason,
+				                          tkl->set_by, tkl->expire_at,
+				                          tkl->set_at, softban, 0);
 			}
-		} else
-		if (TKLIsBanException(tkl))
+		} else if (TKLIsBanException(tkl))
 		{
 			int softban = 0;
 
@@ -646,8 +648,9 @@ int read_tkldb(void)
 			if (*str == '%')
 			{
 				softban = 1;
-				safe_strdup(tkl->ptr.banexception->usermask, str+1);
-			} else {
+				safe_strdup(tkl->ptr.banexception->usermask, str + 1);
+			} else
+			{
 				safe_strdup(tkl->ptr.banexception->usermask, str);
 			}
 			safe_free(str);
@@ -666,16 +669,15 @@ int read_tkldb(void)
 			if (!do_not_add)
 			{
 				added = tkl_add_banexception(tkl->type, tkl->ptr.banexception->usermask,
-				                     tkl->ptr.banexception->hostmask,
-				                     NULL,
-				                     tkl->ptr.banexception->reason,
-				                     tkl->set_by, tkl->expire_at,
-				                     tkl->set_at, softban,
-				                     tkl->ptr.banexception->bantypes,
-				                     0);
+				                             tkl->ptr.banexception->hostmask,
+				                             NULL,
+				                             tkl->ptr.banexception->reason,
+				                             tkl->set_by, tkl->expire_at,
+				                             tkl->set_at, softban,
+				                             tkl->ptr.banexception->bantypes,
+				                             0);
 			}
-		} else
-		if (TKLIsNameBan(tkl))
+		} else if (TKLIsNameBan(tkl))
 		{
 			tkl->ptr.nameban = safe_alloc(sizeof(NameBan));
 
@@ -695,13 +697,12 @@ int read_tkldb(void)
 			if (!do_not_add)
 			{
 				added = tkl_add_nameban(tkl->type, tkl->ptr.nameban->name,
-				                tkl->ptr.nameban->hold,
-				                tkl->ptr.nameban->reason,
-				                tkl->set_by, tkl->expire_at,
-				                tkl->set_at, 0);
+				                        tkl->ptr.nameban->hold,
+				                        tkl->ptr.nameban->reason,
+				                        tkl->set_by, tkl->expire_at,
+				                        tkl->set_at, 0);
 			}
-		} else
-		if (TKLIsSpamfilter(tkl))
+		} else if (TKLIsSpamfilter(tkl))
 		{
 			int match_method;
 			const char *err = NULL;
@@ -734,7 +735,7 @@ int read_tkldb(void)
 			if (!tkl->ptr.spamfilter->target)
 			{
 				config_warn("[tkldb] Spamfilter '%s' without any valid targets (%s) -- spamfilter entry not added",
-					tkl->ptr.spamfilter->match->str, str);
+				            tkl->ptr.spamfilter->match->str, str);
 				do_not_add = 1;
 			}
 			safe_free(str);
@@ -745,7 +746,7 @@ int read_tkldb(void)
 			if (!tkl->ptr.spamfilter->action || banact_config_only(tkl->ptr.spamfilter->action->action))
 			{
 				config_warn("[tkldb] Spamfilter '%s' without valid action (%c) -- spamfilter entry not added",
-					tkl->ptr.spamfilter->match->str, c);
+				            tkl->ptr.spamfilter->match->str, c);
 				do_not_add = 1;
 			}
 
@@ -779,14 +780,14 @@ int read_tkldb(void)
 			if (!do_not_add)
 			{
 				added = tkl_add_spamfilter(tkl->type, NULL, tkl->ptr.spamfilter->target,
-				                   tkl->ptr.spamfilter->action,
-				                   tkl->ptr.spamfilter->match,
-				                   NULL,
-				                   NULL,
-				                   tkl->set_by, tkl->expire_at, tkl->set_at,
-				                   tkl->ptr.spamfilter->tkl_duration,
-				                   tkl->ptr.spamfilter->tkl_reason,
-				                   INPUT_CONVERSION_DEFAULT, 0, 0);
+				                           tkl->ptr.spamfilter->action,
+				                           tkl->ptr.spamfilter->match,
+				                           NULL,
+				                           NULL,
+				                           tkl->set_by, tkl->expire_at, tkl->set_at,
+				                           tkl->ptr.spamfilter->tkl_duration,
+				                           tkl->ptr.spamfilter->tkl_reason,
+				                           INPUT_CONVERSION_DEFAULT, 0, 0);
 				/* Further down in the code we free fields of the TKL entry,
 				 * this is generally fine since almost all fields are copied
 				 * by tkl_add_spamfilter(), however some are not.
@@ -837,4 +838,3 @@ int read_tkldb(void)
 #endif
 	return 1;
 }
-

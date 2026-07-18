@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/operclass",
-	"4.2",
-	"ExtBan ~O - Ban/exempt operclass",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/operclass",
+    "4.2",
+    "ExtBan ~O - Ban/exempt operclass",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -35,15 +34,15 @@ int extban_operclass_is_banned(BanContext *b);
 MOD_INIT()
 {
 	ExtbanInfo req;
-	
+
 	memset(&req, 0, sizeof(req));
 	req.letter = 'O';
 	req.name = "operclass";
 	req.is_ok = NULL;
 	req.conv_param = extban_operclass_conv_param;
 	req.is_banned = extban_operclass_is_banned;
-	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
-	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
+	req.is_banned_events = BANCHK_ALL | BANCHK_TKL;
+	req.options = EXTBOPT_INVEX | EXTBOPT_TKL;
 	if (!ExtbanAdd(modinfo->handle, req))
 	{
 		config_error("could not register extended ban type");
@@ -51,7 +50,7 @@ MOD_INIT()
 	}
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	return MOD_SUCCESS;
 }
 

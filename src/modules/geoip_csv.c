@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"geoip_csv",
-	"5.0",
-	"GEOIP using csv data files", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "geoip_csv",
+    "5.0",
+    "GEOIP using csv data files",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 struct geoip_csv_config_s {
 	char *v4_db_file;
@@ -94,7 +93,7 @@ int geoip_csv_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	ConfigEntry *cep;
 	int errors = 0;
 	int i;
-	
+
 	if (type != CONFIG_SET)
 		return 0;
 
@@ -158,7 +157,7 @@ int geoip_csv_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		}
 		config_warn("%s:%i: unknown item set::geoip-csv::%s", cep->file->filename, cep->line_number, cep->name);
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -209,7 +208,8 @@ int geoip_csv_configposttest(int *errs)
 		if (!geoip_csv_config.have_ipv4_database && !geoip_csv_config.have_ipv6_database)
 		{
 			config_error("[geoip_csv] couldn't read any blocks file! Either put these in %s location "
-					"or specify another in set::geoip-csv config block", PERMDATADIR);
+			             "or specify another in set::geoip-csv config block",
+			             PERMDATADIR);
 			errors++;
 		}
 	}
@@ -295,7 +295,7 @@ MOD_LOAD()
 	if (!geoip_csv_config.countries_db_file)
 	{
 		unreal_log(ULOG_DEBUG, "geoip_csv", "GEOIP_NO_COUNTRIES", NULL,
-				"[BUG] No countries file specified");
+		           "[BUG] No countries file specified");
 		geoip_csv_free();
 		return MOD_FAILED;
 	}
@@ -303,7 +303,7 @@ MOD_LOAD()
 	if (geoip_csv_read_countries(geoip_csv_config.countries_db_file))
 	{
 		unreal_log(ULOG_ERROR, "geoip_csv", "GEOIP_CANNOT_OPEN_DB", NULL,
-					"could not open required countries file!");
+		           "could not open required countries file!");
 		geoip_csv_free();
 		return MOD_FAILED;
 	}
@@ -311,7 +311,7 @@ MOD_LOAD()
 	if (!found_good_file)
 	{
 		unreal_log(ULOG_ERROR, "geoip_csv", "GEOIP_CANNOT_OPEN_DB", NULL,
-					"could not open any database!");
+		           "could not open any database!");
 		geoip_csv_free();
 		return MOD_FAILED;
 	}
@@ -328,7 +328,7 @@ static void geoip_csv_free_ipv4(void)
 {
 	struct geoip_csv_ip_range *ptr, *oldptr;
 	int i;
-	for (i=0; i<256; i++)
+	for (i = 0; i < 256; i++)
 	{
 		ptr = geoip_csv_ip_range_list[i];
 		geoip_csv_ip_range_list[i] = NULL;
@@ -377,13 +377,13 @@ static void geoip_csv_free(void)
 /* reading data from files */
 
 #define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#define BUFLEN 8191
+#define STR(x)        STR_HELPER(x)
+#define BUFLEN        8191
 
 static int geoip_csv_read_ipv4(char *file)
 {
 	FILE *u;
-	char buf[BUFLEN+1];
+	char buf[BUFLEN + 1];
 	int cidr, geoid;
 	char ip[24];
 	char netmask[24];
@@ -394,7 +394,7 @@ static int geoip_csv_read_ipv4(char *file)
 	memset(curr, 0, sizeof(curr));
 	int i;
 	char *filename = NULL;
-	
+
 	safe_strdup(filename, file);
 	convert_to_absolute_path(&filename, CONFDIR);
 	u = fopen(filename, "r");
@@ -404,7 +404,7 @@ static int geoip_csv_read_ipv4(char *file)
 		config_warn("[geoip_csv] Cannot open IPv4 ranges list file");
 		return 1;
 	}
-	
+
 	if (!fgets(buf, BUFLEN, u))
 	{
 		config_warn("[geoip_csv] IPv4 list file is empty");
@@ -432,19 +432,21 @@ static int geoip_csv_read_ipv4(char *file)
 			continue;
 		}
 		addr = htonl(addr);
-		
+
 		mask = 0;
 		while (cidr)
-		{ /* calculate netmask */
+		{
+			/* calculate netmask */
 			mask >>= 1;
-			mask |= (1<<31);
+			mask |= (1 << 31);
 			cidr--;
 		}
-		
-		i=0;
+
+		i = 0;
 		do
-		{ /* multiple iterations in case CIDR is <8 and we have multiple first octets matching */
-			uint8_t index = addr>>24;
+		{
+			/* multiple iterations in case CIDR is <8 and we have multiple first octets matching */
+			uint8_t index = addr >> 24;
 			if (!curr[index])
 			{
 				geoip_csv_ip_range_list[index] = safe_alloc(sizeof(struct geoip_csv_ip_range));
@@ -461,31 +463,36 @@ static int geoip_csv_read_ipv4(char *file)
 			ptr->geoid = geoid;
 			i++;
 			index++;
-		} while (i<=((~mask)>>24));
+		} while (i <= ((~mask) >> 24));
 	}
 	fclose(u);
 	return 0;
 }
 
+/** Convert an IPv6 address from text to binary form.
+ * @param ip   IPv6 address as text
+ * @param out  Result: eight 16-bit groups
+ * @returns 1 on success, 0 if the address is invalid.
+ */
 static int geoip_csv_ip6_convert(char *ip, uint16_t out[8])
-{ /* convert text to binary form */
+{
 	uint16_t tmp[8];
 	int i;
 	if (inet_pton(AF_INET6, ip, out) < 1)
 		return 0;
-	for (i=0; i<8; i++)
+	for (i = 0; i < 8; i++)
 	{
 		out[i] = htons(out[i]);
 	}
 	return 1;
 }
 
-#define IPV6_STRING_SIZE	40
+#define IPV6_STRING_SIZE 40
 
 static int geoip_csv_read_ipv6(char *file)
 {
 	FILE *u;
-	char buf[BUFLEN+1];
+	char buf[BUFLEN + 1];
 	char *bptr, *optr;
 	int cidr, geoid;
 	char ip[IPV6_STRING_SIZE];
@@ -527,7 +534,7 @@ static int geoip_csv_read_ipv6(char *file)
 			}
 			if (++length >= IPV6_STRING_SIZE)
 			{
-				ip[IPV6_STRING_SIZE-1] = '\0';
+				ip[IPV6_STRING_SIZE - 1] = '\0';
 				config_warn("[geoip_csv] Too long IPv6 address found, starts with %s. Bad CSV file?", ip);
 				error = 1;
 				break;
@@ -551,11 +558,12 @@ static int geoip_csv_read_ipv6(char *file)
 		}
 
 		memset(mask, 0, 16);
-		
+
 		int mask_bit = 0;
 		while (cidr)
-		{ /* calculate netmask */
-			mask[mask_bit/16] |= 1<<(15-(mask_bit%16));
+		{
+			/* calculate netmask */
+			mask[mask_bit / 16] |= 1 << (15 - (mask_bit % 16));
 			mask_bit++;
 			cidr--;
 		}
@@ -580,14 +588,14 @@ static int geoip_csv_read_ipv6(char *file)
 }
 
 /* CSV fields; no STATE_GEONAME_ID because of using %d in fscanf */
-#define STATE_LOCALE_CODE	0
-#define STATE_CONTINENT_CODE	1
-#define STATE_CONTINENT_NAME	2
-#define STATE_COUNTRY_ISO_CODE	3
-#define STATE_COUNTRY_NAME	4
-#define STATE_IS_IN_EU	5
+#define STATE_LOCALE_CODE      0
+#define STATE_CONTINENT_CODE   1
+#define STATE_CONTINENT_NAME   2
+#define STATE_COUNTRY_ISO_CODE 3
+#define STATE_COUNTRY_NAME     4
+#define STATE_IS_IN_EU         5
 
-#define MEMBER_SIZE(type,member) sizeof(((type *)0)->member)
+#define MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
 
 static int geoip_csv_read_countries(char *file)
 {
@@ -595,7 +603,7 @@ static int geoip_csv_read_countries(char *file)
 	char code[MEMBER_SIZE(struct geoip_csv_country, code)];
 	char continent[MEMBER_SIZE(struct geoip_csv_country, continent)];
 	char name[MEMBER_SIZE(struct geoip_csv_country, name)];
-	char buf[BUFLEN+1];
+	char buf[BUFLEN + 1];
 	int state;
 	int id;
 	struct geoip_csv_country *curr = NULL;
@@ -610,7 +618,7 @@ static int geoip_csv_read_countries(char *file)
 		config_warn("[geoip_csv] Cannot open countries list file");
 		return 1;
 	}
-	
+
 	if (!fgets(buf, BUFLEN, u))
 	{
 		config_warn("[geoip_csv] Countries list file is empty");
@@ -618,7 +626,8 @@ static int geoip_csv_read_countries(char *file)
 		return 1;
 	}
 	while (fscanf(u, "%d,%" STR(BUFLEN) "[^\n]", &id, buf) == 2)
-	{ /* getting country ID integer and all other data in string */
+	{
+		/* getting country ID integer and all other data in string */
 		char *ptr = buf;
 		char *codeptr = code;
 		char *contptr = continent;
@@ -644,8 +653,8 @@ static int geoip_csv_read_countries(char *file)
 					length++;
 					break;
 				case STATE_COUNTRY_ISO_CODE:
-					if (*ptr == ',')		/* country code is empty */
-						goto next_line;	/* -- that means only the continent is specified - we ignore it completely */
+					if (*ptr == ',')  /* country code is empty */
+						goto next_line; /* -- that means only the continent is specified - we ignore it completely */
 					if (length >= MEMBER_SIZE(struct geoip_csv_country, code) - 1)
 					{
 						*codeptr = '\0';
@@ -669,7 +678,7 @@ static int geoip_csv_read_countries(char *file)
 				state++;
 			}
 		}
-		read_country_name:
+	read_country_name:
 		*codeptr = '\0';
 		*contptr = '\0';
 		length = 0;
@@ -697,7 +706,7 @@ static int geoip_csv_read_countries(char *file)
 					break; // scan for country name
 			}
 		}
-		end_country_name:
+	end_country_name:
 		*nptr = '\0';
 		if (geoip_csv_country_list)
 		{
@@ -713,7 +722,8 @@ static int geoip_csv_read_countries(char *file)
 		strcpy(curr->name, name);
 		strcpy(curr->continent, continent);
 		curr->id = id;
-		next_line: continue;
+	next_line:
+		continue;
 	}
 	fclose(u);
 	return 0;
@@ -725,7 +735,7 @@ static struct geoip_csv_country *geoip_csv_get_country(int id)
 	if (!curr)
 		return NULL;
 	int found = 0;
-	for (;curr;curr = curr->next)
+	for (; curr; curr = curr->next)
 	{
 		if (curr->id == id)
 		{
@@ -750,16 +760,17 @@ static int geoip_csv_get_v4_geoid(char *iip)
 		return 0;
 	}
 	addr = htonl(addr);
-	curr = geoip_csv_ip_range_list[addr>>24];
+	curr = geoip_csv_ip_range_list[addr >> 24];
 	if (curr)
 	{
 		i = 0;
-		for (;curr;curr = curr->next)
+		for (; curr; curr = curr->next)
 		{
 			tmp_addr = addr;
 			tmp_addr &= curr->mask; /* mask the address to filter out net prefix only */
 			if (tmp_addr == curr->addr)
-			{ /* ... and match it to the loaded data */
+			{
+				/* ... and match it to the loaded data */
 				found = 1;
 				break;
 			}
@@ -777,7 +788,7 @@ static int geoip_csv_get_v6_geoid(char *iip)
 	struct geoip_csv_ip6_range *curr;
 	int i;
 	int found = 0;
-	
+
 	if (!geoip_csv_ip6_convert(iip, addr))
 	{
 		unreal_log(ULOG_WARNING, "geoip_csv", "UNSUPPORTED_IP", NULL, "Invalid or unsupported client IP $ip", log_data_string("ip", iip));
@@ -786,18 +797,19 @@ static int geoip_csv_get_v6_geoid(char *iip)
 	curr = geoip_csv_ip6_range_list;
 	if (curr)
 	{
-		for (;curr;curr = curr->next)
+		for (; curr; curr = curr->next)
 		{
 			found = 1;
-			for (i=0; i<8; i++)
+			for (i = 0; i < 8; i++)
 			{
 				if (curr->addr[i] != (addr[i] & curr->mask[i]))
-				{ /* compare net address to loaded data */
+				{
+					/* compare net address to loaded data */
 					found = 0;
 					break;
 				}
 			}
-			if(found)
+			if (found)
 				break;
 		}
 	}
@@ -836,4 +848,3 @@ GeoIPResult *geoip_lookup_csv(char *ip)
 	safe_strdup(r->country_name, country->name);
 	return r;
 }
-

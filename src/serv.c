@@ -31,10 +31,10 @@
 #include <ares.h>
 #ifndef _WIN32
 /* for uname(), is POSIX so should be OK... */
-#include <sys/utsname.h>
+ #include <sys/utsname.h>
 #endif
 
-MODVAR int  max_connection_count = 1, max_client_count = 1;
+MODVAR int max_connection_count = 1, max_client_count = 1;
 extern int do_garbage_collect;
 /* We need all these for cached MOTDs -- codemastr */
 extern char *buildid;
@@ -60,8 +60,8 @@ void reread_motdsandrules();
 
 #if defined(__GNUC__)
 /* Temporarily ignore for this function. FIXME later!!! */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 
 /** Send a message upstream if necessary and check if it's for us.
@@ -153,7 +153,7 @@ int hunt_server(Client *client, MessageTag *mtags, const char *command, int serv
 }
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
 
 #ifndef _WIN32
@@ -168,13 +168,13 @@ char *getosname(void)
 	if (uname(&osinf) != 0)
 		return "<unknown>";
 	snprintf(buf, sizeof(buf), "%s %s %s %s %s",
-		osinf.sysname,
-		osinf.nodename,
-		osinf.release,
-		osinf.version,
-		osinf.machine);
+	         osinf.sysname,
+	         osinf.nodename,
+	         osinf.release,
+	         osinf.version,
+	         osinf.machine);
 	/* get rid of cr/lf */
-	for (p=buf; *p; p++)
+	for (p = buf; *p; p++)
 		if ((*p == '\n') || (*p == '\r'))
 		{
 			*p = '\0';
@@ -207,12 +207,12 @@ CMD_FUNC(cmd_version)
 	if (hunt_server(client, recv_mtags, "VERSION", 1, parc, parv) == HUNTED_ISME)
 	{
 		sendnumeric(client, RPL_VERSION, version, debugmode, me.name,
-			    (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL) ? serveropts : "0"),
-			    extraflags ? extraflags : "",
-			    tainted ? "3" : "",
-			    (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL) ? MYOSNAME : "*"),
-			    UnrealProtocol);
-		if (ValidatePermissionsForPath("server:info",client,NULL,NULL,NULL))
+		            (ValidatePermissionsForPath("server:info", client, NULL, NULL, NULL) ? serveropts : "0"),
+		            extraflags ? extraflags : "",
+		            tainted ? "3" : "",
+		            (ValidatePermissionsForPath("server:info", client, NULL, NULL, NULL) ? MYOSNAME : "*"),
+		            UnrealProtocol);
+		if (ValidatePermissionsForPath("server:info", client, NULL, NULL, NULL))
 		{
 			sendnotice(client, "%s", SSLeay_version(SSLEAY_VERSION));
 			sendnotice(client, "libsodium %s", sodium_version_string());
@@ -253,59 +253,58 @@ void send_proto(Client *client, ConfigItem_link *aconf)
 
 	/* Second line */
 	sendto_one(client, NULL, "PROTOCTL CHANMODES=%s%s,%s,%s,%s USERMODES=%s BOOTED=%lld PREFIX=%s SID=%s MLOCK TS=%lld EXTSWHOIS",
-		CHPAR1, EXPAR1, EXPAR2, EXPAR3, EXPAR4,
-		umodestring, (long long)me.local->fake_lag, prefix->value,
-		me.id, (long long)TStime());
+	           CHPAR1, EXPAR1, EXPAR2, EXPAR3, EXPAR4,
+	           umodestring, (long long)me.local->fake_lag, prefix->value,
+	           me.id, (long long)TStime());
 
 	/* Third line */
 	sendto_one(client, NULL, "PROTOCTL NICKCHARS=%s CHANNELCHARS=%s BIGLINES",
-		charsys_get_current_languages(),
-		allowed_channelchars_valtostr(iConf.allowed_channelchars));
+	           charsys_get_current_languages(),
+	           allowed_channelchars_valtostr(iConf.allowed_channelchars));
 }
 
 #ifndef IRCDTOTALVERSION
-#define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
+ #define IRCDTOTALVERSION BASE_VERSION "-" PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7 PATCH8 PATCH9
 #endif
 
 /** Special filter for remote commands */
 int remotecmdfilter(Client *client, int parc, const char *parv[])
 {
 	/* no remote requests permitted from non-ircops */
-	if (MyUser(client) && !ValidatePermissionsForPath("server:remote",client,NULL,NULL,NULL) && !BadPtr(parv[1]))
+	if (MyUser(client) && !ValidatePermissionsForPath("server:remote", client, NULL, NULL, NULL) && !BadPtr(parv[1]))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return 1; /* STOP */
 	}
 
 	/* same as above, but in case an old server forwards a request to us: we ignore it */
-	if (!MyUser(client) && !ValidatePermissionsForPath("server:remote",client,NULL,NULL,NULL))
+	if (!MyUser(client) && !ValidatePermissionsForPath("server:remote", client, NULL, NULL, NULL))
 		return 1; /* STOP (return) */
-	
+
 	return 0; /* Continue */
 }
 
 /** Output for /INFO */
-char *unrealinfo[] =
-{
-	"This release was brought to you by the following people:",
-	"",
-	"Head coder:",
-	"* Bram Matthys (Syzop) <syzop@unrealircd.org>",
-	"",
-	"Coders:",
-	"* Krzysztof Beresztant (k4be) <k4be@unrealircd.org>",
-	"* Gottem <gottem@unrealircd.org>",
-	"* i <i@unrealircd.org>",
-	"",
-	"Past UnrealIRCd 4.x coders/contributors:",
-	"* Heero, binki, nenolod, ..",
-	"",
-	"Past UnrealIRCd 3.2.x coders/contributors:",
-	"* Stskeeps (ret. head coder / project leader)",
-	"* codemastr (ret. u3.2 head coder)",
-	"* aquanight, WolfSage, ..",
-	"* McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
-	NULL
+char *unrealinfo[] = {
+    "This release was brought to you by the following people:",
+    "",
+    "Head coder:",
+    "* Bram Matthys (Syzop) <syzop@unrealircd.org>",
+    "",
+    "Coders:",
+    "* Krzysztof Beresztant (k4be) <k4be@unrealircd.org>",
+    "* Gottem <gottem@unrealircd.org>",
+    "* i <i@unrealircd.org>",
+    "",
+    "Past UnrealIRCd 4.x coders/contributors:",
+    "* Heero, binki, nenolod, ..",
+    "",
+    "Past UnrealIRCd 3.2.x coders/contributors:",
+    "* Stskeeps (ret. head coder / project leader)",
+    "* codemastr (ret. u3.2 head coder)",
+    "* aquanight, WolfSage, ..",
+    "* McSkaf, Zogg, NiQuiL, chasm, llthangel, nighthawk, ..",
+    NULL,
 };
 
 /** Send /INFO output */
@@ -405,8 +404,7 @@ const char *get_client_status(Client *client)
 			*p++ = 'C';
 		if (client->umodes & LISTENER_TLS)
 			*p++ = 's';
-	}
-	else
+	} else
 	{
 		if (IsTLS(client))
 			*p++ = 's';
@@ -486,7 +484,7 @@ void load_tunefile(void)
 /** Rehash motd and rule files (motd_file/rules_file and all tld entries). */
 void rehash_motdrules()
 {
-ConfigItem_tld *tlds;
+	ConfigItem_tld *tlds;
 
 	reread_motdsandrules();
 	for (tlds = conf_tld; tlds; tlds = tlds->next)
@@ -525,7 +523,7 @@ CMD_FUNC(cmd_rehash)
 	 */
 	labeled_response_inhibit = 1;
 
-	if (!ValidatePermissionsForPath("server:rehash",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:rehash", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -537,15 +535,17 @@ CMD_FUNC(cmd_rehash)
 		return;
 	}
 
-	if ((parc < 3) || BadPtr(parv[2])) {
+	if ((parc < 3) || BadPtr(parv[2]))
+	{
 		/* If the argument starts with a '-' (like -motd, -opermotd, etc) then it's
 		 * assumed not to be a server. -- Syzop
 		 */
 		if (parv[1] && (parv[1][0] == '-'))
 		{
 			x = HUNTED_ISME;
-		} else {
-			if (!ValidatePermissionsForPath("server:rehash:global",client,NULL,NULL,NULL) &&
+		} else
+		{
+			if (!ValidatePermissionsForPath("server:rehash:global", client, NULL, NULL, NULL) &&
 			    parv[1] && (find_client(parv[1], NULL) != &me))
 			{
 				sendnumeric(client, ERR_NOPRIVILEGES);
@@ -553,12 +553,14 @@ CMD_FUNC(cmd_rehash)
 			}
 			x = hunt_server(client, recv_mtags, "REHASH", 1, parc, parv);
 		}
-	} else {
+	} else
+	{
 		if (match_simple("-glob*", parv[1])) /* This is really ugly... hack to make /rehash -global -something work */
 		{
 			x = HUNTED_ISME;
-		} else {
-			if (!ValidatePermissionsForPath("server:rehash:global",client,NULL,NULL,NULL) &&
+		} else
+		{
+			if (!ValidatePermissionsForPath("server:rehash:global", client, NULL, NULL, NULL) &&
 			    parv[1] && (find_client(parv[1], NULL) != &me))
 			{
 				sendnumeric(client, ERR_NOPRIVILEGES);
@@ -587,7 +589,8 @@ CMD_FUNC(cmd_rehash)
 			/* fallthrough... so we deal with this the same way as local rehashes */
 		}
 		parv[1] = parv[2];
-	} else {
+	} else
+	{
 		/* Ok this is in an 'else' because it should be only executed for local clients,
 		 * but it's totally unrelated to the above ;).
 		 */
@@ -602,17 +605,17 @@ CMD_FUNC(cmd_rehash)
 		}
 		if (parv[1] &&
 		    (match_simple("-glob*", parv[1])
-		     /* || (MyUser(client) && !strcasecmp(parv[1], "-all"))*/ ))
+		     /* || (MyUser(client) && !strcasecmp(parv[1], "-all"))*/))
 		{
 			/* /REHASH -global [options] */
 			Client *acptr;
 
-			if (!ValidatePermissionsForPath("server:rehash:global",client,NULL,NULL,NULL))
+			if (!ValidatePermissionsForPath("server:rehash:global", client, NULL, NULL, NULL))
 			{
 				sendnumeric(client, ERR_NOPRIVILEGES);
 				return;
 			}
-			
+
 			/* Shift parv's to the left */
 			parv[1] = parv[2];
 			parv[2] = NULL;
@@ -628,9 +631,9 @@ CMD_FUNC(cmd_rehash)
 				if (acptr == &me)
 					continue;
 				sendto_one(acptr, NULL, ":%s REHASH %s %s",
-					client->name,
-					acptr->name,
-					parv[1] ? parv[1] : "");
+				           client->name,
+				           acptr->name,
+				           parv[1] ? parv[1] : "");
 			}
 			/* Don't return, continue, because we need to REHASH ourselves as well. */
 		}
@@ -662,7 +665,8 @@ CMD_FUNC(cmd_rehash)
 				if (!iConf.central_spamfilter_enabled)
 				{
 					sendnotice(client, "ERROR: Central Spamfilter is not enabled on this server.");
-				} else {
+				} else
+				{
 					unreal_log(ULOG_INFO, "central-spamfilter", "CENTRAL_SPAMFILTER_RELOAD", client,
 					           "Reloading Central Spamfilter rules. [by: $client.details]");
 					central_spamfilter_last_download = 0;
@@ -672,8 +676,7 @@ CMD_FUNC(cmd_rehash)
 			RunHook(HOOKTYPE_REHASHFLAG, client, parv[1]);
 			return;
 		}
-	}
-	else
+	} else
 	{
 		if (loop.rehashing)
 		{
@@ -701,7 +704,7 @@ CMD_FUNC(cmd_restart)
 		return;
 
 	/* Check permissions */
-	if (!ValidatePermissionsForPath("server:restart",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:restart", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -715,8 +718,7 @@ CMD_FUNC(cmd_restart)
 			sendnumeric(client, ERR_NEEDMOREPARAMS, "RESTART");
 			return;
 		}
-	} else
-	if (parc >= 2)
+	} else if (parc >= 2)
 	{
 		/* Syntax: /restart <pass> [reason] */
 		if (conf_drpass)
@@ -736,7 +738,7 @@ CMD_FUNC(cmd_restart)
 			sendnotice(acptr, "Server Restarted by %s", client->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL, ":%s ERROR :Restarted by %s: %s",
-			    me.name, get_client_name(client, TRUE), reason ? reason : "No reason");
+			           me.name, get_client_name(client, TRUE), reason ? reason : "No reason");
 	}
 
 	server_reboot(reason ? reason : "No reason");
@@ -852,7 +854,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 			*tmp = '\0';
 		if ((tmp = strchr(line, '\r')))
 			*tmp = '\0';
-		
+
 		if (strlen(line) > 510)
 			line[510] = '\0';
 
@@ -872,7 +874,7 @@ void read_motd(const char *filename, MOTDFile *themotd)
 		last->next = NULL;
 
 	fclose(fd);
-	
+
 	return;
 }
 
@@ -909,15 +911,15 @@ CMD_FUNC(cmd_die)
 	if (!MyUser(client))
 		return;
 
-	if (!ValidatePermissionsForPath("server:die",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("server:die", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
-	if (conf_drpass)	/* See if we have and DIE/RESTART password */
+	if (conf_drpass) /* See if we have and DIE/RESTART password */
 	{
-		if (parc < 2)	/* And if so, require a password :) */
+		if (parc < 2) /* And if so, require a password :) */
 		{
 			sendnumeric(client, ERR_NEEDMOREPARAMS, "DIE");
 			return;
@@ -936,11 +938,11 @@ CMD_FUNC(cmd_die)
 	list_for_each_entry(acptr, &lclient_list, lclient_node)
 	{
 		if (IsUser(acptr))
-			sendnotice(acptr, "Server Terminated by %s", 
-				client->name);
+			sendnotice(acptr, "Server Terminated by %s",
+			           client->name);
 		else if (IsServer(acptr))
 			sendto_one(acptr, NULL, ":%s ERROR :Terminated by %s",
-			    me.name, get_client_name(client, TRUE));
+			           me.name, get_client_name(client, TRUE));
 	}
 
 	s_die();
@@ -964,7 +966,7 @@ void add_pending_net(Client *client, const char *str)
 	 * and work on a copy.
 	 */
 	if (*str == '*')
-		strlcpy(buf, str+1, sizeof(buf));
+		strlcpy(buf, str + 1, sizeof(buf));
 	else
 		strlcpy(buf, str, sizeof(buf));
 
@@ -976,12 +978,12 @@ void add_pending_net(Client *client, const char *str)
 	{
 		if (!*name)
 			continue;
-		
+
 		srv = safe_alloc(sizeof(PendingServer));
 		strlcpy(srv->sid, name, sizeof(srv->sid));
 		AddListItem(srv, net->servers);
 	}
-	
+
 	AddListItem(net, pendingnet);
 }
 
@@ -990,7 +992,7 @@ void free_pending_net(Client *client)
 {
 	PendingNet *net, *net_next;
 	PendingServer *srv, *srv_next;
-	
+
 	for (net = pendingnet; net; net = net_next)
 	{
 		net_next = net->next;
@@ -1036,7 +1038,7 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 
 	*srv = NULL;
 	*sid = NULL;
-	
+
 	for (net = pendingnet; net; net = net->next)
 	{
 		if (net->client != cptr)
@@ -1054,7 +1056,7 @@ Client *find_pending_net_duplicates(Client *cptr, Client **srv, char **sid)
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -1077,7 +1079,7 @@ Client *find_non_pending_net_duplicates(Client *client)
 				return acptr; /* Found another (fully CONNECTED) server with identical numeric */
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -1189,7 +1191,7 @@ int valid_uid(const char *name)
 		return 0;
 
 	/* For all the remaining characters: digit or uppercase character */
-	for (p = name+1; *p; p++)
+	for (p = name + 1; *p; p++)
 		if (!isdigit(*p) && !isupper(*p))
 			return 0;
 
@@ -1216,17 +1218,19 @@ void lost_server_link(Client *client, const char *tls_error_string)
 		{
 			/* TLS */
 			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
-				   "Lost server link to $client [$client.ip]: $tls_error_string",
-				   log_data_string("tls_error_string", tls_error_string),
-				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
-		} else {
+			           "Lost server link to $client [$client.ip]: $tls_error_string",
+			           log_data_string("tls_error_string", tls_error_string),
+			           client->server->conf ? log_data_link_block(client->server->conf) : NULL);
+		} else
+		{
 			/* NON-TLS */
 			unreal_log(ULOG_ERROR, "link", "LINK_DISCONNECTED", client,
-				   "Lost server link to $client [$client.ip]: $socket_error",
-				   log_data_socket_error(client->local->fd),
-				   client->server->conf ? log_data_link_block(client->server->conf) : NULL);
+			           "Lost server link to $client [$client.ip]: $socket_error",
+			           log_data_socket_error(client->local->fd),
+			           client->server->conf ? log_data_link_block(client->server->conf) : NULL);
 		}
-	} else {
+	} else
+	{
 		/* A link attempt failed (it was never a fully connected server) */
 		/* We send these to local ops only */
 		if (tls_error_string)
@@ -1235,30 +1239,33 @@ void lost_server_link(Client *client, const char *tls_error_string)
 			if (client->server->conf)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-					   client->server->conf->outgoing.file
-					   ? "Unable to link with server $client [$link_block.file]: $tls_error_string"
-					   : "Unable to link with server $client [$link_block.ip:$link_block.port]: $tls_error_string",
-					   log_data_string("tls_error_string", tls_error_string),
-					   log_data_link_block(client->server->conf));
-			} else {
+				           client->server->conf->outgoing.file
+				               ? "Unable to link with server $client [$link_block.file]: $tls_error_string"
+				               : "Unable to link with server $client [$link_block.ip:$link_block.port]: $tls_error_string",
+				           log_data_string("tls_error_string", tls_error_string),
+				           log_data_link_block(client->server->conf));
+			} else
+			{
 				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-					   "Unable to link with server $client: $tls_error_string",
-					   log_data_string("tls_error_string", tls_error_string));
+				           "Unable to link with server $client: $tls_error_string",
+				           log_data_string("tls_error_string", tls_error_string));
 			}
-		} else {
+		} else
+		{
 			/* non-TLS */
 			if (client->server->conf)
 			{
 				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-					   client->server->conf->outgoing.file
-					   ? "Unable to link with server $client [$link_block.file]: $socket_error"
-					   : "Unable to link with server $client [$link_block.ip:$link_block.port]: $socket_error",
-					   log_data_socket_error(client->local->fd),
-					   log_data_link_block(client->server->conf));
-			} else {
+				           client->server->conf->outgoing.file
+				               ? "Unable to link with server $client [$link_block.file]: $socket_error"
+				               : "Unable to link with server $client [$link_block.ip:$link_block.port]: $socket_error",
+				           log_data_socket_error(client->local->fd),
+				           log_data_link_block(client->server->conf));
+			} else
+			{
 				unreal_log(ULOG_ERROR, "link", "LINK_ERROR_CONNECT", client,
-					   "Unable to link with server $client: $socket_error",
-					   log_data_socket_error(client->local->fd));
+				           "Unable to link with server $client: $socket_error",
+				           log_data_socket_error(client->local->fd));
 			}
 		}
 	}

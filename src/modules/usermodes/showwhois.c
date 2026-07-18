@@ -19,17 +19,16 @@
 
 #include "unrealircd.h"
 
-#define IsWhois(cptr)    (cptr->umodes & UMODE_SHOWWHOIS)
+#define IsWhois(cptr) (cptr->umodes & UMODE_SHOWWHOIS)
 
 /* Module header */
-ModuleHeader MOD_HEADER
-  = {
-	"usermodes/showwhois",
-	"4.2",
-	"User Mode +W",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "usermodes/showwhois",
+    "4.2",
+    "User Mode +W",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Global variables */
 long UMODE_SHOWWHOIS = 0L;
@@ -45,9 +44,9 @@ MOD_TEST()
 MOD_INIT()
 {
 	UmodeAdd(modinfo->handle, 'W', UMODE_GLOBAL, 1, umode_allow_opers, &UMODE_SHOWWHOIS);
-	
+
 	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, showwhois_whois);
-	
+
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -67,9 +66,9 @@ int showwhois_whois(Client *requester, Client *target, NameValuePrioList **list)
 	if (IsWhois(target) && (requester != target))
 	{
 		sendnotice(target,
-			"*** %s (%s@%s) did a /whois on you.",
-			requester->name,
-			requester->user->username, requester->user->realhost);
+		           "*** %s (%s@%s) did a /whois on you.",
+		           requester->name,
+		           requester->user->username, requester->user->realhost);
 	}
 
 	return 0;

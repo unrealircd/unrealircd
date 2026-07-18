@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_globops);
 
-#define MSG_GLOBOPS 	"GLOBOPS"	
+#define MSG_GLOBOPS "GLOBOPS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"globops",
-	"5.0",
-	"command /globops", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "globops",
+    "5.0",
+    "command /globops",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_GLOBOPS, cmd_globops, 1, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_GLOBOPS, cmd_globops, 1, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -65,7 +64,7 @@ CMD_FUNC(cmd_globops)
 		return;
 	}
 
-	if (MyUser(client) && !ValidatePermissionsForPath("chat:globops",client,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("chat:globops", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -80,6 +79,6 @@ CMD_FUNC(cmd_globops)
 		/* Backward-compatible (3.2.x) */
 		sendto_umode(UMODE_OPER, "from %s: %s", client->name, message);
 		sendto_server(client, 0, 0, NULL, ":%s SENDUMODE o :from %s: %s",
-		    me.id, client->name, message);
+		              me.id, client->name, message);
 	}
 }

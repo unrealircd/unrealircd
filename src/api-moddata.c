@@ -22,7 +22,7 @@
 
 #include "unrealircd.h"
 
-MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE+1] = { NULL };
+MODVAR ModDataInfo *MDInfo[HIGHESTMODDATATYPE + 1] = {NULL};
 
 MODVAR ModData local_variable_moddata[MODDATA_MAX_LOCAL_VARIABLE];
 MODVAR ModData global_variable_moddata[MODDATA_MAX_GLOBAL_VARIABLE];
@@ -34,16 +34,15 @@ struct moddatatypelimit {
 	char *limit_name;
 };
 
-struct moddatatypelimit moddatatypelimits[] =
-{
-	{ MODDATATYPE_LOCAL_VARIABLE, "MODDATATYPE_LOCAL_VARIABLE", MODDATA_MAX_LOCAL_VARIABLE, "MODDATA_MAX_LOCAL_VARIABLE" },
-	{ MODDATATYPE_GLOBAL_VARIABLE, "MODDATATYPE_GLOBAL_VARIABLE", MODDATA_MAX_GLOBAL_VARIABLE, "MODDATA_MAX_GLOBAL_VARIABLE" },
-	{ MODDATATYPE_CLIENT, "MODDATATYPE_CLIENT", MODDATA_MAX_CLIENT, "MODDATA_MAX_CLIENT" },
-	{ MODDATATYPE_LOCAL_CLIENT, "MODDATATYPE_LOCAL_CLIENT", MODDATA_MAX_LOCAL_CLIENT, "MODDATA_MAX_LOCAL_CLIENT" },
-	{ MODDATATYPE_CHANNEL, "MODDATATYPE_CHANNEL", MODDATA_MAX_CHANNEL, "MODDATA_MAX_CHANNEL" },
-	{ MODDATATYPE_MEMBER, "MODDATATYPE_MEMBER", MODDATA_MAX_MEMBER, "MODDATA_MAX_MEMBER" },
-	{ MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MEMBERSHIP", MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MAX_MEMBERSHIP" },
-	{ 0, NULL, 0, NULL },
+struct moddatatypelimit moddatatypelimits[] = {
+    {MODDATATYPE_LOCAL_VARIABLE, "MODDATATYPE_LOCAL_VARIABLE", MODDATA_MAX_LOCAL_VARIABLE, "MODDATA_MAX_LOCAL_VARIABLE"},
+    {MODDATATYPE_GLOBAL_VARIABLE, "MODDATATYPE_GLOBAL_VARIABLE", MODDATA_MAX_GLOBAL_VARIABLE, "MODDATA_MAX_GLOBAL_VARIABLE"},
+    {MODDATATYPE_CLIENT, "MODDATATYPE_CLIENT", MODDATA_MAX_CLIENT, "MODDATA_MAX_CLIENT"},
+    {MODDATATYPE_LOCAL_CLIENT, "MODDATATYPE_LOCAL_CLIENT", MODDATA_MAX_LOCAL_CLIENT, "MODDATA_MAX_LOCAL_CLIENT"},
+    {MODDATATYPE_CHANNEL, "MODDATATYPE_CHANNEL", MODDATA_MAX_CHANNEL, "MODDATA_MAX_CHANNEL"},
+    {MODDATATYPE_MEMBER, "MODDATATYPE_MEMBER", MODDATA_MAX_MEMBER, "MODDATA_MAX_MEMBER"},
+    {MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MEMBERSHIP", MODDATATYPE_MEMBERSHIP, "MODDATATYPE_MAX_MEMBERSHIP"},
+    {0, NULL, 0, NULL},
 };
 
 int exceeds_moddatatype_limit(int type, int slot)
@@ -57,15 +56,15 @@ int exceeds_moddatatype_limit(int type, int slot)
 			if (slot >= moddatatypelimits[i].limit)
 			{
 				unreal_log(ULOG_ERROR, "module", "MOD_DATA_OUT_OF_SPACE", NULL,
-					   "ModDataAdd: out of space! Your $mod_data_type limit of $limit is reached. "
-					   "Perhaps you have many third party modules loaded?\n"
-					   "If you need more space then you could open include/config.h and "
-					   "raise $mod_data_type_limit_name. You may also want to raise the other limits "
-					   "there, just to be sure. After changing that file, you will have to "
-					   "recompile (make clean; make install) and restart the IRCd.",
-					   log_data_string("mod_data_type", moddatatypelimits[i].type_name),
-					   log_data_string("mod_data_type_limit_name", moddatatypelimits[i].limit_name),
-					   log_data_integer("limit", moddatatypelimits[i].limit));
+				           "ModDataAdd: out of space! Your $mod_data_type limit of $limit is reached. "
+				           "Perhaps you have many third party modules loaded?\n"
+				           "If you need more space then you could open include/config.h and "
+				           "raise $mod_data_type_limit_name. You may also want to raise the other limits "
+				           "there, just to be sure. After changing that file, you will have to "
+				           "recompile (make clean; make install) and restart the IRCd.",
+				           log_data_string("mod_data_type", moddatatypelimits[i].type_name),
+				           log_data_string("mod_data_type_limit_name", moddatatypelimits[i].limit_name),
+				           log_data_integer("limit", moddatatypelimits[i].limit));
 				return 1;
 			}
 			return 0;
@@ -91,7 +90,7 @@ void moddatatype_dump(Client *client)
 #ifdef DEBUGMODE
 		sendtxtnumeric(client, "=== %s ===", moddatatypelimits[i].type_name);
 #endif
-		for (position = 0, m = MDInfo[moddatatypelimits[i].type]; m ; m = m->next, position++)
+		for (position = 0, m = MDInfo[moddatatypelimits[i].type]; m; m = m->next, position++)
 		{
 #ifdef DEBUGMODE
 			sendtxtnumeric(client, "Position %d: %s",
@@ -122,7 +121,7 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 		abort();
 
 	/* Hunt for highest available slot */
-	for (m = MDInfo[req.type]; m ; m = m->next)
+	for (m = MDInfo[req.type]; m; m = m->next)
 	{
 		/* Does an entry already exist with this name? */
 		if (!strcmp(m->name, req.name))
@@ -140,7 +139,7 @@ ModDataInfo *ModDataAdd(Module *module, ModDataInfo req)
 			return NULL;
 		}
 		/* Update next available slot */
-		slotav = MAX(slotav, m->slot+1);
+		slotav = MAX(slotav, m->slot + 1);
 	}
 
 	if (exceeds_moddatatype_limit(req.type, slotav))
@@ -164,7 +163,7 @@ moddataadd_isok:
 	m->self_write = req.self_write;
 	m->owner = module;
 	m->priority = req.priority;
-	
+
 	if (new_struct)
 		AddListItemPrio(m, MDInfo[req.type], m->priority);
 
@@ -176,7 +175,7 @@ moddataadd_isok:
 		AddListItem(mobj, module->objects);
 		module->errorcode = MODERR_NOERROR;
 	}
-	
+
 	return m;
 }
 
@@ -238,7 +237,7 @@ void moddata_free_membership(Membership *m)
 /** Actually free all the ModData from all objects */
 void unload_moddata_commit(ModDataInfo *md)
 {
-	switch(md->type)
+	switch (md->type)
 	{
 		case MODDATATYPE_LOCAL_VARIABLE:
 			if (md->free && moddata_local_variable(md).ptr)
@@ -287,7 +286,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		case MODDATATYPE_CHANNEL:
 		{
 			Channel *channel;
-			for (channel = channels; channel; channel=channel->nextch)
+			for (channel = channels; channel; channel = channel->nextch)
 			{
 				if (md->free && moddata_channel(channel, md).ptr)
 					md->free(&moddata_channel(channel, md));
@@ -299,7 +298,7 @@ void unload_moddata_commit(ModDataInfo *md)
 		{
 			Channel *channel;
 			Member *m;
-			for (channel = channels; channel; channel=channel->nextch)
+			for (channel = channels; channel; channel = channel->nextch)
 			{
 				for (m = channel->members; m; m = m->next)
 				{
@@ -328,7 +327,7 @@ void unload_moddata_commit(ModDataInfo *md)
 			break;
 		}
 	}
-	
+
 	DelListItem(md, MDInfo[md->type]);
 	safe_free(md->name);
 	safe_free(md);
@@ -365,7 +364,8 @@ void ModDataDel(ModDataInfo *md)
 		md->serialize = NULL;
 		md->unserialize = NULL;
 		md->unloaded = 1;
-	} else {
+	} else
+	{
 		/* We need the free function and the like,
 		 * and then completely destroy 'md'.
 		 */
@@ -388,7 +388,8 @@ void unload_all_unused_moddata(void)
 				//config_status("UNLOADING: md %s (owner %p, type %d, slot %d)",
 				//	md->name, md->owner, md->type, md->slot);
 				unload_moddata_commit(md);
-			} else {
+			} else
+			{
 				//config_status("loaded: md %s (owner %p, type %d, slot %d)",
 				//	md->name, md->owner, md->type, md->slot);
 			}
@@ -434,8 +435,7 @@ int moddata_client_set(Client *client, const char *varname, const char *value)
 	{
 		/* SET */
 		md->unserialize(value, &moddata_client(client, md));
-	}
-	else
+	} else
 	{
 		/* UNSET */
 		md->free(&moddata_client(client, md));
@@ -494,8 +494,7 @@ int moddata_local_client_set(Client *client, const char *varname, const char *va
 	{
 		/* SET */
 		md->unserialize(value, &moddata_local_client(client, md));
-	}
-	else
+	} else
 	{
 		/* UNSET */
 		md->free(&moddata_local_client(client, md));
@@ -541,8 +540,7 @@ int moddata_local_variable_set(const char *varname, const char *value)
 	{
 		/* SET */
 		md->unserialize(value, &moddata_local_variable(md));
-	}
-	else
+	} else
 	{
 		/* UNSET */
 		md->free(&moddata_local_variable(md));
@@ -566,8 +564,7 @@ int moddata_global_variable_set(const char *varname, const char *value)
 	{
 		/* SET */
 		md->unserialize(value, &moddata_global_variable(md));
-	}
-	else
+	} else
 	{
 		/* UNSET */
 		md->free(&moddata_global_variable(md));

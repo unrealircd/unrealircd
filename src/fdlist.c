@@ -60,9 +60,9 @@ int fd_open(int fd, const char *desc, FDCloseMethod close_method)
 }
 
 #ifndef _WIN32
-# define OPEN_MODES	S_IRUSR|S_IWUSR
+ #define OPEN_MODES S_IRUSR | S_IWUSR
 #else
-# define OPEN_MODES	S_IREAD|S_IWRITE
+ #define OPEN_MODES S_IREAD | S_IWRITE
 #endif
 
 int fd_fileopen(const char *path, unsigned int flags)
@@ -153,11 +153,11 @@ void fd_unnotify(int fd)
 
 	if ((fd < 0) || (fd >= MAXCONNECTIONS))
 		return;
-	
+
 	fde = &fd_table[fd];
 	if (!fde || !fde->is_open)
 		return;
-		
+
 	fde->read_callback = fde->write_callback = NULL;
 	fd_refresh(fd);
 }
@@ -215,4 +215,3 @@ void fd_desc(int fd, const char *desc)
 
 	strlcpy(fde->desc, desc, FD_DESC_SZ);
 }
-

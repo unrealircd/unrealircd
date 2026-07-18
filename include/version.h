@@ -5,7 +5,7 @@
 ** $Id$
 */
 #ifndef __versioninclude
-#define __versioninclude 1
+#define __versioninclude
 
 /*
  * Utility macros to convert version number constants to strings.
@@ -14,24 +14,24 @@
  * $ info '(cpp) Stringification'
  */
 #define _macro_to_str(n) #n
-#define macro_to_str(n) _macro_to_str(n)
+#define macro_to_str(n)  _macro_to_str(n)
 
 
 /* 
  * Mark of settings
  */
 #ifdef DEBUGMODE
-#define DEBUGMODESET "+(debug)"
+ #define DEBUGMODESET "+(debug)"
 #else
-#define DEBUGMODESET ""
+ #define DEBUGMODESET ""
 #endif
- /**/
+/**/
 #ifdef DEBUG
-#define DEBUGSET "(Debug)"
+ #define DEBUGSET "(Debug)"
 #else
-#define DEBUGSET ""
+ #define DEBUGSET ""
 #endif
-     /**/
+/**/
 #define COMPILEINFO DEBUGMODESET DEBUGSET
 
 /* Version info follows
@@ -54,20 +54,20 @@
  * Can be useful if the above 3 versionids are insufficient for you (eg: you want to support CVS).
  * This is updated automatically on the CVS server every Monday. so don't touch it.
  */
-#define UNREAL_VERSION_TIME	202610
+#define UNREAL_VERSION_TIME 202610
 
-#define UNREAL_VERSION		((UNREAL_VERSION_GENERATION << 24) + (UNREAL_VERSION_MAJOR << 16) + (UNREAL_VERSION_MINOR << 8))
-#define UnrealProtocol 		6100
-#define PATCH1  		macro_to_str(UNREAL_VERSION_GENERATION)
-#define PATCH2  		"." macro_to_str(UNREAL_VERSION_MAJOR)
-#define PATCH3  		"." macro_to_str(UNREAL_VERSION_MINOR)
-#define PATCH4  		UNREAL_VERSION_SUFFIX
-#define PATCH5  		""
-#define PATCH6  		""
-#define PATCH7  		""
-#define PATCH8  		COMPILEINFO
-#define PATCH9  		""
+#define UNREAL_VERSION ((UNREAL_VERSION_GENERATION << 24) + (UNREAL_VERSION_MAJOR << 16) + (UNREAL_VERSION_MINOR << 8))
+#define UnrealProtocol 6100
+#define PATCH1         macro_to_str(UNREAL_VERSION_GENERATION)
+#define PATCH2         "." macro_to_str(UNREAL_VERSION_MAJOR)
+#define PATCH3         "." macro_to_str(UNREAL_VERSION_MINOR)
+#define PATCH4         UNREAL_VERSION_SUFFIX
+#define PATCH5         ""
+#define PATCH6         ""
+#define PATCH7         ""
+#define PATCH8         COMPILEINFO
+#define PATCH9         ""
 /* release header */
-#define Rh BASE_VERSION
-#define VERSIONONLY		PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7
+#define Rh          BASE_VERSION
+#define VERSIONONLY PATCH1 PATCH2 PATCH3 PATCH4 PATCH5 PATCH6 PATCH7
 #endif /* __versioninclude */

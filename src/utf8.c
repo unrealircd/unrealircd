@@ -21,10 +21,11 @@
  */
 
 #define VALIDATE_BYTE(mask, expect) \
-  do {                              \
-    if ((*p & (mask)) != (expect))  \
-      goto error;                   \
-  } while(0)
+	do \
+	{ \
+		if ((*p & (mask)) != (expect)) \
+			goto error; \
+	} while (0)
 
 /* see IETF RFC 3629 Section 4 */
 
@@ -46,8 +47,7 @@ static const char *fast_validate(const char *str)
 				{
 					goto error;
 				}
-			}
-			else
+			} else
 			{
 				if (*p < 0xf0) /* 1110xxxx */
 				{
@@ -62,8 +62,7 @@ static const char *fast_validate(const char *str)
 						default:
 							VALIDATE_BYTE(0xc0, 0x80); /* 10xxxxxx */
 					}
-				}
-				else if (*p < 0xf5) /* 11110xxx excluding out-of-range */
+				} else if (*p < 0xf5) /* 11110xxx excluding out-of-range */
 				{
 					switch (*p++ & 0x07)
 					{
@@ -80,8 +79,7 @@ static const char *fast_validate(const char *str)
 					}
 					p++;
 					VALIDATE_BYTE(0xc0, 0x80); /* 10xxxxxx */
-				}
-				else
+				} else
 				{
 					goto error;
 				}
@@ -92,7 +90,7 @@ static const char *fast_validate(const char *str)
 
 			continue;
 
-error:
+		error:
 			return last;
 		}
 	}
@@ -129,7 +127,7 @@ int unrl_utf8_validate(const char *str, const char **end)
  * @returns Byte that is not in the middle of an UTF8 sequence,
  *          or NULL if we reached the beginning and that isn't valid either.
  */
-char *unrl_utf8_find_prev_char (const char *begin, const char *p)
+char *unrl_utf8_find_prev_char(const char *begin, const char *p)
 {
 	for (--p; p >= begin; --p)
 	{
@@ -184,7 +182,8 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 					replaced = 1;
 				}
 				break;
-			} else {
+			} else
+			{
 				/* We already replaced earlier, now just put the rest at the end. */
 				strlcat(outputbuf, remainder, outputbuflen);
 				break;
@@ -228,7 +227,8 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 					fix_line = 1;
 				}
 			}
-		} else {
+		} else
+		{
 			/* without message tags */
 			if (strlen(outputbuf) > 511)
 			{
@@ -238,7 +238,7 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 		}
 		if (fix_line)
 		{
-			char *cut_at = unrl_utf8_find_prev_char(outputbuf, outputbuf+strlen(outputbuf));
+			char *cut_at = unrl_utf8_find_prev_char(outputbuf, outputbuf + strlen(outputbuf));
 			if (cut_at)
 				*cut_at = '\0';
 			return outputbuf; /* short-circuit */
@@ -251,9 +251,9 @@ char *unrl_utf8_make_valid(const char *str, char *outputbuf, size_t outputbuflen
 	 * NOTE: This may cause us to remove 1 character needlessly at the
 	 *       end even though there was still (some) space. So be it.
 	 */
-	if (strlen(outputbuf) == outputbuflen-1)
+	if (strlen(outputbuf) == outputbuflen - 1)
 	{
-		char *cut_at = unrl_utf8_find_prev_char(outputbuf, outputbuf+outputbuflen-1);
+		char *cut_at = unrl_utf8_find_prev_char(outputbuf, outputbuf + outputbuflen - 1);
 		if (cut_at)
 			*cut_at = '\0';
 	}
@@ -307,7 +307,8 @@ void utf8_test(void)
 		if (heapbuf == res)
 		{
 			printf("    %s\n", res);
-		} else {
+		} else
+		{
 			printf("[!] %s\n", res);
 		}
 		free(heapbuf);

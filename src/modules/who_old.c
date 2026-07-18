@@ -28,16 +28,15 @@
 CMD_FUNC(cmd_who);
 
 /* Place includes here */
-#define MSG_WHO 	"WHO"
+#define MSG_WHO "WHO"
 
-ModuleHeader MOD_HEADER
-  = {
-	"who_old",	/* Name of module */
-	"5.0", /* Version */
-	"command /who (old version)", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "who_old", /* Name of module */
+    "5.0", /* Version */
+    "command /who (old version)", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
@@ -76,7 +75,7 @@ static void who_sendhelp(Client *);
 #define WF_ONCHANNEL 0x02 /**< we're on the channel we're /who'ing */
 #define WF_WILDCARD  0x04 /**< a wildcard /who */
 #define WF_REALHOST  0x08 /**< want real hostnames */
-#define WF_IP	     0x10 /**< want IP addresses */
+#define WF_IP        0x10 /**< want IP addresses */
 
 static int who_flags;
 
@@ -84,9 +83,9 @@ static int who_flags;
 #define WHO_CANSEE  0x02 /**< set if we can */
 #define WHO_OPERSEE 0x04 /**< set if we only saw them because we're an oper */
 
-#define FVC_HIDDEN  0x01
+#define FVC_HIDDEN 0x01
 
-#define WHO_WANT 1
+#define WHO_WANT     1
 #define WHO_DONTWANT 2
 #define WHO_DONTCARE 0
 
@@ -138,7 +137,7 @@ CMD_FUNC(cmd_who)
 		}
 	}
 
-	if (parc-i < 2 || strcmp(parv[1 + i], "0") == 0)
+	if (parc - i < 2 || strcmp(parv[1 + i], "0") == 0)
 		mask = "*";
 	else
 		mask = parv[1 + i];
@@ -165,14 +164,13 @@ CMD_FUNC(cmd_who)
 		return;
 	}
 
-	if (wfl.channel && wfl.want_channel == WHO_WANT && 
+	if (wfl.channel && wfl.want_channel == WHO_WANT &&
 	    (target_channel = find_channel(wfl.channel)) != NULL)
 	{
 		do_channel_who(client, target_channel, mask);
 		sendnumeric(client, RPL_ENDOFWHO, mask);
 		return;
-	}
-	else
+	} else
 	{
 		do_other_who(client, mask);
 		sendnumeric(client, RPL_ENDOFWHO, mask);
@@ -184,59 +182,59 @@ CMD_FUNC(cmd_who)
 
 static void who_sendhelp(Client *client)
 {
-  char *who_help[] = {
-    "/WHO [+|-][achmnsuM] [args]",
-    "Flags are specified like channel modes, the flags chmnsu all have arguments",
-    "Flags are set to a positive check by +, a negative check by -",
-    "The flags work as follows:",
-    "Flag a: user is away",
-    "Flag c <channel>:       user is on <channel>,",
-    "                        no wildcards accepted",
-    "Flag h <host>:          user has string <host> in their hostname,",
-    "                        wildcards accepted",
-    "Flag m <usermodes>:     user has <usermodes> set, only",
-    "                        O/o/C/A/a/N/B are allowed",
-    "Flag n <nick>:          user has string <nick> in their nickname,",
-    "                        wildcards accepted",
-    "Flag s <server>:        user is on server <server>,",
-    "                        wildcards not accepted",
-    "Flag u <user>:          user has string <user> in their username,",
-    "                        wildcards accepted",
-    "Behavior flags:",
-    "Flag M: check for user in channels I am a member of",
-    NULL
-  };
+	char *who_help[] = {
+	    "/WHO [+|-][achmnsuM] [args]",
+	    "Flags are specified like channel modes, the flags chmnsu all have arguments",
+	    "Flags are set to a positive check by +, a negative check by -",
+	    "The flags work as follows:",
+	    "Flag a: user is away",
+	    "Flag c <channel>:       user is on <channel>,",
+	    "                        no wildcards accepted",
+	    "Flag h <host>:          user has string <host> in their hostname,",
+	    "                        wildcards accepted",
+	    "Flag m <usermodes>:     user has <usermodes> set, only",
+	    "                        O/o/C/A/a/N/B are allowed",
+	    "Flag n <nick>:          user has string <nick> in their nickname,",
+	    "                        wildcards accepted",
+	    "Flag s <server>:        user is on server <server>,",
+	    "                        wildcards not accepted",
+	    "Flag u <user>:          user has string <user> in their username,",
+	    "                        wildcards accepted",
+	    "Behavior flags:",
+	    "Flag M: check for user in channels I am a member of",
+	    NULL,
+	};
 
-  char *who_oper_help[] = {
-    "/WHO [+|-][acghimnsuMRI] [args]",
-    "Flags are specified like channel modes, the flags chigmnsu all have arguments",
-    "Flags are set to a positive check by +, a negative check by -",
-    "The flags work as follows:",
-    "Flag a: user is away",
-    "Flag c <channel>:       user is on <channel>,",
-    "                        no wildcards accepted",
-    "Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
-    "                        wildcards accepted",
-    "Flag h <host>:          user has string <host> in their hostname,",
-    "                        wildcards accepted",
-    "Flag i <ip>:            user has string <ip> in their IP address,",
-    "                        wildcards accepted",
-    "Flag p <port>:          user is connecting on port <port>,",
-    "                        local connections only",
-    "Flag m <usermodes>:     user has <usermodes> set",
-    "Flag n <nick>:          user has string <nick> in their nickname,",
-    "                        wildcards accepted",
-    "Flag s <server>:        user is on server <server>,",
-    "                        wildcards not accepted",
-    "Flag u <user>:          user has string <user> in their username,",
-    "                        wildcards accepted",
-    "Behavior flags:",
-    "Flag M: check for user in channels I am a member of",
-    "Flag R: show users' real hostnames",
-    "Flag I: show users' IP addresses",
-    NULL
-  };
-  char **s;
+	char *who_oper_help[] = {
+	    "/WHO [+|-][acghimnsuMRI] [args]",
+	    "Flags are specified like channel modes, the flags chigmnsu all have arguments",
+	    "Flags are set to a positive check by +, a negative check by -",
+	    "The flags work as follows:",
+	    "Flag a: user is away",
+	    "Flag c <channel>:       user is on <channel>,",
+	    "                        no wildcards accepted",
+	    "Flag g <gcos/realname>: user has string <gcos> in their GCOS,",
+	    "                        wildcards accepted",
+	    "Flag h <host>:          user has string <host> in their hostname,",
+	    "                        wildcards accepted",
+	    "Flag i <ip>:            user has string <ip> in their IP address,",
+	    "                        wildcards accepted",
+	    "Flag p <port>:          user is connecting on port <port>,",
+	    "                        local connections only",
+	    "Flag m <usermodes>:     user has <usermodes> set",
+	    "Flag n <nick>:          user has string <nick> in their nickname,",
+	    "                        wildcards accepted",
+	    "Flag s <server>:        user is on server <server>,",
+	    "                        wildcards not accepted",
+	    "Flag u <user>:          user has string <user> in their username,",
+	    "                        wildcards accepted",
+	    "Behavior flags:",
+	    "Flag M: check for user in channels I am a member of",
+	    "Flag R: show users' real hostnames",
+	    "Flag I: show users' IP addresses",
+	    NULL,
+	};
+	char **s;
 
 	if (IsOper(client))
 		s = who_oper_help;
@@ -259,29 +257,44 @@ static int parse_who_options(Client *client, int argc, const char **argv)
 /* A few helper macro's because this is used a lot, added during recode by Syzop. */
 
 /** function requiress a parameter: check if there's one, if not: return -1. */
-#define REQUIRE_PARAM() { if (i >= argc) { \
-                           who_sendhelp(client); \
-                           return -1; \
-                      } } while(0)
+#define REQUIRE_PARAM() \
+	{ \
+		if (i >= argc) \
+		{ \
+			who_sendhelp(client); \
+			return -1; \
+		} \
+	} \
+	while (0)
 /** set option 'x' depending on 'what' (add/want or del/dontwant) */
-#define SET_OPTION(x) { if (what == WHO_ADD) \
-                           x = WHO_WANT; \
-                      else \
-                           x = WHO_DONTWANT; \
-                      } while(0)
+#define SET_OPTION(x) \
+	{ \
+		if (what == WHO_ADD) \
+			x = WHO_WANT; \
+		else \
+			x = WHO_DONTWANT; \
+	} \
+	while (0)
 /** Eat a param, set the param in memory and set the option to want or dontwant */
-#define DOIT(x,y) { REQUIRE_PARAM(); x = argv[i]; SET_OPTION(y); i++; } while(0)
+#define DOIT(x, y) \
+	{ \
+		REQUIRE_PARAM(); \
+		x = argv[i]; \
+		SET_OPTION(y); \
+		i++; \
+	} \
+	while (0)
 
 	if (*s != '-' && *s != '+')
 		return 0;
 
 	while (*s)
- 	{
+	{
 		switch (*s)
 		{
 			case '+':
-	  			what = WHO_ADD;
-	  			break;
+				what = WHO_ADD;
+				break;
 			case '-':
 				what = WHO_DEL;
 				break;
@@ -363,7 +376,7 @@ static int parse_who_options(Client *client, int argc, const char **argv)
 					break;
 				if (what == WHO_ADD)
 					who_flags |= WF_IP;
-				
+
 				else
 					who_flags &= ~WF_IP;
 				break;
@@ -372,9 +385,9 @@ static int parse_who_options(Client *client, int argc, const char **argv)
 				return -1;
 		}
 		s++;
-    }
+	}
 
-  return i;
+	return i;
 #undef REQUIRE_PARAM
 #undef SET_OPTION
 #undef DOIT
@@ -385,7 +398,8 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 	int ret = 0;
 	char has_common_chan = 0;
 
-	do {
+	do
+	{
 		/* can only see people */
 		if (!IsUser(target))
 			return WHO_CANTSEE;
@@ -395,7 +409,8 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 		{
 			if (!IsOper(target))
 				return ret | WHO_CANTSEE;
-			if (IsHideOper(target)) {
+			if (IsHideOper(target))
+			{
 				if (IsOper(requester))
 					ret |= WHO_OPERSEE;
 				else
@@ -410,7 +425,7 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 
 		/* if they only want people on a certain channel. */
 		if (wfl.want_channel != WHO_DONTCARE)
- 		{
+		{
 			Channel *chan = find_channel(wfl.channel);
 			if (!chan && wfl.want_channel == WHO_WANT)
 				return WHO_CANTSEE;
@@ -477,7 +492,7 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 		if (wfl.want_port != WHO_DONTCARE)
 		{
 			int port;
-			
+
 			if (!MyUser(target))
 				return WHO_CANTSEE;
 
@@ -546,8 +561,7 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 
 			if (!user_can_see_member(requester, target, channel))
 				break; /* invisible (eg: due to delayjoin) */
-		}
-		else
+		} else
 		{
 			/* a user/mask who */
 
@@ -583,7 +597,7 @@ static int can_see(Client *requester, Client *target, Channel *channel)
 static void do_channel_who(Client *client, Channel *channel, const char *mask)
 {
 	Member *cm = channel->members;
-	if (IsMember(client, channel) || ValidatePermissionsForPath("channel:see:who:onchannel",client,NULL,channel,NULL))
+	if (IsMember(client, channel) || ValidatePermissionsForPath("channel:see:who:onchannel", client, NULL, channel, NULL))
 		who_flags |= WF_ONCHANNEL;
 
 	for (cm = channel->members; cm; cm = cm->next)
@@ -596,11 +610,11 @@ static void do_channel_who(Client *client, Channel *channel, const char *mask)
 
 		make_who_status(client, acptr, channel, cm, status, cansee);
 		send_who_reply(client, acptr, channel->name, status, "");
-    }
+	}
 }
 
-static void make_who_status(Client *client, Client *acptr, Channel *channel, 
-			    Member *cm, char *status, int cansee)
+static void make_who_status(Client *client, Client *acptr, Channel *channel,
+                            Member *cm, char *status, int cansee)
 {
 	int i = 0;
 	Hook *h;
@@ -622,13 +636,13 @@ static void make_who_status(Client *client, Client *acptr, Channel *channel,
 		if (ret != 0)
 			status[i++] = (char)ret;
 	}
-	
+
 	if (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
 		status[i++] = '*';
 
 	if (IsOper(acptr) && (IsHideOper(acptr) && client != acptr && IsOper(client)))
 		status[i++] = '!';
-  
+
 	if (cansee & WHO_OPERSEE)
 		status[i++] = '?';
 
@@ -640,8 +654,7 @@ static void make_who_status(Client *client, Client *acptr, Channel *channel,
 			char c = mode_to_prefix(*cm->member_modes);
 			if (c)
 				status[i++] = c;
-		}
-		else
+		} else
 		{
 			/* NAMES reply with all rights included (multi-prefix / NAMESX) */
 			strcpy(&status[i], modes_to_prefix(cm->member_modes));
@@ -654,7 +667,7 @@ static void make_who_status(Client *client, Client *acptr, Channel *channel,
 
 static void do_other_who(Client *client, const char *mask)
 {
-int oper = IsOper(client);
+	int oper = IsOper(client);
 
 	if (strchr(mask, '*') || strchr(mask, '?'))
 	{
@@ -665,18 +678,20 @@ int oper = IsOper(client);
 
 		list_for_each_entry(acptr, &client_list, client_node)
 		{
-		int cansee;
-		char status[20];
-		const char *channel;
-		int flg;
+			int cansee;
+			char status[20];
+			const char *channel;
+			int flg;
 
 			if (!IsUser(acptr))
 				continue;
-			if (!oper) {
+			if (!oper)
+			{
 				/* non-opers can only search on nick here */
 				if (!match_simple(mask, acptr->name))
 					continue;
-			} else {
+			} else
+			{
 				/* opers can search on name, ident, virthost, ip and realhost.
 				 * Yes, I like readable if's -- Syzop.
 				 */
@@ -690,7 +705,7 @@ int oper = IsOper(client);
 				/* nothing matched... */
 				continue;
 			}
-matchok:
+		matchok:
 			if ((cansee = can_see(client, acptr, NULL)) & WHO_CANTSEE)
 				continue;
 			if (WHOLIMIT && !IsOper(client) && ++i > WHOLIMIT)
@@ -703,8 +718,7 @@ matchok:
 			make_who_status(client, acptr, NULL, NULL, status, cansee);
 			send_who_reply(client, acptr, channel, status, (flg & FVC_HIDDEN) ? "~" : "");
 		}
-	}
-	else
+	} else
 	{
 		/* just a single client (no wildcards detected) */
 		Client *acptr = find_client(mask, NULL);
@@ -725,8 +739,8 @@ matchok:
 	}
 }
 
-static void send_who_reply(Client *client, Client *acptr, 
-			   const char *channel, const char *status, const char *xstat)
+static void send_who_reply(Client *client, Client *acptr,
+                           const char *channel, const char *status, const char *xstat)
 {
 	char *stat;
 	const char *host;
@@ -743,35 +757,35 @@ static void send_who_reply(Client *client, Client *acptr,
 			host = (acptr->ip ? acptr->ip : acptr->user->realhost);
 		else
 			host = GetHost(acptr);
-	}
-	else
+	} else
 		host = GetHost(acptr);
-					
 
-	if (IsULine(acptr) && !IsOper(client) && !ValidatePermissionsForPath("server:info:map:ulines",client,acptr,NULL,NULL) && HIDE_ULINES)
+
+	if (IsULine(acptr) && !IsOper(client) && !ValidatePermissionsForPath("server:info:map:ulines", client, acptr, NULL, NULL) && HIDE_ULINES)
 	{
-	        sendnumeric(client, RPL_WHOREPLY,
-        	     channel,       /* channel name */
-	             acptr->user->username, /* user name */
-        	     host,		    /* hostname */
-	             "hidden",              /* let's hide the server from normal users if the server is a uline and HIDE_ULINES is on */
-        	     acptr->name,           /* nick */
-	             stat,                  /* status */
-        	     0,                     /* hops (hidden) */
-	             acptr->info            /* realname */
-             	);
-
-	} else {
 		sendnumeric(client, RPL_WHOREPLY,
-		     channel,       /* channel name */
-		     acptr->user->username,      /* user name */
-		     host,		         /* hostname */
-		     acptr->user->server,        /* server name */
-		     acptr->name,                /* nick */
-		     stat,                       /* status */
-		     flat ? 0 : acptr->hopcount, /* hops */ 
-		     acptr->info                 /* realname */
-		     );
+		            channel,       /* channel name */
+		            acptr->user->username, /* user name */
+		            host,                  /* hostname */
+		            "hidden",              /* let's hide the server from normal users if the server is a uline and HIDE_ULINES is on */
+		            acptr->name,           /* nick */
+		            stat,                  /* status */
+		            0,                     /* hops (hidden) */
+		            acptr->info            /* realname */
+		);
+
+	} else
+	{
+		sendnumeric(client, RPL_WHOREPLY,
+		            channel,       /* channel name */
+		            acptr->user->username,      /* user name */
+		            host,                       /* hostname */
+		            acptr->user->server,        /* server name */
+		            acptr->name,                /* nick */
+		            stat,                       /* status */
+		            flat ? 0 : acptr->hopcount, /* hops */
+		            acptr->info                 /* realname */
+		);
 	}
 	safe_free(stat);
 }
@@ -789,7 +803,7 @@ static const char *first_visible_channel(Client *client, Client *acptr, int *flg
 		int ret = EX_ALLOW;
 		int operoverride = 0;
 		int showchannel = 0;
-		
+
 		/* Note that the code below is almost identical to the one in /WHOIS */
 
 		if (ShowChannel(client, channel))
@@ -807,23 +821,22 @@ static const char *first_visible_channel(Client *client, Client *acptr, int *flg
 			if (n == EX_DENY)
 			{
 				ret = EX_DENY;
-			}
-			else if (n == EX_ALWAYS_DENY)
+			} else if (n == EX_ALWAYS_DENY)
 			{
 				ret = EX_ALWAYS_DENY;
 				break;
 			}
 		}
-		
+
 		if (ret == EX_DENY)
 			showchannel = 0;
-		
-		if (!showchannel && (ValidatePermissionsForPath("channel:see:who:secret",client,NULL,channel,NULL) || ValidatePermissionsForPath("channel:see:whois",client,NULL,channel,NULL)))
+
+		if (!showchannel && (ValidatePermissionsForPath("channel:see:who:secret", client, NULL, channel, NULL) || ValidatePermissionsForPath("channel:see:whois", client, NULL, channel, NULL)))
 		{
 			showchannel = 1; /* OperOverride */
 			operoverride = 1;
 		}
-		
+
 		if ((ret == EX_ALWAYS_DENY) && (acptr != client))
 			continue; /* a module asked us to really not expose this channel, so we don't (except target==ourselves). */
 

@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"operinfo",
-	"5.0",
-	"Store oper login in ModData",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "operinfo",
+    "5.0",
+    "Store oper login in ModData",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int operinfo_local_oper(Client *client, int up, const char *oper_block, const char *operclass);
@@ -76,7 +75,8 @@ int operinfo_local_oper(Client *client, int up, const char *oper_block, const ch
 	{
 		moddata_client_set(client, "operlogin", oper_block);
 		moddata_client_set(client, "operclass", operclass);
-	} else {
+	} else
+	{
 		moddata_client_set(client, "operlogin", NULL);
 		moddata_client_set(client, "operclass", NULL);
 	}

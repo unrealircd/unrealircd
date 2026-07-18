@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"plaintext-policy",
-	"5.0",
-	"Plaintext Policy CAP",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "plaintext-policy",
+    "5.0",
+    "Plaintext Policy CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -55,11 +54,11 @@ MOD_UNLOAD()
 const char *plaintext_policy_capability_parameter(Client *client)
 {
 	static char buf[128];
-	
+
 	snprintf(buf, sizeof(buf), "user=%s,oper=%s,server=%s",
-             policy_valtostr(iConf.plaintext_policy_user),
-             policy_valtostr(iConf.plaintext_policy_oper),
-             policy_valtostr(iConf.plaintext_policy_server));
+	         policy_valtostr(iConf.plaintext_policy_user),
+	         policy_valtostr(iConf.plaintext_policy_oper),
+	         policy_valtostr(iConf.plaintext_policy_server));
 	return buf;
 }
 
@@ -71,5 +70,6 @@ void init_plaintext_policy(ModuleInfo *modinfo)
 	cap.name = "unrealircd.org/plaintext-policy";
 	cap.flags = CLICAP_FLAGS_ADVERTISE_ONLY;
 	cap.parameter = plaintext_policy_capability_parameter;
+	cap.minimum_cap_version = 302;
 	ClientCapabilityAdd(modinfo->handle, &cap, NULL);
 }

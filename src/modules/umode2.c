@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_umode2);
 
-#define MSG_UMODE2 	"UMODE2"	
+#define MSG_UMODE2 "UMODE2"
 
-ModuleHeader MOD_HEADER
-  = {
-	"umode2",
-	"5.0",
-	"command /umode2", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "umode2",
+    "5.0",
+    "command /umode2",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -61,11 +60,11 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_umode2)
 {
 	const char *xparv[5] = {
-		client->name,
-		client->name,
-		parv[1],
-		(parc > 3) ? parv[3] : NULL,
-		NULL
+	    client->name,
+	    client->name,
+	    parv[1],
+	    (parc > 3) ? parv[3] : NULL,
+	    NULL,
 	};
 
 	if (!parv[1])

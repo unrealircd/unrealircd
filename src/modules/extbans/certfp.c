@@ -18,13 +18,12 @@
  */
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"extbans/certfp",
-	"4.2",
-	"ExtBan ~certfp - Ban/exempt by SHA256 TLS certificate fingerprint",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "extbans/certfp",
+    "4.2",
+    "ExtBan ~certfp - Ban/exempt by SHA256 TLS certificate fingerprint",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -42,8 +41,8 @@ Extban *register_certfp_extban(ModuleInfo *modinfo)
 	req.is_ok = extban_certfp_is_ok;
 	req.conv_param = extban_certfp_conv_param;
 	req.is_banned = extban_certfp_is_banned;
-	req.is_banned_events = BANCHK_ALL|BANCHK_TKL;
-	req.options = EXTBOPT_INVEX|EXTBOPT_TKL;
+	req.is_banned_events = BANCHK_ALL | BANCHK_TKL;
+	req.options = EXTBOPT_INVEX | EXTBOPT_TKL;
 	return ExtbanAdd(modinfo->handle, req);
 }
 
@@ -92,7 +91,7 @@ int extban_certfp_usage(Client *client)
 	if (client)
 	{
 		sendnotice(client, "ERROR: ExtBan ~certfp expects an SHA256 fingerprint in hexadecimal format (no colons). "
-						 "For example: +e ~certfp:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
+		                   "For example: +e ~certfp:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef)");
 	}
 	return EX_DENY;
 }

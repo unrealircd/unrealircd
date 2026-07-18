@@ -1,0 +1,8 @@
+# Headers: same style as the rest of the tree (inherited from the repo root
+# .clang-format), except that trailing comments are aligned automatically.
+# Headers are mostly structs and #defines where aligned comments look good,
+# unlike function bodies in .c files where we leave comments alone.
+BasedOnStyle: InheritParentConfig
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0

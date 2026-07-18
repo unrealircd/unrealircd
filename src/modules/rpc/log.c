@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/log",
-	"1.0.2",
-	"log.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/log",
+    "1.0.2",
+    "log.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -231,7 +230,7 @@ void rpc_log_send(Client *client, json_t *request, json_t *params)
 
 	new_message(&me, NULL, &mtags);
 
-	MessageTag *json_mtag = safe_alloc(sizeof(MessageTag)); 
+	MessageTag *json_mtag = safe_alloc(sizeof(MessageTag));
 	safe_strdup(json_mtag->name, "unrealircd.org/json-log");
 	safe_strdup(json_mtag->value, serialized);
 	AddListItem(json_mtag, mtags);
@@ -239,12 +238,12 @@ void rpc_log_send(Client *client, json_t *request, json_t *params)
 	safe_free(serialized);
 
 	const char *cmd_params[6] = {
-		me.name,
-		level,
-		subsystem,
-		event_id,
-		msg,
-		NULL
+	    me.name,
+	    level,
+	    subsystem,
+	    event_id,
+	    msg,
+	    NULL,
 	};
 
 	do_cmd(&me, mtags, "SLOG", 5, cmd_params);

@@ -26,11 +26,11 @@ char *cloakcsum();
 int cloak_config_test(ConfigFile *, ConfigEntry *, int, int *);
 
 ModuleHeader MOD_HEADER = {
-	"cloak_none",
-	"1.0",
-	"Cloaking module that does nothing",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "cloak_none",
+    "1.0",
+    "Cloaking module that does nothing",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 MOD_TEST()

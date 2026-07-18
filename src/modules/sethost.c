@@ -25,16 +25,15 @@
 CMD_FUNC(cmd_sethost);
 
 /* Place includes here */
-#define MSG_SETHOST 	"SETHOST"	/* sethost */
+#define MSG_SETHOST "SETHOST" /* sethost */
 
-ModuleHeader MOD_HEADER
-  = {
-	"sethost",	/* Name of module */
-	"5.0", /* Version */
-	"command /sethost", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sethost", /* Name of module */
+    "5.0", /* Version */
+    "command /sethost", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -63,9 +62,9 @@ CMD_FUNC(cmd_sethost)
 {
 	const char *vhost;
 
-	if (MyUser(client) && !ValidatePermissionsForPath("self:set:host",client,NULL,NULL,NULL))
+	if (MyUser(client) && !ValidatePermissionsForPath("self:set:host", client, NULL, NULL, NULL))
 	{
-  		sendnumeric(client, ERR_NOPRIVILEGES);
+		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
 	}
 
@@ -75,7 +74,7 @@ CMD_FUNC(cmd_sethost)
 		vhost = parv[1];
 
 	if (BadPtr(vhost))
-	{	
+	{
 		if (MyConnect(client))
 			sendnotice(client, "*** Syntax: /SetHost <new host>");
 		return;
@@ -143,9 +142,9 @@ CMD_FUNC(cmd_sethost)
 	if (MyConnect(client))
 	{
 		sendto_one(client, NULL, ":%s MODE %s :+xt", client->name, client->name);
-		sendnotice(client, 
-		    "Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
-		     client->name, client->user->username, vhost,
-		    client->name);
+		sendnotice(client,
+		           "Your nick!user@host-mask is now (%s!%s@%s) - To disable it type /mode %s -x",
+		           client->name, client->user->username, vhost,
+		           client->name);
 	}
 }

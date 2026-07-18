@@ -5,13 +5,12 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-= {
-	"rpc/name_ban",
-	"1.0.1",
-	"name_ban.* RPC calls",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "rpc/name_ban",
+    "1.0.1",
+    "name_ban.* RPC calls",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */
@@ -167,7 +166,8 @@ RPC_CALL_FUNC(rpc_name_ban_del)
 	if (!my_find_tkl_nameban(name))
 	{
 		rpc_response(client, request, result);
-	} else {
+	} else
+	{
 		/* Actually this may not be an internal error, it could be an
 		 * incorrect request, such as asking to remove a config-based ban.
 		 */
@@ -196,8 +196,7 @@ RPC_CALL_FUNC(rpc_name_ban_add)
 		tkl_expire_at = config_checkval(str, CFG_TIME);
 		if (tkl_expire_at > 0)
 			tkl_expire_at = TStime() + tkl_expire_at;
-	} else
-	if ((str = json_object_get_string(params, "expire_at")))
+	} else if ((str = json_object_get_string(params, "expire_at")))
 	{
 		tkl_expire_at = server_time_to_unix_time(str);
 	} else
@@ -222,7 +221,7 @@ RPC_CALL_FUNC(rpc_name_ban_add)
 		return;
 	}
 
-	tkl = tkl_add_nameban(TKL_NAME|TKL_GLOBAL, name, 0, reason,
+	tkl = tkl_add_nameban(TKL_NAME | TKL_GLOBAL, name, 0, reason,
 	                      set_by, tkl_expire_at, tkl_set_at,
 	                      0);
 

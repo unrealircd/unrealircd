@@ -20,17 +20,17 @@
 
 #include "unrealircd.h"
 
-#define MSG_SMOD "SMOD"
+#define MSG_SMOD           "SMOD"
 #define SMOD_FLAG_REQUIRED 'R'
-#define SMOD_FLAG_GLOBAL 'G'
-#define SMOD_FLAG_LOCAL 'L'
+#define SMOD_FLAG_GLOBAL   'G'
+#define SMOD_FLAG_LOCAL    'L'
 
 ModuleHeader MOD_HEADER = {
-	"require-module",
-	"5.0.1",
-	"Require/deny modules across the network",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "require-module",
+    "5.0.1",
+    "Require/deny modules across the network",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 typedef struct _denymod DenyMod;
@@ -278,7 +278,7 @@ int reqmods_configrun_deny(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	// Just use a default reason if none was specified (since it's optional)
 	if (!dmod->reason || !strlen(dmod->reason))
-		 safe_strdup(dmod->reason, "no reason");
+		safe_strdup(dmod->reason, "no reason");
 	AddListItem(dmod, DenyModList);
 	return 1;
 }
@@ -431,7 +431,7 @@ CMD_FUNC(cmd_smod)
 		if (!p)
 			continue; /* malformed request */
 		modflag = *modbuf; // Get the module flag (FIXME: parses only first letter atm)
-		modbuf = p+1;
+		modbuf = p + 1;
 		strlcpy(name, modbuf, sizeof(name)); // Let's work on a copy of the param
 
 		version = strchr(name, ':');
@@ -468,8 +468,7 @@ CMD_FUNC(cmd_smod)
 				           log_data_client("me", &me),
 				           log_data_string("module_name", name));
 				abort = 1; // Always SQUIT here too (explicitly required by admins)
-			}
-			else if (modflag == 'G')
+			} else if (modflag == 'G')
 			{
 				unreal_log(ULOG_WARNING, "link", "LINK_MISSING_GLOBAL_MODULE", client,
 				           "Server $me is missing module '$module_name', which is "

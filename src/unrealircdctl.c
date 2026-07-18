@@ -45,7 +45,8 @@ void unrealircdctl_usage(const char *program_name)
 	       "mkpasswd       - Hash a password\n"
 	       "gencloak       - Display 3 random cloak keys\n"
 	       "spkifp         - Display SPKI Fingerprint\n"
-	       "\n", program_name);
+	       "\n",
+	       program_name);
 	exit(-1);
 }
 
@@ -100,7 +101,8 @@ void unrealircdctl_mkpasswd(int argc, char *argv[])
 	if (type == -1)
 	{
 		type = AUTHTYPE_ARGON2;
-	} else {
+	} else
+	{
 		p = argv[3];
 	}
 	if (BadPtr(p))
@@ -119,7 +121,8 @@ void unrealircdctl_mkpasswd(int argc, char *argv[])
 		       "You are suggested to use the 'argon2' algorithm instead.");
 		p[8] = '\0';
 	}
-	if (!(result = Auth_Hash(type, p))) {
+	if (!(result = Auth_Hash(type, p)))
+	{
 		printf("Failed to generate password. Deprecated method? Try 'argon2' instead.\n");
 		exit(0);
 	}
@@ -129,7 +132,7 @@ void unrealircdctl_mkpasswd(int argc, char *argv[])
 
 void unrealircdctl_gencloak(int argc, char *argv[])
 {
-	#define GENERATE_CLOAKKEY_LEN 80 /* Length of cloak keys to generate. */
+#define GENERATE_CLOAKKEY_LEN 80 /* Length of cloak keys to generate. */
 	char keyBuf[GENERATE_CLOAKKEY_LEN + 1];
 	int keyNum;
 	int charIndex;
@@ -147,7 +150,7 @@ void unrealircdctl_gencloak(int argc, char *argv[])
 		has_lower = 0;
 		has_num = 0;
 
-		for (charIndex = 0; charIndex < sizeof(keyBuf)-1; ++charIndex)
+		for (charIndex = 0; charIndex < sizeof(keyBuf) - 1; ++charIndex)
 		{
 			switch (getrandom8() % 3)
 			{
@@ -165,7 +168,7 @@ void unrealircdctl_gencloak(int argc, char *argv[])
 					break;
 			}
 		}
-		keyBuf[sizeof(keyBuf)-1] = '\0';
+		keyBuf[sizeof(keyBuf) - 1] = '\0';
 
 		if (has_upper && has_lower && has_num)
 			printf("\t\t\"%s\";\n", keyBuf);
@@ -243,11 +246,11 @@ int main(int argc, char *argv[])
 	chdir(".."); /* go up one level from "bin" */
 	init_winsock();
 #else
-#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+ #if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 	alarm(60); /* 60 seconds timeout - ASan can be slow... */
-#else
+ #else
 	alarm(20); /* 20 seconds timeout */
-#endif
+ #endif
 #endif
 	dbuf_init();
 	init_random();

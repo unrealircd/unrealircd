@@ -23,18 +23,16 @@
 CMD_FUNC(cmd_sqline);
 
 /* Place includes here */
-#define MSG_SQLINE      "SQLINE"        /* SQLINE */
+#define MSG_SQLINE "SQLINE"        /* SQLINE */
 
 
-
-ModuleHeader MOD_HEADER
-  = {
-	"sqline",	/* Name of module */
-	"5.0", /* Version */
-	"command /sqline", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "sqline", /* Name of module */
+    "5.0", /* Version */
+    "command /sqline", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
@@ -66,15 +64,15 @@ CMD_FUNC(cmd_sqline)
 	char mo[32];
 	const char *comment = (parc == 3) ? parv[2] : NULL;
 	const char *tkllayer[9] = {
-		me.name,        /*0  server.name */
-		"+",            /*1  +|- */
-		"Q",            /*2  G   */
-		"*" ,           /*3  user */
-		parv[1],        /*4  host */
-		client->name,     /*5  setby */
-		"0",            /*6  expire_at */
-		NULL,           /*7  set_at */
-		"no reason"     /*8  reason */
+	    me.name, /*0  server.name */
+	    "+",     /*1  +|- */
+	    "Q",     /*2  G   */
+	    "*",     /*3  user */
+	    parv[1], /*4  host */
+	    client->name,     /*5  setby */
+	    "0",            /*6  expire_at */
+	    NULL,           /*7  set_at */
+	    "no reason",    /*8  reason */
 	};
 
 	if (parc < 2)

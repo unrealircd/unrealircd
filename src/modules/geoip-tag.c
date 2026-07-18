@@ -22,14 +22,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"geoip-tag",
-	"6.0",
-	"geoip message tag",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "geoip-tag",
+    "6.0",
+    "geoip message tag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int geoip_mtag_is_ok(Client *client, const char *name, const char *value);
@@ -80,7 +79,7 @@ int geoip_mtag_is_ok(Client *client, const char *name, const char *value)
 void mtag_add_geoip(Client *client, MessageTag *recv_mtags, MessageTag **mtag_list, const char *signature)
 {
 	MessageTag *m;
-	
+
 	GeoIPResult *geoip;
 
 	if (IsUser(client) && ((geoip = geoip_client(client))))
@@ -89,7 +88,8 @@ void mtag_add_geoip(Client *client, MessageTag *recv_mtags, MessageTag **mtag_li
 		if (m)
 		{
 			m = duplicate_mtag(m);
-		} else {
+		} else
+		{
 			m = safe_alloc(sizeof(MessageTag));
 			safe_strdup(m->name, "unrealircd.org/geoip");
 			safe_strdup(m->value, geoip->country_code);

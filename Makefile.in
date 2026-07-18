@@ -170,6 +170,16 @@ depend:
 		( cd $$i; ${MAKE} ${MAKEARGS} depend; ) \
 	done
 
+# Code reformatting using clang-format: work on git .c/.h files only, but skip vendored files.
+format:
+	clang-format -i `git ls-files src include | grep -E '\.(c|h)$$' | grep -vE 'crypt_blowfish|openssl_hostname_validation'`
+
+# Like 'make format' but only CHECK if everything is formatted properly,
+# without modifying any file. Fails if 'make format' would change something.
+# The CI runs this too (see .github/workflows/linux-ci.yml).
+format-check:
+	clang-format --dry-run --Werror `git ls-files src include | grep -E '\.(c|h)$$' | grep -vE 'crypt_blowfish|openssl_hostname_validation'`
+
 install: all
 	$(INSTALL) -m 0700 -d $(DESTDIR)@BINDIR@
 	$(INSTALL) -m 0700 src/ircd $(DESTDIR)@BINDIR@/unrealircd

@@ -11,14 +11,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"certfp",
-	"5.0",
-	"Certificate fingerprint",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "certfp",
+    "5.0",
+    "Certificate fingerprint",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 void certfp_free(ModData *m);
@@ -36,7 +35,7 @@ MOD_INIT()
 	ModDataInfo mreq;
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	memset(&mreq, 0, sizeof(mreq));
 	mreq.name = "certfp";
 	mreq.free = certfp_free;
@@ -83,12 +82,13 @@ char *get_fingerprint_for_client(Client *client)
 
 	if (!MyConnect(client) || !client->local->ssl)
 		return NULL;
-	
+
 	x509_clientcert = SSL_get_peer_certificate(client->local->ssl);
 
 	if (x509_clientcert)
 	{
-		if (X509_digest(x509_clientcert, digest, md, &n)) {
+		if (X509_digest(x509_clientcert, digest, md, &n))
+		{
 			binarytohex(md, n, hex);
 			X509_free(x509_clientcert);
 			return hex;
@@ -117,7 +117,7 @@ int certfp_connect(Client *client)
 	if (IsSecure(client))
 	{
 		const char *fp = moddata_client_get(client, "certfp");
-	
+
 		if (fp && !iConf.no_connect_tls_info)
 			sendnotice(client, "*** Your TLS certificate fingerprint is %s", fp);
 	}

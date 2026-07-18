@@ -30,6 +30,7 @@
 
 #include "unrealircd.h"
 
+/* clang-format off */
 static const char *months[] = {
 	"January", "February", "March", "April",
 	"May", "June", "July", "August",
@@ -40,23 +41,41 @@ static const char *weekdays[] = {
 	"Sunday", "Monday", "Tuesday", "Wednesday",
 	"Thursday", "Friday", "Saturday"
 };
+/* clang-format on */
 
 static const char *short_months[12] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
 };
 
 static const char *short_weekdays[7] = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
 };
 
 typedef struct {
-	int value;			/** Unique integer value of item */
-	char character;		/** Unique character assigned to item */
-	char *name;			/** Name of item */
+	int value;   /** Unique integer value of item */
+	char character;  /** Unique character assigned to item */
+	char *name;   /** Name of item */
 	char config_only;
 } BanActTable;
 
+/* clang-format off */
 static BanActTable banacttable[] = {
 	{ BAN_ACT_KILL,		'K',	"kill",			0 },
 	{ BAN_ACT_SOFT_KILL,	'i',	"soft-kill",		0 },
@@ -83,14 +102,16 @@ static BanActTable banacttable[] = {
 	{ BAN_ACT_STOP,		'0',	"stop",			1 },
 	{ 0, 0, 0, 0 }
 };
+/* clang-format on */
 
 typedef struct {
-	int value;			/** Unique integer value of item */
-	char character;		/** Unique character assigned to item */
-	char *name;			/** Name of item */
-	char *irccommand;	/** Raw IRC command of item (not unique!) */
+	int value;   /** Unique integer value of item */
+	char character;  /** Unique character assigned to item */
+	char *name;   /** Name of item */
+	char *irccommand; /** Raw IRC command of item (not unique!) */
 } SpamfilterTargetTable;
 
+/* clang-format off */
 SpamfilterTargetTable spamfiltertargettable[] = {
 	{ SPAMF_CHANMSG,	'c',	"channel",		"PRIVMSG" },
 	{ SPAMF_USERMSG,	'p',	"private",		"PRIVMSG" },
@@ -106,6 +127,7 @@ SpamfilterTargetTable spamfiltertargettable[] = {
 	{ SPAMF_RAW,		'R',	"raw",			"cmd" },
 	{ 0, 0, 0, 0 }
 };
+/* clang-format on */
 
 /** IRC Statistics (quite useless?) */
 struct IRCStatistics ircstats;
@@ -116,7 +138,7 @@ const char *long_date(time_t clock)
 	static char buf[80], plus;
 	struct tm *lt, *gm;
 	struct tm gmbuf;
-	int  minswest;
+	int minswest;
 
 	if (!clock)
 		time(&clock);
@@ -127,7 +149,7 @@ const char *long_date(time_t clock)
 #ifndef _WIN32
 	if (lt->tm_yday == gm->tm_yday)
 		minswest = (gm->tm_hour - lt->tm_hour) * 60 +
-		    (gm->tm_min - lt->tm_min);
+		           (gm->tm_min - lt->tm_min);
 	else if (lt->tm_yday > gm->tm_yday)
 		minswest = (gm->tm_hour - (lt->tm_hour + 24)) * 60;
 	else
@@ -139,9 +161,9 @@ const char *long_date(time_t clock)
 	if (minswest < 0)
 		minswest = -minswest;
 	ircsnprintf(buf, sizeof(buf), "%s %s %d %d -- %02d:%02d %c%02d:%02d",
-	    weekdays[lt->tm_wday], months[lt->tm_mon], lt->tm_mday,
-	    1900 + lt->tm_year,
-	    lt->tm_hour, lt->tm_min, plus, minswest / 60, minswest % 60);
+	            weekdays[lt->tm_wday], months[lt->tm_mon], lt->tm_mday,
+	            1900 + lt->tm_year,
+	            lt->tm_hour, lt->tm_min, plus, minswest / 60, minswest % 60);
 
 	return buf;
 }
@@ -226,9 +248,9 @@ char *make_user_host(const char *name, const char *host)
 {
 	static char namebuf[USERLEN + HOSTLEN + 6];
 
-	strlncpy(namebuf, check_string(name), sizeof(namebuf), USERLEN+1);
+	strlncpy(namebuf, check_string(name), sizeof(namebuf), USERLEN + 1);
 	strlcat(namebuf, "@", sizeof(namebuf));
-	strlncat(namebuf, check_string(host), sizeof(namebuf), HOSTLEN+1);
+	strlncat(namebuf, check_string(host), sizeof(namebuf), HOSTLEN + 1);
 	return namebuf;
 }
 
@@ -238,11 +260,11 @@ char *make_user_host(const char *name, const char *host)
  */
 char *make_nick_user_host_r(char *namebuf, size_t namebuflen, const char *nick, const char *name, const char *host)
 {
-	strlncpy(namebuf, check_string(nick), namebuflen, NICKLEN+1);
+	strlncpy(namebuf, check_string(nick), namebuflen, NICKLEN + 1);
 	strlcat(namebuf, "!", namebuflen);
-	strlncat(namebuf, check_string(name), namebuflen, USERLEN+1);
+	strlncat(namebuf, check_string(name), namebuflen, USERLEN + 1);
 	strlcat(namebuf, "@", namebuflen);
-	strlncat(namebuf, check_string(host), namebuflen, HOSTLEN+1);
+	strlncat(namebuf, check_string(host), namebuflen, HOSTLEN + 1);
 	return namebuf;
 }
 
@@ -345,14 +367,15 @@ const char *get_client_name(Client *client, int showip)
 		if (showip)
 		{
 			ircsnprintf(nbuf, sizeof(nbuf), "%s[%s@%s.%d]",
-			    client->name,
-			    IsIdentSuccess(client) ? client->ident : "",
-			    client->ip ? client->ip : "???",
-			    get_client_port(client));
-		} else {
+			            client->name,
+			            IsIdentSuccess(client) ? client->ident : "",
+			            client->ip ? client->ip : "???",
+			            get_client_port(client));
+		} else
+		{
 			if (mycmp(client->name, client->local->sockhost))
 				ircsnprintf(nbuf, sizeof(nbuf), "%s[%s]",
-				    client->name, client->local->sockhost);
+				            client->name, client->local->sockhost);
 			else
 				return client->name;
 		}
@@ -370,9 +393,9 @@ const char *get_client_host(Client *client)
 	if (!client->local->hostp)
 		return get_client_name(client, FALSE);
 	ircsnprintf(nbuf, sizeof(nbuf), "%s[%-.*s@%-.*s]",
-	    client->name, USERLEN,
-  	    IsIdentSuccess(client) ? client->ident : "",
-	    HOSTLEN, client->local->hostp->h_name);
+	            client->name, USERLEN,
+	            IsIdentSuccess(client) ? client->ident : "",
+	            HOSTLEN, client->local->hostp->h_name);
 	return nbuf;
 }
 
@@ -394,7 +417,7 @@ int on_dccallow_list(Client *to, Client *from)
 {
 	Link *lp;
 
-	for(lp = to->user->dccallow; lp; lp = lp->next)
+	for (lp = to->user->dccallow; lp; lp = lp->next)
 		if (lp->flags == DCC_LINK_ME && lp->value.client == from)
 			return 1;
 	return 0;
@@ -450,11 +473,12 @@ int valid_host(const char *host, int strict)
 
 	if (strict)
 	{
-		for (p=host; *p; p++)
+		for (p = host; *p; p++)
 			if (!isalnum(*p) && !strchr("_-.", *p))
 				return 0;
-	} else {
-		for (p=host; *p; p++)
+	} else
+	{
+		for (p = host; *p; p++)
 			if (!isalnum(*p) && !strchr("_-.:/", *p))
 				return 0;
 	}
@@ -494,7 +518,7 @@ int valid_vhost(const char *userhost)
 	char uhost[512], *p;
 	const char *host = userhost;
 
-        strlcpy(uhost, userhost, sizeof(uhost));
+	strlcpy(uhost, userhost, sizeof(uhost));
 
 	if ((p = strchr(uhost, '@')))
 	{
@@ -559,33 +583,29 @@ int parse_ban_action_set(const char *str, char **var, VarActionValue *op, int *v
 	{
 		*op = VAR_ACT_INCREASE;
 		*p = '\0';
-		p+=2;
+		p += 2;
 		*value = 1;
-	} else
-	if (!strncmp(p, "--", 2))
+	} else if (!strncmp(p, "--", 2))
 	{
 		*op = VAR_ACT_DECREASE;
 		*p = '\0';
-		p+=2;
+		p += 2;
 		*value = 1;
-	} else
-	if (!strncmp(p, "+=", 2))
+	} else if (!strncmp(p, "+=", 2))
 	{
 		*op = VAR_ACT_INCREASE;
 		*p = '\0';
-		p+=2;
-	} else
-	if (!strncmp(p, "-=", 2))
+		p += 2;
+	} else if (!strncmp(p, "-=", 2))
 	{
 		*op = VAR_ACT_DECREASE;
 		*p = '\0';
-		p+=2;
-	} else
-	if (!strncmp(p, "=", 1))
+		p += 2;
+	} else if (!strncmp(p, "=", 1))
 	{
 		*op = VAR_ACT_SET;
 		*p = '\0';
-		p+=1;
+		p += 1;
 	} else
 	{
 		*error = "Unknown set action, should be one of: ++, --, +=, -= or =";
@@ -618,14 +638,14 @@ int test_ban_action_config_helper(ConfigEntry *ce, const char *name, const char 
 	if (!action)
 	{
 		config_error("%s:%d: unknown action: %s",
-			     ce->file->filename, ce->line_number, name);
+		             ce->file->filename, ce->line_number, name);
 		errors++;
 	} else if (action == BAN_ACT_SET)
 	{
 		if (!value)
 		{
 			config_error("%s:%d: action set is missing a value",
-				ce->file->filename, ce->line_number);
+			             ce->file->filename, ce->line_number);
 			errors++;
 		} else
 		{
@@ -636,7 +656,7 @@ int test_ban_action_config_helper(ConfigEntry *ce, const char *name, const char 
 			if (!parse_ban_action_set(value, &var, &op, &varvalue, &error))
 			{
 				config_error("%s:%d: action: %s",
-					ce->file->filename, ce->line_number, error);
+				             ce->file->filename, ce->line_number, error);
 				errors++;
 			}
 		}
@@ -661,8 +681,7 @@ int test_ban_action_config(ConfigEntry *ce)
 		/* action { xxx; } */
 		for (cep = ce->items; cep; cep = cep->next)
 			errors += test_ban_action_config_helper(cep, cep->name, cep->value);
-	} else
-	if (!ce->value)
+	} else if (!ce->value)
 	{
 		config_error("%s:%d: action has no value", ce->file->filename, ce->line_number);
 		errors++;
@@ -695,8 +714,7 @@ BanAction *parse_ban_action_config_helper(const char *name, const char *value)
 		safe_strdup(action->var, var);
 		action->value = varvalue;
 		action->var_action = op;
-	} else
-	if (action->action == BAN_ACT_REPORT)
+	} else if (action->action == BAN_ACT_REPORT)
 	{
 		safe_strdup(action->var, value); // can be NULL, means all
 	}
@@ -732,8 +750,7 @@ void parse_ban_action_config(ConfigEntry *ce, BanAction **store_actions)
 			if (action)
 				append_ListItem((ListStruct *)action, (ListStruct **)store_actions);
 		}
-	} else
-	if (ce->value)
+	} else if (ce->value)
 	{
 		/* action xxx; */
 		action = parse_ban_action_config_helper(ce->value, NULL);
@@ -852,7 +869,7 @@ const char *ban_actions_to_string(BanAction *actions)
 
 	/* Cut off trailing "," */
 	if (*buf)
-		buf[strlen(buf)-1] = '\0';
+		buf[strlen(buf) - 1] = '\0';
 
 	return buf;
 }
@@ -920,8 +937,8 @@ BanAction *duplicate_ban_actions(BanAction *actions)
 /** Extract target flags from string 's'. */
 int spamfilter_gettargets(const char *s, Client *client)
 {
-SpamfilterTargetTable *e;
-int flags = 0;
+	SpamfilterTargetTable *e;
+	int flags = 0;
 
 	for (; *s; s++)
 	{
@@ -943,7 +960,7 @@ int flags = 0;
 /** Convert a string with a targetname to an integer value */
 int spamfilter_getconftargets(const char *s)
 {
-SpamfilterTargetTable *e;
+	SpamfilterTargetTable *e;
 
 	for (e = &spamfiltertargettable[0]; e->value; e++)
 		if (!strcmp(s, e->name))
@@ -973,17 +990,17 @@ char *unreal_decodespace(const char *s)
 	const char *i;
 	static char buf[512], *o;
 
-	for (i = s, o = buf; (*i) && (o < buf+510); i++)
+	for (i = s, o = buf; (*i) && (o < buf + 510); i++)
 		if (*i == '_')
 		{
 			if (i[1] != '_')
 				*o++ = ' ';
-			else {
+			else
+			{
 				*o++ = '_';
 				i++;
 			}
-		}
-		else
+		} else
 			*o++ = *i;
 	*o = '\0';
 	return buf;
@@ -1000,7 +1017,7 @@ char *unreal_encodespace(const char *s)
 	if (!s)
 		return NULL; /* NULL in = NULL out */
 
-	for (i = s, o = buf; (*i) && (o < buf+509); i++)
+	for (i = s, o = buf; (*i) && (o < buf + 509); i++)
 	{
 		if (*i == ' ')
 			*o++ = '_';
@@ -1008,8 +1025,7 @@ char *unreal_encodespace(const char *s)
 		{
 			*o++ = '_';
 			*o++ = '_';
-		}
-		else
+		} else
 			*o++ = *i;
 	}
 	*o = '\0';
@@ -1049,8 +1065,7 @@ void unreal_add_names(NameList **n, ConfigEntry *ce)
 		ConfigEntry *cep;
 		for (cep = ce->items; cep; cep = cep->next)
 			_add_name_list(n, cep->value ? cep->value : cep->name);
-	} else
-	if (ce->value)
+	} else if (ce->value)
 	{
 		_add_name_list(n, ce->value);
 	}
@@ -1064,8 +1079,7 @@ void unreal_add_name_values(NameValuePrioList **n, const char *name, ConfigEntry
 		ConfigEntry *cep;
 		for (cep = ce->items; cep; cep = cep->next)
 			add_nvplist(n, 0, name, cep->value ? cep->value : cep->name);
-	} else
-	if (ce->value)
+	} else if (ce->value)
 	{
 		add_nvplist(n, 0, name, ce->value);
 	}
@@ -1104,7 +1118,7 @@ const char *namevalue_nospaces(NameValuePrioList *n)
 	snprintf(buf, sizeof(buf), "%s:%s", n->name, n->value);
 
 	/* Replace spaces with underscores */
-	for (p=buf; *p; p++)
+	for (p = buf; *p; p++)
 		if (*p == ' ')
 			*p = '_';
 
@@ -1131,7 +1145,7 @@ char *our_strcasestr(const char *haystack, const char *needle)
 
 	for (i = 0; i <= (hlength - nlength); i++)
 	{
-		if (strncasecmp (haystack + i, needle, nlength) == 0)
+		if (strncasecmp(haystack + i, needle, nlength) == 0)
 			return (char *)(haystack + i);
 	}
 
@@ -1164,10 +1178,10 @@ int swhois_add(Client *client, const char *tag, int priority, const char *swhois
 	AddListItemPrio(s, client->user->swhois, s->priority);
 
 	sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :%s",
-		from->id, client->id, swhois);
+	              from->id, client->id, swhois);
 
 	sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s + %s %d :%s",
-		from->id, client->id, tag, priority, swhois);
+	              from->id, client->id, tag, priority, swhois);
 
 	return 0;
 }
@@ -1192,8 +1206,8 @@ int swhois_delete(Client *client, const char *tag, const char *swhois, Client *f
 		s_next = s->next;
 
 		/* If ( same swhois or "*" ) AND same tag */
-		if ( ((!strcmp(s->line, swhois) || !strcmp(swhois, "*")) &&
-		    !strcmp(s->setby, tag)))
+		if (((!strcmp(s->line, swhois) || !strcmp(swhois, "*")) &&
+		     !strcmp(s->setby, tag)))
 		{
 			DelListItem(s, client->user->swhois);
 			safe_free(s->line);
@@ -1201,10 +1215,10 @@ int swhois_delete(Client *client, const char *tag, const char *swhois, Client *f
 			safe_free(s);
 
 			sendto_server(skip, 0, PROTO_EXTSWHOIS, NULL, ":%s SWHOIS %s :",
-				from->id, client->id);
+			              from->id, client->id);
 
 			sendto_server(skip, PROTO_EXTSWHOIS, 0, NULL, ":%s SWHOIS %s - %s %d :%s",
-				from->id, client->id, tag, 0, swhois);
+			              from->id, client->id, tag, 0, swhois);
 
 			ret = 0;
 		}
@@ -1361,7 +1375,7 @@ MessageTag *duplicate_mtags(MessageTag *mtags)
 
 /** Duplicate a message tag list, excluding tags with MTAG_HANDLER_FLAGS_FIRST_ONLY.
  * Used to build the tag set for subsequent lines (lines 2..N),
- * where tags like msgid and +draft/reply should not be repeated.
+ * where tags like msgid, +reply and +draft/reply should not be repeated.
  */
 MessageTag *duplicate_mtags_for_subsequent_lines(MessageTag *mtags)
 {
@@ -1420,7 +1434,8 @@ void new_message_special(Client *sender, MessageTag *recv_mtags, MessageTag **mt
 void parse_message_tags_default_handler(Client *client, char **str, MessageTag **mtag_list)
 {
 	/* Just skip everything until the space character */
-	for (; **str && **str != ' '; *str = *str + 1);
+	for (; **str && **str != ' '; *str = *str + 1)
+		;
 }
 
 /** Default handler for mtags_to_string().
@@ -1680,7 +1695,8 @@ time_t my_timegm(struct tm *tm)
 	{
 		setenv("TZ", tz, 1);
 		safe_free(tz);
-	} else {
+	} else
+	{
 		unsetenv("TZ");
 	}
 	tzset();
@@ -1704,13 +1720,13 @@ time_t server_time_to_unix_time(const char *tbuf)
 
 	memset(&tm, 0, sizeof(tm));
 	ret = sscanf(tbuf, "%d-%d-%dT%d:%d:%d.%dZ",
-		&tm.tm_year,
-		&tm.tm_mon,
-		&tm.tm_mday,
-		&tm.tm_hour,
-		&tm.tm_min,
-		&tm.tm_sec,
-		&dontcare);
+	             &tm.tm_year,
+	             &tm.tm_mon,
+	             &tm.tm_mday,
+	             &tm.tm_hour,
+	             &tm.tm_min,
+	             &tm.tm_sec,
+	             &dontcare);
 
 	if (ret != 7)
 		return 0;
@@ -1746,7 +1762,7 @@ time_t rfc2616_time_to_unix_time(const char *tbuf)
 	if (ret < 6)
 		return 0;
 
-	for (i=0; i < 12; i++)
+	for (i = 0; i < 12; i++)
 	{
 		if (!strcmp(short_months[i], month))
 		{
@@ -1770,7 +1786,7 @@ const char *rfc2616_time(time_t clock)
 	static char buf[80], plus;
 	struct tm *lt, *gm;
 	struct tm gmbuf;
-	int  minswest;
+	int minswest;
 
 	if (!clock)
 		time(&clock);
@@ -1944,7 +1960,7 @@ void binarytohex(void *data, size_t len, char *str)
 	char *datastr = (char *)data;
 	int i, n = 0;
 
-	for (i=0; i<len; i++)
+	for (i = 0; i < len; i++)
 	{
 		str[n++] = hexchars[(datastr[i] >> 4) & 0xF];
 		str[n++] = hexchars[datastr[i] & 0xF];
@@ -2054,7 +2070,7 @@ const char *sha256sum_file(const char *fname)
 	char buf[2048];
 	SHA256_CTX hash;
 	char binaryhash[SHA256_DIGEST_LENGTH];
-	static char hexhash[SHA256_DIGEST_LENGTH*2+1];
+	static char hexhash[SHA256_DIGEST_LENGTH * 2 + 1];
 	int n;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	unsigned int md_len;
@@ -2131,10 +2147,11 @@ char *filename_strip_suffix(const char *fname, const char *suffix)
 		int suffix_len = strlen(suffix);
 		if (buf_len >= suffix_len)
 		{
-			if (!strncmp(buf+buf_len-suffix_len, suffix, suffix_len))
-				buf[buf_len-suffix_len] = '\0';
+			if (!strncmp(buf + buf_len - suffix_len, suffix, suffix_len))
+				buf[buf_len - suffix_len] = '\0';
 		}
-	} else {
+	} else
+	{
 		char *p = strrchr(buf, '.');
 		if (p)
 			*p = '\0';
@@ -2271,13 +2288,14 @@ MultiLine *line2multiline(const char *str)
 
 	strlcpy(buf, str, sizeof(buf));
 	p = buf;
-	do {
+	do
+	{
 		p2 = strchr(p, '\n');
 		if (p2)
 			*p2++ = '\0';
 		addmultiline(&ml, p);
 		p = p2;
-	} while(p2 && *p2);
+	} while (p2 && *p2);
 	return ml;
 }
 
@@ -2302,7 +2320,7 @@ const char *sendtype_to_cmd(SendType sendtype)
 int check_password_strength(const char *pass, int min_length, int strict, char **err)
 {
 	static char buf[256];
-	char has_lowercase=0, has_uppercase=0, has_digit=0;
+	char has_lowercase = 0, has_uppercase = 0, has_digit = 0;
 	const char *p;
 
 	if (err)
@@ -2318,7 +2336,7 @@ int check_password_strength(const char *pass, int min_length, int strict, char *
 		return 0;
 	}
 
-	for (p=pass; *p; p++)
+	for (p = pass; *p; p++)
 	{
 		if (islower(*p))
 			has_lowercase = 1;
@@ -2335,14 +2353,12 @@ int check_password_strength(const char *pass, int min_length, int strict, char *
 			if (err)
 				*err = "Password must contain at least 1 lowercase character";
 			return 0;
-		} else
-		if (!has_uppercase)
+		} else if (!has_uppercase)
 		{
 			if (err)
 				*err = "Password must contain at least 1 UPPERcase character";
 			return 0;
-		} else
-		if (!has_digit)
+		} else if (!has_digit)
 		{
 			if (err)
 				*err = "Password must contain at least 1 digit (number)";
@@ -2412,7 +2428,8 @@ int terminal_supports_color(void)
 /** Skip whitespace (if any) */
 void skip_whitespace(char **p)
 {
-	for (; **p == ' ' || **p == '\t'; *p = *p + 1);
+	for (; **p == ' ' || **p == '\t'; *p = *p + 1)
+		;
 }
 
 /** Keep reading '*p' until we hit any of the 'stopchars'.
@@ -2421,16 +2438,17 @@ void skip_whitespace(char **p)
  */
 void read_until(char **p, char *stopchars)
 {
-	for (; **p && !strchr(stopchars, **p); *p = *p + 1);
+	for (; **p && !strchr(stopchars, **p); *p = *p + 1)
+		;
 }
 
 void write_pidfile_failed(void)
 {
 	char *errstr = strerror(errno);
 	unreal_log(ULOG_WARNING, "config", "WRITE_PID_FILE_FAILED", NULL,
-		   "Unable to write to pid file '$filename': $system_error",
-		   log_data_string("filename", conf_files->pid_file),
-		   log_data_string("system_error", errstr));
+	           "Unable to write to pid file '$filename': $system_error",
+	           log_data_string("filename", conf_files->pid_file),
+	           log_data_string("system_error", errstr));
 }
 
 /** Write PID file */
@@ -2528,8 +2546,7 @@ char *url_getfilename(const char *url)
 		if (!*c)
 			return raw_strdup(start);
 		else
-			return raw_strldup(start, c-start+1);
-
+			return raw_strldup(start, c - start + 1);
 	}
 	return raw_strdup("-");
 }
@@ -2548,7 +2565,8 @@ int is_file_readable(const char *file, const char *dir)
 {
 	char *filename = strdup(file);
 	convert_to_absolute_path(&filename, dir);
-	if (access(filename, R_OK)){
+	if (access(filename, R_OK))
+	{
 		safe_free(filename);
 		return 0;
 	}
@@ -2632,11 +2650,11 @@ void s_die()
 		unload_all_modules();
 
 		list_for_each_entry(client, &lclient_list, lclient_node)
-			(void) send_queued(client);
+			(void)send_queued(client);
 
 		exit(-1);
-	}
-	else {
+	} else
+	{
 		SERVICE_STATUS status;
 		SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		SC_HANDLE hService = OpenService(hSCManager, "UnrealIRCd", SERVICE_STOP);
@@ -2699,10 +2717,10 @@ void ignore_this_signal()
 	(void)sigaddset(&act.sa_mask, SIGPIPE);
 	(void)sigaction(SIGALRM, &act, (struct sigaction *)NULL);
 	(void)sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-#ifdef SIGWINCH
+ #ifdef SIGWINCH
 	(void)sigaddset(&act.sa_mask, SIGWINCH);
 	(void)sigaction(SIGWINCH, &act, (struct sigaction *)NULL);
-#endif
+ #endif
 }
 #endif /* #ifndef _WIN32 */
 
@@ -2716,7 +2734,7 @@ void server_reboot(const char *mesg)
 	           log_data_string("reason", mesg));
 
 	list_for_each_entry(client, &lclient_list, lclient_node)
-		(void) send_queued(client);
+		(void)send_queued(client);
 
 	/*
 	 * ** fd 0 must be 'preserved' if either the -d or -i options have
@@ -2757,14 +2775,13 @@ void server_reboot(const char *mesg)
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 		GetModuleFileName(GetModuleHandle(NULL), fname, MAX_PATH);
 		CreateProcess(fname, "restartsvc", NULL, NULL, FALSE,
-			0, NULL, NULL, &si, &pi);
+		              0, NULL, NULL, &si, &pi);
 		IRCDStatus.dwCurrentState = SERVICE_STOPPED;
 		SetServiceStatus(IRCDStatusHandle, &IRCDStatus);
 		ExitProcess(0);
-	}
-	else
+	} else
 #endif
-	exit(-1);
+		exit(-1);
 }
 
 /** Check if at least 'minimum' seconds passed by since last run.
@@ -2783,7 +2800,7 @@ int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
 		tv_old->tv_usec = timeofday_tv.tv_usec;
 		return 0;
 	}
-	v = ((timeofday_tv.tv_sec - tv_old->tv_sec) * 1000) + ((timeofday_tv.tv_usec - tv_old->tv_usec)/1000);
+	v = ((timeofday_tv.tv_sec - tv_old->tv_sec) * 1000) + ((timeofday_tv.tv_usec - tv_old->tv_usec) / 1000);
 	if (v >= minimum)
 	{
 		tv_old->tv_sec = timeofday_tv.tv_sec;
@@ -2802,10 +2819,10 @@ int minimum_msec_since_last_run(struct timeval *tv_old, long minimum)
  */
 const char *StripControlCodesEx(const char *text, char *output, size_t outputlen, int strip_flags)
 {
-	int i = 0, len = strlen(text), save_len=0;
+	int i = 0, len = strlen(text), save_len = 0;
 	char nc = 0, col = 0, rgb = 0;
 	char *o = output;
-	const char *save_text=NULL;
+	const char *save_text = NULL;
 
 	/* Handle special cases first.. */
 
@@ -2821,7 +2838,7 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 	/* Reserve room for the NUL byte */
 	outputlen--;
 
-	while (len > 0) 
+	while (len > 0)
 	{
 		if ((col && isdigit(*text) && nc < 2) ||
 		    ((col == 1) && (*text == ',') && isdigit(text[1]) && (nc > 0) && (nc < 3)))
@@ -2842,8 +2859,7 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 			nc++;
 			if (*text == ',')
 				nc = 0;
-		}
-		else 
+		} else
 		{
 			if (col)
 				col = 0;
@@ -2851,8 +2867,8 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 			{
 				if (nc != 6)
 				{
-					text = save_text+1;
-					len = save_len-1;
+					text = save_text + 1;
+					len = save_len - 1;
 					rgb = 0;
 					continue;
 				}
@@ -2860,63 +2876,62 @@ const char *StripControlCodesEx(const char *text, char *output, size_t outputlen
 			}
 			switch (*text)
 			{
-			case 3:
-				/* color */
-				col = 1;
-				nc = 0;
-				break;
-			case 4:
-				/* RGB */
-				save_text = text;
-				save_len = len;
-				rgb = 1;
-				nc = 0;
-				break;
-			case 2:
-				/* bold */
-				break;
-			case 31:
-				/* underline */
-				break;
-			case 22:
-				/* reverse */
-				break;
-			case 15:
-				/* plain */
-				break;
-			case 29:
-				/* italic */
-				break;
-			case 30:
-				/* strikethrough */
-				break;
-			case 17:
-				/* monospace */
-				break;
-			case 0xe2:
-				if (!strncmp(text+1, "\x80\x8b", 2))
-				{
-					/* +2 means we skip 3 */
-					text += 2;
-					len  -= 2;
+				case 3:
+					/* color */
+					col = 1;
+					nc = 0;
 					break;
-				}
-				/*fallthrough*/
-			default:
-				if ((*text >= ' ') ||
-				    !(strip_flags & UNRL_STRIP_LOW_ASCII) ||
-				    ((strip_flags & UNRL_STRIP_KEEP_LF) && (*text == '\n'))
-				    )
-				{
-					*o++ = *text;
-					outputlen--;
-					if (outputlen == 0)
+				case 4:
+					/* RGB */
+					save_text = text;
+					save_len = len;
+					rgb = 1;
+					nc = 0;
+					break;
+				case 2:
+					/* bold */
+					break;
+				case 31:
+					/* underline */
+					break;
+				case 22:
+					/* reverse */
+					break;
+				case 15:
+					/* plain */
+					break;
+				case 29:
+					/* italic */
+					break;
+				case 30:
+					/* strikethrough */
+					break;
+				case 17:
+					/* monospace */
+					break;
+				case 0xe2:
+					if (!strncmp(text + 1, "\x80\x8b", 2))
 					{
-						*o = '\0';
-						return output;
+						/* +2 means we skip 3 */
+						text += 2;
+						len -= 2;
+						break;
 					}
-				}
-				break;
+				/*fallthrough*/
+				default:
+					if ((*text >= ' ') ||
+					    !(strip_flags & UNRL_STRIP_LOW_ASCII) ||
+					    ((strip_flags & UNRL_STRIP_KEEP_LF) && (*text == '\n')))
+					{
+						*o++ = *text;
+						outputlen--;
+						if (outputlen == 0)
+						{
+							*o = '\0';
+							return output;
+						}
+					}
+					break;
 			}
 		}
 		text++;
@@ -3039,9 +3054,9 @@ void free_outgoingwebrequest(OutgoingWebRequest *r)
 	safe_free(r->apicallback);
 	safe_free(r->url);
 	safe_free(r->actual_url);
-        safe_free(r->body);
-        safe_free_nvplist(r->headers);
-        safe_free(r);
+	safe_free(r->body);
+	safe_free_nvplist(r->headers);
+	safe_free(r);
 }
 
 /** Safely duplicate an OutgoingWebRequest struct (eg for https redirects) */
@@ -3151,7 +3166,8 @@ void synchronous_http_request_handle_response(OutgoingWebRequest *request, Outgo
 	{
 		strlcpy(synchronous_http_request_tmpfile, response->file, sizeof(synchronous_http_request_tmpfile));
 		synchronous_http_request_in_progress = 0;
-	} else {
+	} else
+	{
 		config_error("%s: Unexpected error, no error but no file", request->url);
 		synchronous_http_request_in_progress = -1;
 	}

@@ -6,14 +6,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"utf8only",
-	"1.0.0",
-	"only allow UTF8 traffic on IRC (UTF8ONLY)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "utf8only",
+    "1.0.0",
+    "only allow UTF8 traffic on IRC (UTF8ONLY)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int utf8only_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
@@ -110,12 +109,15 @@ const char *parse_get_command(const char *msg)
 	static char cmd[64];
 
 	/* Skip whitespace at beginning of the line */
-	for (; *p == ' '; p++);
+	for (; *p == ' '; p++)
+		;
 	/* Skip message tags (if any) */
 	if (*p == '@')
 	{
-		for (p++; *p && (*p != ' '); p++);
-		for (; *p == ' '; p++);
+		for (p++; *p && (*p != ' '); p++)
+			;
+		for (; *p == ' '; p++)
+			;
 	}
 
 	if (*p)
@@ -128,7 +130,8 @@ const char *parse_get_command(const char *msg)
 			sz--;
 		}
 		*o++ = '\0';
-	} else {
+	} else
+	{
 		strlcpy(cmd, "*", sizeof(cmd));
 	}
 
@@ -159,7 +162,8 @@ int utf8only_packet(Client *from, Client *to, Client *intended_to, char **msg, i
 			*length = strlen(*msg); /* Needs to be recalculated */
 		}
 		return 0;
-	} else if (IsUser(from)) {
+	} else if (IsUser(from))
+	{
 		/* Connected user: be strict */
 		if (!unrl_utf8_validate(*msg, NULL))
 		{

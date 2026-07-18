@@ -25,22 +25,21 @@ CMD_FUNC(cmd_pong);
 CMD_FUNC(cmd_nospoof);
 
 /* Place includes here */
-#define MSG_PING        "PING"  /* PING */
-#define MSG_PONG        "PONG"  /* PONG */
+#define MSG_PING "PING"  /* PING */
+#define MSG_PONG "PONG"  /* PONG */
 
-ModuleHeader MOD_HEADER
-  = {
-	"pingpong",	/* Name of module */
-	"5.0", /* Version */
-	"ping, pong and nospoof", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "pingpong", /* Name of module */
+    "5.0", /* Version */
+    "ping, pong and nospoof", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_PING, cmd_ping, MAXPARA, CMD_USER|CMD_SERVER|CMD_SHUN);
-	CommandAdd(modinfo->handle, MSG_PONG, cmd_pong, MAXPARA, CMD_UNREGISTERED|CMD_USER|CMD_SERVER|CMD_SHUN|CMD_VIRUS);
+	CommandAdd(modinfo->handle, MSG_PING, cmd_ping, MAXPARA, CMD_USER | CMD_SERVER | CMD_SHUN);
+	CommandAdd(modinfo->handle, MSG_PONG, cmd_pong, MAXPARA, CMD_UNREGISTERED | CMD_USER | CMD_SERVER | CMD_SHUN | CMD_VIRUS);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -75,7 +74,7 @@ CMD_FUNC(cmd_ping)
 	}
 
 	origin = parv[1];
-	destination = parv[2];	/* Will get NULL or pointer (parc >= 2!!) */
+	destination = parv[2]; /* Will get NULL or pointer (parc >= 2!!) */
 
 	if (!MyUser(client))
 		origin = client->name;
@@ -91,13 +90,12 @@ CMD_FUNC(cmd_ping)
 			sendnumeric(client, ERR_NOSUCHSERVER, destination);
 			return;
 		}
-	}
-	else
+	} else
 	{
 		MessageTag *mtags = NULL;
 		new_message(&me, recv_mtags, &mtags);
 		sendto_one(client, mtags, ":%s PONG %s :%s", me.name,
-		    (destination) ? destination : me.name, origin);
+		           (destination) ? destination : me.name, origin);
 		free_message_tags(mtags);
 	}
 }
@@ -144,7 +142,7 @@ CMD_FUNC(cmd_nospoof)
 
 	if (USE_BAN_VERSION && MyConnect(client))
 		sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-			   me.name, client->name);
+		           me.name, client->name);
 
 	if (is_handshake_finished(client))
 		register_user(client);
@@ -198,8 +196,7 @@ CMD_FUNC(cmd_pong)
 				sendto_one(target, mtags, ":%s PONG %s %s", client->name, origin, destination);
 				free_message_tags(mtags);
 			}
-		}
-		else
+		} else
 		{
 			sendnumeric(client, ERR_NOSUCHSERVER, destination);
 			return;

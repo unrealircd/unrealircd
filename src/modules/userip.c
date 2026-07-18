@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_userip);
 
-#define MSG_USERIP 	"USERIP"	
+#define MSG_USERIP "USERIP"
 
-ModuleHeader MOD_HEADER
-  = {
-	"userip",
-	"5.0",
-	"command /userip", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "userip",
+    "5.0",
+    "command /userip",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -65,18 +64,18 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_userip)
 {
 
-	char *p;		/* scratch end pointer */
-	char *cn;		/* current name */
-	char *ip, ipbuf[HOSTLEN+1];
+	char *p;  /* scratch end pointer */
+	char *cn;  /* current name */
+	char *ip, ipbuf[HOSTLEN + 1];
 	Client *acptr;
 	char request[BUFSIZE];
 	char response[MAXUSERHOSTREPLIES][NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30];
-	int  i;			/* loop counter */
+	int i;   /* loop counter */
 	int w;
 
 	if (!MyUser(client))
 		return;
-		
+
 	if (parc < 2)
 	{
 		sendnumeric(client, ERR_NEEDMOREPARAMS, "USERIP");
@@ -103,18 +102,19 @@ CMD_FUNC(cmd_userip)
 		{
 			if (!(ip = GetIP(acptr)))
 				ip = "<unknown>";
-			if (client != acptr && !ValidatePermissionsForPath("client:see:ip",client,acptr,NULL,NULL) && IsHidden(acptr))
+			if (client != acptr && !ValidatePermissionsForPath("client:see:ip", client, acptr, NULL, NULL) && IsHidden(acptr))
 			{
 				make_cloakedhost(acptr, GetIP(acptr), ipbuf, sizeof(ipbuf));
 				ip = ipbuf;
 			}
 
 			ircsnprintf(response[w], NICKLEN * 2 + CHANNELLEN + USERLEN + HOSTLEN + 30, "%s%s=%c%s@%s",
-			    acptr->name,
-			    (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
-				? "*" : "",
-			    (acptr->user->away) ? '-' : '+',
-			    acptr->user->username, ip);
+			            acptr->name,
+			            (IsOper(acptr) && (!IsHideOper(acptr) || client == acptr || IsOper(client)))
+			                ? "*"
+			                : "",
+			            (acptr->user->away) ? '-' : '+',
+			            acptr->user->username, ip);
 			w++;
 		}
 		if (p)

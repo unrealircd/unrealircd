@@ -10,13 +10,12 @@
  * channel mode +H.
  */
 
-ModuleHeader MOD_HEADER
-= {
-	"history_backend_null",
-	"2.0",
-	"History backend: null/none",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+ModuleHeader MOD_HEADER = {
+    "history_backend_null",
+    "2.0",
+    "History backend: null/none",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 /* Forward declarations */

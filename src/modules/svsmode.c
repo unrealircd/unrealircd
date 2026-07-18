@@ -30,24 +30,23 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 CMD_FUNC(cmd_svsmode);
 CMD_FUNC(cmd_svs2mode);
 
-#define MSG_SVSMODE 	"SVSMODE"	
-#define MSG_SVS2MODE    "SVS2MODE"
+#define MSG_SVSMODE  "SVSMODE"
+#define MSG_SVS2MODE "SVS2MODE"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svsmode",
-	"5.0",
-	"command /svsmode and svs2mode", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svsmode",
+    "5.0",
+    "command /svsmode and svs2mode",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 char modebuf[BUFSIZE], parabuf[BUFSIZE];
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSMODE, cmd_svsmode, MAXPARA, CMD_SERVER|CMD_USER);
-	CommandAdd(modinfo->handle, MSG_SVS2MODE, cmd_svs2mode, MAXPARA, CMD_SERVER|CMD_USER);
+	CommandAdd(modinfo->handle, MSG_SVSMODE, cmd_svsmode, MAXPARA, CMD_SERVER | CMD_USER);
+	CommandAdd(modinfo->handle, MSG_SVS2MODE, cmd_svs2mode, MAXPARA, CMD_SERVER | CMD_USER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -69,35 +68,31 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 	Ban *ban, *bnext;
 	Ban **banlist;
 	BanContext *b;
-	char uhost[NICKLEN+USERLEN+HOSTLEN+6], vhost[NICKLEN+USERLEN+HOSTLEN+6];
-	char ihost[NICKLEN+USERLEN+HOSTLEN+6], chost[NICKLEN+USERLEN+HOSTLEN+6];
+	char uhost[NICKLEN + USERLEN + HOSTLEN + 6], vhost[NICKLEN + USERLEN + HOSTLEN + 6];
+	char ihost[NICKLEN + USERLEN + HOSTLEN + 6], chost[NICKLEN + USERLEN + HOSTLEN + 6];
 
 	/* BUILD HOSTS */
 
 	*uhost = *vhost = *ihost = *chost = '\0';
 
-	strlcpy(uhost, make_nick_user_host(acptr->name, 
-		acptr->user->username, acptr->user->realhost),
-		sizeof uhost);
+	strlcpy(uhost, make_nick_user_host(acptr->name, acptr->user->username, acptr->user->realhost),
+	        sizeof uhost);
 
 	if (GetIP(acptr)) /* only if we actually have an IP */
-		strlcpy(ihost, make_nick_user_host(acptr->name,
-			acptr->user->username, GetIP(acptr)),
-			sizeof ihost);
+		strlcpy(ihost, make_nick_user_host(acptr->name, acptr->user->username, GetIP(acptr)),
+		        sizeof ihost);
 
 	/* The next could have been an IsSetHost(), but I'm playing it safe with regards to backward compat. */
 	if (IsHidden(acptr) &&
-	    !(*acptr->user->cloakedhost && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost))) 
+	    !(*acptr->user->cloakedhost && !strcasecmp(acptr->user->virthost, acptr->user->cloakedhost)))
 	{
-		strlcpy(vhost, make_nick_user_host(acptr->name,
-			acptr->user->username, acptr->user->virthost),
-			sizeof vhost);
+		strlcpy(vhost, make_nick_user_host(acptr->name, acptr->user->username, acptr->user->virthost),
+		        sizeof vhost);
 	}
 
 	if (*acptr->user->cloakedhost) /* only if we know the cloaked host */
-		strlcpy(chost, make_nick_user_host(acptr->name, 
-			acptr->user->username, acptr->user->cloakedhost),
-			sizeof chost);
+		strlcpy(chost, make_nick_user_host(acptr->name, acptr->user->username, acptr->user->cloakedhost),
+		        sizeof chost);
 
 	b = safe_alloc(sizeof(BanContext));
 
@@ -135,10 +130,9 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 		    (*ihost && match_simple(ban->banstr, ihost)) ||
 		    (*chost && match_simple(ban->banstr, chost)))
 		{
-			add_send_mode_param(channel, client, '-',  chmode, ban->banstr);
+			add_send_mode_param(channel, client, '-', chmode, ban->banstr);
 			del_listmode(banlist, channel, ban->banstr);
-		}
-		else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr, &nextbanstr)))
+		} else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr, &nextbanstr)))
 		{
 			if (extban->is_banned_events & b->ban_check_types)
 			{
@@ -174,7 +168,7 @@ void clear_bans(Client *client, Channel *channel, char chmode)
 		default:
 			abort();
 	}
-	
+
 	for (ban = *banlist; ban; ban = bnext)
 	{
 		bnext = ban->next;
@@ -183,7 +177,7 @@ void clear_bans(Client *client, Channel *channel, char chmode)
 			if (!(extban->is_banned_events & BANCHK_JOIN))
 				continue;
 		}
-		add_send_mode_param(channel, client, '-',  chmode, ban->banstr);
+		add_send_mode_param(channel, client, '-', chmode, ban->banstr);
 		del_listmode(banlist, channel, ban->banstr);
 	}
 }
@@ -209,7 +203,7 @@ void clear_bans(Client *client, Channel *channel, char chmode)
  *
  * OLD syntax had a 'ts' parameter. No services are known to use this.
  */
-void channel_svsmode(Client *client, int parc, const char *parv[]) 
+void channel_svsmode(Client *client, int parc, const char *parv[])
 {
 	Channel *channel;
 	Client *target;
@@ -229,19 +223,17 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 
 	for (m = parv[2]; *m; m++)
 	{
-		if (*m == '+') 
+		if (*m == '+')
 		{
 			what = MODE_ADD;
-		} else
-		if (*m == '-')
+		} else if (*m == '-')
 		{
 			what = MODE_DEL;
-		} else
-		if ((*m == 'b') || (*m == 'e') || (*m == 'I'))
+		} else if ((*m == 'b') || (*m == 'e') || (*m == 'I'))
 		{
 			if (parc >= i)
 			{
-				if (!(target = find_user(parv[i-1], NULL)))
+				if (!(target = find_user(parv[i - 1], NULL)))
 				{
 					i++;
 					break;
@@ -249,8 +241,8 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 				i++;
 
 				unban_user(client, channel, target, *m);
-			}
-			else {
+			} else
+			{
 				clear_bans(client, channel, *m);
 			}
 		} else
@@ -280,10 +272,10 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 					Membership *mb = find_membership_link(member->client->user->channel, channel);
 					if (!mb)
 						continue; /* bug */
-					
+
 					/* Send the -x out */
 					add_send_mode_param(channel, client, '-', *m, member->client->name);
-					
+
 					/* And remove from memory */
 					del_member_mode_fast(member, mb, *m);
 				}
@@ -301,8 +293,8 @@ void channel_svsmode(Client *client, int parc, const char *parv[])
 
 		sendto_channel(channel, client, client, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
-		               client->name, channel->name,  modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s%s", client->id, channel->name, modebuf, parabuf, IsServer(client)?" 0":"");
+		               client->name, channel->name, modebuf, parabuf);
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s%s", client->id, channel->name, modebuf, parabuf, IsServer(client) ? " 0" : "");
 
 		/* Activate this hook just like cmd_mode.c */
 		RunHook(HOOKTYPE_REMOTE_CHANMODE, client, channel, mtags, modebuf, parabuf, 0, 0, &destroy_channel);
@@ -327,7 +319,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 	Umode *um;
 	const char *m;
 	Client *target;
-	int  what;
+	int what;
 	long oldumodes = 0;
 
 	if (!IsSvsCmdOk(client))
@@ -338,7 +330,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 	if (parc < 3)
 		return;
 
-	if (parv[1][0] == '#') 
+	if (parv[1][0] == '#')
 	{
 		channel_svsmode(client, parc, parv);
 		return;
@@ -388,13 +380,14 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 					{
 						/* clear 'H' too, and opercount stays the same.. */
 						target->umodes &= ~UMODE_HIDEOPER;
-					} else {
+					} else
+					{
 						irccounts.operators--;
 					}
 
 					if (MyUser(target) && !list_empty(&target->special_node))
 						list_del(&target->special_node);
-					
+
 					/* User is no longer oper (after the goto below, anyway)...
 					 * so remove all oper-only modes and snomasks.
 					 */
@@ -436,14 +429,14 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 						 * to not logged in, which is something that can happen
 						 * from 0 to 123456, eg from no account to unconfirmed account.
 						 */
-					} else {
+					} else
+					{
 						/* LOGIN or LOGOUT (or account change) */
 						user_account_login(recv_mtags, target);
 					}
 					if (MyConnect(target) && IsDead(target))
 						return; /* was killed due to *LINE on ~a probably */
-				}
-				else
+				} else
 				{
 					/* setting deaf */
 					goto setmodex;
@@ -478,7 +471,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 					 */
 					if (MyUser(target) && !strcasecmp(target->user->virthost, target->user->cloakedhost))
 						sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->id,
-							target->user->virthost);
+						              target->user->virthost);
 				}
 				goto setmodex;
 			case 't':
@@ -499,7 +492,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 						/* And broadcast the change to VHP servers */
 						if (MyUser(target))
 							sendto_server(NULL, PROTO_VHP, 0, NULL, ":%s SETHOST :%s", target->id,
-								target->user->virthost);
+							              target->user->virthost);
 					}
 					goto setmodex;
 				}
@@ -508,7 +501,7 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 				/* Setting and unsetting user mode 'z' remotely is not supported */
 				break;
 			default:
-				setmodex:
+			setmodex:
 				for (um = usermodes; um; um = um->next)
 				{
 					if (um->letter == *m)
@@ -525,12 +518,12 @@ void do_svsmode(Client *client, MessageTag *recv_mtags, int parc, const char *pa
 
 	if (parc > 3)
 		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s %s",
-		    client->id, show_change ? "SVS2MODE" : "SVSMODE",
-		    parv[1], parv[2], parv[3]);
+		              client->id, show_change ? "SVS2MODE" : "SVSMODE",
+		              parv[1], parv[2], parv[3]);
 	else
 		sendto_server(client, 0, 0, recv_mtags, ":%s %s %s %s",
-		    client->id, show_change ? "SVS2MODE" : "SVSMODE",
-		    parv[1], parv[2]);
+		              client->id, show_change ? "SVS2MODE" : "SVSMODE",
+		              parv[1], parv[2]);
 
 	/* Here we trigger the same hooks that cmd_mode does and, likewise,
 	   only if the old flags (oldumodes) are different than the newly-
@@ -583,9 +576,10 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 	static char *modes = NULL, lastwhat;
 	static short count = 0;
 	short send = 0;
-	
-	if (!modes) modes = modebuf;
-	
+
+	if (!modes)
+		modes = modebuf;
+
 	if (!modebuf[0])
 	{
 		modes = modebuf;
@@ -603,14 +597,13 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 	}
 	if (strlen(parabuf) + strlen(param) + 11 < MODEBUFLEN)
 	{
-		if (*parabuf) 
+		if (*parabuf)
 			strcat(parabuf, " ");
 		strcat(parabuf, param);
 		*modes++ = mode;
 		*modes = 0;
 		count++;
-	}
-	else if (*parabuf) 
+	} else if (*parabuf)
 		send = 1;
 
 	if (count == MAXMODEPARAMS)
@@ -624,7 +617,7 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 		sendto_channel(channel, from, from, 0, 0, SEND_LOCAL, mtags,
 		               ":%s MODE %s %s %s",
 		               from->name, channel->name, modebuf, parabuf);
-		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s%s", from->id, channel->name, modebuf, parabuf, IsServer(from)?" 0":"");
+		sendto_server(NULL, 0, 0, mtags, ":%s MODE %s %s %s%s", from->id, channel->name, modebuf, parabuf, IsServer(from) ? " 0" : "");
 		free_message_tags(mtags);
 		send = 0;
 		*parabuf = 0;
@@ -636,8 +629,7 @@ void add_send_mode_param(Channel *channel, Client *from, char what, char mode, c
 			strcpy(parabuf, param);
 			*modes++ = mode;
 			count = 1;
-		}
-		else 
+		} else
 			count = 0;
 		*modes = 0;
 	}

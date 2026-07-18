@@ -22,10 +22,10 @@
 
 #include "unrealircd.h"
 
-#define MSG_MONITOR 	"MONITOR"
+#define MSG_MONITOR "MONITOR"
 
 #define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
+#define STR(x)        STR_HELPER(x)
 
 CMD_FUNC(cmd_monitor);
 char *monitor_isupport_param(void);
@@ -39,19 +39,18 @@ int monitor_notification(Client *client, Watch *watch, Link *lp, int event, void
 ModDataInfo *watchCounterMD = NULL;
 ModDataInfo *watchListMD = NULL;
 
-ModuleHeader MOD_HEADER
-  = {
-	"monitor",
-	"5.0",
-	"command /monitor", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "monitor",
+    "5.0",
+    "command /monitor",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
-{	
+{
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	
+
 	CommandAdd(modinfo->handle, MSG_MONITOR, cmd_monitor, 2, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_NICKCHANGE, 0, monitor_nickchange);
 	HookAdd(modinfo->handle, HOOKTYPE_REMOTE_NICKCHANGE, 0, monitor_nickchange);
@@ -132,7 +131,7 @@ int monitor_notification(Client *client, Watch *watch, Link *lp, int event, void
 		default:
 			break; /* may be handled by other modules */
 	}
-	
+
 	return 0;
 }
 
@@ -142,16 +141,18 @@ void send_status(Client *client, MessageTag *recv_mtags, const char *nick)
 	Client *user;
 	user = find_user(nick, NULL);
 	new_message(client, recv_mtags, &mtags);
-	if (!user){
+	if (!user)
+	{
 		sendnumeric(client, RPL_MONOFFLINE, nick);
-	} else {
+	} else
+	{
 		sendnumeric(client, RPL_MONONLINE, user->name, user->user->username, GetHost(user));
 	}
 	free_message_tags(mtags);
 }
 
 #define WATCHES(client) (moddata_local_client(client, watchCounterMD).i)
-#define WATCH(client) (moddata_local_client(client, watchListMD).ptr)
+#define WATCH(client)   (moddata_local_client(client, watchListMD).ptr)
 
 CMD_FUNC(cmd_monitor)
 {
@@ -177,8 +178,8 @@ CMD_FUNC(cmd_monitor)
 		sendnotice(client, "MONITOR command is not available at this moment. Please try again later.");
 		return;
 	}
-	
-	switch(cmd)
+
+	switch (cmd)
 	{
 		case 'c':
 			watch_del_list(client, WATCH_FLAG_TYPE_MONITOR);
@@ -218,9 +219,11 @@ CMD_FUNC(cmd_monitor)
 			strlcpy(request, parv[2], sizeof(request));
 			for (s = strtoken(&p, request, ","); s; s = strtoken(&p, NULL, ","))
 			{
-				if (cmd == '-') {
+				if (cmd == '-')
+				{
 					watch_del(s, client, WATCH_FLAG_TYPE_MONITOR);
-				} else {
+				} else
+				{
 					if (WATCHES(client) >= MAXWATCH)
 					{
 						sendnumeric(client, ERR_MONLISTFULL, MAXWATCH, s);
@@ -234,4 +237,3 @@ CMD_FUNC(cmd_monitor)
 			break;
 	}
 }
-

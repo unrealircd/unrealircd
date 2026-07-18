@@ -19,8 +19,8 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef	__config_include__
-#define	__config_include__
+#ifndef __config_include__
+#define __config_include__
 
 #include "setup.h"
 
@@ -44,28 +44,28 @@
  * this to determine what backend is used.
  */
 #ifndef _WIN32
-# ifdef HAVE_EPOLL
-#  define BACKEND_EPOLL
-# else
-#  ifdef HAVE_KQUEUE
-#   define BACKEND_KQUEUE
-#  else
-#   ifdef HAVE_POLL
-#    define BACKEND_POLL
-#   else
-#    define BACKEND_SELECT
-#   endif
-#  endif
-# endif
+ #ifdef HAVE_EPOLL
+  #define BACKEND_EPOLL
+ #else
+  #ifdef HAVE_KQUEUE
+   #define BACKEND_KQUEUE
+  #else
+   #ifdef HAVE_POLL
+    #define BACKEND_POLL
+   #else
+    #define BACKEND_SELECT
+   #endif
+  #endif
+ #endif
 #else
-# define BACKEND_SELECT
+ #define BACKEND_SELECT
 #endif
 
 /* Define the ircd module suffix, should be .so on UNIX, and .dll on Windows. */
 #ifndef _WIN32
-# define MODULE_SUFFIX	".so"
+ #define MODULE_SUFFIX ".so"
 #else
-# define MODULE_SUFFIX	".dll"
+ #define MODULE_SUFFIX ".dll"
 #endif
 
 /* Permit remote /rehash */
@@ -78,10 +78,10 @@
 ** HOW_MANY_FREELINKS_ALLOWED - how many freelinks allowed
 */
 #ifndef GARBAGE_COLLECT_EVERY
-#define GARBAGE_COLLECT_EVERY 		600	/* default: 600 (10 mins) */
+ #define GARBAGE_COLLECT_EVERY 600 /* default: 600 (10 mins) */
 #endif
 
-#define HOW_MANY_FREELINKS_ALLOWED 	200	/* default: 200 */
+#define HOW_MANY_FREELINKS_ALLOWED 200 /* default: 200 */
 
 /*
  * read/write are restarted after signals defining this 1, gets
@@ -89,7 +89,7 @@
  * behaviour (apollo sr10.1/bsd4.3 needs this)
  */
 #ifdef APOLLO
-#define	RESTARTING_SYSTEMCALLS
+ #define RESTARTING_SYSTEMCALLS
 #endif
 
 /* DEBUGMODE: This should only be used when tracing a problem. It creates
@@ -101,15 +101,15 @@
 /*
  * Full pathnames and defaults of irc system's support files.
  */
-#define	CPATH		CONFDIR"/unrealircd.conf"	/* server configuration file */
-#define	MPATH		CONFDIR"/ircd.motd"	/* server MOTD file */
-#define SMPATH		CONFDIR"/ircd.smotd"    /* short MOTD file */
-#define RPATH   	CONFDIR"/ircd.rules"	/* server rules file */
-#define OPATH   	CONFDIR"/oper.motd"	/* Operators MOTD file */
-#define	LPATH		LOGDIR"/debug.log"	/* Where the debug file lives, if DEBUGMODE */
-#define VPATH		CONFDIR"/ircd.svsmotd"	/* Services MOTD append. */
-#define BPATH		CONFDIR"/bot.motd"	/* Bot MOTD */
-#define IRCDTUNE 	PERMDATADIR"/ircd.tune"	/* tuning .. */
+#define CPATH    CONFDIR "/unrealircd.conf" /* server configuration file */
+#define MPATH    CONFDIR "/ircd.motd"       /* server MOTD file */
+#define SMPATH   CONFDIR "/ircd.smotd"      /* short MOTD file */
+#define RPATH    CONFDIR "/ircd.rules"      /* server rules file */
+#define OPATH    CONFDIR "/oper.motd"       /* Operators MOTD file */
+#define LPATH    LOGDIR "/debug.log"        /* Where the debug file lives, if DEBUGMODE */
+#define VPATH    CONFDIR "/ircd.svsmotd"    /* Services MOTD append. */
+#define BPATH    CONFDIR "/bot.motd"        /* Bot MOTD */
+#define IRCDTUNE PERMDATADIR "/ircd.tune"   /* tuning .. */
 
 /** FAKELAG_CONFIGURABLE makes it possible to make certain classes exempted
  * from 'fake lag' (that is, the artificial delay that is added by the ircd
@@ -126,9 +126,9 @@
 //#undef FAKELAG_CONFIGURABLE
 
 /* The default value for class::sendq */
-#define DEFAULT_SENDQ	3000000
+#define DEFAULT_SENDQ 3000000
 /* The default value for class::recvq */
-#define	DEFAULT_RECVQ	8000
+#define DEFAULT_RECVQ 8000
 
 /*   STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP STOP  */
 
@@ -144,11 +144,11 @@
  * 2004-10-13: 1024 -> 4096
  */
 #ifdef _WIN32
- #define MAXCONNECTIONS	10240
+ #define MAXCONNECTIONS 10240
 #else
  /* Non-Windows: */
  #if (!defined(MAXCONNECTIONS_REQUEST) || (MAXCONNECTIONS_REQUEST < 1)) && \
-      (defined(HAVE_POLL) || defined(HAVE_EPOLL) || defined(HAVE_KQUEUE))
+     (defined(HAVE_POLL) || defined(HAVE_EPOLL) || defined(HAVE_KQUEUE))
   /* Have poll/epoll/kqueue and either no --with-maxconnections or
    * --with-maxconnections=0, either of which indicates 'automatic' mode.
    * At the time of writing we will try a limit of 16384.
@@ -182,7 +182,7 @@
  *       chasing possible for mode and kick.
  */
 #ifndef NICKNAMEHISTORYLENGTH
-#define NICKNAMEHISTORYLENGTH 2000
+ #define NICKNAMEHISTORYLENGTH 2000
 #endif
 
 /*
@@ -201,7 +201,7 @@
  * This can't be in the configuration file, as we need it while
  * fetching the configuration file.. ;)
  */
-#define DOWNLOAD_CONNECT_TIMEOUT 15
+#define DOWNLOAD_CONNECT_TIMEOUT  15
 #define DOWNLOAD_TRANSFER_TIMEOUT 45
 
 /* Maximum number of HTTP redirects to follow.
@@ -235,7 +235,7 @@
  * This is kinda experimental, and requires getrusage.
  */
 #ifndef _WIN32
-#define SPAMFILTER_DETECTSLOW
+ #define SPAMFILTER_DETECTSLOW
 #endif
 
 /* Limits for PCRE2 regex matching (eg. spamfilter, badwords). A regex that
@@ -245,8 +245,8 @@
  * We use the same defaults that PHP has been using for a long time (which is
  * actually 10 times lower than PCRE2 defaults, as of 2026).
  */
-#define UNREAL_PCRE2_MATCH_LIMIT	1000000
-#define UNREAL_PCRE2_DEPTH_LIMIT	100000
+#define UNREAL_PCRE2_MATCH_LIMIT 1000000
+#define UNREAL_PCRE2_DEPTH_LIMIT 100000
 
 /* Maximum number of ModData objects that may be attached to an object */
 /* UnrealIRCd 4.0.0:   8,     8, 4, 4
@@ -255,13 +255,13 @@
  * UnrealIRCd 6.0.0:  24, 12, 8, 4, 4, 500, 500
  * UnrealIRCd 6.1.2:  24, 24, 8, 4, 4, 500, 500
  */
-#define MODDATA_MAX_CLIENT		 24
-#define MODDATA_MAX_LOCAL_CLIENT	 24
-#define MODDATA_MAX_CHANNEL		  8
-#define MODDATA_MAX_MEMBER		  4
-#define MODDATA_MAX_MEMBERSHIP		  4
-#define MODDATA_MAX_LOCAL_VARIABLE	500
-#define MODDATA_MAX_GLOBAL_VARIABLE	500
+#define MODDATA_MAX_CLIENT          24
+#define MODDATA_MAX_LOCAL_CLIENT    24
+#define MODDATA_MAX_CHANNEL         8
+#define MODDATA_MAX_MEMBER          4
+#define MODDATA_MAX_MEMBERSHIP      4
+#define MODDATA_MAX_LOCAL_VARIABLE  500
+#define MODDATA_MAX_GLOBAL_VARIABLE 500
 
 /** Size of the member modes buffer, so can be max this-1 modes
  * assigned to an individual user (and thus max prefixes as well).
@@ -269,7 +269,7 @@
  * It allows for vhoaq (5) and then 2 additional ones from 3rd
  * party modules.
  */
-#define MEMBERMODESLEN	8
+#define MEMBERMODESLEN 8
 
 /* If EXPERIMENTAL is #define'd then all users will receive a notice about
  * this when they connect, along with a pointer to bugs.unrealircd.org where
@@ -294,27 +294,27 @@
  * UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY requires OpenSSL 1.1.0
  * UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY is the last fallback option
  */
-#define UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY "X25519MLKEM768/X25519:secp521r1:secp384r1:prime256v1"
+#define UNREALIRCD_DEFAULT_TLS_GROUPS_PRIMARY   "X25519MLKEM768/X25519:secp521r1:secp384r1:prime256v1"
 #define UNREALIRCD_DEFAULT_TLS_GROUPS_SECONDARY "X25519:secp521r1:secp384r1:prime256v1"
-#define UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY "secp521r1:secp384r1:prime256v1"
+#define UNREALIRCD_DEFAULT_TLS_GROUPS_TERTIARY  "secp521r1:secp384r1:prime256v1"
 
 /* These can be changed via set::central-spamfilter::url and ::feed */
-#define DEFAULT_CENTRAL_SPAMFILTER_URL_OPEN_ACCESS "https://spamfilter.unrealircd.org/spamfilter/v6/$feed/central_spamfilter.conf"
+#define DEFAULT_CENTRAL_SPAMFILTER_URL_OPEN_ACCESS       "https://spamfilter.unrealircd.org/spamfilter/v6/$feed/central_spamfilter.conf"
 #define DEFAULT_CENTRAL_SPAMFILTER_URL_RESTRICTED_ACCESS "https://spamfilter.unrealircd-api.org/spamfilter/v6/$feed/central_spamfilter.conf"
-#define DEFAULT_CENTRAL_SPAMFILTER_FEED "standard"
+#define DEFAULT_CENTRAL_SPAMFILTER_FEED                  "standard"
 
 /* These are just defaults, which you can override via set::dns */
 #define DNS_DEFAULT_CLIENT_TIMEOUT 1500
 #define DNS_DEFAULT_CLIENT_RETRIES 2
-#define DNS_DEFAULT_DNSBL_TIMEOUT 3000
-#define DNS_DEFAULT_DNSBL_RETRIES 2
+#define DNS_DEFAULT_DNSBL_TIMEOUT  3000
+#define DNS_DEFAULT_DNSBL_RETRIES  2
 
 /* ------------------------- END CONFIGURATION SECTION -------------------- */
-#define MOTD MPATH
-#define RULES RPATH
-#define	MYNAME BINDIR "/unrealircd"
-#define	CONFIGFILE CPATH
-#define	IRCD_PIDFILE PIDFILE
+#define MOTD         MPATH
+#define RULES        RPATH
+#define MYNAME       BINDIR "/unrealircd"
+#define CONFIGFILE   CPATH
+#define IRCD_PIDFILE PIDFILE
 
 #ifdef DEBUGMODE
  #define LOGFILE LPATH
@@ -323,14 +323,14 @@
 #endif
 
 #if defined(DEFAULT_RECVQ)
-#    if (DEFAULT_RECVQ < 512)
-     error DEFAULT_RECVQ needs redefining.
-#    endif
+ #if (DEFAULT_RECVQ < 512)
+error DEFAULT_RECVQ needs redefining.
+ #endif
 #else
-     error DEFAULT_RECVQ undefined
+error DEFAULT_RECVQ undefined
 #endif
 #if (NICKNAMEHISTORYLENGTH < 100)
-#  define NICKNAMEHISTORYLENGTH 100
+ #define NICKNAMEHISTORYLENGTH 100
 #endif
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__) && \
@@ -338,25 +338,30 @@
     !defined(__cplusplus)
  #define GCC_TYPECHECKING
 
- /* copied from cURL: */
+	/* copied from cURL: */
 
  #define _UNREAL_WARNING(id, message) \
-   static void __attribute__((__warning__(message))) \
-   __attribute__((__unused__)) __attribute__((__noinline__)) \
-   id(void) { __asm__(""); }
+	 static void __attribute__((__warning__(message))) \
+	 __attribute__((__unused__)) __attribute__((__noinline__)) \
+	 id(void) \
+	 { \
+		 __asm__(""); \
+	 }
 
  #define _UNREAL_ERROR(id, message) \
-   static void __attribute__((__error__(message))) \
-   __attribute__((__unused__)) __attribute__((__noinline__)) \
-   id(void) { __asm__(""); }
+	 static void __attribute__((__error__(message))) \
+	 __attribute__((__unused__)) __attribute__((__noinline__)) \
+	 id(void) \
+	 { \
+		 __asm__(""); \
+	 }
 #endif
 
 #ifndef __has_feature
- #define __has_feature(x) 0  // Compatibility with non-clang compilers.
+ #define __has_feature(x) 0 // Compatibility with non-clang compilers.
 #endif
 #ifndef __has_extension
  #define __has_extension __has_feature // Compatibility with pre-3.0 compilers.
 #endif
 
-#endif				/* __config_include__ */
-
+#endif /* __config_include__ */

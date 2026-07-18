@@ -19,14 +19,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"jumpserver",
-	"1.1",
-	"/jumpserver command",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "jumpserver",
+    "1.1",
+    "/jumpserver command",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 CMD_FUNC(cmd_jumpserver);
@@ -35,8 +34,7 @@ void jumpserver_free_jss(ModData *m);
 
 /* Jumpserver status struct */
 typedef struct JSS JSS;
-struct JSS
-{
+struct JSS {
 	char *reason;
 	char *server;
 	int port;
@@ -44,7 +42,7 @@ struct JSS
 	int tls_port;
 };
 
-JSS *jss=NULL; /**< JumpServer Status. NULL=disabled. */
+JSS *jss = NULL; /**< JumpServer Status. NULL=disabled. */
 
 MOD_INIT()
 {
@@ -122,9 +120,9 @@ void jumpserver_free_jss(ModData *m)
 
 CMD_FUNC(cmd_jumpserver)
 {
-	char *serv, *tlsserv=NULL, *p;
+	char *serv, *tlsserv = NULL, *p;
 	const char *reason;
-	int all=0, port=6667, sslport=6697;
+	int all = 0, port = 6667, sslport = 6697;
 	char request[BUFSIZE];
 	char logbuf[512];
 
@@ -138,11 +136,10 @@ CMD_FUNC(cmd_jumpserver)
 	{
 		if (jss && jss->tls_server)
 			sendnotice(client, "JumpServer is \002ENABLED\002 to %s:%d (TLS: %s:%d) with reason '%s'",
-				jss->server, jss->port, jss->tls_server, jss->tls_port, jss->reason);
-		else
-		if (jss)
+			           jss->server, jss->port, jss->tls_server, jss->tls_port, jss->reason);
+		else if (jss)
 			sendnotice(client, "JumpServer is \002ENABLED\002 to %s:%d with reason '%s'",
-				jss->server, jss->port, jss->reason);
+			           jss->server, jss->port, jss->reason);
 		else
 			sendnotice(client, "JumpServer is \002DISABLED\002");
 		return;
@@ -179,14 +176,14 @@ CMD_FUNC(cmd_jumpserver)
 
 	strlcpy(request, parv[1], sizeof(request));
 	serv = request;
-	
+
 	p = strchr(serv, '/');
 	if (p)
 	{
 		*p = '\0';
-		tlsserv = p+1;
+		tlsserv = p + 1;
 	}
-	
+
 	p = strchr(serv, ':');
 	if (p)
 	{
@@ -218,7 +215,8 @@ CMD_FUNC(cmd_jumpserver)
 		all = 0;
 	else if (!strcasecmp(parv[2], "all"))
 		all = 1;
-	else {
+	else
+	{
 		sendnotice(client, "ERROR: Invalid action '%s', should be 'NEW' or 'ALL' (see /jumpserver help for usage)", parv[2]);
 		return;
 	}
@@ -255,7 +253,8 @@ CMD_FUNC(cmd_jumpserver)
 		           log_data_string("jumpserver_tls_server", jss->tls_server),
 		           log_data_integer("jumpserver_tls_port", jss->tls_port),
 		           log_data_string("reason", jss->reason));
-	} else {
+	} else
+	{
 		unreal_log(ULOG_INFO, "jumpserver", "JUMPSERVER_ENABLED", client,
 		           "[jumpserver] $client.details turned jumpserver ON for $jumpserver_who "
 		           "to $jumpserver_server:$jumpserver_port "

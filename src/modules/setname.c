@@ -25,20 +25,19 @@
 CMD_FUNC(cmd_setname);
 char *setname_isupport_param(void);
 
-#define MSG_SETNAME 	"SETNAME"	/* setname */
+#define MSG_SETNAME   "SETNAME" /* setname */
 #define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
+#define STR(x)        STR_HELPER(x)
 
 long CAP_SETNAME = 0L;
 
-ModuleHeader MOD_HEADER
-  = {
-	"setname",	/* Name of module */
-	"5.0", /* Version */
-	"command /setname", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "setname", /* Name of module */
+    "5.0", /* Version */
+    "command /setname", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -46,7 +45,7 @@ MOD_INIT()
 	ClientCapability *c;
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, CMD_USER|CMD_TEXTANALYSIS);
+	CommandAdd(modinfo->handle, MSG_SETNAME, cmd_setname, 1, CMD_USER | CMD_TEXTANALYSIS);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "setname";
@@ -71,7 +70,8 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-char *setname_isupport_param(void){
+char *setname_isupport_param(void)
+{
 	return STR(REALLEN);
 }
 
@@ -80,7 +80,7 @@ char *setname_isupport_param(void){
  * parv[1] - gecos
  * D: This will set your gecos to be <x> (like (/setname :The lonely wanderer))
    this is now compatible with IRCv3 SETNAME --k4be
-*/ 
+*/
 CMD_FUNC(cmd_setname)
 {
 	int xx;
@@ -110,8 +110,7 @@ CMD_FUNC(cmd_setname)
 			new_message(client, recv_mtags, &mtags);
 			sendto_one(client, mtags, ":%s FAIL SETNAME INVALID_REALNAME :\"Real names\" may maximum be %i characters of length", me.name, REALLEN);
 			free_message_tags(mtags);
-		}
-		else
+		} else
 		{
 			sendnotice(client, "*** /SetName Error: \"Real names\" may maximum be %i characters of length", REALLEN);
 		}
@@ -128,7 +127,7 @@ CMD_FUNC(cmd_setname)
 		if (match_spamfilter(client, spamfilter_user, SPAMF_USER, "SETNAME", NULL, 0, clictx, NULL))
 		{
 			if (IsDead(client))
-			        return; /* Killed, don't bother anymore */
+				return; /* Killed, don't bother anymore */
 
 			/* Was rejected by spamfilter, restore the realname */
 			if (HasCapabilityFast(client, CAP_SETNAME))
@@ -142,13 +141,14 @@ CMD_FUNC(cmd_setname)
 		}
 
 		/* Check for realname bans here too */
-		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname",client,NULL,NULL,NULL) &&
+		if (!ValidatePermissionsForPath("immune:server-ban:ban-realname", client, NULL, NULL, NULL) &&
 		    ((bconf = find_ban(NULL, client->info, CONF_BAN_REALNAME))))
 		{
-			banned_client(client, "realname", bconf->reason?bconf->reason:"", NULL, 0, 0);
+			banned_client(client, "realname", bconf->reason ? bconf->reason : "", NULL, 0, 0);
 			return;
 		}
-	} else {
+	} else
+	{
 		/* remote user */
 		strlcpy(client->info, parv[1], sizeof(client->info));
 	}
@@ -166,6 +166,6 @@ CMD_FUNC(cmd_setname)
 			sendnotice(client, "Your \"real name\" is now set to be %s - you have to set it manually to undo it", parv[1]);
 	}
 	free_message_tags(mtags);
-	
+
 	RunHook(HOOKTYPE_REALNAME_CHANGE, client, oldinfo);
 }

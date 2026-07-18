@@ -22,11 +22,11 @@
 #define MAX_EB_LEN 128 // Max extban length
 
 ModuleHeader MOD_HEADER = {
-	"chanmodes/link",
-	"5.0",
-	"Channel Mode +L",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "chanmodes/link",
+    "5.0",
+    "Channel Mode +L",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 Cmode_t EXTMODE_LINK = 0L;
@@ -115,8 +115,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, const char *para, 
 		if (type == EXCHK_ACCESS_ERR) /* can only be due to being halfop */
 			sendnumeric(client, ERR_NOTFORHALFOPS, 'L');
 		return EX_DENY;
-	} else
-	if (type == EXCHK_PARAM)
+	} else if (type == EXCHK_PARAM)
 	{
 		/* Check parameter.. syntax is +L #channel */
 		if (strchr(para, ','))
@@ -132,7 +131,7 @@ int cmodeL_is_ok(Client *client, Channel *channel, char mode, const char *para, 
 		{
 			if (MyUser(client))
 				sendnumeric(client, ERR_CANNOTCHANGECHANMODE, 'L',
-					   "a channel cannot be linked to itself");
+				            "a channel cannot be linked to itself");
 			return EX_DENY;
 		}
 		return EX_ALLOW;
@@ -158,7 +157,7 @@ void *cmodeL_put_param(void *r_in, const char *param)
 const char *cmodeL_get_param(void *r_in)
 {
 	aModeLEntry *r = (aModeLEntry *)r_in;
-	static char retbuf[CHANNELLEN+1];
+	static char retbuf[CHANNELLEN + 1];
 
 	if (!r)
 		return NULL;
@@ -284,7 +283,7 @@ const char *extban_link_conv_param(BanContext *b, Extban *extban)
 
 int link_doforward(Client *client, Channel *channel, const char *linked, linkType type)
 {
-	char linked_channel_buffer[CHANNELLEN+1];
+	char linked_channel_buffer[CHANNELLEN + 1];
 	char desc[64];
 	const char *parv[3];
 
@@ -368,12 +367,10 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 			if (!strncmp(ban->banstr, "~f:", 3))
 			{
 				strlcpy(bantmp, ban->banstr + 3, sizeof(bantmp));
-			} else
-			if (!strncmp(ban->banstr, "~forward:", 9))
+			} else if (!strncmp(ban->banstr, "~forward:", 9))
 			{
 				strlcpy(bantmp, ban->banstr + 9, sizeof(bantmp));
-			} else
-			if (!strncmp(ban->banstr, "~t:", 3))
+			} else if (!strncmp(ban->banstr, "~t:", 3))
 			{
 				/* A timed ban, but is it for us? Need to parse a little:
 				 * ~t:dddd:~f:...
@@ -382,16 +379,15 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 				if (p && !strncmp(p, ":~f:", 4))
 				{
 					strlcpy(bantmp, p + 4, sizeof(bantmp));
-				} else
-				if (p && !strncmp(p, ":~forward:", 10))
+				} else if (p && !strncmp(p, ":~forward:", 10))
 				{
 					strlcpy(bantmp, p + 10, sizeof(bantmp));
-				} else {
+				} else
+				{
 					/* Not for us - some other ~t ban */
 					continue;
 				}
-			} else
-			if (!strncmp(ban->banstr, "~time:", 6))
+			} else if (!strncmp(ban->banstr, "~time:", 6))
 			{
 				/* A timed ban, but is it for us? Need to parse a little:
 				 * ~t:dddd:~f:...
@@ -400,11 +396,11 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 				if (p && !strncmp(p, ":~f:", 4))
 				{
 					strlcpy(bantmp, p + 4, sizeof(bantmp));
-				} else
-				if (p && !strncmp(p, ":~forward:", 10))
+				} else if (p && !strncmp(p, ":~forward:", 10))
 				{
 					strlcpy(bantmp, p + 10, sizeof(bantmp));
-				} else {
+				} else
+				{
 					/* Not for us - some other ~t ban */
 					continue;
 				}
@@ -439,7 +435,8 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 					/* A ~forward ban matched, go for it.. */
 					safe_free(b);
 					return link_doforward(client, channel, banchan, LINKTYPE_BAN);
-				} else {
+				} else
+				{
 					/* Break the outer loop as well: the user is exempt,
 					 * so it makes no sense to check other bans anymore.
 					 * no "safe_free(b);" here because that is taken
@@ -474,7 +471,8 @@ int link_pre_localjoin_cb(Client *client, Channel *channel, const char *key)
 		return link_doforward(client, channel, linked, LINKTYPE_REG);
 
 	// For a couple of conditions we can use the return value from can_join() =]
-	switch(canjoin) {
+	switch (canjoin)
+	{
 		// Any ban other than our own ~f: extban
 		case ERR_BANNEDFROMCHAN:
 			return link_doforward(client, channel, linked, LINKTYPE_BAN);

@@ -29,59 +29,58 @@
 /** String of server options in this compile (eg 'D' for debug mode).
  */
 MODVAR char serveropts[] = {
-#ifdef	DEBUGMODE
-	'D',
+#ifdef DEBUGMODE
+    'D',
 #endif
-	/* FDLIST (always) */
-	'F',
-	/* Hub (always) */
-	'h',
-	/* NOSPOOF (always) */
-	'n',
-#ifdef	VALLOC
-	'V',
+    /* FDLIST (always) */
+    'F',
+    /* Hub (always) */
+    'h',
+    /* NOSPOOF (always) */
+    'n',
+#ifdef VALLOC
+    'V',
 #endif
-#ifdef	_WIN32
-	'W',
+#ifdef _WIN32
+    'W',
 #endif
-#ifdef	USE_SYSLOG
-	'Y',
+#ifdef USE_SYSLOG
+    'Y',
 #endif
-	'6',
+    '6',
 #ifndef NO_OPEROVERRIDE
-	'O',
+    'O',
 #endif
 #ifndef OPEROVERRIDE_VERIFY
-	'o',
+    'o',
 #endif
-	'E',
+    'E',
 #ifdef USE_LIBCURL
-	'r',
+    'r',
 #endif
-	'\0', /* Don't change those nuls. -- Syzop */
-	'\0',
-	'\0',
-	'\0',
-	'\0'
+    '\0', /* Don't change those nuls. -- Syzop */
+    '\0',
+    '\0',
+    '\0',
+    '\0',
 };
 
 char *extraflags = NULL;
 
 MODVAR int debugfd = 2;
 
-void	flag_add(char ch)
+void flag_add(char ch)
 {
 	char *newextra;
 	if (extraflags)
 	{
-		char tmp[2] = { ch, 0 };
+		char tmp[2] = {ch, 0};
 		newextra = safe_alloc(strlen(extraflags) + 2);
 		strcpy(newextra, extraflags);
 		strcat(newextra, tmp);
 		safe_free(extraflags);
 		extraflags = newextra;
-	}
-	else
+	} else
 	{
 		extraflags = safe_alloc(2);
 		extraflags[0] = ch;
@@ -89,12 +88,12 @@ void	flag_add(char ch)
 	}
 }
 
-void	flag_del(char ch)
+void flag_del(char ch)
 {
 	int newsz;
 	char *p, *op;
 	char *newflags;
-	newsz = 0;	
+	newsz = 0;
 	p = extraflags;
 	for (newsz = 0, p = extraflags; *p; p++)
 		if (*p != ch)
@@ -109,14 +108,13 @@ void	flag_del(char ch)
 }
 
 
-
 #ifdef DEBUGMODE
 
-#ifndef _WIN32
-#define SET_ERRNO(x) errno = x
-#else
-#define SET_ERRNO(x) WSASetLastError(x)
-#endif /* _WIN32 */
+ #ifndef _WIN32
+  #define SET_ERRNO(x) errno = x
+ #else
+  #define SET_ERRNO(x) WSASetLastError(x)
+ #endif /* _WIN32 */
 
 static char debugbuf[4096];
 
@@ -131,17 +129,17 @@ void debug(int level, FORMAT_STRING(const char *form), ...)
 	{
 		(void)ircvsnprintf(debugbuf, sizeof(debugbuf), form, vl);
 
-#ifndef _WIN32
+ #ifndef _WIN32
 		strlcat(debugbuf, "\n", sizeof(debugbuf));
 		if (write(debugfd, debugbuf, strlen(debugbuf)) < 0)
 		{
 			/* Yeah.. what can we do if output isn't working? Outputting an error makes no sense */
 			;
 		}
-#else
+ #else
 		strlcat(debugbuf, "\r\n", sizeof(debugbuf));
 		OutputDebugString(debugbuf);
-#endif
+ #endif
 	}
 	va_end(vl);
 	SET_ERRNO(err);

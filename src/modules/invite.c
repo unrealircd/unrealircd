@@ -22,10 +22,10 @@
 
 #include "unrealircd.h"
 
-#define MSG_INVITE 	"INVITE"
+#define MSG_INVITE "INVITE"
 
-#define CLIENT_INVITES(client)		(moddata_local_client(client, userInvitesMD).ptr)
-#define CHANNEL_INVITES(channel)	(moddata_channel(channel, channelInvitesMD).ptr)
+#define CLIENT_INVITES(client)   (moddata_local_client(client, userInvitesMD).ptr)
+#define CHANNEL_INVITES(channel) (moddata_channel(channel, channelInvitesMD).ptr)
 
 ModDataInfo *userInvitesMD;
 ModDataInfo *channelInvitesMD;
@@ -44,14 +44,13 @@ int invite_user_quit(Client *client, MessageTag *mtags, const char *comment);
 int invite_user_join(Client *client, Channel *channel, MessageTag *mtags);
 int invite_is_invited(Client *client, Channel *channel, int *invited);
 
-ModuleHeader MOD_HEADER
-  = {
-	"invite",
-	"5.0",
-	"command /invite", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "invite",
+    "5.0",
+    "command /invite",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_TEST()
 {
@@ -67,7 +66,7 @@ MOD_INIT()
 
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 
-	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER|CMD_SERVER);	
+	CommandAdd(modinfo->handle, MSG_INVITE, cmd_invite, MAXPARA, CMD_USER | CMD_SERVER);
 
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "invite-notify";
@@ -78,7 +77,7 @@ MOD_INIT()
 		return MOD_FAILED;
 	}
 
-	memset(&mreq, 0 , sizeof(mreq));
+	memset(&mreq, 0, sizeof(mreq));
 	mreq.type = MODDATATYPE_LOCAL_CLIENT;
 	mreq.name = "invite",
 	mreq.free = invite_free;
@@ -88,8 +87,8 @@ MOD_INIT()
 		config_error("[%s] Failed to request user invite moddata: %s", MOD_HEADER.name, ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
-	
-	memset(&mreq, 0 , sizeof(mreq));
+
+	memset(&mreq, 0, sizeof(mreq));
 	mreq.type = MODDATATYPE_CHANNEL;
 	mreq.name = "invite",
 	mreq.free = invite_free;
@@ -106,7 +105,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_QUIT, 0, invite_user_quit);
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_JOIN, 0, invite_user_join);
 	HookAdd(modinfo->handle, HOOKTYPE_IS_INVITED, 0, invite_is_invited);
-	
+
 	return MOD_SUCCESS;
 }
 
@@ -200,7 +199,7 @@ void send_invite_list(Client *client)
 	for (inv = CLIENT_INVITES(client); inv; inv = inv->next)
 	{
 		sendnumeric(client, RPL_INVITELIST,
-			   inv->value.channel->name);	
+		            inv->value.channel->name);
 	}
 	sendnumeric(client, RPL_ENDOFINVITELIST);
 }
@@ -208,7 +207,7 @@ void send_invite_list(Client *client)
 int invite_is_invited(Client *client, Channel *channel, int *invited)
 {
 	Link *lp;
-	
+
 	if (!MyConnect(client))
 		return 0; // not handling invite lists for remote clients
 
@@ -231,46 +230,38 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 	sendto_server(client, 0, 0, mtags, ":%s INVITE %s %s %d", client->id, target->id, channel->name, override);
 
 	/* send chanops notifications */
-	if (IsUser(client) && (check_channel_access(client, channel, "oaq")
-	    || IsULine(client)
-	    || ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
-	    || invite_always_notify
-	    ))
+	if (IsUser(client) && (check_channel_access(client, channel, "oaq") || IsULine(client) || ValidatePermissionsForPath("channel:override:invite:self", client, NULL, channel, NULL) || invite_always_notify))
 	{
 		if (override == 1)
 		{
 			sendto_channel(channel, &me, NULL, "o",
-				0, SEND_LOCAL, mtags,
-				":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
-				me.name, channel->name, client->name);
+			               0, SEND_LOCAL, mtags,
+			               ":%s NOTICE @%s :OperOverride -- %s invited him/herself into the channel.",
+			               me.name, channel->name, client->name);
 		}
 		if (override == 0)
 		{
 			sendto_channel(channel, &me, NULL, "o",
-				CAP_INVITE_NOTIFY | CAP_INVERT, SEND_LOCAL, mtags,
-				":%s NOTICE @%s :%s invited %s into the channel.",
-				me.name, channel->name, client->name, target->name);
+			               CAP_INVITE_NOTIFY | CAP_INVERT, SEND_LOCAL, mtags,
+			               ":%s NOTICE @%s :%s invited %s into the channel.",
+			               me.name, channel->name, client->name, target->name);
 		}
 		/* always send IRCv3 invite-notify if possible */
 		sendto_channel(channel, client, NULL, "o",
-			CAP_INVITE_NOTIFY, SEND_LOCAL, mtags,
-			":%s INVITE %s %s",
-			client->name, target->name, channel->name);
+		               CAP_INVITE_NOTIFY, SEND_LOCAL, mtags,
+		               ":%s INVITE %s %s",
+		               client->name, target->name, channel->name);
 	}
 
 	/* add to list and notify the person who got invited */
 	if (MyConnect(target))
 	{
-		if (IsUser(client) && (check_channel_access(client, channel, "oaq")
-			|| IsULine(client)
-			|| ValidatePermissionsForPath("channel:override:invite:self",client,NULL,channel,NULL)
+		if (IsUser(client) && (check_channel_access(client, channel, "oaq") || IsULine(client) ||
+		                       ValidatePermissionsForPath("channel:override:invite:self", client, NULL, channel, NULL)
 #ifdef OPEROVERRIDE_VERIFY
-			|| (override 
-				&& ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) 
-				&& client == target
-				&& (SecretChannel(channel) || HiddenChannel(channel)))
+		                       || (override && ValidatePermissionsForPath("channel:override:privsecret", client, NULL, channel, NULL) && client == target && (SecretChannel(channel) || HiddenChannel(channel)))
 #endif
-			))
+		                           ))
 		{
 			add_invite(client, target, channel, mtags);
 		}
@@ -278,7 +269,7 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 		if (!is_silenced(client, target))
 		{
 			sendto_prefix_one(target, client, mtags, ":%s INVITE %s :%s", client->name,
-				target->name, channel->name);
+			                  target->name, channel->name);
 		}
 	}
 	free_message_tags(mtags);
@@ -287,11 +278,11 @@ void invite_process(Client *client, Client *target, Channel *channel, MessageTag
 void invite_operoverride_msg(Client *client, Channel *channel, char *override_mode, char *override_mode_text)
 {
 	unreal_log(ULOG_INFO, "operoverride", "OPEROVERRIDE_INVITE", client,
-		   "OperOverride: $client.details invited him/herself into $channel (Overriding $override_mode_text)",
-		   log_data_string("override_type", "join"),
-		   log_data_string("override_mode", override_mode),
-		   log_data_string("override_mode_text", override_mode_text),
-		   log_data_channel("channel", channel));
+	           "OperOverride: $client.details invited him/herself into $channel (Overriding $override_mode_text)",
+	           log_data_string("override_type", "join"),
+	           log_data_string("override_mode", override_mode),
+	           log_data_string("override_mode_text", override_mode_text),
+	           log_data_channel("channel", channel));
 }
 
 /*
@@ -315,7 +306,7 @@ CMD_FUNC(cmd_invite)
 		target = find_user(parv[1], NULL);
 		channel = find_channel(parv[2]);
 	}
-	
+
 	if (!MyConnect(client))
 	/*** remote invite ***/
 	{
@@ -374,7 +365,7 @@ CMD_FUNC(cmd_invite)
 	/* proceed with the command */
 	for (h = Hooks[HOOKTYPE_PRE_INVITE]; h; h = h->next)
 	{
-		i = (*(h->func.intfunc))(client,target,channel,&override);
+		i = (*(h->func.intfunc))(client, target, channel, &override);
 		if (i == HOOK_DENY)
 			return;
 		if (i == HOOK_ALLOW)
@@ -383,18 +374,16 @@ CMD_FUNC(cmd_invite)
 
 	if (!IsMember(client, channel) && !IsULine(client))
 	{
-		if (ValidatePermissionsForPath("channel:override:invite:notinchannel",client,NULL,channel,NULL) && client == target)
+		if (ValidatePermissionsForPath("channel:override:invite:notinchannel", client, NULL, channel, NULL) && client == target)
 		{
 			override = 1;
 #ifdef OPEROVERRIDE_VERIFY
-		} 
-		else if (ValidatePermissionsForPath("channel:override:privsecret",client,NULL,channel,NULL) 
-			&& client == target
-			&& (SecretChannel(channel) || HiddenChannel(channel)))
+		} else if (ValidatePermissionsForPath("channel:override:privsecret", client, NULL, channel, NULL) && client == target && (SecretChannel(channel) || HiddenChannel(channel)))
 		{
 			override = 1;
 #endif
-		} else {
+		} else
+		{
 			sendnumeric(client, ERR_NOTONCHANNEL, parv[2]);
 			return;
 		}
@@ -410,20 +399,21 @@ CMD_FUNC(cmd_invite)
 	{
 		if (!check_channel_access(client, channel, "oaq") && !IsULine(client))
 		{
-			if (ValidatePermissionsForPath("channel:override:invite:invite-only",client,NULL,channel,NULL) && client == target)
+			if (ValidatePermissionsForPath("channel:override:invite:invite-only", client, NULL, channel, NULL) && client == target)
 			{
 				override = 1;
-			} else {
+			} else
+			{
 				sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 				return;
 			}
-		}
-		else if (!IsMember(client, channel) && !IsULine(client))
+		} else if (!IsMember(client, channel) && !IsULine(client))
 		{
-			if (ValidatePermissionsForPath("channel:override:invite:invite-only",client,NULL,channel,NULL) && client == target)
+			if (ValidatePermissionsForPath("channel:override:invite:invite-only", client, NULL, channel, NULL) && client == target)
 			{
 				override = 1;
-			} else {
+			} else
+			{
 				sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 				return;
 			}
@@ -432,7 +422,7 @@ CMD_FUNC(cmd_invite)
 
 	if (SPAMFILTER_VIRUSCHANDENY && SPAMFILTER_VIRUSCHAN &&
 	    !strcasecmp(channel->name, SPAMFILTER_VIRUSCHAN) &&
-	    !check_channel_access(client, channel, "oaq") && !ValidatePermissionsForPath("immune:server-ban:viruschan",client,NULL,NULL,NULL))
+	    !check_channel_access(client, channel, "oaq") && !ValidatePermissionsForPath("immune:server-ban:viruschan", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_CHANOPRIVSNEEDED, channel->name);
 		return;
@@ -441,7 +431,7 @@ CMD_FUNC(cmd_invite)
 	if (target_limit_exceeded(client, target, target->name))
 		return;
 
-	if (!ValidatePermissionsForPath("immune:invite-flood",client,NULL,NULL,NULL) &&
+	if (!ValidatePermissionsForPath("immune:invite-flood", client, NULL, NULL, NULL) &&
 	    flood_limit_exceeded(client, FLD_INVITE))
 	{
 		sendnumeric(client, RPL_TRYAGAIN, "INVITE");
@@ -455,8 +445,7 @@ CMD_FUNC(cmd_invite)
 		{
 			sendnumeric(client, RPL_AWAY, target->name, target->user->away);
 		}
-	}
-	else
+	} else
 	{
 		/* Send OperOverride messages */
 		char override_what = '\0';
@@ -501,7 +490,6 @@ void add_invite(Client *from, Client *to, Channel *channel, MessageTag *mtags)
 		for (tmp = CLIENT_INVITES(to); tmp->next; tmp = tmp->next)
 			;
 		del_invite(to, tmp->value.channel);
-
 	}
 	/* We get pissy over too many invites per channel as well now,
 	 * since otherwise mass-inviters could take up some major
@@ -555,4 +543,3 @@ void del_invite(Client *client, Channel *channel)
 			break;
 		}
 }
-

@@ -21,21 +21,20 @@
 
 CMD_FUNC(cmd_svspart);
 
-#define MSG_SVSPART       "SVSPART"
+#define MSG_SVSPART "SVSPART"
 
-ModuleHeader MOD_HEADER
-  = {
-	"svspart",	/* Name of module */
-	"5.0", /* Version */
-	"command /svspart", /* Short description of module */
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "svspart", /* Name of module */
+    "5.0", /* Version */
+    "command /svspart", /* Short description of module */
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* This is called on module init, before Server Ready */
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SVSPART, cmd_svspart, 3, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SVSPART, cmd_svspart, 3, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -49,7 +48,7 @@ MOD_LOAD()
 /* Called when module is unloaded */
 MOD_UNLOAD()
 {
-	return MOD_SUCCESS;	
+	return MOD_SUCCESS;
 }
 
 /* cmd_svspart() - Lamego - Wed Jul 21 20:04:48 1999
@@ -66,7 +65,7 @@ CMD_FUNC(cmd_svspart)
 	if (!IsSvsCmdOk(client))
 		return;
 
-	if (parc < 3 || !(target = find_user(parv[1], NULL))) 
+	if (parc < 3 || !(target = find_user(parv[1], NULL)))
 		return;
 
 	if (MyUser(target))
@@ -77,14 +76,13 @@ CMD_FUNC(cmd_svspart)
 		parv[3] = NULL;
 		do_cmd(target, NULL, "PART", comment ? 3 : 2, parv);
 		/* NOTE: target may be killed now by spamfilter due to the part reason */
-	}
-	else
+	} else
 	{
 		if (comment)
 			sendto_one(target, NULL, ":%s SVSPART %s %s :%s", client->name,
-			    parv[1], parv[2], parv[3]);
+			           parv[1], parv[2], parv[3]);
 		else
 			sendto_one(target, NULL, ":%s SVSPART %s %s", client->name,
-			    parv[1], parv[2]);
+			           parv[1], parv[2]);
 	}
 }

@@ -7,14 +7,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"real-quit-reason",
-	"6.0",
-	"unrealircd.org/real-quit-reason message tag",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "real-quit-reason",
+    "6.0",
+    "unrealircd.org/real-quit-reason message tag",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int real_quit_reason_mtag_is_ok(Client *client, const char *name, const char *value);

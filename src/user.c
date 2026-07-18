@@ -81,7 +81,7 @@ void iNAH_host(Client *client, const char *host)
 	safe_strdup(client->user->virthost, host);
 	if (MyConnect(client))
 		sendto_server(NULL, 0, 0, NULL, ":%s SETHOST :%s", client->id, client->user->virthost);
-	client->umodes |= UMODE_SETHOST|UMODE_HIDE;
+	client->umodes |= UMODE_SETHOST | UMODE_HIDE;
 
 	userhost_changed(client);
 }
@@ -155,7 +155,7 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 	int max_concurrent_conversations_users, max_concurrent_conversations_new_user_every;
 	FloodSettings *settings;
 
-	if (ValidatePermissionsForPath("immune:max-concurrent-conversations",client,NULL,NULL,NULL))
+	if (ValidatePermissionsForPath("immune:max-concurrent-conversations", client, NULL, NULL, NULL))
 		return 0;
 
 	if (client->local->targets[0] == hash)
@@ -200,9 +200,9 @@ int target_limit_exceeded(Client *client, void *target, const char *name)
 	 * This is so client->local->nexttarget=0 will become client->local->nexttarget=currenttime-...
 	 */
 	if (TStime() > client->local->nexttarget +
-	    (max_concurrent_conversations_users * max_concurrent_conversations_new_user_every))
+	                   (max_concurrent_conversations_users * max_concurrent_conversations_new_user_every))
 	{
-		client->local->nexttarget = TStime() - ((max_concurrent_conversations_users-1) * max_concurrent_conversations_new_user_every);
+		client->local->nexttarget = TStime() - ((max_concurrent_conversations_users - 1) * max_concurrent_conversations_new_user_every);
 	}
 
 	client->local->nexttarget += max_concurrent_conversations_new_user_every;
@@ -223,7 +223,7 @@ char *canonize(const char *buffer)
 	static char cbuf[2048];
 	char tbuf[2048];
 	char *s, *t, *cp = cbuf;
-	int  l = 0;
+	int l = 0;
 	char *p = NULL, *p2;
 
 	*cp = '\0';
@@ -237,13 +237,12 @@ char *canonize(const char *buffer)
 		if (l)
 		{
 			for (p2 = NULL, t = strtoken(&p2, cbuf, ","); t;
-			    t = strtoken(&p2, NULL, ","))
+			     t = strtoken(&p2, NULL, ","))
 				if (!mycmp(s, t))
 					break;
 				else if (p2)
 					p2[-1] = ',';
-		}
-		else
+		} else
 			t = NULL;
 		if (!t)
 		{
@@ -254,8 +253,7 @@ char *canonize(const char *buffer)
 			strcpy(cp, s);
 			if (p)
 				cp += (p - s);
-		}
-		else if (p2)
+		} else if (p2)
 			p2[-1] = ',';
 	}
 	return cbuf;
@@ -348,7 +346,7 @@ void set_snomask(Client *client, const char *snomask)
 		remove_all_snomasks(client);
 		return;
 	}
-	
+
 	for (p = snomask; p && *p; p++)
 	{
 		switch (*p)
@@ -365,7 +363,8 @@ void set_snomask(Client *client, const char *snomask)
 					if (!isalpha(*p) || !is_valid_snomask(*p))
 						continue;
 					addlettertodynamicstringsorted(&client->user->snomask, *p);
-				} else {
+				} else
+				{
 					delletterfromstring(client->user->snomask, *p);
 				}
 				break;
@@ -407,8 +406,7 @@ void build_umode_string(Client *client, long old, long sendmask, char *umode_buf
 				*m++ = '-';
 				*m++ = um->letter;
 			}
-		}
-		else if (!(flag & old) && (client->umodes & flag))
+		} else if (!(flag & old) && (client->umodes & flag))
 		{
 			if (what == MODE_ADD)
 				*m++ = um->letter;
@@ -641,32 +639,32 @@ int should_show_connect_info(Client *client)
 static char uid_int_to_char(int v)
 {
 	if (v < 10)
-		return '0'+v;
+		return '0' + v;
 	else
-		return 'A'+v-10;
+		return 'A' + v - 10;
 }
 
 /** Acquire a new unique UID */
 const char *uid_get(void)
 {
 	Client *acptr;
-	static char uid[IDLEN+1];
+	static char uid[IDLEN + 1];
 	static int uidcounter = 0;
 
 	uidcounter++;
-	if (uidcounter == 36*36)
+	if (uidcounter == 36 * 36)
 		uidcounter = 0;
 
 	do
 	{
 		snprintf(uid, sizeof(uid), "%s%c%c%c%c%c%c",
-			me.id,
-			uid_int_to_char(getrandom8() % 36),
-			uid_int_to_char(getrandom8() % 36),
-			uid_int_to_char(getrandom8() % 36),
-			uid_int_to_char(getrandom8() % 36),
-			uid_int_to_char(uidcounter / 36),
-			uid_int_to_char(uidcounter % 36));
+		         me.id,
+		         uid_int_to_char(getrandom8() % 36),
+		         uid_int_to_char(getrandom8() % 36),
+		         uid_int_to_char(getrandom8() % 36),
+		         uid_int_to_char(getrandom8() % 36),
+		         uid_int_to_char(uidcounter / 36),
+		         uid_int_to_char(uidcounter % 36));
 		acptr = find_client(uid, NULL);
 	} while (acptr);
 
@@ -698,8 +696,8 @@ void make_cloakedhost(Client *client, const char *curr, char *buf, size_t buflen
 	const char *mask;
 
 	/* Convert host to lowercase and cut off at 255 bytes just to be sure */
-	for (p = curr, q = host; *p && (q < host+sizeof(host)-1); p++, q++)
-		*q =  tolower(*p);
+	for (p = curr, q = host; *p && (q < host + sizeof(host) - 1); p++, q++)
+		*q = tolower(*p);
 	*q = '\0';
 
 	/* Call the cloaking layer */
@@ -830,7 +828,7 @@ const char *get_connect_extinfo(Client *client)
 	secgroups = get_security_groups(client);
 	if (secgroups)
 		add_nvplist(&list, 100, "security-groups", secgroups);
-	
+
 	/* tkl shunned */
 	if (IsShunned(client))
 		add_nvplist(&list, 110, "shunned", NULL);
@@ -846,7 +844,7 @@ const char *get_connect_extinfo(Client *client)
 	}
 	/* Cut off last space (unless empty string) */
 	if (*retbuf)
-		retbuf[strlen(retbuf)-1] = '\0';
+		retbuf[strlen(retbuf) - 1] = '\0';
 
 	/* Free the list, as it was only used to build retbuf */
 	free_nvplist(list);
@@ -948,16 +946,17 @@ FloodSettings *get_floodsettings_for_user(Client *client, FloodOption opt)
 }
 
 MODVAR const char *floodoption_names[] = {
-	"nick-flood",
-	"join-flood",
-	"away-flood",
-	"invite-flood",
-	"knock-flood",
-	"max-concurrent-conversations",
-	"lag-penalty",
-	"vhost-flood",
-	"multiline",
-	NULL
+    "nick-flood",
+    "join-flood",
+    "away-flood",
+    "invite-flood",
+    "knock-flood",
+    "max-concurrent-conversations",
+    "lag-penalty",
+    "vhost-flood",
+    "multiline",
+    "max-processing-time",
+    NULL,
 };
 
 /* Per-session flood-block counter names, parallel to floodoption_names[].
@@ -967,16 +966,17 @@ MODVAR const char *floodoption_names[] = {
  * soft penalty rather than a block, and multiline is not counted.
  */
 MODVAR const char *floodoption_shortnames[] = {
-	"nick",			/* FLD_NICK */
-	"join",			/* FLD_JOIN */
-	"away",			/* FLD_AWAY */
-	"invite",		/* FLD_INVITE */
-	"knock",		/* FLD_KNOCK */
-	"conversations",	/* FLD_CONVERSATIONS */
-	NULL,			/* FLD_LAG_PENALTY: not counted (soft penalty, not a block) */
-	"vhost",		/* FLD_VHOST */
-	NULL,			/* FLD_MULTILINE: not counted */
-	NULL
+    "nick",          /* FLD_NICK */
+    "join",          /* FLD_JOIN */
+    "away",          /* FLD_AWAY */
+    "invite",        /* FLD_INVITE */
+    "knock",         /* FLD_KNOCK */
+    "conversations", /* FLD_CONVERSATIONS */
+    NULL,            /* FLD_LAG_PENALTY: not counted (soft penalty, not a block) */
+    "vhost",         /* FLD_VHOST */
+    NULL,            /* FLD_MULTILINE: not counted */
+    NULL,            /* FLD_MAX_PROCESSING_TIME: not counted (soft yield) */
+    NULL,
 };
 
 /** Count a flood-block for this client.
@@ -1097,7 +1097,7 @@ void bump_tag_serial(Client *client)
 
 Tag *add_tag(Client *client, const char *name, int value)
 {
-	Tag *e = safe_alloc(sizeof(Tag)+strlen(name)+1);
+	Tag *e = safe_alloc(sizeof(Tag) + strlen(name) + 1);
 	strcpy(e->name, name); /* safe, allocated above */
 	e->value = value;
 	AddListItem(e, client->local->tags);
@@ -1158,7 +1158,7 @@ int highest_channel_member_count(Client *client)
 	Membership *m;
 	int highest = 0;
 
-	for (m = client->user->channel; m; m=m->next)
+	for (m = client->user->channel; m; m = m->next)
 		if (m->channel->users > highest)
 			highest = m->channel->users;
 

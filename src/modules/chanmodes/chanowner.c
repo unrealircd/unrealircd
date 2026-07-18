@@ -19,14 +19,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/chanowner",
-	"6.0",
-	"Channel Mode +q",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/chanowner",
+    "6.0",
+    "Channel Mode +q",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Forward declarations */
 int cmode_chanowner_is_ok(Client *client, Channel *channel, char mode, const char *para, int type, int what);

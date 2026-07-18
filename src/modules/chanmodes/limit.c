@@ -19,14 +19,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/limit",
-	"6.0",
-	"Channel Mode +l",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/limit",
+    "6.0",
+    "Channel Mode +l",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 typedef struct ChannelLimit ChannelLimit;
 struct ChannelLimit {
@@ -37,10 +36,10 @@ struct ChannelLimit {
 ModDataInfo *mdlimit = NULL;
 Cmode_t EXTMODE_LIMIT = 0L;
 
-#define IsLimit(x)	((x)->mode.mode & EXTMODE_LIMIT)
+#define IsLimit(x) ((x)->mode.mode & EXTMODE_LIMIT)
 
 /* Just for buffers, nothing else */
-#define LIMITLEN	32
+#define LIMITLEN 32
 
 /* Forward declarations */
 int limit_can_join(Client *client, Channel *channel, const char *key, char **errmsg);
@@ -95,9 +94,9 @@ int limit_can_join(Client *client, Channel *channel, const char *key, char **err
 	if (r && r->limit && (channel->users >= r->limit))
 	{
 		Hook *h;
-		for (h = Hooks[HOOKTYPE_CAN_JOIN_LIMITEXCEEDED]; h; h = h->next) 
+		for (h = Hooks[HOOKTYPE_CAN_JOIN_LIMITEXCEEDED]; h; h = h->next)
 		{
-			int i = (*(h->func.intfunc))(client,channel,key,errmsg);
+			int i = (*(h->func.intfunc))(client, channel, key, errmsg);
 			if (i != 0)
 				return i;
 		}
@@ -116,14 +115,13 @@ int cmode_limit_is_ok(Client *client, Channel *channel, char mode, const char *p
 		if (IsUser(client) && check_channel_access(client, channel, "hoaq"))
 			return EX_ALLOW;
 		return EX_DENY;
-	} else
-	if (type == EXCHK_PARAM)
+	} else if (type == EXCHK_PARAM)
 	{
 		/* When coming from an IRC client, we reject limit <=0 explicitly, as it makes no sense */
 		if (atoi(param) <= 0)
 		{
 			sendnumeric(client, ERR_INVALIDMODEPARAM,
-				channel->name, 'l', "*", "Channel limit (+l) needs to be a positive number");
+			            channel->name, 'l', "*", "Channel limit (+l) needs to be a positive number");
 			return EX_DENY;
 		}
 		/* Any other value is valid, we just morph it */

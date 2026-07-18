@@ -20,14 +20,13 @@
 #include "unrealircd.h"
 
 
-ModuleHeader MOD_HEADER
-  = {
-	"chanmodes/moderated",
-	"6.0",
-	"Channel Mode +m",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "chanmodes/moderated",
+    "6.0",
+    "Channel Mode +m",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Global variables */
 Cmode_t EXTCMODE_MODERATED;
@@ -38,7 +37,7 @@ const char *moderated_pre_local_part(Client *client, Channel *channel, const cha
 int moderated_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg);
 
 /* Macros */
-#define IsModerated(channel)    (channel->mode.mode & EXTCMODE_MODERATED)
+#define IsModerated(channel) (channel->mode.mode & EXTCMODE_MODERATED)
 
 MOD_INIT()
 {
@@ -72,7 +71,7 @@ MOD_UNLOAD()
 int moderated_can_send_to_channel(Client *client, Channel *channel, Membership *m, const char **msg, const char **errmsg, SendType sendtype, ClientContext *clictx)
 {
 	if (IsModerated(channel) && (!m || !check_channel_access_membership(m, "vhoaq")) &&
-	    !op_can_override("channel:override:message:moderated",client,channel,NULL))
+	    !op_can_override("channel:override:message:moderated", client, channel, NULL))
 	{
 		Hook *h;
 		for (h = Hooks[HOOKTYPE_CAN_BYPASS_CHANNEL_MESSAGE_RESTRICTION]; h; h = h->next)
@@ -101,7 +100,7 @@ const char *moderated_pre_local_part(Client *client, Channel *channel, const cha
 
 int moderated_can_set_topic(Client *client, Channel *channel, const char *topic, const char **errmsg)
 {
-	static char errmsg_buf[NICKLEN+256];
+	static char errmsg_buf[NICKLEN + 256];
 
 	/* Channel is +m but user is not +vhoaq: reject the topic change */
 	if (has_channel_mode(channel, 'm') && !check_channel_access(client, channel, "vhoaq"))

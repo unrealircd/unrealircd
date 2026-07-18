@@ -47,11 +47,11 @@ static char *hidehost_normalhost(char *host);
 static inline unsigned int downsample(char *i);
 
 ModuleHeader MOD_HEADER = {
-	"cloak_md5",
-	"1.0",
-	"Old cloaking module (MD5)",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "cloak_md5",
+    "1.0",
+    "Old cloaking module (MD5)",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 MOD_TEST()
@@ -110,9 +110,9 @@ MOD_UNLOAD()
 
 static int check_badrandomness(char *key)
 {
-char gotlowcase=0, gotupcase=0, gotdigit=0;
-char *p;
-	for (p=key; *p; p++)
+	char gotlowcase = 0, gotupcase = 0, gotdigit = 0;
+	char *p;
+	for (p = key; *p; p++)
 		if (islower(*p))
 			gotlowcase = 1;
 		else if (isupper(*p))
@@ -141,13 +141,12 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (!ce->value)
 		{
 			config_error("%s:%i: set::cloak-method: no method specified. The only supported methods are: 'ip' and 'host'",
-				ce->file->filename, ce->line_number);
+			             ce->file->filename, ce->line_number);
 			errors++;
-		} else
-		if (strcmp(ce->value, "ip") && strcmp(ce->value, "host"))
+		} else if (strcmp(ce->value, "ip") && strcmp(ce->value, "host"))
 		{
 			config_error("%s:%i: set::cloak-method: unknown method '%s'. The only supported methods are: 'ip' and 'host'",
-				ce->file->filename, ce->line_number, ce->value);
+			             ce->file->filename, ce->line_number, ce->value);
 			errors++;
 		}
 
@@ -165,34 +164,35 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 		if (check_badrandomness(cep->name))
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Keys should be mixed a-zA-Z0-9, "
-			             "like \"a2JO6fh3Q6w4oN3s7\"", cep->file->filename, cep->line_number, keycnt);
+			             "like \"a2JO6fh3Q6w4oN3s7\"",
+			             cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
 		if (strlen(cep->name) < 5)
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be at least 5 characters",
-				cep->file->filename, cep->line_number, keycnt);
+			             cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
 		if (strlen(cep->name) > 100)
 		{
 			config_error("%s:%i: set::cloak-keys: (key %d) Each key should be less than 100 characters",
-				cep->file->filename, cep->line_number, keycnt);
+			             cep->file->filename, cep->line_number, keycnt);
 			errors++;
 		}
 		if (keycnt < 4)
-			keys[keycnt-1] = cep->name;
+			keys[keycnt - 1] = cep->name;
 	}
 	if (keycnt != 3)
 	{
 		config_error("%s:%i: set::cloak-keys: we want 3 values, not %i!",
-			ce->file->filename, ce->line_number, keycnt);
+		             ce->file->filename, ce->line_number, keycnt);
 		errors++;
 	}
 	if ((keycnt == 3) && (!strcmp(keys[0], keys[1]) || !strcmp(keys[1], keys[2])))
 	{
 		config_error("%s:%i: set::cloak-keys: All your 3 keys should be RANDOM, they should not be equal",
-			ce->file->filename, ce->line_number);
+		             ce->file->filename, ce->line_number);
 		errors++;
 	}
 	*errs = errors;
@@ -201,7 +201,7 @@ int cloak_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 int cloak_config_posttest(int *errs)
 {
-int errors = 0;
+	int errors = 0;
 
 	if (nokeys)
 	{
@@ -215,8 +215,8 @@ int errors = 0;
 
 int cloak_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
-ConfigEntry *cep;
-char buf[512], result[16];
+	ConfigEntry *cep;
+	char buf[512], result[16];
 
 	if (type == CONFIG_SET)
 	{
@@ -245,23 +245,23 @@ char buf[512], result[16];
 	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, KEY2, KEY3);
 	DoMD5(result, buf, strlen(buf));
 	ircsnprintf(cloak_checksum, sizeof(cloak_checksum),
-		"MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
-		(u_int)(result[0] & 0xf), (u_int)(result[0] >> 4),
-		(u_int)(result[1] & 0xf), (u_int)(result[1] >> 4),
-		(u_int)(result[2] & 0xf), (u_int)(result[2] >> 4),
-		(u_int)(result[3] & 0xf), (u_int)(result[3] >> 4),
-		(u_int)(result[4] & 0xf), (u_int)(result[4] >> 4),
-		(u_int)(result[5] & 0xf), (u_int)(result[5] >> 4),
-		(u_int)(result[6] & 0xf), (u_int)(result[6] >> 4),
-		(u_int)(result[7] & 0xf), (u_int)(result[7] >> 4),
-		(u_int)(result[8] & 0xf), (u_int)(result[8] >> 4),
-		(u_int)(result[9] & 0xf), (u_int)(result[9] >> 4),
-		(u_int)(result[10] & 0xf), (u_int)(result[10] >> 4),
-		(u_int)(result[11] & 0xf), (u_int)(result[11] >> 4),
-		(u_int)(result[12] & 0xf), (u_int)(result[12] >> 4),
-		(u_int)(result[13] & 0xf), (u_int)(result[13] >> 4),
-		(u_int)(result[14] & 0xf), (u_int)(result[14] >> 4),
-		(u_int)(result[15] & 0xf), (u_int)(result[15] >> 4));
+	            "MD5:%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+	            (u_int)(result[0] & 0xf), (u_int)(result[0] >> 4),
+	            (u_int)(result[1] & 0xf), (u_int)(result[1] >> 4),
+	            (u_int)(result[2] & 0xf), (u_int)(result[2] >> 4),
+	            (u_int)(result[3] & 0xf), (u_int)(result[3] >> 4),
+	            (u_int)(result[4] & 0xf), (u_int)(result[4] >> 4),
+	            (u_int)(result[5] & 0xf), (u_int)(result[5] >> 4),
+	            (u_int)(result[6] & 0xf), (u_int)(result[6] >> 4),
+	            (u_int)(result[7] & 0xf), (u_int)(result[7] >> 4),
+	            (u_int)(result[8] & 0xf), (u_int)(result[8] >> 4),
+	            (u_int)(result[9] & 0xf), (u_int)(result[9] >> 4),
+	            (u_int)(result[10] & 0xf), (u_int)(result[10] >> 4),
+	            (u_int)(result[11] & 0xf), (u_int)(result[11] >> 4),
+	            (u_int)(result[12] & 0xf), (u_int)(result[12] >> 4),
+	            (u_int)(result[13] & 0xf), (u_int)(result[13] >> 4),
+	            (u_int)(result[14] & 0xf), (u_int)(result[14] >> 4),
+	            (u_int)(result[15] & 0xf), (u_int)(result[15] >> 4));
 	return 1;
 }
 
@@ -291,25 +291,25 @@ char *cloakcsum()
 /** Downsamples a 128bit result to 32bits (md5 -> unsigned int) */
 static inline unsigned int downsample(char *i)
 {
-char r[4];
+	char r[4];
 
 	r[0] = i[0] ^ i[1] ^ i[2] ^ i[3];
 	r[1] = i[4] ^ i[5] ^ i[6] ^ i[7];
 	r[2] = i[8] ^ i[9] ^ i[10] ^ i[11];
 	r[3] = i[12] ^ i[13] ^ i[14] ^ i[15];
-	
-	return ( ((unsigned int)r[0] << 24) +
-	         ((unsigned int)r[1] << 16) +
-	         ((unsigned int)r[2] << 8) +
-	         (unsigned int)r[3]);
+
+	return (((unsigned int)r[0] << 24) +
+	        ((unsigned int)r[1] << 16) +
+	        ((unsigned int)r[2] << 8) +
+	        (unsigned int)r[3]);
 }
 
 static char *hidehost_ipv4(char *host)
 {
-unsigned int a, b, c, d;
-static char buf[512], res[512], res2[512], result[128];
-unsigned long n;
-unsigned int alpha, beta, gamma;
+	unsigned int a, b, c, d;
+	static char buf[512], res[512], res2[512], result[128];
+	unsigned long n;
+	unsigned int alpha, beta, gamma;
 
 	/* 
 	 * Output: ALPHA.BETA.GAMMA.IP
@@ -326,24 +326,24 @@ unsigned int alpha, beta, gamma;
 	/* ALPHA... */
 	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY2, host, KEY3);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY1, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY1, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
 	ircsnprintf(buf, sizeof(buf), "%s:%d.%d.%d:%s", KEY3, a, b, c, KEY1);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY2, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY2, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
 	ircsnprintf(buf, sizeof(buf), "%s:%d.%d:%s", KEY1, a, b, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY3, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
@@ -353,10 +353,10 @@ unsigned int alpha, beta, gamma;
 
 static char *hidehost_ipv6(char *host)
 {
-unsigned int a, b, c, d, e, f, g, h;
-static char buf[512], res[512], res2[512], result[128];
-unsigned long n;
-unsigned int alpha, beta, gamma;
+	unsigned int a, b, c, d, e, f, g, h;
+	static char buf[512], res[512], res2[512], result[128];
+	unsigned long n;
+	unsigned int alpha, beta, gamma;
 
 	/* 
 	 * Output: ALPHA:BETA:GAMMA:IP
@@ -369,29 +369,29 @@ unsigned int alpha, beta, gamma;
 	 * GAMMA = downsample(md5(md5("KEY1:a:b:c:d:KEY2")+"KEY3"));
 	 */
 	sscanf(host, "%x:%x:%x:%x:%x:%x:%x:%x",
-		&a, &b, &c, &d, &e, &f, &g, &h);
+	       &a, &b, &c, &d, &e, &f, &g, &h);
 
 	/* ALPHA... */
 	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY2, host, KEY3);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY1, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY1, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
 	/* BETA... */
 	ircsnprintf(buf, sizeof(buf), "%s:%x:%x:%x:%x:%x:%x:%x:%s", KEY3, a, b, c, d, e, f, g, KEY1);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY2, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY2, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	beta = downsample(res2);
 
 	/* GAMMA... */
 	ircsnprintf(buf, sizeof(buf), "%s:%x:%x:%x:%x:%s", KEY1, a, b, c, d, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY3, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	gamma = downsample(res2);
 
@@ -401,14 +401,14 @@ unsigned int alpha, beta, gamma;
 
 static char *hidehost_normalhost(char *host)
 {
-char *p;
-static char buf[512], res[512], res2[512], result[HOSTLEN+1];
-unsigned int alpha, n;
+	char *p;
+	static char buf[512], res[512], res2[512], result[HOSTLEN + 1];
+	unsigned int alpha, n;
 
 	ircsnprintf(buf, sizeof(buf), "%s:%s:%s", KEY1, host, KEY2);
 	DoMD5(res, buf, strlen(buf));
-	strlcpy(res+16, KEY3, sizeof(res)-16); /* first 16 bytes are filled, append our key.. */
-	n = strlen(res+16) + 16;
+	strlcpy(res + 16, KEY3, sizeof(res) - 16); /* first 16 bytes are filled, append our key.. */
+	n = strlen(res + 16) + 16;
 	DoMD5(res2, res, n);
 	alpha = downsample(res2);
 
@@ -428,7 +428,7 @@ unsigned int alpha, n;
 		else
 			strlcat(result, p + (len - HOSTLEN), sizeof(result));
 	} else
-		ircsnprintf(result, sizeof(result),  "%s-%X", CLOAK_PREFIX, alpha);
+		ircsnprintf(result, sizeof(result), "%s-%X", CLOAK_PREFIX, alpha);
 
 	return result;
 }

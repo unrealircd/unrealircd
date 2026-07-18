@@ -35,21 +35,19 @@ unsigned char *RTFBuf;
  */
 DWORD CALLBACK SplitIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 {
-	StreamIO *stream = (StreamIO*)dwCookie;
+	StreamIO *stream = (StreamIO *)dwCookie;
 	if (*stream->size == 0)
 	{
 		pcb = 0;
 		*stream->buffer = 0;
-	}
-	else if (cb <= *stream->size) 
+	} else if (cb <= *stream->size)
 	{
 		memcpy(pbBuff, *stream->buffer, cb);
 		*stream->buffer += cb;
 		*stream->size -= cb;
 		*pcb = cb;
 
-	}
-	else 
+	} else
 	{
 		memcpy(pbBuff, *stream->buffer, *stream->size);
 		*pcb = *stream->size;
@@ -76,12 +74,12 @@ DWORD CALLBACK BufferIt(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 	if (!RTFBuf)
 		size = 0;
 
-	buf2 = safe_alloc(size+cb+1);
+	buf2 = safe_alloc(size + cb + 1);
 
 	if (RTFBuf)
-		memcpy(buf2,RTFBuf,size);
+		memcpy(buf2, RTFBuf, size);
 
-	memcpy(buf2+size,pbBuff,cb);
+	memcpy(buf2 + size, pbBuff, cb);
 
 	size += cb;
 	safe_free(RTFBuf);
@@ -115,7 +113,7 @@ void ColorPop(IRCColor **stack)
 	if (!(*stack))
 		return;
 	safe_free(p->color);
-	
+
 	*stack = p->next;
 	safe_free(p);
 }
@@ -143,16 +141,16 @@ void ColorEmpty(IRCColor **stack)
  *  pbBuff - The buffer containing the RTF text
  *  cb     - The length of the RTF text
  */
-DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb) 
+DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 {
-	unsigned char *buffer = safe_alloc(cb*2+2);
+	unsigned char *buffer = safe_alloc(cb * 2 + 2);
 	int colors[17], bold = 0, uline = 0, incolor = 0, inbg = 0;
 	int lastwascf = 0, lastwascf0 = 0;
 	int i = 0;
 
 	IRCColor *TextColors = NULL;
 	IRCColor *BgColors = NULL;
-	
+
 	memset(buffer, 0, cb);
 
 	for (; *pbBuff; pbBuff++)
@@ -172,16 +170,16 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 				ultr[0] = *(++pbBuff);
 				ultr[1] = *(++pbBuff);
 				ultr[2] = 0;
-				ltr = strtoul(ultr,NULL,16);
+				ltr = strtoul(ultr, NULL, 16);
 				buffer[i++] = ltr;
-			}
-			else
+			} else
 			{
 				int j;
 				char cmd[128];
 				/* Capture the control sequence */
 				for (j = 0; *pbBuff && *pbBuff != '\\' && !isspace(*pbBuff) &&
-					!iseol(*pbBuff); pbBuff++)
+				            !iseol(*pbBuff);
+				     pbBuff++)
 				{
 					cmd[j++] = *pbBuff;
 				}
@@ -206,7 +204,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 					{
 						if (*pbBuff == ';')
 						{
-							color[k]=0;
+							color[k] = 0;
 							if (!strcmp(color, "\\red255\\green255\\blue255"))
 								colors[m++] = 0;
 							else if (!strcmp(color, "\\red0\\green0\\blue0"))
@@ -237,27 +235,24 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 								colors[m++] = 13;
 							else if (!strcmp(color, "\\red127\\green127\\blue127"))
 								colors[m++] = 14;
-							else if (!strcmp(color, "\\red210\\green210\\blue210")) 
+							else if (!strcmp(color, "\\red210\\green210\\blue210"))
 								colors[m++] = 15;
-							k=0;
-						}
-						else
+							k = 0;
+						} else
 							color[k++] = *pbBuff;
 					}
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strcmp(cmd, "tab"))
+				} else if (!strcmp(cmd, "tab"))
 				{
 					buffer[i++] = '\t';
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strcmp(cmd, "par"))
+				} else if (!strcmp(cmd, "par"))
 				{
 					if (bold || uline || incolor || inbg)
 						buffer[i++] = '\17';
 					buffer[i++] = '\r';
 					buffer[i++] = '\n';
-					if (!*(pbBuff+3) || *(pbBuff+3) != '}')
+					if (!*(pbBuff + 3) || *(pbBuff + 3) != '}')
 					{
 						if (bold)
 							buffer[i++] = '\2';
@@ -274,8 +269,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 								strcat(buffer, BgColors->color);
 								i += strlen(BgColors->color);
 							}
-						}
-						else if (inbg) 
+						} else if (inbg)
 						{
 							buffer[i++] = '\3';
 							buffer[i++] = '0';
@@ -285,37 +279,31 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 							i += strlen(BgColors->color);
 						}
 					}
-				}
-				else if (!strcmp(cmd, "b"))
+				} else if (!strcmp(cmd, "b"))
 				{
 					bold = 1;
 					buffer[i++] = '\2';
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strcmp(cmd, "b0"))
+				} else if (!strcmp(cmd, "b0"))
 				{
 					bold = 0;
 					buffer[i++] = '\2';
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strcmp(cmd, "ul"))
+				} else if (!strcmp(cmd, "ul"))
 				{
 					uline = 1;
 					buffer[i++] = '\37';
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strcmp(cmd, "ulnone"))
+				} else if (!strcmp(cmd, "ulnone"))
 				{
 					uline = 0;
 					buffer[i++] = '\37';
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strcmp(cmd, "cf0"))
+				} else if (!strcmp(cmd, "cf0"))
 				{
 					lastwascf0 = 1;
 					lastwascf = 0;
-				}
-				else if (!strcmp(cmd, "highlight0"))
+				} else if (!strcmp(cmd, "highlight0"))
 				{
 					inbg = 0;
 					ColorPop(&BgColors);
@@ -325,8 +313,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 						incolor = 0;
 						ColorPop(&TextColors);
 						lastwascf0 = 0;
-					}
-					else if (incolor)
+					} else if (incolor)
 					{
 						strcat(buffer, TextColors->color);
 						i += strlen(TextColors->color);
@@ -335,8 +322,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 						buffer[i++] = '0';
 					}
 					lastwascf = lastwascf0 = 0;
-				}
-				else if (!strncmp(cmd, "cf", 2))
+				} else if (!strncmp(cmd, "cf", 2))
 				{
 					unsigned char number[3];
 					int num;
@@ -349,12 +335,11 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 					else
 						sprintf(number, "%d", colors[num]);
 					ColorPush(number, &TextColors);
-					strcat(buffer,number);
+					strcat(buffer, number);
 					i += strlen(number);
 					lastwascf = 1;
 					lastwascf0 = 0;
-				}
-				else if (!strncmp(cmd, "highlight", 9))
+				} else if (!strncmp(cmd, "highlight", 9))
 				{
 					int num;
 					unsigned char number[3];
@@ -369,8 +354,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 						buffer[i++] = '\3';
 						strcat(buffer, TextColors->color);
 						i += strlen(TextColors->color);
-					}
-					else if (!incolor)
+					} else if (!incolor)
 					{
 						buffer[i++] = '\3';
 						buffer[i++] = '0';
@@ -381,8 +365,7 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 					i += strlen(number);
 					ColorPush(number, &BgColors);
 					lastwascf = lastwascf0 = 0;
-				}
-				else
+				} else
 					lastwascf = lastwascf0 = 0;
 
 				if (lastwascf0 && incolor)
@@ -392,13 +375,11 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
 					buffer[i++] = '\3';
 				}
 			}
-		}
-		else
+		} else
 		{
 			lastwascf = lastwascf0 = 0;
 			buffer[i++] = *pbBuff;
 		}
-				
 	}
 	write(fd, buffer, i);
 	close(fd);
@@ -413,18 +394,19 @@ DWORD CALLBACK RTFToIRC(int fd, unsigned char *pbBuff, long cb)
  * Returns:
  *  The lenght of the buffer needed to store the RTF translation
  */
-int CountRTFSize(unsigned char *buffer) {
+int CountRTFSize(unsigned char *buffer)
+{
 	int size = 0;
 	char bold = 0, uline = 0, incolor = 0, inbg = 0, reverse = 0;
 	char *buf = buffer;
 
-	for (; *buf; buf++) 
+	for (; *buf; buf++)
 	{
 		if (*buf == '{' || *buf == '}' || *buf == '\\')
 			size++;
 		else if (*buf == '\r')
 		{
-			if (*(buf+1) && *(buf+1) == '\n')
+			if (*(buf + 1) && *(buf + 1) == '\n')
 			{
 				buf++;
 				if (bold)
@@ -440,11 +422,10 @@ int CountRTFSize(unsigned char *buffer) {
 				if (bold || uline || incolor || inbg || reverse)
 					size++;
 				bold = uline = incolor = inbg = reverse = 0;
-				size +=6;
+				size += 6;
 				continue;
 			}
-		}
-		else if (*buf == '\n')
+		} else if (*buf == '\n')
 		{
 			if (bold)
 				size += 3;
@@ -459,10 +440,9 @@ int CountRTFSize(unsigned char *buffer) {
 			if (bold || uline || incolor || inbg || reverse)
 				size++;
 			bold = uline = incolor = inbg = reverse = 0;
-			size +=6;
-			continue;	
-		}
-		else if (*buf == '\2')
+			size += 6;
+			continue;
+		} else if (*buf == '\2')
 		{
 			if (bold)
 				size += 4;
@@ -470,30 +450,28 @@ int CountRTFSize(unsigned char *buffer) {
 				size += 3;
 			bold = !bold;
 			continue;
-		}
-		else if (*buf == '\3' && reverse)
+		} else if (*buf == '\3' && reverse)
 		{
-			if (*(buf+1) && isdigit(*(buf+1)))
+			if (*(buf + 1) && isdigit(*(buf + 1)))
 			{
 				++buf;
-				if (*(buf+1) && isdigit(*(buf+1)))
+				if (*(buf + 1) && isdigit(*(buf + 1)))
 					++buf;
-				if (*(buf+1) && *(buf+1) == ',')
+				if (*(buf + 1) && *(buf + 1) == ',')
 				{
-					if (*(buf+2) && isdigit(*(buf+2)))
+					if (*(buf + 2) && isdigit(*(buf + 2)))
 					{
-						buf+=2;
-						if (*(buf+1) && isdigit(*(buf+1)))
+						buf += 2;
+						if (*(buf + 1) && isdigit(*(buf + 1)))
 							++buf;
 					}
 				}
 			}
 			continue;
-		}
-		else if (*buf == '\3' && !reverse)
+		} else if (*buf == '\3' && !reverse)
 		{
 			size += 3;
-			if (*(buf+1) && !isdigit(*(buf+1)))
+			if (*(buf + 1) && !isdigit(*(buf + 1)))
 			{
 				incolor = 0;
 				size++;
@@ -502,37 +480,37 @@ int CountRTFSize(unsigned char *buffer) {
 					inbg = 0;
 					size += 11;
 				}
-			}
-			else if (*(buf+1))
+			} else if (*(buf + 1))
 			{
 				unsigned char color[3];
 				int number;
 				color[0] = *(++buf);
 				color[1] = 0;
-				if (*(buf+1) && isdigit(*(buf+1)))
+				if (*(buf + 1) && isdigit(*(buf + 1)))
 					color[1] = *(++buf);
 				color[2] = 0;
 				number = atoi(color);
-				if (number == 99 || number == 1) 
+				if (number == 99 || number == 1)
 					size += 2;
-				else if (number == 0) 
+				else if (number == 0)
 					size++;
-				else  {
+				else
+				{
 					number %= 16;
 					_itoa(number, color, 10);
 					size += strlen(color);
 				}
 				color[2] = 0;
 				number = atoi(color);
-				if (*(buf+1) && *(buf+1) == ',')
+				if (*(buf + 1) && *(buf + 1) == ',')
 				{
-					if (*(buf+2) && isdigit(*(buf+2)))
+					if (*(buf + 2) && isdigit(*(buf + 2)))
 					{
 						size += 10;
 						buf++;
 						color[0] = *(++buf);
 						color[1] = 0;
-						if (*(buf+1) && isdigit(*(buf+1)))
+						if (*(buf + 1) && isdigit(*(buf + 1)))
 							color[1] = *(++buf);
 						color[2] = 0;
 						number = atoi(color);
@@ -553,8 +531,7 @@ int CountRTFSize(unsigned char *buffer) {
 			}
 			size++;
 			continue;
-		}
-		else if (*buf == '\17')
+		} else if (*buf == '\17')
 		{
 			if (bold)
 				size += 3;
@@ -570,8 +547,7 @@ int CountRTFSize(unsigned char *buffer) {
 				size++;
 			bold = uline = incolor = inbg = reverse = 0;
 			continue;
-		}
-		else if (*buf == '\26')
+		} else if (*buf == '\26')
 		{
 			if (reverse)
 				size += 16;
@@ -579,8 +555,7 @@ int CountRTFSize(unsigned char *buffer) {
 				size += 17;
 			reverse = !reverse;
 			continue;
-		}
-		else if (*buf == '\37')
+		} else if (*buf == '\37')
 		{
 			if (uline)
 				size += 8;
@@ -590,11 +565,11 @@ int CountRTFSize(unsigned char *buffer) {
 			continue;
 		}
 		size++;
-	}			
+	}
 	size += strlen("{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-		"fcharset0 Fixedsys;}}\r\n"
-		MIRC_COLORS
-		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20")+1;
+	               "fcharset0 Fixedsys;}}\r\n" MIRC_COLORS
+	               "\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20") +
+	        1;
 	return (size);
 }
 
@@ -603,62 +578,59 @@ int CountRTFSize(unsigned char *buffer) {
  *  buffer - The input buffer containing IRC codes
  *  string - The output buffer in RTF
  */
-void IRCToRTF(unsigned char *buffer, unsigned char *string) 
+void IRCToRTF(unsigned char *buffer, unsigned char *string)
 {
 	unsigned char *tmp;
 	int i = 0;
 	short bold = 0, uline = 0, incolor = 0, inbg = 0, reverse = 0;
 	sprintf(string, "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fmodern\\fprq1\\"
-		"fcharset0 Fixedsys;}}\r\n"
-		MIRC_COLORS
-		"\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
+	                "fcharset0 Fixedsys;}}\r\n" MIRC_COLORS
+	                "\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20");
 	i = strlen(string);
 	for (tmp = buffer; *tmp; tmp++)
 	{
 		if (*tmp == '{')
 		{
 			strcat(string, "\\{");
-			i+=2;
+			i += 2;
 			continue;
-		}
-		else if (*tmp == '}')
+		} else if (*tmp == '}')
 		{
 			strcat(string, "\\}");
-			i+=2;
+			i += 2;
 			continue;
-		}
-		else if (*tmp == '\\')
+		} else if (*tmp == '\\')
 		{
 			strcat(string, "\\\\");
-			i+=2;
+			i += 2;
 			continue;
-		}
-		else if (*tmp == '\r')
+		} else if (*tmp == '\r')
 		{
-			if (*(tmp+1) && *(tmp+1) == '\n')
+			if (*(tmp + 1) && *(tmp + 1) == '\n')
 			{
 				tmp++;
 				if (bold)
 				{
 					strcat(string, "\\b0 ");
-					i+=3;
+					i += 3;
 				}
 				if (uline)
 				{
 					strcat(string, "\\ulnone");
-					i+=7;
+					i += 7;
 				}
 				if (incolor && !reverse)
 				{
 					strcat(string, "\\cf0");
-					i+=4;
+					i += 4;
 				}
 				if (inbg && !reverse)
 				{
 					strcat(string, "\\highlight0");
-					i +=11;
+					i += 11;
 				}
-				if (reverse) {
+				if (reverse)
+				{
 					strcat(string, "\\cf0\\highlight0");
 					i += 15;
 				}
@@ -666,35 +638,34 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 					string[i++] = ' ';
 				bold = uline = incolor = inbg = reverse = 0;
 				strcat(string, "\\par\r\n");
-				i +=6;
-			}
-			else
-				string[i++]='\r';
+				i += 6;
+			} else
+				string[i++] = '\r';
 			continue;
-		}
-		else if (*tmp == '\n')
+		} else if (*tmp == '\n')
 		{
 			if (bold)
 			{
 				strcat(string, "\\b0 ");
-				i+=3;
+				i += 3;
 			}
 			if (uline)
 			{
 				strcat(string, "\\ulnone");
-				i+=7;
+				i += 7;
 			}
 			if (incolor && !reverse)
 			{
 				strcat(string, "\\cf0");
-				i+=4;
+				i += 4;
 			}
 			if (inbg && !reverse)
 			{
 				strcat(string, "\\highlight0");
-				i +=11;
+				i += 11;
 			}
-			if (reverse) {
+			if (reverse)
+			{
 				strcat(string, "\\cf0\\highlight0");
 				i += 15;
 			}
@@ -702,48 +673,44 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 				string[i++] = ' ';
 			bold = uline = incolor = inbg = reverse = 0;
 			strcat(string, "\\par\r\n");
-			i +=6;
+			i += 6;
 			continue;
-		}
-		else if (*tmp == '\2')
+		} else if (*tmp == '\2')
 		{
 			if (bold)
 			{
 				strcat(string, "\\b0 ");
-				i+=4;
-			}
-			else
+				i += 4;
+			} else
 			{
 				strcat(string, "\\b ");
-				i+=3;
+				i += 3;
 			}
 			bold = !bold;
 			continue;
-		}
-		else if (*tmp == '\3' && reverse)
+		} else if (*tmp == '\3' && reverse)
 		{
-			if (*(tmp+1) && isdigit(*(tmp+1)))
+			if (*(tmp + 1) && isdigit(*(tmp + 1)))
 			{
 				++tmp;
-				if (*(tmp+1) && isdigit(*(tmp+1)))
+				if (*(tmp + 1) && isdigit(*(tmp + 1)))
 					++tmp;
-				if (*(tmp+1) && *(tmp+1) == ',')
+				if (*(tmp + 1) && *(tmp + 1) == ',')
 				{
-					if (*(tmp+2) && isdigit(*(tmp+2)))
+					if (*(tmp + 2) && isdigit(*(tmp + 2)))
 					{
-						tmp+=2;
-						if (*(tmp+1) && isdigit(*(tmp+1)))
+						tmp += 2;
+						if (*(tmp + 1) && isdigit(*(tmp + 1)))
 							++tmp;
 					}
 				}
 			}
 			continue;
-		}
-		else if (*tmp == '\3' && !reverse)
+		} else if (*tmp == '\3' && !reverse)
 		{
 			strcat(string, "\\cf");
 			i += 3;
-			if (*(tmp+1) && !isdigit(*(tmp+1)))
+			if (*(tmp + 1) && !isdigit(*(tmp + 1)))
 			{
 				incolor = 0;
 				string[i++] = '0';
@@ -753,44 +720,41 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 					strcat(string, "\\highlight0");
 					i += 11;
 				}
-			}
-			else if (*(tmp+1))
+			} else if (*(tmp + 1))
 			{
 				unsigned char color[3];
 				int number;
 				color[0] = *(++tmp);
 				color[1] = 0;
-				if (*(tmp+1) && isdigit(*(tmp+1)))
+				if (*(tmp + 1) && isdigit(*(tmp + 1)))
 					color[1] = *(++tmp);
 				color[2] = 0;
 				number = atoi(color);
 				if (number == 99 || number == 1)
 				{
-					strcat(string, "16"); 
+					strcat(string, "16");
 					i += 2;
-				}
-				else if (number == 0) 
+				} else if (number == 0)
 				{
 					strcat(string, "1");
 					i++;
-				}
-				else
+				} else
 				{
 					number %= 16;
 					_itoa(number, color, 10);
 					strcat(string, color);
 					i += strlen(color);
 				}
-				if (*(tmp+1) && *(tmp+1) == ',')
+				if (*(tmp + 1) && *(tmp + 1) == ',')
 				{
-					if (*(tmp+2) && isdigit(*(tmp+2)))
+					if (*(tmp + 2) && isdigit(*(tmp + 2)))
 					{
 						strcat(string, "\\highlight");
 						i += 10;
 						tmp++;
 						color[0] = *(++tmp);
 						color[1] = 0;
-						if (*(tmp+1) && isdigit(*(tmp+1)))
+						if (*(tmp + 1) && isdigit(*(tmp + 1)))
 							color[1] = *(++tmp);
 						color[2] = 0;
 						number = atoi(color);
@@ -798,34 +762,36 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 						{
 							strcat(string, "16");
 							i += 2;
-						}
-						else if (number == 0 || number == 99)
+						} else if (number == 0 || number == 99)
 							string[i++] = '1';
 						else
 						{
 							number %= 16;
 							_itoa(number, color, 10);
-							strcat(string,color);
+							strcat(string, color);
 							i += strlen(color);
 						}
 						inbg = 1;
 					}
 				}
-				incolor=1;
+				incolor = 1;
 			}
 			string[i++] = ' ';
 			continue;
-		}
-		else if (*tmp == '\17') {
-			if (uline) {
+		} else if (*tmp == '\17')
+		{
+			if (uline)
+			{
 				strcat(string, "\\ulnone");
 				i += 7;
 			}
-			if (bold) {
+			if (bold)
+			{
 				strcat(string, "\\b0");
 				i += 3;
 			}
-			if (incolor && !reverse) {
+			if (incolor && !reverse)
+			{
 				strcat(string, "\\cf0");
 				i += 4;
 			}
@@ -834,7 +800,8 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 				strcat(string, "\\highlight0");
 				i += 11;
 			}
-			if (reverse) {
+			if (reverse)
+			{
 				strcat(string, "\\cf0\\highlight0");
 				i += 15;
 			}
@@ -842,15 +809,13 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 				string[i++] = ' ';
 			uline = bold = incolor = inbg = reverse = 0;
 			continue;
-		}
-		else if (*tmp == '\26')
+		} else if (*tmp == '\26')
 		{
 			if (reverse)
 			{
 				strcat(string, "\\cf0\\highlight0 ");
 				i += 16;
-			}
-			else
+			} else
 			{
 				strcat(string, "\\cf1\\highlight16 ");
 				i += 17;
@@ -859,12 +824,14 @@ void IRCToRTF(unsigned char *buffer, unsigned char *string)
 			continue;
 		}
 
-		else if (*tmp == '\37') {
-			if (uline) {
+		else if (*tmp == '\37')
+		{
+			if (uline)
+			{
 				strcat(string, "\\ulnone ");
 				i += 8;
-			}
-			else {
+			} else
+			{
 				strcat(string, "\\ul ");
 				i += 4;
 			}

@@ -24,16 +24,15 @@
 
 CMD_FUNC(cmd_user);
 
-#define MSG_USER 	"USER"	
+#define MSG_USER "USER"
 
-ModuleHeader MOD_HEADER
-  = {
-	"user",
-	"5.0",
-	"command /user", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "user",
+    "5.0",
+    "command /user",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -86,9 +85,9 @@ CMD_FUNC(cmd_user)
 
 	username = parv[1];
 	realname = parv[4];
-	
+
 	make_user(client);
-	
+
 	client->user->server = me_hash;
 	strlcpy(client->info, realname, sizeof(client->info));
 	strlcpy(client->user->username, username, sizeof(client->user->username));
@@ -103,7 +102,7 @@ CMD_FUNC(cmd_user)
 		if (USE_BAN_VERSION && MyConnect(client))
 		{
 			sendto_one(client, NULL, ":IRC!IRC@%s PRIVMSG %s :\1VERSION\1",
-				me.name, client->name);
+			           me.name, client->name);
 		}
 		register_user(client);
 		return;

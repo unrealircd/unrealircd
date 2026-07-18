@@ -26,16 +26,15 @@
 
 CMD_FUNC(cmd_swhois);
 
-#define MSG_SWHOIS 	"SWHOIS"	
+#define MSG_SWHOIS "SWHOIS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"swhois",
-	"5.0",
-	"command /swhois", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "swhois",
+    "5.0",
+    "command /swhois",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -67,8 +66,8 @@ MOD_UNLOAD()
 CMD_FUNC(cmd_swhois)
 {
 	Client *target;
-	char tag[HOSTLEN+1];
-	char swhois[SWHOISLEN+1];
+	char tag[HOSTLEN + 1];
+	char swhois[SWHOISLEN + 1];
 	int add;
 	int priority = 0;
 
@@ -88,7 +87,8 @@ CMD_FUNC(cmd_swhois)
 		strlcpy(tag, parv[3], sizeof(tag));
 		priority = atoi(parv[4]);
 		strlcpy(swhois, parv[5], sizeof(swhois));
-	} else {
+	} else
+	{
 		/* Old syntax */
 		strlcpy(tag, client->name, sizeof(tag));
 		if (BadPtr(parv[2]))
@@ -96,7 +96,8 @@ CMD_FUNC(cmd_swhois)
 			/* Delete. Hmmmm. Let's just delete anything with that tag. */
 			strcpy(swhois, "*");
 			add = 0;
-		} else {
+		} else
+		{
 			/* Add */
 			add = 1;
 			strlcpy(swhois, parv[2], sizeof(swhois));

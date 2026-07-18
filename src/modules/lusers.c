@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_lusers);
 
-#define MSG_LUSERS 	"LUSERS"	
+#define MSG_LUSERS "LUSERS"
 
-ModuleHeader MOD_HEADER
-  = {
-	"lusers",
-	"5.0",
-	"command /lusers", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "lusers",
+    "5.0",
+    "command /lusers",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_LUSERS, cmd_lusers, MAXPARA, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_LUSERS, cmd_lusers, MAXPARA, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -57,12 +56,12 @@ MOD_UNLOAD()
  */
 CMD_FUNC(cmd_lusers)
 {
-char flatmap;
+	char flatmap;
 
 	if (hunt_server(client, recv_mtags, "LUSERS", 1, parc, parv) != HUNTED_ISME)
 		return;
 
-	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers",client,NULL,NULL,NULL)) ? 1 : 0;
+	flatmap = (FLAT_MAP && !ValidatePermissionsForPath("server:info:lusers", client, NULL, NULL, NULL)) ? 1 : 0;
 
 	/* Just to correct results ---Stskeeps */
 	if (irccounts.clients > irccounts.global_max)
@@ -71,8 +70,8 @@ char flatmap;
 		irccounts.me_max = irccounts.me_clients;
 
 	sendnumeric(client, RPL_LUSERCLIENT,
-	    irccounts.clients - irccounts.invisible, irccounts.invisible,
-	    irccounts.servers);
+	            irccounts.clients - irccounts.invisible, irccounts.invisible,
+	            irccounts.servers);
 
 	if (irccounts.operators)
 		sendnumeric(client, RPL_LUSEROP, irccounts.operators);
@@ -86,7 +85,7 @@ char flatmap;
 	if (irccounts.me_clients > max_connection_count)
 	{
 		max_connection_count = irccounts.me_clients;
-		if (max_connection_count % 10 == 0)	/* only send on even tens */
+		if (max_connection_count % 10 == 0) /* only send on even tens */
 		{
 			unreal_log(ULOG_INFO, "client", "NEW_USER_RECORD", NULL,
 			           "New record on this server: $num_users connections",

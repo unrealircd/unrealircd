@@ -29,9 +29,9 @@
 
 /* Some forward declarions are needed */
 void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl);
-void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
-static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl) __attribute__((format(printf,4,0)));
-static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf,6,0)));
+void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf, 4, 0)));
+static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, const char *pattern, va_list vl) __attribute__((format(printf, 4, 0)));
+static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *to, Client *from, MessageTag *mtags, const char *pattern, va_list vl) __attribute__((format(printf, 6, 0)));
 static void linecache_add(LineCache *cache, int line_opts, Client *to, const char *line, int linelen);
 static LineCacheLine *linecache_get(LineCache *cache, int line_opts, Client *to);
 
@@ -47,7 +47,7 @@ static char sendbuf3[MAXLINELENGTH];
  * it is checked if to->direction->local->serial == current_serial
  * and if so, sending is skipped.
  */
-MODVAR int  current_serial;
+MODVAR int current_serial;
 
 /** This is a callback function from the event loop.
  * All it does is call send_queued().
@@ -68,7 +68,7 @@ void send_queued_cb(int fd, int revents, void *data)
  */
 int send_queued(Client *to)
 {
-	int  len, rlen;
+	int len, rlen;
 	dbufbuf *block;
 	int want_read;
 
@@ -112,7 +112,7 @@ int send_queued(Client *to)
 			break;
 		}
 	}
-	
+
 	/* Nothing left to write, stop asking for write-ready notification. */
 	if ((DBufLength(&to->local->sendQ) == 0) && (to->local->fd >= 0))
 		fd_setselect(to->local->fd, FD_SELECT_WRITE, NULL, to);
@@ -176,21 +176,22 @@ void vsendto_one(Client *to, MessageTag *mtags, const char *pattern, va_list vl)
 
 	/* Need to ignore -Wformat-nonliteral here */
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-	ircvsnprintf(sendbuf, sizeof(sendbuf)-3, pattern, vl);
+	ircvsnprintf(sendbuf, sizeof(sendbuf) - 3, pattern, vl);
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
 
 	if (BadPtr(mtags_str))
 	{
 		/* Simple message without message tags */
 		sendbufto_one(to, sendbuf, 0);
-	} else {
+	} else
+	{
 		/* Message tags need to be prepended */
-		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
+		snprintf(sendbuf2, sizeof(sendbuf2) - 3, "@%s %s", mtags_str, sendbuf);
 		sendbufto_one(to, sendbuf2, 0);
 	}
 }
@@ -237,24 +238,25 @@ static int sendbufto_one_prepare_line(Client *to, char **input)
 		 * (MAXTAGSIZE) and then 512 bytes for
 		 * the remainder of the message (BUFSIZE).
 		 */
-		p = strchr(msg+1, ' ');
+		p = strchr(msg + 1, ' ');
 		if (!p)
 		{
 			unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_MALFORMED_MSG", to,
-				   "Malformed message to $client: $buf",
-				   log_data_string("buf", msg));
+			           "Malformed message to $client: $buf",
+			           log_data_string("buf", msg));
 			return 0;
 		}
 		if (p - msg > MAXTAGSIZE)
 		{
 			unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_OVERSIZED_MSG", to,
-				   "Oversized message to $client (length $length): $buf",
-				   log_data_integer("length", p - msg),
-				   log_data_string("buf", msg));
+			           "Oversized message to $client (length $length): $buf",
+			           log_data_integer("length", p - msg),
+			           log_data_string("buf", msg));
 			return 0;
 		}
 		p++; /* skip space character */
-	} else {
+	} else
+	{
 		p = msg;
 	}
 
@@ -271,22 +273,24 @@ static int sendbufto_one_prepare_line(Client *to, char **input)
 			p[len++] = '\r';
 			p[len++] = '\n';
 			p[len] = '\0';
-		} else {
+		} else
+		{
 			/* BIGLINES case:
 			 * - first 'if' is about the total line length,
 			 *   this is basically an optimized strlen(msg)
 			 * - the 'else' applies to non-mtags part,
 			 *   like in the 'Normal case' from above.
 			 */
-			if ((p - msg) + len > MAXLINELENGTH-3)
+			if ((p - msg) + len > MAXLINELENGTH - 3)
 			{
-				len = MAXLINELENGTH-3;
+				len = MAXLINELENGTH - 3;
 				if (UTF8ONLY)
 					utf8_valid_cutoff(msg, &len);
 				msg[len++] = '\r';
 				msg[len++] = '\n';
 				msg[len] = '\0';
-			} else {
+			} else
+			{
 				if (UTF8ONLY)
 					utf8_valid_cutoff(p, &len);
 				p[len++] = '\r';
@@ -338,12 +342,11 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 	int len;
 	Hook *h;
 	Client *intended_to = to;
-	
+
 	if (to->direction)
 		to = to->direction;
 	if (IsDeadSocket(to))
-		return;		/* This socket has already
-				   been marked as dead */
+		return; /* This socket has already been marked as dead */
 	if (to->local->fd < 0)
 	{
 		/* This is normal when 'to' was being closed (via exit_client
@@ -361,16 +364,17 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		len = sendbufto_one_prepare_line(to, &msg);
 		if (len == 0)
 			return;
-	} else {
+	} else
+	{
 		len = quick;
 	}
 
 	if (len >= MAXLINELENGTH)
 	{
 		unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_OVERSIZED_MSG2", to,
-			   "Oversized message to $client (length $length): $buf",
-			   log_data_integer("length", len),
-			   log_data_string("buf", msg));
+		           "Oversized message to $client (length $length): $buf",
+		           log_data_integer("length", len),
+		           log_data_string("buf", msg));
 #ifdef DEBUGMODE
 		abort();
 #else
@@ -385,8 +389,8 @@ void sendbufto_one(Client *to, char *msg, unsigned int quick)
 		strlcpy(tmp_msg, msg, sizeof(tmp_msg));
 		stripcrlf(tmp_msg);
 		unreal_log(ULOG_WARNING, "send", "SENDBUFTO_ONE_ME_MESSAGE", to,
-			   "Trying to send data to myself: $buf",
-			   log_data_string("buf", tmp_msg));
+		           "Trying to send data to myself: $buf",
+		           log_data_string("buf", tmp_msg));
 		return;
 	}
 
@@ -760,7 +764,8 @@ void quit_sendto_local_common_channels(Client *leaving, MessageTag *mtags, const
 	{
 		snprintf(sender, sizeof(sender), "%s!%s@%s",
 		         leaving->name, leaving->user->username, GetHost(leaving));
-	} else {
+	} else
+	{
 		strlcpy(sender, leaving->name, sizeof(sender));
 	}
 
@@ -833,10 +838,9 @@ void sendto_match_butone(Client *one, Client *from, const char *mask, int what,
 
 	if (MyConnect(from))
 	{
-		cansendlocal = (ValidatePermissionsForPath("chat:notice:local",from,NULL,NULL,NULL)) ? 1 : 0;
-		cansendglobal = (ValidatePermissionsForPath("chat:notice:global",from,NULL,NULL,NULL)) ? 1 : 0;
-	}
-	else
+		cansendlocal = (ValidatePermissionsForPath("chat:notice:local", from, NULL, NULL, NULL)) ? 1 : 0;
+		cansendglobal = (ValidatePermissionsForPath("chat:notice:global", from, NULL, NULL, NULL)) ? 1 : 0;
+	} else
 		cansendlocal = cansendglobal = 1;
 
 	/* To servers... */
@@ -916,8 +920,7 @@ void sendto_umode_global(int umodes, FORMAT_STRING(const char *pattern), ...)
 			va_start(vl, pattern);
 			vsendto_one(acptr, NULL, nbuf, vl);
 			va_end(vl);
-		} else
-		if (IsServer(acptr) && *modestr)
+		} else if (IsServer(acptr) && *modestr)
 		{
 			snprintf(nbuf, sizeof(nbuf), ":%s SENDUMODE %s :%s", me.id, modestr, pattern);
 			va_start(vl, pattern);
@@ -955,14 +958,16 @@ void send_cap_notify(int add, const char *token)
 				if (!args)
 				{
 					sendto_one(client, NULL, ":%s CAP %s NEW :%s",
-						me.name, (*client->name ? client->name : "*"), token);
-				} else {
+					           me.name, (*client->name ? client->name : "*"), token);
+				} else
+				{
 					sendto_one(client, NULL, ":%s CAP %s NEW :%s=%s",
-						me.name, (*client->name ? client->name : "*"), token, args);
+					           me.name, (*client->name ? client->name : "*"), token, args);
 				}
-			} else {
+			} else
+			{
 				sendto_one(client, NULL, ":%s CAP %s DEL :%s",
-					me.name, (*client->name ? client->name : "*"), token);
+				           me.name, (*client->name ? client->name : "*"), token);
 			}
 		}
 	}
@@ -989,7 +994,7 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 		va_arg(vl, char *); /* eat first parameter */
 
 		*buf = ':';
-		strlcpy(buf+1, from->name, buflen-1);
+		strlcpy(buf + 1, from->name, buflen - 1);
 
 		if (IsUser(from))
 		{
@@ -1009,15 +1014,14 @@ static int vmakebuf_local_withprefix(char *buf, size_t buflen, Client *from, con
 		}
 		/* Now build the remaining string */
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 		ircvsnprintf(buf + strlen(buf), buflen - strlen(buf), &pattern[3], vl);
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
-	}
-	else
+	} else
 	{
 		ircvsnprintf(buf, buflen, pattern, vl);
 	}
@@ -1067,17 +1071,18 @@ void vsendto_prefix_one(Client *to, Client *from, MessageTag *mtags, const char 
 	const char *mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
 	if (to && from && MyUser(to) && from->user)
-		vmakebuf_local_withprefix(sendbuf, sizeof(sendbuf)-3, from, pattern, vl);
+		vmakebuf_local_withprefix(sendbuf, sizeof(sendbuf) - 3, from, pattern, vl);
 	else
-		ircvsnprintf(sendbuf, sizeof(sendbuf)-3, pattern, vl);
+		ircvsnprintf(sendbuf, sizeof(sendbuf) - 3, pattern, vl);
 
 	if (BadPtr(mtags_str))
 	{
 		/* Simple message without message tags */
 		sendbufto_one(to, sendbuf, 0);
-	} else {
+	} else
+	{
 		/* Message tags need to be prepended */
-		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
+		snprintf(sendbuf2, sizeof(sendbuf2) - 3, "@%s %s", mtags_str, sendbuf);
 		sendbufto_one(to, sendbuf2, 0);
 	}
 }
@@ -1120,7 +1125,8 @@ static unsigned long linecache_caps(Client *to)
 			return -1; /* 0xffffff... (iotw: all) */
 		else
 			return 0; /* none */
-	} else {
+	} else
+	{
 		return to->local->caps & clicaps_affecting_mtag;
 	}
 }
@@ -1172,9 +1178,9 @@ static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *t
 	mtags_str = mtags ? mtags_to_string(mtags, to) : NULL;
 
 	if (to && from && MyUser(to) && from->user)
-		vmakebuf_local_withprefix(sendbuf, sizeof(sendbuf)-3, from, pattern, vl);
+		vmakebuf_local_withprefix(sendbuf, sizeof(sendbuf) - 3, from, pattern, vl);
 	else
-		ircvsnprintf(sendbuf, sizeof(sendbuf)-3, pattern, vl);
+		ircvsnprintf(sendbuf, sizeof(sendbuf) - 3, pattern, vl);
 
 	if (BadPtr(mtags_str))
 	{
@@ -1183,10 +1189,11 @@ static void vsendto_prefix_one_cached(LineCache *cache, int line_opts, Client *t
 		len = sendbufto_one_prepare_line(to, &out);
 		linecache_add(cache, line_opts, to, out, len);
 		sendbufto_one(to, out, len);
-	} else {
+	} else
+	{
 		/* Message tags need to be prepended */
 		char *out = sendbuf2;
-		snprintf(sendbuf2, sizeof(sendbuf2)-3, "@%s %s", mtags_str, sendbuf);
+		snprintf(sendbuf2, sizeof(sendbuf2) - 3, "@%s %s", mtags_str, sendbuf);
 		len = sendbufto_one_prepare_line(to, &out);
 		linecache_add(cache, line_opts, to, out, len);
 		sendbufto_one(to, out, 0);
@@ -1224,7 +1231,7 @@ void sendto_serv_butone_nickcmd(Client *one, MessageTag *mtags, Client *client, 
 	{
 		if (one && acptr == one->direction)
 			continue;
-		
+
 		sendto_one_nickcmd(acptr, mtags, client, umodes);
 	}
 }
@@ -1248,8 +1255,7 @@ void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, const
 			vhost = client->user->virthost;
 		else
 			vhost = client->user->realhost;
-	}
-	else
+	} else
 	{
 		if (IsHidden(client) && client->umodes & UMODE_SETHOST)
 			vhost = client->user->virthost;
@@ -1264,12 +1270,12 @@ void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, const
 	}
 
 	sendto_one(server, mtags,
-		":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
-		client->uplink->id, client->name, client->hopcount,
-		(long long)client->lastnick,
-		client->user->username, client->user->realhost, client->id,
-		client->user->account, umodes, vhost, getcloak(client),
-		encode_ip(client->ip), client->info);
+	           ":%s UID %s %d %lld %s %s %s %s %s %s %s %s :%s",
+	           client->uplink->id, client->name, client->hopcount,
+	           (long long)client->lastnick,
+	           client->user->username, client->user->realhost, client->id,
+	           client->user->account, umodes, vhost, getcloak(client),
+	           encode_ip(client->ip), client->info);
 
 	if (mtags_generated)
 		safe_free_message_tags(mtags);
@@ -1278,7 +1284,7 @@ void sendto_one_nickcmd(Client *server, MessageTag *mtags, Client *client, const
 /* sidenote: sendnotice() and sendtxtnumeric() assume no client or server
  * has a % in their nick, which is a safe assumption since % is illegal.
  */
- 
+
 /** Send a server notice to a client.
  * @param to		The client to send to
  * @param pattern	The format string / pattern to use.
@@ -1367,12 +1373,12 @@ void buildnumericfmt(char *buf, size_t buflen, Client *to, int numeric, FORMAT_S
 	va_start(vl, pattern);
 	/* Need to ignore -Wformat-nonliteral here */
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 	vsnprintf(buf, buflen, realpattern, vl);
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
 	va_end(vl);
 }
@@ -1387,12 +1393,12 @@ void add_nvplist_numeric_fmt(NameValuePrioList **lst, int priority, const char *
 	va_start(vl, pattern);
 	/* Need to ignore -Wformat-nonliteral here */
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 	vsnprintf(buf, sizeof(buf), realpattern, vl);
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+ #pragma GCC diagnostic pop
 #endif
 	va_end(vl);
 

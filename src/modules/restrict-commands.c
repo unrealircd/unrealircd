@@ -20,11 +20,11 @@
 #include "unrealircd.h"
 
 ModuleHeader MOD_HEADER = {
-	"restrict-commands",
-	"1.0.2",
-	"Restrict specific commands unless certain conditions have been met",
-	"UnrealIRCd Team",
-	"unrealircd-6",
+    "restrict-commands",
+    "1.0.2",
+    "Restrict specific commands unless certain conditions have been met",
+    "UnrealIRCd Team",
+    "unrealircd-6",
 };
 
 typedef struct RestrictedCommand RestrictedCommand;
@@ -57,13 +57,13 @@ CMD_OVERRIDE_FUNC(rcmd_override);
 static ModuleInfo ModInf;
 RestrictedCommand *RestrictedCommandList = NULL;
 CmdMap conf_cmdmaps[] = {
-	// These are special cases in which we can't override the command, so they are handled through hooks instead
-	{ "channel-message", "PRIVMSG" },
-	{ "channel-notice", "NOTICE" },
-	{ "channel-create", "JOIN" },
-	{ "private-message", "PRIVMSG" },
-	{ "private-notice", "NOTICE" },
-	{ NULL, NULL, }, // REQUIRED for the loop to properly work
+    // These are special cases in which we can't override the command, so they are handled through hooks instead
+    {"channel-message", "PRIVMSG"},
+    {"channel-notice", "NOTICE"},
+    {"channel-create", "JOIN"},
+    {"private-message", "PRIVMSG"},
+    {"private-notice", "NOTICE"},
+    {NULL, NULL}, // REQUIRED for the loop to properly work
 };
 
 MOD_TEST()
@@ -112,7 +112,8 @@ MOD_UNLOAD()
 	return MOD_SUCCESS;
 }
 
-const char *find_cmd_byconftag(const char *conftag) {
+const char *find_cmd_byconftag(const char *conftag)
+{
 	CmdMap *cmap;
 	for (cmap = conf_cmdmaps; cmap->conftag; cmap++)
 	{
@@ -122,7 +123,8 @@ const char *find_cmd_byconftag(const char *conftag) {
 	return NULL;
 }
 
-RestrictedCommand *find_restrictions_bycmd(const char *cmd) {
+RestrictedCommand *find_restrictions_bycmd(const char *cmd)
+{
 	RestrictedCommand *rcmd;
 	for (rcmd = RestrictedCommandList; rcmd; rcmd = rcmd->next)
 	{
@@ -132,7 +134,8 @@ RestrictedCommand *find_restrictions_bycmd(const char *cmd) {
 	return NULL;
 }
 
-RestrictedCommand *find_restrictions_byconftag(const char *conftag) {
+RestrictedCommand *find_restrictions_byconftag(const char *conftag)
+{
 	RestrictedCommand *rcmd;
 	for (rcmd = RestrictedCommandList; rcmd; rcmd = rcmd->next)
 	{
@@ -166,7 +169,7 @@ int rcmd_configtest(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				if (!warn_disable)
 				{
 					config_warn("Simply remove 'disable yes;' from the configuration file and "
-				                   "it will have the same effect without it (will disable the command).");
+					            "it will have the same effect without it (will disable the command).");
 					warn_disable = 1;
 				}
 				continue;
@@ -373,12 +376,13 @@ int rcmd_block_message(Client *client, const char *destination, const char *text
 		if (rcmd->except->connect_time)
 		{
 			ircsnprintf(errbuf, sizeof(errbuf),
-				    "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
-				    (notice ? "notice" : "message"), display, rcmd->except->connect_time);
-		} else {
+			            "You cannot send %ss to %ss until you've been connected for %ld seconds or more",
+			            (notice ? "notice" : "message"), display, rcmd->except->connect_time);
+		} else
+		{
 			ircsnprintf(errbuf, sizeof(errbuf),
-				    "Sending of %ss to %ss been disabled by the network administrators",
-				    (notice ? "notice" : "message"), display);
+			            "Sending of %ss to %ss been disabled by the network administrators",
+			            (notice ? "notice" : "message"), display);
 		}
 		*errmsg = errbuf;
 		return 1;
@@ -410,7 +414,8 @@ CMD_OVERRIDE_FUNC(rcmd_override)
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
 			               "%s :You must be connected for at least %ld seconds before you can use this command",
 			               ovr->command->cmd, rcmd->except->connect_time);
-		} else {
+		} else
+		{
 			sendnumericfmt(client, ERR_UNKNOWNCOMMAND,
 			               "%s :This command is disabled by the network administrator",
 			               ovr->command->cmd);
@@ -461,10 +466,11 @@ int rcmd_block_join(Client *client, Channel *channel, const char **errmsg)
 		if (rcmd->except->connect_time)
 		{
 			ircsnprintf(errbuf, sizeof(errbuf),
-					"You cannot create new channels until you have been connected for %ld seconds or more.", rcmd->except->connect_time);
-		} else {
+			            "You cannot create new channels until you have been connected for %ld seconds or more.", rcmd->except->connect_time);
+		} else
+		{
 			ircsnprintf(errbuf, sizeof(errbuf),
-					"Creation of new channels has been restricted by the network administrator.");
+			            "Creation of new channels has been restricted by the network administrator.");
 		}
 		*errmsg = errbuf;
 		return 1;

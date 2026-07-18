@@ -26,16 +26,15 @@
 
 CMD_FUNC(cmd_mkpasswd);
 
-#define MSG_MKPASSWD 	"MKPASSWD"	
+#define MSG_MKPASSWD "MKPASSWD"
 
-ModuleHeader MOD_HEADER
-  = {
-	"mkpasswd",
-	"5.0",
-	"command /mkpasswd", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "mkpasswd",
+    "5.0",
+    "command /mkpasswd",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -102,5 +101,5 @@ CMD_FUNC(cmd_mkpasswd)
 	}
 
 	sendnotice(client, "*** Authentication phrase (method=%s, para=%s) is: %s",
-		parv[1], parv[2], result);
+	           parv[1], parv[2], result);
 }

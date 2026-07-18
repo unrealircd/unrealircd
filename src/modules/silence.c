@@ -24,20 +24,18 @@
 
 CMD_FUNC(cmd_silence);
 
-ModuleHeader MOD_HEADER
-  = {
-	"silence",
-	"5.0",
-	"command /silence", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "silence",
+    "5.0",
+    "command /silence",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Structs */
 typedef struct Silence Silence;
 /** A /SILENCE entry */
-struct Silence
-{
+struct Silence {
 	Silence *prev, *next;
 	char mask[]; /**< user!nick@host mask of silence entry */
 };
@@ -46,7 +44,7 @@ struct Silence
 ModDataInfo *silence_md = NULL;
 
 /* Macros */
-#define SILENCELIST(x)       ((Silence *)moddata_local_client(x, silence_md).ptr)
+#define SILENCELIST(x) ((Silence *)moddata_local_client(x, silence_md).ptr)
 
 /* Forward declarations */
 int _is_silenced(Client *, Client *);
@@ -121,8 +119,7 @@ CMD_FUNC(cmd_silence)
 		if (action == '-' || action == '+')
 		{
 			p++;
-		} else
-		if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_user(p, NULL))
+		} else if (!strchr(p, '@') && !strchr(p, '.') && !strchr(p, '!') && !strchr(p, '*') && !find_user(p, NULL))
 		{
 			sendnumeric(client, ERR_NOSUCHNICK, parv[1]);
 			return;
@@ -135,7 +132,7 @@ CMD_FUNC(cmd_silence)
 		    (action != '-' && add_silence(client, p, 1)))
 		{
 			sendto_prefix_one(client, client, NULL, ":%s SILENCE %c%s",
-			    client->name, action, p);
+			                  client->name, action, p);
 		}
 		return;
 	}
@@ -187,8 +184,7 @@ int _add_silence(Client *client, const char *mask, int senderr)
 			if (senderr)
 				sendnumeric(client, ERR_SILELISTFULL, mask);
 			return 0;
-		}
-		else
+		} else
 		{
 			if (match_simple(s->mask, mask))
 				return 0;
@@ -196,7 +192,7 @@ int _add_silence(Client *client, const char *mask, int senderr)
 	}
 
 	/* Add the new entry */
-	s = safe_alloc(sizeof(Silence)+strlen(mask)+1);
+	s = safe_alloc(sizeof(Silence) + strlen(mask) + 1);
 	strcpy(s->mask, mask); /* safe, allocated above */
 	AddListItemUnchecked(s, moddata_local_client(client, silence_md).ptr);
 	return 1;

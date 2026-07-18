@@ -24,17 +24,16 @@
 
 CMD_FUNC(cmd_help);
 
-#define MSG_HELP 	"HELP"	
-#define MSG_HELPOP	"HELPOP"
+#define MSG_HELP   "HELP"
+#define MSG_HELPOP "HELPOP"
 
-ModuleHeader MOD_HEADER
-  = {
-	"help",
-	"5.0",
-	"command /help", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "help",
+    "5.0",
+    "command /help",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
@@ -74,7 +73,7 @@ ConfigItem_help *find_Help(const char *command)
 	{
 		if (help->command == NULL)
 			continue;
-		else if (!strcasecmp(command,help->command))
+		else if (!strcasecmp(command, help->command))
 			return help;
 	}
 	return NULL;
@@ -93,32 +92,34 @@ void parse_help(Client *client, const char *help)
 		HDR("        ***** UnrealIRCd Help System *****");
 		SND(" -");
 		text = helpitem->text;
-		while (text) {
+		while (text)
+		{
 			SND(text->line);
 			text = text->next;
 		}
 		SND(" -");
 		return;
-		
 	}
 	helpitem = find_Help(help);
-	if (!helpitem) {
+	if (!helpitem)
+	{
 		SND(" -");
 		HDR("        ***** No Help Available *****");
 		SND(" -");
 		SND("   We're sorry, we don't have help available for the command you requested.");
 		SND(" -");
 		sendto_one(client, NULL, ":%s 292 %s : ***** Go to %s if you have any further questions *****",
-		    me.name, client->name, HELP_CHANNEL);
+		           me.name, client->name, HELP_CHANNEL);
 		SND(" -");
 		return;
 	}
 	text = helpitem->text;
 	SND(" -");
 	sendto_one(client, NULL, ":%s 290 %s :***** %s *****",
-	    me.name, client->name, helpitem->command);
+	           me.name, client->name, helpitem->command);
 	SND(" -");
-	while (text) {
+	while (text)
+	{
 		SND(text->line);
 		text = text->next;
 	}
@@ -137,7 +138,7 @@ CMD_FUNC(cmd_help)
 		return; /* never remote */
 
 	helptopic = parc > 1 ? parv[1] : NULL;
-	
+
 	if (helptopic && (*helptopic == '?'))
 		helptopic++;
 

@@ -40,7 +40,7 @@
  * 2nd page. Note that there is no need to provide room for malloc
  * overhead as we use mempools.
  */
-#define DBUF_BLOCK_SIZE		(4072+4096)
+#define DBUF_BLOCK_SIZE (4072 + 4096)
 
 /*
 ** dbuf is a collection of functions which can be used to
@@ -58,8 +58,8 @@
 ** interface.
 */
 typedef struct dbuf {
-	u_int length;		/* Current number of bytes stored */
-//	u_int offset;		/* Offset to the first byte */
+	u_int length; /* Current number of bytes stored */
+	//	u_int offset;		/* Offset to the first byte */
 	struct list_head dbuf_list;
 } dbuf;
 
@@ -83,13 +83,13 @@ typedef struct dbufbuf {
 **	from users buffer.
 */
 void dbuf_put(dbuf *, const char *, size_t);
-					/* Dynamic buffer header */
-					/* Pointer to data to be stored */
-					/* Number of bytes to store */
+/* Dynamic buffer header */
+/* Pointer to data to be stored */
+/* Number of bytes to store */
 
 void dbuf_delete(dbuf *, size_t);
-					/* Dynamic buffer header */
-					/* Number of bytes to delete */
+/* Dynamic buffer header */
+/* Number of bytes to delete */
 
 /*
 ** DBufLength
@@ -104,7 +104,7 @@ void dbuf_delete(dbuf *, size_t);
 **	Scratch the current content of the buffer. Release all
 **	allocated buffers and make it empty.
 */
-#define DBufClear(dyn)	dbuf_delete((dyn),DBufLength(dyn))
+#define DBufClear(dyn) dbuf_delete((dyn), DBufLength(dyn))
 
 extern int dbuf_getmsg(dbuf *, char *);
 extern int dbuf_get(dbuf *dyn, char **buf);

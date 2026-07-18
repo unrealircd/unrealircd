@@ -22,21 +22,20 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"labeled-response",
-	"5.0",
-	"Labeled response CAP",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-	};
+ModuleHeader MOD_HEADER = {
+    "labeled-response",
+    "5.0",
+    "Labeled response CAP",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 /* Data structures */
 typedef struct LabeledResponseContext LabeledResponseContext;
 struct LabeledResponseContext {
 	Client *client; /**< The client who issued the original command with a label */
 	char label[256]; /**< The label attached to this command */
-	char batch[BATCHLEN+1]; /**< The generated batch id */
+	char batch[BATCHLEN + 1]; /**< The generated batch id */
 	int responses; /**< Number of lines sent back to client */
 	int sent_remote; /**< Command has been sent to remote server */
 	char firstbuf[MAXLINELENGTH]; /**< First buffered response */
@@ -53,14 +52,14 @@ void _labeled_response_set_context(void *ctx);
 void _labeled_response_force_end(void);
 
 /* Our special version of SupportBatch() assumes that remote servers always handle it */
-#define SupportBatch(x)		(MyConnect(x) ? HasCapability((x), "batch") : 1)
-#define SupportLabel(x)		(HasCapabilityFast((x), CAP_LABELED_RESPONSE))
+#define SupportBatch(x) (MyConnect(x) ? HasCapability((x), "batch") : 1)
+#define SupportLabel(x) (HasCapabilityFast((x), CAP_LABELED_RESPONSE))
 
 /* Variables */
 static LabeledResponseContext currentcmd;
 static long CAP_LABELED_RESPONSE = 0L;
 
-static char packet[MAXLINELENGTH*2];
+static char packet[MAXLINELENGTH * 2];
 
 int labeled_response_mtag_is_ok(Client *client, const char *name, const char *value);
 
@@ -161,16 +160,17 @@ char *gen_start_batch(void)
 	{
 		/* Local connection */
 		snprintf(buf, sizeof(buf), "@label=%s :%s BATCH +%s labeled-response",
-			currentcmd.label,
-			me.name,
-			currentcmd.batch);
-	} else {
+		         currentcmd.label,
+		         me.name,
+		         currentcmd.batch);
+	} else
+	{
 		/* Remote connection: requires intra-server BATCH syntax */
 		snprintf(buf, sizeof(buf), "@label=%s :%s BATCH %s +%s labeled-response",
-			currentcmd.label,
-			me.name,
-			currentcmd.client->name,
-			currentcmd.batch);
+		         currentcmd.label,
+		         me.name,
+		         currentcmd.client->name,
+		         currentcmd.batch);
 	}
 	return buf;
 }
@@ -207,19 +207,18 @@ int lr_post_command(Client *from, MessageTag *mtags, const char *buf)
 			free_message_tags(m);
 			lr_clear();
 			return 0;
-		} else
-		if (currentcmd.responses == 1)
+		} else if (currentcmd.responses == 1)
 		{
 			/* We have buffered this response earlier,
 			 * now we will send it
 			 */
 			int more_tags = currentcmd.firstbuf[0] == '@';
 			currentcmd.client = NULL; /* prevent lr_packet from interfering */
-			snprintf(packet, sizeof(packet)-3,
-				 "@label=%s%s%s",
-				 currentcmd.label,
-				 more_tags ? ";" : " ",
-				 more_tags ? currentcmd.firstbuf+1 : currentcmd.firstbuf);
+			snprintf(packet, sizeof(packet) - 3,
+			         "@label=%s%s%s",
+			         currentcmd.label,
+			         more_tags ? ";" : " ",
+			         more_tags ? currentcmd.firstbuf + 1 : currentcmd.firstbuf);
 			/* Format the IRC message correctly here, so we can take the
 			 * quick path through sendbufto_one().
 			 */
@@ -266,7 +265,7 @@ char *skip_tags(char *msg)
 			if ((*p == ';') || (*p == ' '))
 				return p;
 	}
-	return msg+1; /* just skip the '@' */
+	return msg + 1; /* just skip the '@' */
 }
 
 int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *len)
@@ -284,8 +283,7 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 				/* Don't send anything -- yet */
 				*msg = NULL;
 				*len = 0;
-			} else
-			if (currentcmd.responses == 1)
+			} else if (currentcmd.responses == 1)
 			{
 				/* Start the batch now, normally this would be a sendto_one()
 				 * but doing so is not possible since we are in the sending code :(
@@ -303,49 +301,50 @@ int lr_packet(Client *from, Client *to, Client *intended_to, char **msg, int *le
 				{
 					/* Special case: current message (*msg) already contains a batch */
 					snprintf(packet, sizeof(packet),
-						 "%s\r\n"
-						 "@batch=%s%s%s\r\n"
-						 "%s",
-						 batchstr,
-						 currentcmd.batch,
-						 more_tags_one ? ";" : " ",
-						 more_tags_one ? currentcmd.firstbuf+1 : currentcmd.firstbuf,
-						 *msg);
+					         "%s\r\n"
+					         "@batch=%s%s%s\r\n"
+					         "%s",
+					         batchstr,
+					         currentcmd.batch,
+					         more_tags_one ? ";" : " ",
+					         more_tags_one ? currentcmd.firstbuf + 1 : currentcmd.firstbuf,
+					         *msg);
 				} else
 				{
 					/* Regular case: current message (*msg) contains no batch yet, add one.. */
 					snprintf(packet, sizeof(packet),
-						 "%s\r\n"
-						 "@batch=%s%s%s\r\n"
-						 "@batch=%s%s%s",
-						 batchstr,
-						 currentcmd.batch,
-						 more_tags_one ? ";" : " ",
-						 more_tags_one ? currentcmd.firstbuf+1 : currentcmd.firstbuf,
-						 currentcmd.batch,
-						 more_tags_two ? ";" : " ",
-						 more_tags_two ? *msg+1 : *msg);
+					         "%s\r\n"
+					         "@batch=%s%s%s\r\n"
+					         "@batch=%s%s%s",
+					         batchstr,
+					         currentcmd.batch,
+					         more_tags_one ? ";" : " ",
+					         more_tags_one ? currentcmd.firstbuf + 1 : currentcmd.firstbuf,
+					         currentcmd.batch,
+					         more_tags_two ? ";" : " ",
+					         more_tags_two ? *msg + 1 : *msg);
 				}
 				*msg = packet;
 				*len = strlen(*msg);
-			} else {
+			} else
+			{
 				/* >2 responses.... the first 2 have already been sent */
 				if (!strncmp(*msg, "@batch", 6))
 				{
 					/* No buffer change needed, already contains a (now inner) batch */
-				} else {
+				} else
+				{
 					int more_tags = **msg == '@';
 					snprintf(packet, sizeof(packet), "@batch=%s%s%s",
-						currentcmd.batch,
-						more_tags ? ";" : " ",
-						more_tags ? *msg+1 : *msg);
+					         currentcmd.batch,
+					         more_tags ? ";" : " ",
+					         more_tags ? *msg + 1 : *msg);
 					*msg = packet;
 					*len = strlen(*msg);
 				}
 			}
 			currentcmd.responses++;
-		}
-		else if (IsServer(to) || !MyUser(to))
+		} else if (IsServer(to) || !MyUser(to))
 		{
 			currentcmd.sent_remote = 1;
 		}
@@ -402,7 +401,8 @@ void _labeled_response_set_context(void *ctx)
 	{
 		/* This means: clear the current context */
 		memset(&currentcmd, 0, sizeof(currentcmd));
-	} else {
+	} else
+	{
 		/* Set the current context to the provided one */
 		memcpy(&currentcmd, ctx, sizeof(LabeledResponseContext));
 	}

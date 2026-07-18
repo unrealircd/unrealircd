@@ -5,14 +5,13 @@
 
 #include "unrealircd.h"
 
-ModuleHeader MOD_HEADER
-  = {
-	"central-api",
-	"1.0.2",
-	"Acquire and set API key for unrealircd.org services",
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "central-api",
+    "1.0.2",
+    "Acquire and set API key for unrealircd.org services",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 struct cfgstruct {
 	char *request_key_challenge;
@@ -83,20 +82,19 @@ int capi_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::central-api.. */
 	if (!ce || !ce->name || strcmp(ce->name, "central-api"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!cep->value)
 		{
 			config_error("%s:%i: set::central-api::%s with no value",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
-		} else
-		if (!strcmp(cep->name, "request-key"))
+		} else if (!strcmp(cep->name, "request-key"))
 		{
 			char *p = strchr(cep->value, '-');
 			if (!p)
@@ -107,29 +105,28 @@ int capi_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 				errors++;
 			}
 			req.request_key = 1;
-			
-		} else
-		if (!strcmp(cep->name, "api-key"))
+
+		} else if (!strcmp(cep->name, "api-key"))
 		{
 			if (!strchr(cep->value, ':'))
 			{
 				config_error("%s:%i: set::central-api::api-key: Invalid format. "
-					     "Please check if you copy-pasted the api-key correctly. "
-					     "You can log in at your account to view API keys at "
-					     "https://www.unrealircd.org/central-api/account/",
-					     cep->file->filename, cep->line_number);
+				             "Please check if you copy-pasted the api-key correctly. "
+				             "You can log in at your account to view API keys at "
+				             "https://www.unrealircd.org/central-api/account/",
+				             cep->file->filename, cep->line_number);
 				errors++;
 			}
 			req.api_key = 1;
 		} else
 		{
 			config_error("%s:%i: unknown directive set::central-api::%s",
-				cep->file->filename, cep->line_number, cep->name);
+			             cep->file->filename, cep->line_number, cep->name);
 			errors++;
 			continue;
 		}
 	}
-	
+
 	*errs = errors;
 	return errors ? -1 : 1;
 }
@@ -143,7 +140,7 @@ int capi_config_posttest(int *errs)
 		config_error("You need to set either set::central-api::request-key or set::central-api::api-key (not both or none).");
 		config_error("See https://www.unrealircd.org/docs/Central_API for the documentation");
 		errors++;
-	} 
+	}
 
 	*errs = errors;
 	return errors ? -1 : 1;
@@ -166,9 +163,9 @@ char *capi_hash(const char *in)
 	static char hashbuf[128];
 
 	snprintf(buf, sizeof(buf), "%s:%s:%s",
-		CAPI_HASH_STRING_PREFIX,
-		in,
-		CAPI_HASH_STRING_SUFFIX);
+	         CAPI_HASH_STRING_PREFIX,
+	         in,
+	         CAPI_HASH_STRING_SUFFIX);
 	return sha256hash(hashbuf, buf, strlen(buf));
 }
 
@@ -179,11 +176,11 @@ int capi_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (type != CONFIG_SET)
 		return 0;
-	
+
 	/* We are only interrested in set::central-api.. */
 	if (!ce || !ce->name || strcmp(ce->name, "central-api"))
 		return 0;
-	
+
 	for (cep = ce->items; cep; cep = cep->next)
 	{
 		if (!strcmp(cep->name, "request-key"))
@@ -198,8 +195,7 @@ int capi_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 			safe_strdup(cfg.request_key_challenge, capi_hash(buf));
 			safe_strdup(cfg.request_key_response, capi_hash(p));
-		} else
-		if (!strcmp(cep->name, "api-key"))
+		} else if (!strcmp(cep->name, "api-key"))
 		{
 			safe_strdup(cfg.api_key, cep->value);
 		}

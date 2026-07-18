@@ -24,20 +24,19 @@
 
 CMD_FUNC(cmd_squit);
 
-#define MSG_SQUIT 	"SQUIT"	
+#define MSG_SQUIT "SQUIT"
 
-ModuleHeader MOD_HEADER
-  = {
-	"squit",
-	"5.0",
-	"command /squit", 
-	"UnrealIRCd Team",
-	"unrealircd-6",
-    };
+ModuleHeader MOD_HEADER = {
+    "squit",
+    "5.0",
+    "command /squit",
+    "UnrealIRCd Team",
+    "unrealircd-6",
+};
 
 MOD_INIT()
 {
-	CommandAdd(modinfo->handle, MSG_SQUIT, cmd_squit, 2, CMD_USER|CMD_SERVER);
+	CommandAdd(modinfo->handle, MSG_SQUIT, cmd_squit, 2, CMD_USER | CMD_SERVER);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -65,7 +64,7 @@ CMD_FUNC(cmd_squit)
 
 	// FIXME: this function is way too confusing, and full of old shit?
 
-	if (!ValidatePermissionsForPath("route:local",client,NULL,NULL,NULL))
+	if (!ValidatePermissionsForPath("route:local", client, NULL, NULL, NULL))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -119,8 +118,8 @@ CMD_FUNC(cmd_squit)
 		sendnumeric(client, ERR_NOSUCHSERVER, server);
 		return;
 	}
-	if (MyUser(client) && ((!ValidatePermissionsForPath("route:global",client,NULL,NULL,NULL) && !MyConnect(target)) ||
-	    (!ValidatePermissionsForPath("route:local",client,NULL,NULL,NULL) && MyConnect(target))))
+	if (MyUser(client) && ((!ValidatePermissionsForPath("route:global", client, NULL, NULL, NULL) && !MyConnect(target)) ||
+	                       (!ValidatePermissionsForPath("route:local", client, NULL, NULL, NULL) && MyConnect(target))))
 	{
 		sendnumeric(client, ERR_NOPRIVILEGES);
 		return;
@@ -134,8 +133,7 @@ CMD_FUNC(cmd_squit)
 		           "SQUIT: Forced server disconnect of $target by $client ($reason)",
 		           log_data_client("target", target),
 		           log_data_string("reason", comment));
-	}
-	else if (MyConnect(target))
+	} else if (MyConnect(target))
 	{
 		if (target->user)
 		{
