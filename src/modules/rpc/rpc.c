@@ -62,6 +62,7 @@ struct RPCTimer {
 	char *timer_id;
 	json_t *request;
 	struct timeval last_run;
+	char deleted;
 };
 
 /* Forward declarations */
@@ -128,6 +129,7 @@ ConfigItem_operclass *conf_rpc_class = NULL;
 RRPC *rrpc_list = NULL;
 OutstandingRRPC *outstanding_rrpc_list = NULL;
 RPCTimer *rpc_timer_list = NULL;
+int rpc_timers_iterating = 0; /* prevent deletion of events during list operations */
 ModDataInfo *rrpc_md;
 
 MOD_TEST()
@@ -1527,10 +1529,29 @@ void free_outstanding_rrpc_list(ModData *m)
 /** Remove timer from rpc_timer_list and free it */
 void free_rpc_timer(RPCTimer *r)
 {
+	if (rpc_timers_iterating)
+	{
+		/* Don't free mid-iteration, let cleanup_rpc_timers() handle it (#6639) */
+		r->deleted = 1;
+		return;
+	}
 	safe_free(r->timer_id);
 	json_decref(r->request);
 	DelListItem(r, rpc_timer_list);
 	safe_free(r);
+}
+
+/** Free timers that were marked for deletion during rpc_do_timers() */
+static void cleanup_rpc_timers(void)
+{
+	RPCTimer *r, *r_next;
+
+	for (r = rpc_timer_list; r; r = r_next)
+	{
+		r_next = r->next;
+		if (r->deleted)
+			free_rpc_timer(r);
+	}
 }
 
 /* Admin unloading the RPC module for good (not called on rehash) */
@@ -1564,6 +1585,8 @@ RPCTimer *find_rpc_timer(Client *client, const char *timer_id)
 
 	for (r = rpc_timer_list; r; r = r->next)
 	{
+		if (r->deleted)
+			continue;
 		if ((r->client == client) && !strcmp(timer_id, r->timer_id))
 			return r;
 	}
@@ -2271,17 +2294,21 @@ RPC_CALL_FUNC(rpc_rpc_add_timer)
 
 EVENT(rpc_do_timers)
 {
-	RPCTimer *e, *e_next;
+	RPCTimer *e;
 
-	for (e = rpc_timer_list; e; e = e_next)
+	rpc_timers_iterating++;
+	for (e = rpc_timer_list; e; e = e->next)
 	{
-		e_next = e->next;
+		if (e->deleted)
+			continue;
 		if (minimum_msec_since_last_run(&e->last_run, e->every_msec))
 		{
 			rpc_call_json(e->client, e->request);
 		}
 		// TODO: maybe do counts as well?
 	}
+	if (--rpc_timers_iterating == 0)
+		cleanup_rpc_timers();
 }
 
 /** Client being freed? If RPC then cancel timers, if any */

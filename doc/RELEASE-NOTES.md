@@ -20,6 +20,7 @@ This is work in progress and may not always be a stable version.
   for classic somewhere in 2027.
 
 ### Fixes:
+* Crash with JSON-RPC method `rpc.del_timer`
 * Race condition in server linking. If a server was trying to link to
   multiple servers at once, then the servers could clash causing a
   connect+split. This could happen in the non-standard configuration where
