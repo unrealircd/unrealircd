@@ -41,6 +41,7 @@ typedef struct ConfusablesConversionTable {
  * sed 's/; /;/g'|\
  * awk -F ';' '{ print "\t{0x" $1 ", 0x" $2 ", \"" $3 "\", 1}," }'|\
  * sed 's/"Emoticons", 1/"Emoticons", 0/g'|\
+ * sed 's/"Variation Selectors", 1/"Variation Selectors", -1/g'|\
  * sed 's/"Mathematical Alphanumeric Symbols", 1/"Mathematical Alphanumeric Symbols", 3/g'
  *
  * If blocks are added then you will need to change UNICODE_BLOCK_COUNT
@@ -49,6 +50,8 @@ typedef struct ConfusablesConversionTable {
  * Important: don't change this list and then REHASH.
  * Such hot-reloading will cause pages to be off (=WRONG).
  * Only do this with restarts, eg. with a release upgrade.
+ *
+ * A score of -1 means the block never counts as a script change.
  *
  * NOTE IF YOU TWEAK ANY OF THE SCORES BELOW:
  * Then also update the sed command from a few lines up :)
@@ -212,7 +215,7 @@ UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
 	{0xF900, 0xFAFF, "CJK Compatibility Ideographs", 1},
 	{0xFB00, 0xFB4F, "Alphabetic Presentation Forms", 1},
 	{0xFB50, 0xFDFF, "Arabic Presentation Forms-A", 1},
-	{0xFE00, 0xFE0F, "Variation Selectors", 1},
+	{0xFE00, 0xFE0F, "Variation Selectors", -1},
 	{0xFE10, 0xFE1F, "Vertical Forms", 1},
 	{0xFE20, 0xFE2F, "Combining Half Marks", 1},
 	{0xFE30, 0xFE4F, "CJK Compatibility Forms", 1},
@@ -5866,22 +5869,25 @@ int utf8_text_analysis(Client *client, const char *text, TextAnalysis *e)
 			if (current_script <= 3)
 				current_script = 0;
 
-			if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
+			if (unicode_blocks[current_script].score >= 0)
 			{
-				/* Script change: add X point(s) */
-				int add_points = unicode_blocks[current_script].score;
-				e->antimixedutf8_points += add_points;
+				if ((current_script != last_script) && (last_script != SCRIPT_UNDEFINED))
+				{
+					/* Script change: add X point(s) */
+					int add_points = unicode_blocks[current_script].score;
+					e->antimixedutf8_points += add_points;
 
 #if 0
-				/* Give an extra point if the script change happened
-				 * within the same word, as that would be rather unusual
-				 * in normal cases. (Unless .score is 0 points)
-				 */
-				if (add_points && !last_character_was_word_separator)
-					e->antimixedutf8_points++;
+					/* Give an extra point if the script change happened
+					 * within the same word, as that would be rather unusual
+					 * in normal cases. (Unless .score is 0 points)
+					 */
+					if (add_points && !last_character_was_word_separator)
+						e->antimixedutf8_points++;
 #endif
+				}
+				last_script = current_script;
 			}
-			last_script = current_script;
 		}
 
 		if (strchr("., ", *p))
