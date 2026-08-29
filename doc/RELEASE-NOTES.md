@@ -10,6 +10,10 @@ This is work in progress and may not always be a stable version.
   particular client in the I/O engine. This gives other clients a more fair
   chance to get their commands read and processed. Defaults to 25ms for
   unknown-users and 50ms for known-users.
+* IRCOps can use `WHO` with
+  [Extended Server Bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  for things like `WHO ~asn:64496`, `WHO ~country:NL` and
+  `WHO ~security-group:unknown-users`.
 
 ### Changes:
 * Update shipped libs: c-ares (1.34.8, security fixes)

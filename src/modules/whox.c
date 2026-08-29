@@ -46,6 +46,7 @@ ModuleHeader MOD_HEADER = {
 #define WMATCH_IP      0x0080
 #define WMATCH_MODES   0x0100
 #define WMATCH_CONTIME 0x0200
+#define WMATCH_EXTBAN  0x0400
 
 #define RPL_WHOSPCRPL 354
 
@@ -448,6 +449,33 @@ CMD_FUNC(cmd_whox)
 		operspy = 1;
 	}
 
+	/* Searching by extended server ban, eg "WHO ~country:NL" or "WHO ~asn:64496".
+	 * Requires specific IRCOp privileges because this can reveal information
+	 * that is not shown publicly in WHOIS.
+	 */
+	if (is_extended_ban(mask))
+	{
+		const char *nextbanstr;
+		Extban *extban;
+
+		if (!ValidatePermissionsForPath("client:see:who:extended-server-ban", client, NULL, NULL, NULL))
+		{
+			sendnumeric(client, ERR_NOPRIVILEGES);
+			sendnumeric(client, RPL_ENDOFWHO, mask);
+			return;
+		}
+		extban = findmod_by_bantype(mask, &nextbanstr);
+		if (!extban ||
+		    !(extban->options & EXTBOPT_TKL) ||
+		    !(extban->is_banned_events & BANCHK_TKL))
+		{
+			sendnotice(client, "WHO: '%s' is not a valid extended server ban type", mask);
+			sendnumeric(client, RPL_ENDOFWHO, mask);
+			return;
+		}
+		fmt.matchsel |= WMATCH_EXTBAN;
+	}
+
 	/* '/who 0' for a global list.  this forces clients to actually
 	 * request a full list.  I presume its because of too many typos
 	 * with "/who" ;) --fl
@@ -472,6 +500,12 @@ static int do_match(Client *client, Client *acptr, char *mask, struct who_format
 {
 	if (mask == NULL)
 		return 1;
+
+	/* match extended server ban, eg ~asn:64496
+	 * (the IRCOp privilege check already happened in cmd_whox).
+	 */
+	if (IsMatch(fmt, WMATCH_EXTBAN))
+		return match_user(mask, acptr, MATCH_CHECK_EXTENDED);
 
 	/* default */
 	if (fmt->matchsel == 0 && (match_simple(mask, acptr->name) ||
