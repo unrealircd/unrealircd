@@ -22,6 +22,7 @@ This is work in progress and may not always be a stable version.
   the default for existing installations as well. The old engine
   `geoip_classic` is now deprecated and we will stop database updates
   for classic somewhere in 2027.
+* Added minimal self-check for Argon2 (fail early instead of crashing)
 
 ### Fixes:
 * Crash with JSON-RPC method `rpc.del_timer`

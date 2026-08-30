@@ -542,6 +542,7 @@ int InitUnrealIRCd(int argc, char *argv[])
 		fprintf(stderr, "Failed to initialize sodium library -- error accessing random device?\n");
 		exit(-1);
 	}
+	check_argon2();
 
 	memset(&botmotd, '\0', sizeof(MOTDFile));
 	memset(&rules, '\0', sizeof(MOTDFile));

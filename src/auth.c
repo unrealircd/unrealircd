@@ -617,3 +617,61 @@ const char *Auth_Hash(AuthenticationType type, const char *text)
 			return NULL;
 	}
 }
+
+/** Check if the argon2 library actually works on this machine.
+ * We run it in a forked child, because a libargon2 that was built for
+ * another CPU dies with SIGILL instead of returning an error.
+ */
+void check_argon2(void)
+{
+#ifndef _WIN32
+	struct rlimit corelim;
+	char buf[128];
+	pid_t p;
+	int status = 0;
+
+	p = fork();
+	if (p < 0)
+		return; /* Can't fork? Then just skip this check */
+
+	if (p == 0)
+	{
+		/* No core dumps */
+		corelim.rlim_cur = corelim.rlim_max = 0;
+		setrlimit(RLIMIT_CORE, &corelim);
+		/* Now the actual call that may crash */
+		argon2id_hash_encoded(1, 8, 1, "x", 1, "12345678", 8, 4, buf, sizeof(buf));
+		_exit(0);
+	}
+
+	while ((waitpid(p, &status, 0) < 0) && (errno == EINTR))
+		;
+
+	if (WIFSIGNALED(status))
+	{
+		fprintf(stderr,
+		        "** ERROR **\n"
+		        "The argon2 library crashed during startup (%s).\n"
+		        "Usually this happens when an UnrealIRCd installation is copied from\n"
+		        "one machine to another. That is not supported. For example, we optimize\n"
+		        "the argon2 library for the CPU of the machine you compile on.\n"
+		        "\n",
+		        strsignal(WTERMSIG(status)));
+		if (file_exists(BUILDDIR))
+		{
+			fprintf(stderr,
+			        "To fix this, compile and install UnrealIRCd on THIS machine:\n"
+			        "cd %s && ./Config && make && make install\n"
+			        "\n",
+			        BUILDDIR);
+		} else
+		{
+			fprintf(stderr,
+			        "To fix this you need to compile and install UnrealIRCd on THIS machine.\n"
+			        "See: https://www.unrealircd.org/docs/Installing_from_source\n"
+			        "\n");
+		}
+		exit(-1);
+	}
+#endif
+}

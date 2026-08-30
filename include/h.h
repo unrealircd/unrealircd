@@ -556,6 +556,7 @@ extern int Auth_Check(Client *cptr, AuthConfig *as, const char *para);
 extern const char *Auth_Hash(AuthenticationType type, const char *text);
 extern int Auth_CheckError(ConfigEntry *ce, int warn_on_plaintext);
 extern int Auth_AutoDetectHashType(const char *hash);
+extern void check_argon2(void);
 
 extern void make_cloakedhost(Client *client, const char *curr, char *buf, size_t buflen);
 extern int channel_canjoin(Client *client, const char *name);
