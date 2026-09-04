@@ -24,6 +24,10 @@ ModuleHeader MOD_HEADER = {
 /* The "Server: xyz" in the response */
 #define WEB_SOFTWARE "UnrealIRCd"
 
+/* Limits on incoming HTTP request headers */
+#define WEBSERVER_MAX_HEADERS            64   /* max number of headers */
+#define WEBSERVER_MAX_HEADER_LINE_LENGTH 4096 /* max length of one header line */
+
 /* Macros */
 #define WEB(client)       ((WebRequest *)moddata_local_client(client, webserver_md).ptr)
 #define WEBSERVER(client) ((client->local && client->local->listener) ? client->local->listener->webserver : NULL)
@@ -398,6 +402,14 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 			safe_strdup(WEB(client)->uri, value);
 		} else
 		{
+			/* A header line is too long or there are too many headers */
+			if ((WEB(client)->num_headers >= WEBSERVER_MAX_HEADERS) ||
+			    (strlen(key) + strlen(value) > WEBSERVER_MAX_HEADER_LINE_LENGTH))
+			{
+				webserver_send_response(client, 431, "Too many or too large HTTP headers");
+				safe_free(netbuf);
+				return -1; /* dead */
+			}
 			if (!strcasecmp(key, "Content-Length"))
 			{
 				WEB(client)->content_length = atoll(value);
@@ -407,6 +419,7 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 					WEB(client)->transfer_encoding = TRANSFER_ENCODING_CHUNKED;
 			}
 			add_nvplist(&WEB(client)->headers, WEB(client)->num_headers, key, value);
+			WEB(client)->num_headers++;
 		}
 	}
 
@@ -490,6 +503,8 @@ void _webserver_send_response(Client *client, int status, char *msg)
 		statusmsg = "Not Found";
 	else if (status == 416)
 		statusmsg = "Range Not Satisfiable";
+	else if (status == 431)
+		statusmsg = "Request Header Fields Too Large";
 
 	snprintf(buf, sizeof(buf),
 	         "HTTP/1.1 %d %s\r\nServer: %s\r\nConnection: close\r\n\r\n",
