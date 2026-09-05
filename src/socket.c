@@ -1297,8 +1297,14 @@ void read_packet(int fd, int revents, void *data)
 		if (length < sizeof(readbuf))
 			return;
 
-		/* If processing client data takes too much time, yield so we process the next client */
-		if (max_ns && (monotime_ns() - loop_start > max_ns))
+		/* Stop processing a client if they take too much time. Yield and go to next client.
+		 * With one exception: when OpenSSL still has decrypted data for us. Because
+		 * otherwise this pending data will not be processed until the client happens to
+		 * send another packet, which may not be until the server pings and the client
+		 * pongs back. We are talking about up to 16kb, so this is acceptable.
+		 */
+		if (max_ns && (monotime_ns() - loop_start > max_ns) &&
+		    !(IsTLS(client) && client->local->ssl && SSL_pending(client->local->ssl)))
 			return;
 	}
 }
