@@ -283,8 +283,12 @@ const char *module_renamed(const char *name)
 	return NULL;
 }
 
-/** Return an error string if module with 'name' should no longer be used. */
-const char *is_module_deprecated(const char *name)
+/** Return an error string if module with 'name' should no longer be used.
+ * @param name  Module
+ * @param phase What phase of loading, 0 for pre-file-exists and 1 after
+ *              trying a non-existent module.
+ */
+const char *is_module_deprecated(const char *name, int phase)
 {
 	if (!strcmp(name, "third/central-api"))
 	{
@@ -292,13 +296,19 @@ const char *is_module_deprecated(const char *name)
 		           "The central-api module has been moved from third party modules to the core.\n"
 		           "Please replace your loadmodule \"third/central-api\"; line with: loadmodule \"central-api\";");
 		return "Don't load this third party module, see error above";
-	}
-	if (!strcmp(name, "third/centralblocklist"))
+	} else if (!strcmp(name, "third/centralblocklist"))
 	{
 		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_DEPRECATED_MODULE", NULL,
 		           "The centralblocklist module has been moved from third party modules to the core with a slightly changed name.\n"
 		           "Please replace your loadmodule \"third/centralblocklist\"; line with: loadmodule \"central-blocklist\";");
 		return "Don't load this third party module, see error above";
+	} else if (!strcmp(name, "geoip_classic") && (phase == 1))
+	{
+		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_DEPRECATED_MODULE", NULL,
+		           "The geoip_classic module is being phased out. If you can, use the geoip_mmdb module instead. See https://www.unrealircd.org/docs/GeoIP#Settings\n"
+		           "If you insist on using geoip_classic then re-run ./Config, answer 'classic' at the GeoIP question and run make install.\n"
+		           "Note that database updates for 'geoip_classic' will stop somewhere in 2027.");
+		return "deprecated module not available";
 	}
 	return NULL;
 }
@@ -343,7 +353,7 @@ const char *Module_Create(const char *path_)
 		}
 	}
 
-	if ((reterr = is_module_deprecated(relpath)))
+	if ((reterr = is_module_deprecated(relpath, 0)))
 		return reterr;
 
 	if (module_already_in_testing(relpath))
@@ -351,6 +361,8 @@ const char *Module_Create(const char *path_)
 
 	if (!file_exists(path))
 	{
+		if ((reterr = is_module_deprecated(relpath, 1)))
+			return reterr;
 		snprintf(errorbuf, sizeof(errorbuf), "Cannot open module file: %s", strerror(errno));
 		return errorbuf;
 	}

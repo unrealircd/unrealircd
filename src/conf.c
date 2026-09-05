@@ -8411,6 +8411,25 @@ int _conf_set(ConfigFile *conf, ConfigEntry *ce)
 	return 0;
 }
 
+/** Give feedback about set:: items that no longer exist.
+ */
+static int is_set_item_deprecated(ConfigEntry *cep)
+{
+	if (!strcmp(cep->name, "geoip-classic"))
+	{
+		config_error("%s:%i: set::geoip-classic: the geoip_classic module is being "
+		             "phased out. If you can, use set::geoip-mmdb instead. "
+		             "See https://www.unrealircd.org/docs/GeoIP#Settings",
+		             cep->file->filename, cep->line_number);
+		config_error("If you insist on using geoip_classic then re-run ./Config, answer "
+		             "'classic' at the GeoIP question and run make install. Note that "
+		             "database updates for 'geoip_classic' will stop somewhere in 2027.");
+		return 1;
+	}
+
+	return 0;
+}
+
 int _test_set(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp, *cep4;
@@ -10022,9 +10041,12 @@ int _test_set(ConfigFile *conf, ConfigEntry *ce)
 			}
 			if (!used)
 			{
-				config_error("%s:%i: unknown directive set::%s",
-				             cep->file->filename, cep->line_number,
-				             cep->name);
+				if (!is_set_item_deprecated(cep))
+				{
+					config_error("%s:%i: unknown directive set::%s",
+					             cep->file->filename, cep->line_number,
+					             cep->name);
+				}
 				errors++;
 			}
 		}
