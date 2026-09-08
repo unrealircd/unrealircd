@@ -699,7 +699,6 @@ static int crule_match_asname(crule_context *context, int numargs, void *crulear
 	geo = geoip_client(context->client);
 	if (geo && geo->asname && match_simple(arg, geo->asname))
 		ret = 1;
-	free_geoip_result(geo);
 	return ret;
 }
 

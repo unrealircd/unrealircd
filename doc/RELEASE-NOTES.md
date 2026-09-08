@@ -25,7 +25,20 @@ This is work in progress and may not always be a stable version.
 * Added minimal self-check for Argon2 (fail early instead of crashing)
 
 ### Fixes:
+* Resource exhaustion attack in the webserver. Previously we had no
+  restriction on HTTP request headers, so a client could make a big
+  request which would consume a lot of memory and stall the IRCd. This
+  only affects servers with a listen block with `listen::options::websocket`
+  (for [Websockets](https://www.unrealircd.org/docs/WebSocket_support))
+  or `listen::options::rpc`
+  (for [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC)). See the top
+  of these release notes, especially the hot-patch.
+* Crash when using [crule functions](https://www.unrealircd.org/docs/Crule)
+  `match_asname()`
 * Crash with JSON-RPC method `rpc.del_timer`
+* Crash with `REHASH -dns` if linking to a server (race condition)
+* [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)
+  gave some emoji a way too high score.
 * Race condition in server linking. If a server was trying to link to
   multiple servers at once, then the servers could clash causing a
   connect+split. This could happen in the non-standard configuration where
