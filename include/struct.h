@@ -978,7 +978,7 @@ struct SWhois {
 	char *setby;
 };
 
-#define UNICODE_BLOCK_COUNT 339
+#define UNICODE_BLOCK_COUNT 338
 /** Text analysis by utf8_text_analysis() and other modules */
 typedef struct TextAnalysis {
 	int antimixedutf8_points;                   /**< Points given by AntiMixedUTF8 */

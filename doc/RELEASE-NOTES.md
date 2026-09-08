@@ -34,7 +34,7 @@ This is work in progress and may not always be a stable version.
   (for [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC)). See the top
   of these release notes, especially the hot-patch.
 * Crash when using [crule functions](https://www.unrealircd.org/docs/Crule)
-  `match_asname()`
+  `match_asname()` or when using `unicode_count('Nonexistent Block')`.
 * Crash with JSON-RPC method `rpc.del_timer`
 * Crash with `REHASH -dns` if linking to a server (race condition)
 * [AntiMixedUTF8](https://www.unrealircd.org/docs/Set_block#set::antimixedutf8)

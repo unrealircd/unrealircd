@@ -45,7 +45,8 @@ typedef struct ConfusablesConversionTable {
  * sed 's/"Mathematical Alphanumeric Symbols", 1/"Mathematical Alphanumeric Symbols", 3/g'
  *
  * If blocks are added then you will need to change UNICODE_BLOCK_COUNT
- * which is in include/struct.h
+ * which is in include/struct.h. If they mismatch then we return
+ * MOD_FAILED in MOD_INIT().
  *
  * Important: don't change this list and then REHASH.
  * Such hot-reloading will cause pages to be off (=WRONG).
@@ -57,7 +58,7 @@ typedef struct ConfusablesConversionTable {
  * Then also update the sed command from a few lines up :)
  */
 /* clang-format off */
-UnicodeBlocks unicode_blocks[UNICODE_BLOCK_COUNT] =
+UnicodeBlocks unicode_blocks[] =
 {
 	{0x0000, 0x007F, "Basic Latin", 1},
 	{0x0080, 0x00FF, "Latin-1 Supplement", 1},
@@ -5602,6 +5603,15 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+
+	if (ARRAY_SIZEOF(unicode_blocks) != UNICODE_BLOCK_COUNT)
+	{
+		config_error("[utf8functions] unicode_blocks[] has %d entries but UNICODE_BLOCK_COUNT "
+		             "is %d. Please update UNICODE_BLOCK_COUNT in include/struct.h to match.",
+		             (int)ARRAY_SIZEOF(unicode_blocks), UNICODE_BLOCK_COUNT);
+		return MOD_FAILED;
+	}
+
 	HookAdd(modinfo->handle, HOOKTYPE_ANALYZE_TEXT, -1, utf8_text_analysis);
 
 	return MOD_SUCCESS;
