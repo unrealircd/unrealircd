@@ -751,6 +751,17 @@ static void stats_set_anti_flood(Client *client, FloodSettings *f)
 			               f->name, (int)f->limit[i]);
 			sendtxtnumeric(client, "anti-flood::%s::multiline::max-bytes: %d",
 			               f->name, (int)f->period[i]);
+		} else if (i == FLD_MAX_PROCESSING_TIME)
+		{
+			if (f->limit[i] < 0)
+			{
+				sendtxtnumeric(client, "anti-flood::%s::max-processing-time: unlimited",
+				               f->name);
+			} else
+			{
+				sendtxtnumeric(client, "anti-flood::%s::max-processing-time: %d msec",
+				               f->name, (int)f->limit[i]);
+			}
 		} else
 		{
 			sendtxtnumeric(client, "anti-flood::%s::%s: %d per %s",
