@@ -102,6 +102,7 @@ RPC_CALL_FUNC(rpc_security_group_get)
 		result = json_object();
 		json_object_set_new(result, "name", json_string_unreal("unknown-users"));
 		json_object_set_new(result, "priority", json_integer(0));
+		json_object_set_new(result, "public", json_boolean(1));
 		json_object_set_new(result, "builtin", json_boolean(1));
 		json_object_set_new(result, "description", json_string_unreal("Users not matching the 'known-users' security group"));
 		rpc_response(client, request, result);
@@ -118,7 +119,7 @@ RPC_CALL_FUNC(rpc_security_group_get)
 
 	result = json_object();
 	json_expand_security_group(result, NULL, s, 1);
-	if (!strcmp(s->name, "known-users"))
+	if (s->builtin)
 		json_object_set_new(result, "builtin", json_boolean(1));
 
 	rpc_response(client, request, result);
