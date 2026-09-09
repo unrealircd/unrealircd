@@ -41,6 +41,7 @@ typedef struct ConfusablesConversionTable {
  * sed 's/; /;/g'|\
  * awk -F ';' '{ print "\t{0x" $1 ", 0x" $2 ", \"" $3 "\", 1}," }'|\
  * sed 's/"Emoticons", 1/"Emoticons", 0/g'|\
+ * sed 's/"General Punctuation", 1/"General Punctuation", 0/g'|\
  * sed 's/"Variation Selectors", 1/"Variation Selectors", -1/g'|\
  * sed 's/"Mathematical Alphanumeric Symbols", 1/"Mathematical Alphanumeric Symbols", 3/g'
  *
