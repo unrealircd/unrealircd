@@ -406,7 +406,7 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 			if ((WEB(client)->num_headers >= WEBSERVER_MAX_HEADERS) ||
 			    (strlen(key) + strlen(value) > WEBSERVER_MAX_HEADER_LINE_LENGTH))
 			{
-				webserver_send_response(client, 431, "Too many or too large HTTP headers");
+				webserver_send_response(client, 431, "Request header too large");
 				safe_free(netbuf);
 				return -1; /* dead */
 			}
@@ -467,6 +467,13 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 
 	if (lastloc && lastloc_len)
 	{
+		/* An unterminated header line that exceeds size */
+		if (lastloc_len > WEBSERVER_MAX_HEADER_LINE_LENGTH)
+		{
+			webserver_send_response(client, 431, "Request header too large");
+			safe_free(netbuf);
+			return -1; /* dead */
+		}
 		/* Last line was cut somewhere, save it for next round. */
 		WEB(client)->lefttoparselen = lastloc_len;
 		WEB(client)->lefttoparse = safe_alloc(lastloc_len);
