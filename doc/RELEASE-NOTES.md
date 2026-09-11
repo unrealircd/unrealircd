@@ -1,8 +1,18 @@
-UnrealIRCd 6.2.7-git
+UnrealIRCd 6.2.7
 =================
 
-This is the git version (development version) for future UnrealIRCd 6.2.7.
-This is work in progress and may not always be a stable version.
+This UnrealIRCd 6.2.7 release fixes multiple issues in the webserver
+module which allow an attacker to stall the IRCd. If you use Websockets
+or JSON-RPC then we recommend to either upgrade or **hot-patch**.
+The hot-patch allows you to update the server **without a restart** on
+UnrealIRCd 6.2.x and may also work on older (unsupported) versions.
+
+To do so, run: `./unrealircd hot-patch webserver-header-dos`
+
+Note that the hot-patch *only* fixes the issues mentioned above. This
+release contains other fixes and enhancements. A good strategy may be
+to hot-patch now to fix the most urgent issue and plan an upgrade to
+6.2.7 at a more convenient time in the upcoming weeks.
 
 ### Enhancements:
 * New [set::anti-flood](https://www.unrealircd.org/docs/Anti-flood_settings#max-processing-time)
@@ -33,6 +43,7 @@ This is work in progress and may not always be a stable version.
   or `listen::options::rpc`
   (for [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC)). See the top
   of these release notes, especially the hot-patch.
+* Websocket pings were limited in size but not throttled
 * Crash when using [crule functions](https://www.unrealircd.org/docs/Crule)
   `match_asname()` or when using `unicode_count('Nonexistent Block')`.
 * Crash with JSON-RPC method `rpc.del_timer`
@@ -64,6 +75,10 @@ This is work in progress and may not always be a stable version.
 * All C code must now be formatted with clang-format version 21: run
   `make format` **before committing** (or use clang-format in your editor).
   CI will check for this and fail a PR containing unformatted code.
+* [JSON-RPC](https://www.unrealircd.org/docs/JSON-RPC:Security_group)
+  `security_group.list` and `security_group.get`: we now consistently
+  have `builtin` on all built-in security groups, and a fix for missing
+  `public` in unknown-users.
 
 UnrealIRCd 6.2.6
 -----------------
