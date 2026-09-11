@@ -25,8 +25,9 @@ ModuleHeader MOD_HEADER = {
 #define WEB_SOFTWARE "UnrealIRCd"
 
 /* Limits on incoming HTTP request headers */
-#define WEBSERVER_MAX_HEADERS            64   /* max number of headers */
-#define WEBSERVER_MAX_HEADER_LINE_LENGTH 4096 /* max length of one header line */
+#define WEBSERVER_MAX_HEADERS             64    /* max number of headers */
+#define WEBSERVER_MAX_HEADER_LINE_LENGTH  8192  /* max length of one header line */
+#define WEBSERVER_MAX_HEADER_TOTAL_LENGTH 32768 /* max length of the entire request header */
 
 /* Macros */
 #define WEB(client)       ((WebRequest *)moddata_local_client(client, webserver_md).ptr)
@@ -373,6 +374,14 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	char *lastloc = NULL;
 	int lastloc_len = 0;
 	int totalsize;
+
+	/* Very early: check maximum request header size */
+	if (WEB(client)->header_bytes > WEBSERVER_MAX_HEADER_TOTAL_LENGTH - *length)
+	{
+		webserver_send_response(client, 431, "Request header too large");
+		return -1; /* dead */
+	}
+	WEB(client)->header_bytes += *length;
 
 	totalsize = WEB(client)->lefttoparselen + *length;
 	netbuf = safe_alloc(totalsize + 1);
