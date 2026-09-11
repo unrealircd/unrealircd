@@ -284,8 +284,18 @@ int websocket_handle_packet_ping(Client *client, const char *buf, int len)
 		dead_socket(client, "WebSocket: oversized PING request");
 		return -1;
 	}
-	websocket_send_pong(client, buf, len);
 	add_fake_lag(client, 1000); /* lag penalty of 1 second */
+	/* If client is lagged up considerably then we don't respond
+	 * with a PONG. Instead of <10 we use <60 here. The <10 could
+	 * happen if someone has reached the full fake lag limit, no,
+	 * even 25 could happen with multiline. If maxed out and the
+	 * client application would PING it would not receive a PONG
+	 * back from us. So we play it safe with <60, since 60 cannot
+	 * be reached under any normal circumstances except for Websocket
+	 * PING flooding, basically.
+	 */
+	if (client->local->fake_lag - TStime() < 60)
+		websocket_send_pong(client, buf, len);
 	return 0;
 }
 
