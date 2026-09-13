@@ -1164,8 +1164,15 @@ void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf
 
 	*buf = '\0';
 
-	/* First we must grab the lowest ranking mode, eg 'vhoaq' results in rank for 'v' */
-	rank = lowest_ranking_mode(modes);
+	/* First we must grab the lowest ranking mode, eg 'vhoaq' results in rank for 'v'.
+	 * lowest_ranking_mode() returns a mode LETTER (eg 'v'), not a rank - it must be
+	 * converted via mode_to_rank() before comparing against cm->rank below, otherwise
+	 * we'd be comparing a numeric rank against a raw ASCII code. Every ASCII mode
+	 * letter is under 1000, so halfop/op/admin/owner (ranks 1000+) would always
+	 * satisfy "cm->rank >= rank" regardless of the requested target mode - eg a
+	 * NOTICE to "~#channel" (owner-only) would incorrectly also reach @ and %.
+	 */
+	rank = mode_to_rank(lowest_ranking_mode(modes));
 	if (!rank)
 		return; /* zero matches */
 
