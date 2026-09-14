@@ -1158,14 +1158,13 @@ char lowest_ranking_mode(const char *mode)
  */
 void channel_member_modes_generate_equal_or_greater(const char *modes, char *buf, size_t buflen)
 {
-	const char *p;
 	int rank;
 	Cmode *cm;
 
 	*buf = '\0';
 
-	/* First we must grab the lowest ranking mode, eg 'vhoaq' results in rank for 'v' */
-	rank = lowest_ranking_mode(modes);
+	/* First we must grab the lowest rank, eg 'vhoaq' results in rank for 'v' */
+	rank = mode_to_rank(lowest_ranking_mode(modes));
 	if (!rank)
 		return; /* zero matches */
 
