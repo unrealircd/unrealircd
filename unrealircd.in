@@ -400,6 +400,7 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 			echo "This is for your information only. It is possible to continue."
 			echo "Press ENTER to continue, or CTRL+C to abort."
 			echo "If in doubt, see https://www.unrealircd.org/docs/FAQ#upgrade-verify-failed"
+			read answer
 			export NOGPG=1
 		fi
 	else
@@ -408,6 +409,8 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 		echo "or 'sudo pkg install gnupg' on FreeBSD."
 		echo "When 'gpg' is installed then the UnrealIRCd patch script can"
 		echo "verify the digital signature of the download file."
+		echo "Press ENTER to continue, or CTRL+C to abort."
+		read answer
 		export NOGPG=1
 	fi
 
