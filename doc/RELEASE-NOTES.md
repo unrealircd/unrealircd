@@ -1,5 +1,19 @@
-UnrealIRCd 6.2.7
+UnrealIRCd 6.2.8-git
 =================
+
+This is the git version (development version) for future UnrealIRCd 6.2.8.
+This is work in progress and may not always be a stable version.
+
+### Enhancements:
+
+### Changes:
+
+### Fixes:
+
+### Developers and protocol:
+
+UnrealIRCd 6.2.7
+-----------------
 
 This UnrealIRCd 6.2.7 release fixes multiple issues in the webserver
 module which allow an attacker to stall the IRCd. If you use Websockets
