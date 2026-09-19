@@ -36,6 +36,8 @@ provided the OS version was released within the past ~5 years.
 
 With regards to Windows, we support Windows 10 or later and Windows Server 2016 or later. Older versions are not supported.
 
+## Tested systems
+
 We use a private BuildBot instance to test each commit. The **tested** systems are (others are
 likely to work too):
 * Linux: Debian (10, 11, 12, 13), Ubuntu (18.04, 20.04, 22.04, 24.04, 26.04)
