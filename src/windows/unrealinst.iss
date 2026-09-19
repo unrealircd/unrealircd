@@ -111,8 +111,17 @@ var
 function InitializeSetup(): Boolean;
 var
 	major: Cardinal;
+	ver: TWindowsVersion;
 begin
 	Result := true;
+
+	GetWindowsVersionEx(ver);
+	if (ver.Major < 10) and (not WizardSilent) then
+	begin
+		MsgBox('Microsoft no longer supports this version of Windows and it no longer receives security updates.' #13 +
+		       'UnrealIRCd only supports Windows 10 or later and Windows Server 2016 or later.' #13 +
+		       'If you click OK the installation will continue but things may fail and we DO NOT provide any support for this.', mbInformation, MB_OK);
+	end;
 
 	if Not RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Major', major) then
 	begin
