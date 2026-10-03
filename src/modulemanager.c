@@ -207,6 +207,116 @@ int mm_parse_module_file(ManagedModule *m, char *buf, unsigned int line_offset)
 	return 1;
 }
 
+/* Strip comments in C code. This is a minimal single-line-only version.
+ * It does NOT deal with multiline. We keep it simple, a minimal version.
+ * It is only used for mod header parsing anyway.
+ */
+void strip_c_comments(const char *buf, char *dest, size_t destlen)
+{
+	char *p, *e;
+
+	strlcpy(dest, buf, destlen);
+
+	p = strstr(dest, "//");
+	if (p)
+		*p = '\0';
+
+	while ((p = strstr(dest, "/*")))
+	{
+		e = strstr(p + 2, "*/");
+		if (!e)
+		{
+			*p = '\0';
+			break;
+		}
+		memmove(p, e + 2, strlen(e + 2) + 1);
+	}
+}
+
+/* Helper function for mm_parse_module_c_file().
+ * This parses one line of the ModuleHeader block. This advances 'stage'
+ * and fills in the fields of 'm'. Returns 1 if we can proceed to next line,
+ * or 0 if there is a fatal error.
+ */
+int mm_parse_module_header_line(const char *buf, ParseModuleHeaderStage *stage,
+                                ManagedModule *m, const char *modulename, int linenr, int silent)
+{
+	ParseModuleHeaderStage stage_before = *stage;
+	char value[256];
+	char line[1024];
+	char *p;
+
+	strip_c_comments(buf, line, sizeof(line));
+
+	switch (*stage)
+	{
+		case PMH_STAGE_LOOKING:
+			if (strstr(line, "ModuleHeader"))
+				*stage = PMH_STAGE_MODULEHEADER;
+			else
+				break;
+			/*fallthrough*/
+		case PMH_STAGE_MODULEHEADER:
+			if (strstr(line, "MOD_HEADER"))
+				*stage = PMH_STAGE_MOD_HEADER;
+			break;
+		case PMH_STAGE_MOD_HEADER:
+			if (parse_quoted_string(line, value, sizeof(value)))
+			{
+				safe_strdup(m->name, value);
+				*stage = PMH_STAGE_GOT_NAME;
+			}
+			break;
+		case PMH_STAGE_GOT_NAME:
+			if (parse_quoted_string(line, value, sizeof(value)))
+			{
+				safe_strdup(m->version, value);
+				*stage = PMH_STAGE_GOT_VERSION;
+			}
+			break;
+		case PMH_STAGE_GOT_VERSION:
+			if (parse_quoted_string(line, value, sizeof(value)))
+			{
+				safe_strdup(m->description, value);
+				*stage = PMH_STAGE_GOT_DESCRIPTION;
+			}
+			break;
+		case PMH_STAGE_GOT_DESCRIPTION:
+			if (parse_quoted_string(line, value, sizeof(value)))
+			{
+				safe_strdup(m->author, value);
+				*stage = PMH_STAGE_GOT_AUTHOR;
+			}
+			break;
+		default:
+			break;
+	}
+
+	/* Between the PMH_STAGE_MOD_HEADER and the PMH_STAGE_GOT_AUTHOR stage:
+	 * Did parse_quoted_string() fail above in the switch?
+	 * Then this means we did not encounter a "string".
+	 */
+	if ((stage_before >= PMH_STAGE_MOD_HEADER) && (stage_before < PMH_STAGE_GOT_AUTHOR) &&
+	    (*stage == stage_before))
+	{
+		p = line;
+		skip_whitespace(&p);
+		if (*p && (strspn(p, "={},; \t") != strlen(p)))
+		{
+			if (!silent)
+			{
+				fprintf(stderr, "ERROR: %s:%d: expected a string in the ModuleHeader block, but got: %s\n",
+				        modulename, linenr, p);
+				fprintf(stderr, "The name, version, description and author in ModuleHeader must be plain strings. "
+				                "Macros and other expressions are not supported there.\n");
+			}
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
  #define MODULECONFIGBUFFER 16384
 ManagedModule *mm_parse_module_c_file(char *modulename, char *fname, int silent)
 {
@@ -216,13 +326,7 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname, int silent)
 	ParseModuleConfigStage parse_module_config = PMC_STAGE_LOOKING;
 	char *moduleconfig = NULL;
 	int linenr = 0, module_config_start_line = 0;
-	char module_header_name[128];
-	char module_header_version[64];
-	char module_header_description[256];
-	char module_header_author[128];
 	ManagedModule *m = NULL;
-
-	*module_header_name = *module_header_version = *module_header_description = *module_header_author = '\0';
 
 	if (!mm_valid_module_name(modulename))
 	{
@@ -238,42 +342,19 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname, int silent)
 		return NULL;
 	}
 
+	m = safe_alloc(sizeof(ManagedModule));
 	moduleconfig = safe_alloc(MODULECONFIGBUFFER); /* should be sufficient */
 	while ((fgets(buf, sizeof(buf), fd)))
 	{
 		linenr++;
 		stripcrlf(buf);
-		/* parse module header stuff: */
-		switch (parse_module_header)
+		/* parse module header */
+		if (!mm_parse_module_header_line(buf, &parse_module_header, m, modulename, linenr, silent))
 		{
-			case PMH_STAGE_LOOKING:
-				if (strstr(buf, "ModuleHeader"))
-					parse_module_header = PMH_STAGE_MODULEHEADER;
-				else
-					break;
-				/*fallthrough*/
-			case PMH_STAGE_MODULEHEADER:
-				if (strstr(buf, "MOD_HEADER"))
-					parse_module_header = PMH_STAGE_MOD_HEADER;
-				break;
-			case PMH_STAGE_MOD_HEADER:
-				if (parse_quoted_string(buf, module_header_name, sizeof(module_header_name)))
-					parse_module_header = PMH_STAGE_GOT_NAME;
-				break;
-			case PMH_STAGE_GOT_NAME:
-				if (parse_quoted_string(buf, module_header_version, sizeof(module_header_version)))
-					parse_module_header = PMH_STAGE_GOT_VERSION;
-				break;
-			case PMH_STAGE_GOT_VERSION:
-				if (parse_quoted_string(buf, module_header_description, sizeof(module_header_description)))
-					parse_module_header = PMH_STAGE_GOT_DESCRIPTION;
-				break;
-			case PMH_STAGE_GOT_DESCRIPTION:
-				if (parse_quoted_string(buf, module_header_author, sizeof(module_header_author)))
-					parse_module_header = PMH_STAGE_GOT_AUTHOR;
-				break;
-			default:
-				break;
+			fclose(fd);
+			safe_free_managed_module(m);
+			safe_free(moduleconfig);
+			return NULL;
 		}
 		/* parse module config stuff: */
 		switch (parse_module_config)
@@ -302,18 +383,19 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname, int silent)
 	}
 	fclose(fd);
 
-	if (!*module_header_name || !*module_header_version ||
-	    !*module_header_description || !*module_header_author)
+	if (BadPtr(m->name) || BadPtr(m->version) || BadPtr(m->description) || BadPtr(m->author))
 	{
 		fprintf(stderr, "Error parsing module header in %s\n", modulename);
+		safe_free_managed_module(m);
 		safe_free(moduleconfig);
 		return NULL;
 	}
 
-	if (strcmp(module_header_name, modulename))
+	if (strcmp(m->name, modulename))
 	{
 		fprintf(stderr, "ERROR: Mismatch in module name in header (%s) and filename (%s)\n",
-		        module_header_name, modulename);
+		        m->name, modulename);
+		safe_free_managed_module(m);
 		safe_free(moduleconfig);
 		return NULL;
 	}
@@ -325,16 +407,10 @@ ManagedModule *mm_parse_module_c_file(char *modulename, char *fname, int silent)
 			fprintf(stderr, "ERROR: Module does not contain module config data (<<<MODULE MANAGER START>>>)\n"
 			                "This means it is not meant to be managed by the module manager\n");
 		}
+		safe_free_managed_module(m);
 		safe_free(moduleconfig);
 		return NULL;
 	}
-
-	/* Fill in the fields from MOD_HEADER() */
-	m = safe_alloc(sizeof(ManagedModule));
-	safe_strdup(m->name, module_header_name);
-	safe_strdup(m->version, module_header_version);
-	safe_strdup(m->description, module_header_description);
-	safe_strdup(m->author, module_header_author);
 
 	if (!mm_parse_module_file(m, moduleconfig, module_config_start_line))
 	{
@@ -1549,6 +1625,7 @@ void mm_parse_c_file(int argc, char *args[])
 	}
 	m->sha256sum = strdup(sha256sum_file(fullname));
 	m->source = strdup("...");
+	m->mtime = unreal_getfilemodtime(fullname);
 	print_md_block(stdout, m);
 	safe_free_managed_module(m);
 	exit(0);
