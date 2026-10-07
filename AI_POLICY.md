@@ -58,7 +58,7 @@ Honestly? A big vibecoded PR coming out of nowhere is not something we
 typically get excited about:
 * Feature suggestions or major cleaning/rewriting of code should be
   discussed first. See the
-  [Discussing changes](https://www.unrealircd.org/docs/Contributing#Discussing_changes)
+  [When to discuss first](https://www.unrealircd.org/docs/Dev:Coding_guidelines#When_to_discuss_first)
   section on the wiki.
 * A large vibecoded PR puts a big burden on us as maintainers. We have to
   review all the submitted code line by line. Keep in mind that reviewing
