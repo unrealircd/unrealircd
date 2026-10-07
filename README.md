@@ -53,5 +53,6 @@ also have some on x86 and arm64 to ensure these work as well.
 * https://fosstodon.org/@unrealircd - Mastodon
 * https://twitter.com/Unreal_IRCd - Twitter
 * [SECURITY.md](https://github.com/unrealircd/unrealircd/blob/unreal60_dev/SECURITY.md#security-policy) - How to report security issues
+* [AI_POLICY.md](https://github.com/unrealircd/unrealircd/blob/unreal60_dev/AI_POLICY.md) - Our policy on AI use for coding
 * [LICENSE](https://github.com/unrealircd/unrealircd/blob/unreal60_dev/LICENSE) - LICENSE: GPLv2 or later
 * [Contributing](https://www.unrealircd.org/docs/Contributing) - How to help: report bugs, test, write or translate documentations, ..
