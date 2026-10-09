@@ -19,6 +19,7 @@ Module *cbl_module = NULL;
 #define CBL_URL                        "https://centralblocklist.unrealircd-api.org/api/v1"
 #define SPAMREPORT_URL                 "https://spamreport.unrealircd-api.org/api/spamreport-v1"
 #define CBL_TRANSFER_TIMEOUT           10
+#define CBL_MAX_REQUEST_SIZE           65536
 #define SPAMREPORT_NUM_REMEMBERED_CMDS 20
 
 #define WEB(client) ((WebRequest *)moddata_local_client(client, webserver_md).ptr)
@@ -89,6 +90,7 @@ void cbl_cancel_all_transfers(void);
 EVENT(centralblocklist_bundle_requests);
 EVENT(centralblocklist_timeout_evt);
 void cbl_allow(Client *client);
+void send_request_for_clients(json_t *requests, NameList *clientlist);
 void send_request_for_pending_clients(void);
 const char *get_api_key(void);
 void set_tag(Client *client, const char *tag, int value);
@@ -994,48 +996,72 @@ void cbl_mdata_free(ModData *m)
 void send_request_for_pending_clients(void)
 {
 	Client *client, *next;
-	OutgoingWebRequest *w;
-	json_t *j, *requests;
-	NameValuePrioList *headers = NULL;
-	int num;
-	char *json_serialized;
-	CBLTransfer *c;
+	json_t *requests = NULL;
 	NameList *clientlist = NULL;
-
-	num = downloads_in_progress();
-	if (num > cfg.max_downloads)
-	{
-		unreal_log(ULOG_WARNING, "central-blocklist", "CENTRAL_BLOCKLIST_TOO_MANY_CONCURRENT_REQUESTS", NULL,
-		           "Already $num_requests HTTP(S) requests in progress.",
-		           log_data_integer("num_requests", num));
-		return;
-	}
-
-	j = json_object();
-	json_object_set_new(j, "server", json_string_unreal(me.name));
-	json_object_set_new(j, "module_version", json_string_unreal(cbl_module->header->version));
-	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
-	requests = json_object();
-	json_object_set_new(j, "requests", requests);
+	char *json_serialized;
+	int num;
+	int size = 0;
 
 	list_for_each_entry_safe(client, next, &unknown_list, lclient_node)
 	{
 		CBLUser *cbl = CBL(client);
 		if (cbl && cbl->request_pending)
 		{
+			if (!requests)
+			{
+				num = downloads_in_progress();
+				if (num > cfg.max_downloads)
+				{
+					unreal_log(ULOG_WARNING, "central-blocklist", "CENTRAL_BLOCKLIST_TOO_MANY_CONCURRENT_REQUESTS", NULL,
+					           "Already $num_requests HTTP(S) requests in progress.",
+					           log_data_integer("num_requests", num));
+					break;
+				}
+				requests = json_object();
+			}
 			// requests[clientid] => ["client"=>["nick"=>"xyz"...etc...
 			json_object_set_new(requests, client->id, json_deep_copy(cbl->handshake));
 
 			cbl->request_pending = 0;
 			cbl->request_sent = TStime();
 			add_name_list(clientlist, client->id);
+
+			json_serialized = json_dumps(cbl->handshake, JSON_COMPACT);
+			if (json_serialized)
+				size += strlen(json_serialized);
+			safe_free(json_serialized);
+			if (size >= CBL_MAX_REQUEST_SIZE)
+			{
+				send_request_for_clients(requests, clientlist);
+				requests = NULL;
+				clientlist = NULL;
+				size = 0;
+			}
 		}
 	}
+
+	if (requests)
+		send_request_for_clients(requests, clientlist);
+}
+
+void send_request_for_clients(json_t *requests, NameList *clientlist)
+{
+	OutgoingWebRequest *w;
+	json_t *j;
+	NameValuePrioList *headers = NULL;
+	char *json_serialized;
+	CBLTransfer *c;
+
+	j = json_object();
+	json_object_set_new(j, "server", json_string_unreal(me.name));
+	json_object_set_new(j, "module_version", json_string_unreal(cbl_module->header->version));
+	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
+	json_object_set_new(j, "requests", requests);
 
 	json_serialized = json_dumps(j, JSON_COMPACT);
 	if (!json_serialized)
 	{
-		unreal_log(ULOG_WARNING, "central-blocklist", "CENTRAL_BLOCKLIST_BUG_SERIALIZE", client,
+		unreal_log(ULOG_WARNING, "central-blocklist", "CENTRAL_BLOCKLIST_BUG_SERIALIZE", NULL,
 		           "Unable to serialize JSON request. Weird.");
 		json_decref(j);
 		free_entire_name_list(clientlist);
