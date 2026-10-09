@@ -1469,11 +1469,10 @@ int is_extended_ban(const char *str)
 		return 0;
 	for (p = str + 1; *p; p++)
 	{
-		if (!isalnum(*p))
-		{
-			if (*p == ':')
-				return 1;
-		}
+		if (*p == ':')
+			return 1;
+		if (!isalnum(*p) && !strchr("_-", *p))
+			return 0;
 	}
 	return 0;
 }
