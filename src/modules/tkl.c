@@ -120,6 +120,7 @@ int _find_tkl_exception(int ban_type, Client *client);
 int _server_ban_parse_mask(Client *client, int add, char type, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 int _server_ban_exception_parse_mask(Client *client, int add, const char *bantypes, const char *str, char **usermask_out, char **hostmask_out, int *soft, const char **error);
 static void add_default_exempts(void);
+static void reparse_central_spamfilter_rules(void);
 int parse_extended_server_ban(const char *mask_in, Client *client, char **error, int skip_checking, char *buf1, size_t buf1len, char *buf2, size_t buf2len);
 void _tkl_added(Client *client, TKL *tkl);
 int spamfilter_pre_command(Client *from, MessageTag *mtags, const char *buf);
@@ -315,6 +316,7 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	reparse_central_spamfilter_rules();
 	check_special_spamfilters_present();
 	check_set_spamfilter_utf8_setting_changed();
 	_config_tkl_hits_restore();
@@ -3697,6 +3699,51 @@ void _remove_config_tkls(int flag)
 				tkl_del_line(tk);
 			}
 		}
+	}
+}
+
+/** Re-parse the crules of the central spamfilters.
+ * A REHASH does not reload central spamfilters, which have their own (re)load
+ * timing whenever the feed gets refreshed. However, a REHASH does reload the
+ * crule module, which means all our pointers in spamfilter->rule and in
+ * spamfilter->except->rule are now invalid.
+ * In this function we simply re-parse all central spamfilter rules.
+ *
+ * (Theoretically this can mean that a 'rule' no longer parses, even though
+ *  it parsed fine before. If that happens then we remove the TKL entry.)
+ */
+static void reparse_central_spamfilter_rules(void)
+{
+	TKL *tkl, *tkl_next;
+	Spamfilter *s;
+
+	for (tkl = tklines[tkl_hash('F')]; tkl; tkl = tkl_next)
+	{
+		int failed = 0;
+		tkl_next = tkl->next;
+		if (!(tkl->flags & TKL_FLAG_CENTRAL_SPAMFILTER))
+			continue;
+		s = tkl->ptr.spamfilter;
+		if (s->prettyrule)
+		{
+			safe_crule_free(s->rule);
+			if (!(s->rule = crule_parse(s->prettyrule)))
+				failed = 1;
+		}
+		if (s->except && s->except->prettyrule)
+		{
+			safe_crule_free(s->except->rule);
+			if (!(s->except->rule = crule_parse(s->except->prettyrule)))
+				failed = 1;
+		}
+		if (s->except && s->except->exclude_prettyrule)
+		{
+			safe_crule_free(s->except->exclude_rule);
+			if (!(s->except->exclude_rule = crule_parse(s->except->exclude_prettyrule)))
+				failed = 1;
+		}
+		if (failed)
+			tkl_del_line(tkl);
 	}
 }
 
