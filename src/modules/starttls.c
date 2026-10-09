@@ -67,6 +67,12 @@ CMD_FUNC(cmd_starttls)
 	if (!MyConnect(client) || !IsUnknown(client))
 		return;
 
+	if (IsWebsocket(client))
+	{
+		sendnumeric(client, ERR_STARTTLS, "STARTTLS failed. This makes no sense for websockets (wrong network layer).");
+		return;
+	}
+
 	ctx = tls_ctx_for_listener(client->local->listener);
 	tls_options = tls_options_for_listener(client->local->listener)->options;
 
