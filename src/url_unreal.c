@@ -314,6 +314,8 @@ void url_resolve_cb(void *arg, int status, int timeouts, struct hostent *he)
 
 void unreal_https_initiate_connect(Download *handle)
 {
+	int opt;
+
 	handle->fd = fd_socket(handle->socket_type == SOCKET_TYPE_IPV6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0, "HTTPS");
 	if (handle->fd < 0)
 	{
@@ -328,6 +330,8 @@ void unreal_https_initiate_connect(Download *handle)
 		return;
 	}
 	set_sock_opts(handle->fd, NULL, handle->socket_type);
+	opt = 204800; /* 200k */
+	setsockopt(handle->fd, SOL_SOCKET, SO_SNDBUF, (void *)&opt, sizeof(opt));
 	if (!unreal_connect(handle->fd,
 	                    (handle->socket_type == SOCKET_TYPE_IPV4) ? handle->ip4 : handle->ip6,
 	                    handle->port,
@@ -555,7 +559,8 @@ int url_parse(const char *url, char **hostname, int *port, char **username, char
 
 int https_connect_send_header(Download *handle)
 {
-	char buf[8192];
+	char *buf;
+	size_t buflen = 8192;
 	char hostandport[512];
 	int ssl_err;
 	char *host;
@@ -565,13 +570,17 @@ int https_connect_send_header(Download *handle)
 	handle->connected = 1;
 	snprintf(hostandport, sizeof(hostandport), "%s:%d", handle->hostname, handle->port);
 
+	if (handle->request->body)
+		buflen += strlen(handle->request->body);
+	buf = safe_alloc(buflen);
+
 	/* Prepare the header */
 	if (handle->request->http_method == HTTP_METHOD_GET)
 	{
-		snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n"
-		                           "User-Agent: UnrealIRCd %s\r\n"
-		                           "Host: %s\r\n"
-		                           "Connection: close\r\n",
+		snprintf(buf, buflen, "GET %s HTTP/1.1\r\n"
+		                      "User-Agent: UnrealIRCd %s\r\n"
+		                      "Host: %s\r\n"
+		                      "Connection: close\r\n",
 		         handle->document,
 		         VERSIONONLY,
 		         hostandport);
@@ -579,10 +588,10 @@ int https_connect_send_header(Download *handle)
 	{
 		if (!handle->request->body || !strlen(handle->request->body))
 		{
-			snprintf(buf, sizeof(buf), "POST %s HTTP/1.1\r\n"
-			                           "User-Agent: UnrealIRCd %s\r\n"
-			                           "Host: %s\r\n"
-			                           "Connection: close\r\n",
+			snprintf(buf, buflen, "POST %s HTTP/1.1\r\n"
+			                      "User-Agent: UnrealIRCd %s\r\n"
+			                      "Host: %s\r\n"
+			                      "Connection: close\r\n",
 			         handle->document,
 			         VERSIONONLY,
 			         hostandport);
@@ -592,12 +601,12 @@ int https_connect_send_header(Download *handle)
 			if (!find_nvplist(handle->request->headers, "Content-Type"))
 				add_default_content_type = 1;
 
-			snprintf(buf, sizeof(buf), "POST %s HTTP/1.1\r\n"
-			                           "User-Agent: UnrealIRCd %s\r\n"
-			                           "Host: %s\r\n"
-			                           "%s"
-			                           "Content-Length: %ld\r\n"
-			                           "Connection: close\r\n",
+			snprintf(buf, buflen, "POST %s HTTP/1.1\r\n"
+			                      "User-Agent: UnrealIRCd %s\r\n"
+			                      "Host: %s\r\n"
+			                      "%s"
+			                      "Content-Length: %ld\r\n"
+			                      "Connection: close\r\n",
 			         handle->document,
 			         VERSIONONLY,
 			         hostandport,
@@ -616,7 +625,7 @@ int https_connect_send_header(Download *handle)
 		if (b64_encode(wbuf, strlen(wbuf), obuf, sizeof(obuf) - 1) > 0)
 		{
 			snprintf(header, sizeof(header), "Authorization: Basic %s\r\n", obuf);
-			strlcat(buf, header, sizeof(buf));
+			strlcat(buf, header, buflen);
 		}
 	}
 	if (handle->request->cachetime > 0)
@@ -625,7 +634,7 @@ int https_connect_send_header(Download *handle)
 		if (datestr)
 		{
 			// snprintf_append...
-			snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+			snprintf(buf + strlen(buf), buflen - strlen(buf),
 			         "If-Modified-Since: %s\r\n", datestr);
 		}
 	}
@@ -640,16 +649,17 @@ int https_connect_send_header(Download *handle)
 				snprintf(nbuf, sizeof(nbuf), "%s: %s\r\n", n->name, n->value);
 			else
 				snprintf(nbuf, sizeof(nbuf), "%s:\r\n", n->name);
-			if (strlen(buf) + strlen(nbuf) > sizeof(buf) - 8)
+			if (strlen(buf) + strlen(nbuf) > 8192 - 8)
 				break;
-			strlcat(buf, nbuf, sizeof(buf));
+			strlcat(buf, nbuf, buflen);
 		}
 	}
-	strlcat(buf, "\r\n", sizeof(buf));
+	strlcat(buf, "\r\n", buflen);
 	if (handle->request->body)
-		strlcat(buf, handle->request->body, sizeof(buf));
+		strlcat(buf, handle->request->body, buflen);
 
 	ssl_err = SSL_write(handle->ssl, buf, strlen(buf));
+	safe_free(buf);
 	if (ssl_err < 0)
 		return https_fatal_tls_error(ssl_err, ERRNO, handle);
 	fd_setselect(handle->fd, FD_SELECT_WRITE, NULL, handle);
