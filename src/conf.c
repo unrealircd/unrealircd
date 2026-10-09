@@ -8423,7 +8423,7 @@ static int is_set_item_deprecated(ConfigEntry *cep)
 		             cep->file->filename, cep->line_number);
 		config_error("If you insist on using geoip_classic then re-run ./Config, answer "
 		             "'classic' at the GeoIP question and run make install. Note that "
-		             "database updates for 'geoip_classic' will stop somewhere in 2027.");
+		             "database updates for 'geoip_classic' will stop in mid-2027.");
 		return 1;
 	}
 

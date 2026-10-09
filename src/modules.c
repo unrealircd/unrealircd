@@ -307,7 +307,7 @@ const char *is_module_deprecated(const char *name, int phase)
 		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_DEPRECATED_MODULE", NULL,
 		           "The geoip_classic module is being phased out. If you can, use the geoip_mmdb module instead. See https://www.unrealircd.org/docs/GeoIP#Settings\n"
 		           "If you insist on using geoip_classic then re-run ./Config, answer 'classic' at the GeoIP question and run make install.\n"
-		           "Note that database updates for 'geoip_classic' will stop somewhere in 2027.");
+		           "Note that database updates for 'geoip_classic' will stop in mid-2027.");
 		return "deprecated module not available";
 	}
 	return NULL;
