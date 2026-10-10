@@ -592,7 +592,7 @@ int spamreport_banned_client(Client *client, const char *bantype, const char *re
 	NameValuePrioList *details = NULL;
 	TKL *spamfilter = NULL;
 
-	if (!IsUser(client))
+	if (!IsUser(client) || (client->flags & CLIENT_FLAG_SKIP_BAN_SPAMREPORT))
 		return 0;
 
 	if (tkl && *tkl->spamfilter_id)

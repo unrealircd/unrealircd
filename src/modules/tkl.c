@@ -5720,6 +5720,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 	int previous_highest = 0;
 	int highest = 0;
 	NameValuePrioList *details = NULL;
+	int reported_to_all = 0;
 
 	if (stopped)
 		*stopped = 0;
@@ -5801,11 +5802,14 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					find_shun(client);
 					break;
 				} /* else.. */
+				if (reported_to_all)
+					client->flags |= CLIENT_FLAG_SKIP_BAN_SPAMREPORT;
 				if (!find_tkline_match(client, 0))
 				{
 					/* Not banned! revert the return value that we had in mind... */
 					highest = previous_highest;
 				}
+				client->flags &= ~CLIENT_FLAG_SKIP_BAN_SPAMREPORT;
 				break;
 			}
 			case BAN_ACT_SOFT_KILL:
@@ -5833,6 +5837,8 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
 				spamreport(client, client->ip, details, action->var, NULL, spamfilter ? "spamfilter" : NULL, NULL, spamfilter);
 				safe_free_nvplist(details);
+				if (!action->var)
+					reported_to_all = 1;
 				break;
 			case BAN_ACT_SET:
 				if (!(take_action_flags & TAKE_ACTION_SKIP_SET))

@@ -431,42 +431,43 @@ typedef enum ClientStatus {
  * @defgroup ClientFlags Client flags
  * @{
  */
-#define CLIENT_FLAG_PINGSENT                 0x00000001  /**< PING sent, no reply yet */
-#define CLIENT_FLAG_DEAD                     0x00000002  /**< Client is dead: already quit/exited and removed from all lists -- Remaining part will soon be freed in main loop */
-#define CLIENT_FLAG_DEADSOCKET               0x00000004  /**< Local socket is dead but otherwise the client still exists fully -- Will soon exit in main loop */
-#define CLIENT_FLAG_KILLED                   0x00000008  /**< Prevents "QUIT" from being sent for this */
-#define CLIENT_FLAG_MONITOR_REHASH           0x00000010  /**< Client is monitoring rehash output */
-#define CLIENT_FLAG_OUTGOING                 0x00000020  /**< Outgoing connection (do not touch cptr->listener->clients) */
-#define CLIENT_FLAG_CLOSING                  0x00000040  /**< Set when closing to suppress errors */
-#define CLIENT_FLAG_LISTEN                   0x00000080  /**< Used to mark clients which we listen() on */
-#define CLIENT_FLAG_DNSLOOKUP                0x00000100  /**< Client is doing a DNS lookup */
-#define CLIENT_FLAG_IDENTLOOKUP              0x00000200  /**< Client is doing an Ident lookup (RFC931) */
-#define CLIENT_FLAG_IDENTLOOKUPSENT          0x00000400  /**< Set if we havent writen to ident server */
-#define CLIENT_FLAG_LOCALHOST                0x00000800  /**< Set for localhost clients */
-#define CLIENT_FLAG_IDENTSUCCESS             0x00001000  /**< Successful ident lookup achieved */
-#define CLIENT_FLAG_USEIDENT                 0x00002000  /**< The allow { } block says we should use the ident (if available) */
-#define CLIENT_FLAG_NEXTCALL                 0x00004000  /**< Next call (don't ask...) */
-#define CLIENT_FLAG_ULINE                    0x00008000  /**< User/server is considered U-lined (eg: services) */
-#define CLIENT_FLAG_SQUIT                    0x00010000  /**< Server has been /SQUIT by an oper */
-#define CLIENT_FLAG_PROTOCTL                 0x00020000  /**< Received at least 1 PROTOCTL message */
-#define CLIENT_FLAG_EAUTH                    0x00040000  /**< Server authenticated via PROTOCTL EAUTH */
-#define CLIENT_FLAG_NETINFO                  0x00080000  /**< Received a NETINFO message */
-#define CLIENT_FLAG_QUARANTINE               0x00100000  /**< Quarantined server (don't allow ircops on this server) */
-#define CLIENT_FLAG_DCCNOTICE                0x00200000  /**< Has the user seen a notice on how to use DCCALLOW already? */
-#define CLIENT_FLAG_SHUNNED                  0x00400000  /**< Connection is shunned (user cannot execute any commands) */
-#define CLIENT_FLAG_VIRUS                    0x00800000  /**< Tagged by spamfilter as a virus */
-#define CLIENT_FLAG_TLS                      0x01000000  /**< Connection is using TLS */
-#define CLIENT_FLAG_NOFAKELAG                0x02000000  /**< Exemption from fake lag */
-#define CLIENT_FLAG_DCCBLOCK                 0x04000000  /**< Block all DCC send requests */
-#define CLIENT_FLAG_MAP                      0x08000000  /**< Show this entry in /MAP (only used in map module) */
-#define CLIENT_FLAG_PINGWARN                 0x10000000  /**< Server ping warning (remote server slow with responding to PINGs) */
-#define CLIENT_FLAG_NOHANDSHAKEDELAY         0x20000000  /**< No handshake delay */
-#define CLIENT_FLAG_SERVER_DISCONNECT_LOGGED 0x40000000  /**< Server disconnect message is (already) logged */
-#define CLIENT_FLAG_ASYNC_RPC                0x80000000  /**< Asynchronous remote RPC request - special case for rehash etc. */
-#define CLIENT_FLAG_IPUSERS_BUMPED           0x100000000 /**< The IpUsersBucket for this IP has been bumped (and needs to be decreased on disconnect) */
-#define CLIENT_FLAG_DEADSOCKET_IS_BANNED     0x200000000 /**< The deadsocket message should also send ERR_YOUREBANNEDCREEP and such */
-#define CLIENT_FLAG_CONNECT_FLOOD_CHECKED    0x400000000 /**< connect-flood has been checked (there are two hooks, so need this) */
-#define CLIENT_FLAG_IPV6                     0x800000000 /**< client is using IPv6 */
+#define CLIENT_FLAG_PINGSENT                 0x00000001   /**< PING sent, no reply yet */
+#define CLIENT_FLAG_DEAD                     0x00000002   /**< Client is dead: already quit/exited and removed from all lists -- Remaining part will soon be freed in main loop */
+#define CLIENT_FLAG_DEADSOCKET               0x00000004   /**< Local socket is dead but otherwise the client still exists fully -- Will soon exit in main loop */
+#define CLIENT_FLAG_KILLED                   0x00000008   /**< Prevents "QUIT" from being sent for this */
+#define CLIENT_FLAG_MONITOR_REHASH           0x00000010   /**< Client is monitoring rehash output */
+#define CLIENT_FLAG_OUTGOING                 0x00000020   /**< Outgoing connection (do not touch cptr->listener->clients) */
+#define CLIENT_FLAG_CLOSING                  0x00000040   /**< Set when closing to suppress errors */
+#define CLIENT_FLAG_LISTEN                   0x00000080   /**< Used to mark clients which we listen() on */
+#define CLIENT_FLAG_DNSLOOKUP                0x00000100   /**< Client is doing a DNS lookup */
+#define CLIENT_FLAG_IDENTLOOKUP              0x00000200   /**< Client is doing an Ident lookup (RFC931) */
+#define CLIENT_FLAG_IDENTLOOKUPSENT          0x00000400   /**< Set if we havent writen to ident server */
+#define CLIENT_FLAG_LOCALHOST                0x00000800   /**< Set for localhost clients */
+#define CLIENT_FLAG_IDENTSUCCESS             0x00001000   /**< Successful ident lookup achieved */
+#define CLIENT_FLAG_USEIDENT                 0x00002000   /**< The allow { } block says we should use the ident (if available) */
+#define CLIENT_FLAG_NEXTCALL                 0x00004000   /**< Next call (don't ask...) */
+#define CLIENT_FLAG_ULINE                    0x00008000   /**< User/server is considered U-lined (eg: services) */
+#define CLIENT_FLAG_SQUIT                    0x00010000   /**< Server has been /SQUIT by an oper */
+#define CLIENT_FLAG_PROTOCTL                 0x00020000   /**< Received at least 1 PROTOCTL message */
+#define CLIENT_FLAG_EAUTH                    0x00040000   /**< Server authenticated via PROTOCTL EAUTH */
+#define CLIENT_FLAG_NETINFO                  0x00080000   /**< Received a NETINFO message */
+#define CLIENT_FLAG_QUARANTINE               0x00100000   /**< Quarantined server (don't allow ircops on this server) */
+#define CLIENT_FLAG_DCCNOTICE                0x00200000   /**< Has the user seen a notice on how to use DCCALLOW already? */
+#define CLIENT_FLAG_SHUNNED                  0x00400000   /**< Connection is shunned (user cannot execute any commands) */
+#define CLIENT_FLAG_VIRUS                    0x00800000   /**< Tagged by spamfilter as a virus */
+#define CLIENT_FLAG_TLS                      0x01000000   /**< Connection is using TLS */
+#define CLIENT_FLAG_NOFAKELAG                0x02000000   /**< Exemption from fake lag */
+#define CLIENT_FLAG_DCCBLOCK                 0x04000000   /**< Block all DCC send requests */
+#define CLIENT_FLAG_MAP                      0x08000000   /**< Show this entry in /MAP (only used in map module) */
+#define CLIENT_FLAG_PINGWARN                 0x10000000   /**< Server ping warning (remote server slow with responding to PINGs) */
+#define CLIENT_FLAG_NOHANDSHAKEDELAY         0x20000000   /**< No handshake delay */
+#define CLIENT_FLAG_SERVER_DISCONNECT_LOGGED 0x40000000   /**< Server disconnect message is (already) logged */
+#define CLIENT_FLAG_ASYNC_RPC                0x80000000   /**< Asynchronous remote RPC request - special case for rehash etc. */
+#define CLIENT_FLAG_IPUSERS_BUMPED           0x100000000  /**< The IpUsersBucket for this IP has been bumped (and needs to be decreased on disconnect) */
+#define CLIENT_FLAG_DEADSOCKET_IS_BANNED     0x200000000  /**< The deadsocket message should also send ERR_YOUREBANNEDCREEP and such */
+#define CLIENT_FLAG_CONNECT_FLOOD_CHECKED    0x400000000  /**< connect-flood has been checked (there are two hooks, so need this) */
+#define CLIENT_FLAG_IPV6                     0x800000000  /**< client is using IPv6 */
+#define CLIENT_FLAG_SKIP_BAN_SPAMREPORT      0x1000000000 /**< Do not spamreport this client (temporarily set to avoid double reporting) */
 /** @} */
 
 #define OPER_SNOMASKS "+bBcdfxkqsSoO"
