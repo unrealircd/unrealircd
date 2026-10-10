@@ -910,6 +910,7 @@ extern MODVAR TKL *(*find_tkl_serverban)(int type, const char *usermask, const c
 extern MODVAR TKL *(*find_tkl_banexception)(int type, const char *usermask, const char *hostmask, int softban);
 extern MODVAR TKL *(*find_tkl_nameban)(int type, const char *name, int hold);
 extern MODVAR TKL *(*find_tkl_spamfilter)(int type, const char *match_string, BanActionValue action, unsigned short target);
+extern MODVAR TKL *(*find_tkl_spamfilter_by_id)(const char *id);
 extern MODVAR void (*sendnotice_tkl_del)(const char *removed_by, TKL *tkl);
 extern MODVAR void (*sendnotice_tkl_add)(TKL *tkl);
 extern MODVAR void (*free_tkl)(TKL *tkl);
@@ -1009,7 +1010,7 @@ extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf
 extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern MODVAR void (*cancel_ident_lookup)(Client *client);
-extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason);
+extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
 extern MODVAR int (*crule_test)(const char *rule);
 extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
 extern MODVAR int (*crule_eval)(crule_context *context, CRuleNode *rule);
@@ -1023,7 +1024,7 @@ extern MODVAR void (*crule_free)(CRuleNode **);
 extern MODVAR const char *(*crule_errstring)(int errcode);
 extern MODVAR void (*ban_act_set_reputation)(Client *client, BanAction *action);
 extern MODVAR const char *(*get_central_api_key)(void);
-extern MODVAR int (*central_spamreport)(Client *target, Client *by, const char *source, const char *reason, NameValuePrioList *details, const char *url);
+extern MODVAR int (*central_spamreport)(Client *target, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url);
 extern MODVAR int (*central_spamreport_enabled)(void);
 extern MODVAR void (*sasl_succeeded)(Client *client);
 extern MODVAR void (*sasl_failed)(Client *client);
@@ -1031,7 +1032,7 @@ extern MODVAR int (*decode_authenticate_plain)(const char *param, char **authori
 extern MODVAR void (*exit_client)(Client *client, MessageTag *recv_mtags, const char *comment);
 extern MODVAR void (*exit_client_fmt)(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 extern MODVAR void (*exit_client_ex)(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
-extern MODVAR void (*banned_client)(Client *client, const char *bantype, const char *reason, const char *tklid, int global, int noexit);
+extern MODVAR void (*banned_client)(Client *client, const char *bantype, const char *reason, TKL *tkl, int global, int noexit);
 extern MODVAR char *(*unreal_expand_string)(const char *str, char *buf, size_t buflen, NameValuePrioList *nvp, int buildvarstring_options, Client *client);
 extern MODVAR char *(*utf8_convert_confusables)(const char *i, char *obuf, int olen);
 extern MODVAR const char *(*utf8_get_block_name)(int i);
@@ -1110,10 +1111,10 @@ extern int websocket_create_packet_ex_default_handler(int opcode, char **buf, in
 extern int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len);
 extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern void cancel_ident_lookup_default_handler(Client *client);
-extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason);
+extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
 extern void ban_act_set_reputation_default_handler(Client *client, BanAction *action);
 extern const char *get_central_api_key_default_handler(void);
-extern int central_spamreport_default_handler(Client *target, Client *by, const char *source, const char *reason, NameValuePrioList *details, const char *url);
+extern int central_spamreport_default_handler(Client *target, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url);
 extern int central_spamreport_enabled_default_handler(void);
 extern void sasl_succeeded_default_handler(Client *client);
 extern void sasl_failed_default_handler(Client *client);

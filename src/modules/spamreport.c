@@ -51,11 +51,11 @@ int tkl_config_test_spamreport(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
 Spamreport *find_spamreport_block(const char *name);
 void free_spamreport_blocks(void);
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason);
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
 int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
 SpamreportType parse_spamreport_type(const char *s);
-int spamreport_banned_client(Client *client, const char *bantype, const char *reason, int global);
+int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global);
 
 /* Variables */
 Spamreport *spamreports = NULL;
@@ -399,7 +399,7 @@ int _central_spamreport_enabled(void)
 	return 0;
 }
 
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason)
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter)
 {
 	Spamreport *s;
 	OutgoingWebRequest *request;
@@ -424,7 +424,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	{
 		int ret = 0;
 		for (s = spamreports; s; s = s->next)
-			ret += spamreport(client, ip, details, s->name, by, source, reason);
+			ret += spamreport(client, ip, details, s->name, by, source, reason, spamfilter);
 		return ret;
 	}
 
@@ -476,7 +476,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		add_nvplist(&headers, 0, "Content-Type", "text/xml");
 	} else if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
 	{
-		return central_spamreport(client, by, source, reason, details, s->url);
+		return central_spamreport(client, by, source, reason, spamfilter, details, s->url);
 	} else
 	{
 		abort();
@@ -569,7 +569,7 @@ CMD_FUNC(cmd_spamreport)
 		}
 	}
 
-	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL, client, "manual", reason))))
+	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL, client, "manual", reason, NULL))))
 		sendnotice(client, "Could not report spam. No spamreport { } blocks configured, or all filtered out/exempt.");
 	else
 		sendnotice(client, "Sending spam report to %d target(s)", n);
@@ -586,12 +586,25 @@ void spamreportcounters_free_all(ModData *m)
 	}
 }
 
-int spamreport_banned_client(Client *client, const char *bantype, const char *reason, int global)
+int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global)
 {
 	Spamreport *s;
+	NameValuePrioList *details = NULL;
+	TKL *spamfilter = NULL;
+
+	if (!IsUser(client))
+		return 0;
+
+	if (tkl && *tkl->spamfilter_id)
+	{
+		add_nvplist(&details, 0, "spamfilter_id", tkl->spamfilter_id);
+		spamfilter = find_tkl_spamfilter_by_id(tkl->spamfilter_id);
+	}
 
 	for (s = spamreports; s; s = s->next)
 		if (s->on_server_ban)
-			spamreport(client, client->ip, NULL, s->name, NULL, "server-ban", reason);
+			spamreport(client, client->ip, details, s->name, NULL, "server-ban", reason, spamfilter);
+
+	safe_free_nvplist(details);
 	return 0;
 }

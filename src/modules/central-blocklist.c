@@ -76,7 +76,7 @@ ModDataInfo *webserver_md = NULL; /* (external module, looked up) */
 ModDataInfo *websocket_md = NULL; /* (external module, looked up) */
 
 /* Forward declarations */
-int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, NameValuePrioList *details, const char *url);
+int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url);
 int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int cbl_config_posttest(int *errs);
 int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -1140,11 +1140,12 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 	CALL_NEXT_COMMAND_OVERRIDE();
 }
 
-int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, NameValuePrioList *details, const char *url)
+int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url)
 {
-	json_t *j, *requests, *data, *cmds, *item, *clientobj;
+	json_t *j, *requests, *data, *cmds, *item, *clientobj, *originobj;
 	OutgoingWebRequest *w;
 	NameValuePrioList *headers = NULL;
+	MessageTag *mtags = NULL, *m;
 	const char *str;
 	int num;
 	char *json_serialized;
@@ -1171,19 +1172,29 @@ int _central_spamreport(Client *client, Client *by, const char *source, const ch
 	json_object_set_new(j, "server", json_string_unreal(me.name));
 	json_object_set_new(j, "module_version", json_string_unreal(cbl_module->header->version));
 	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
-	if (by)
-		json_object_set_new(j, "reporter", json_string_unreal(by->name));
-	if (source)
-		json_object_set_new(j, "source", json_string_unreal(source));
-	if (reason)
-		json_object_set_new(j, "reason", json_string_unreal(reason));
-	if ((str = get_nvplist(details, "spamfilter_id")))
-		json_object_set_new(j, "spamfilter_id", json_string_unreal(str));
 	requests = json_object();
 	json_object_set_new(j, "reports", requests);
 
 	data = json_deep_copy(CBL(client)->handshake); /* .. deep copy. */
 	json_object_set_new(requests, client->id, data); /* ..and steal reference */
+
+	originobj = json_object();
+	json_object_set_new(data, "origin", originobj);
+	if (source)
+		json_object_set_new(originobj, "source", json_string_unreal(source));
+	if (by)
+	{
+		mtag_add_issued_by(&mtags, by, NULL);
+		if ((m = find_mtag(mtags, "unrealircd.org/issued-by")))
+			json_object_set_new(originobj, "reporter", json_string_unreal(m->value));
+		free_message_tags(mtags);
+	}
+	if (reason)
+		json_object_set_new(originobj, "reason", json_string_unreal(reason));
+	if ((str = get_nvplist(details, "spamfilter_id")))
+		json_object_set_new(originobj, "spamfilter_id", json_string_unreal(str));
+	if (spamfilter)
+		json_expand_tkl(originobj, "spamfilter", spamfilter, 1);
 
 	/* We add the flood counters here explicitly, because when "client" was created
 	 * earlier there were no or limited flood counts yet (during registration phase).

@@ -37,7 +37,7 @@ CMD_FUNC(cmd_quit);
 void _exit_client(Client *client, MessageTag *recv_mtags, const char *comment);
 void _exit_client_fmt(Client *client, MessageTag *recv_mtags, FORMAT_STRING(const char *pattern), ...) __attribute__((format(printf, 3, 4)));
 void _exit_client_ex(Client *client, Client *origin, MessageTag *recv_mtags, const char *comment);
-void _banned_client(Client *client, const char *bantype, const char *reason, const char *tklid, int global, int noexit);
+void _banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global, int noexit);
 static void remove_dependents(Client *client, Client *from, MessageTag *mtags, const char *comment, const char *splitstr);
 static void exit_one_client(Client *, MessageTag *mtags_i, const char *);
 static int should_hide_ban_reason(Client *client, const char *reason);
@@ -481,6 +481,7 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
  * @param client   The affected client.
  * @param bantype  The ban type, such as: "K-Lined", "G-Lined" or "realname".
  * @param reason   The specified reason.
+ * @param tkl      The server ban that caused this, or NULL (eg for realname bans).
  * @param global   Whether the ban is global (1) or for this server only (0)
  * @param noexit   Set this to NO_EXIT_CLIENT to make us not call exit_client().
  *                 This is really only needed from the accept code, do not
@@ -488,7 +489,7 @@ static void exit_one_client(Client *client, MessageTag *mtags_i, const char *com
  *
  * @note This function will call exit_client() appropriately.
  */
-void _banned_client(Client *client, const char *bantype, const char *reason, const char *tklid, int global, int noexit)
+void _banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global, int noexit)
 {
 	char buf[512];
 	char idbuf[64];
@@ -500,15 +501,15 @@ void _banned_client(Client *client, const char *bantype, const char *reason, con
 	if (!MyConnect(client))
 		abort();
 
-	RunHook(HOOKTYPE_BANNED_CLIENT, client, bantype, reason, global);
+	RunHook(HOOKTYPE_BANNED_CLIENT, client, bantype, reason, tkl, global);
 
 	/* Create the tklid. We actually need two buffers:
 	 * 1) 'idbuf' is used in snprintf() in the quit reason and is " [ID: %s]" (or "")
 	 * 2) 'banid' is used by buildvarstring() and is just "[ID: %s]" (or "")
 	 */
-	if (!BadPtr(tklid))
+	if (tkl && !BadPtr(tkl->id))
 	{
-		snprintf(idbuf, sizeof(idbuf), " [ID: %s]", tklid);
+		snprintf(idbuf, sizeof(idbuf), " [ID: %s]", tkl->id);
 		banid = idbuf + 1;
 	} else
 	{

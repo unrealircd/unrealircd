@@ -2754,11 +2754,12 @@ int hooktype_can_use_nick(Client *client, const char *newnick, const char **reje
  * @param client	The client
  * @param bantype	The ban type, such as: "K-Lined", "G-Lined" or "realname"
  * @param reason	The specified reason
+ * @param tkl		The server ban that caused this, or NULL (eg for realname bans)
  * @param global	Whether the ban is global (1) or for this server only (0)
  * @notes This function is not called on /KILL (which is not a ban).
  * @return The return value is ignored (use return 0)
  */
-int hooktype_banned_client(Client *client, const char *bantype, const char *reason, int global);
+int hooktype_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global);
 
 /** Called when a local user calls /MOTD, including on connect
   * @param client	The client
@@ -3091,6 +3092,7 @@ enum EfunctionType {
 	EFUNC_TKL_HIT,
 	EFUNC_REMOVE_CONFIG_TKLS,
 	EFUNC_CONFIG_TKL_HITS_RESTORE,
+	EFUNC_FIND_TKL_SPAMFILTER_BY_ID,
 };
 
 /* Module flags */
