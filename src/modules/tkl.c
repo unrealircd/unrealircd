@@ -370,18 +370,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!strcmp(cep->name, "id"))
-		{
-			if (config_detect_duplicate(&has_id, cep, &errors))
-				continue;
-			if (!valid_spamfilter_id(cep->value))
-			{
-				config_error("%s:%i: spamfilter::id invalid: maximum size (%d chars) exceeded "
-				             "or forbidden characters encountered: only A-Z, 0-9 and _ are permitted.",
-				             cep->file->filename, cep->line_number, TKLIDLEN - 1);
-				errors++;
-			}
-		} else if (!strcmp(cep->name, "target"))
+		if (!strcmp(cep->name, "target"))
 		{
 			if (config_detect_duplicate(&has_target, cep, &errors))
 				continue;
@@ -457,6 +446,17 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			                   "spamfilter", cep->name);
 			errors++;
 			continue;
+		} else if (!strcmp(cep->name, "id"))
+		{
+			if (config_detect_duplicate(&has_id, cep, &errors))
+				continue;
+			if (!valid_spamfilter_id(cep->value))
+			{
+				config_error("%s:%i: spamfilter::id invalid: maximum size (%d chars) exceeded "
+				             "or forbidden characters encountered: only A-Z, 0-9 and _ are permitted.",
+				             cep->file->filename, cep->line_number, TKLIDLEN - 1);
+				errors++;
+			}
 		} else if (!strcmp(cep->name, "reason"))
 		{
 			if (config_detect_duplicate(&has_reason, cep, &errors))

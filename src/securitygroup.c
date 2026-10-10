@@ -256,6 +256,7 @@ int test_match_item(ConfigFile *conf, ConfigEntry *cep, int *errors)
 	{
 		int val;
 
+		CheckNullX(cep);
 		if (!strcmp(cep->name, "rule"))
 			config_detect_duplicate(&has_rule, cep, errors);
 		else if (!strcmp(cep->name, "exclude-rule"))
