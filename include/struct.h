@@ -1310,6 +1310,9 @@ struct BanAction {
 /** Don't ban/kill/block/etc, but do return value as if we did */
 #define TAKE_ACTION_SIMULATE_USER_ACTION 0x2
 
+/** spamreport(): only send to spamreport blocks that have spamreport::auto-report with a matching 'source' */
+#define SPAMREPORT_FLAG_AUTO 0x1
+
 typedef enum SpamfilterShowMessageContentOnHit {
 	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_ALWAYS = 1,
 	SPAMFILTER_SHOW_MESSAGE_CONTENT_ON_HIT_CHANNEL_ONLY = 2,

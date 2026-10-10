@@ -1526,7 +1526,7 @@ int is_silenced_default_handler(Client *client, Client *acptr)
 	return 0;
 }
 
-int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter)
+int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags)
 {
 	return -1;
 }

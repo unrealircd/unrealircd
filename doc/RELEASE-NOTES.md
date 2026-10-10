@@ -6,9 +6,35 @@ This is work in progress and may not always be a stable version.
 
 ### Enhancements:
 
+
 ### Changes:
+* We continue the gradual transition from `geoip_classic` to `geoip_mmdb`.
+  Now also for `./Config -quick` (and thus `./unrealircd upgrade`).
+  This because we will stop database updates for classic in mid-2027.
+* A ton of spamreport changes:
+  * A spamreport block can now report automatically, via the new option
+    [spamreport::auto-report](https://www.unrealircd.org/docs/Spamreport_block).
+    Currently it has two sources:
+    * `spamfilter`: when a spamfilter kills or *LINEs a user.
+      The spamfilter itself is included in the report.
+    * `server-ban`: when an online user is banned (eg /GLINE by an oper)
+      and the ban reason contains the word "spam". You can change the word(s)
+      with [set::spamreport::auto-report::server-ban-reason](https://www.unrealircd.org/docs/Set_block#set::spamreport).
+    For [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+    both are on by default. For other spamreport blocks it is off by default.
+    To turn it off, you put in the spamreport block: `auto-report { }`
+  * The `SPAMREPORT` command now has an optional reason:  
+    `SPAMREPORT <nick|ip> [name-of-spamreport-block|all] [reason]`
+  * For spamreport blocks of type simple you can now use `$source`,
+    `$reason` and `$spamfilter_id` in the URL.
+  * You now get a config error if you use `action { gline; report; }`.
+    This because a report cannot happen after a user is killed.
+    The correct syntax is: `action { report; gline; }`
 
 ### Fixes:
+* In 6.2.x every server ban was accidentally reported to all spamreport
+  blocks. That could have been especially bad if you had a spamreport
+  block with type `dronebl`.
 
 ### Developers and protocol:
 

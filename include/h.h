@@ -1011,7 +1011,7 @@ extern MODVAR int (*websocket_create_packet_simple)(int opcode, const char **buf
 extern MODVAR const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 extern MODVAR void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern MODVAR void (*cancel_ident_lookup)(Client *client);
-extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
+extern MODVAR int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags);
 extern MODVAR int (*crule_test)(const char *rule);
 extern MODVAR CRuleNode *(*crule_parse)(const char *rule);
 extern MODVAR int (*crule_eval)(crule_context *context, CRuleNode *rule);
@@ -1112,7 +1112,7 @@ extern int websocket_create_packet_ex_default_handler(int opcode, char **buf, in
 extern int websocket_create_packet_simple_default_handler(int opcode, const char **buf, int *len);
 extern void mtag_add_issued_by_default_handler(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 extern void cancel_ident_lookup_default_handler(Client *client);
-extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
+extern int spamreport_default_handler(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags);
 extern void ban_act_set_reputation_default_handler(Client *client, BanAction *action);
 extern const char *get_central_api_key_default_handler(void);
 extern int central_spamreport_default_handler(Client *target, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url);

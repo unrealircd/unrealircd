@@ -33,7 +33,7 @@ struct Spamreport {
 	SecurityGroup *except;
 	int rate_limit_count;
 	int rate_limit_period;
-	int on_server_ban;
+	NameList *auto_report; /**< Sources that are reported automatically, eg "spamfilter" */
 };
 
 typedef struct SpamreportCounter SpamreportCounter;
@@ -45,13 +45,21 @@ struct SpamreportCounter {
 	time_t last_warning_sent;
 };
 
+struct {
+	NameList *auto_report_server_ban_reason;
+} cfg;
+
 /* Forward declarations */
+static void init_config(void);
+static void free_config(void);
 CMD_FUNC(cmd_spamreport);
 int tkl_config_test_spamreport(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
+int spamreport_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
+int spamreport_config_run_set(ConfigFile *, ConfigEntry *, int);
 Spamreport *find_spamreport_block(const char *name);
 void free_spamreport_blocks(void);
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags);
 int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
 SpamreportType parse_spamreport_type(const char *s);
@@ -60,6 +68,8 @@ int spamreport_banned_client(Client *client, const char *bantype, const char *re
 /* Variables */
 Spamreport *spamreports = NULL;
 SpamreportCounter *spamreportcounters = NULL;
+/** Valid sources for spamreport::auto-report */
+static const char *auto_report_sources[] = {"spamfilter", "server-ban", NULL};
 
 MOD_TEST()
 {
@@ -67,14 +77,17 @@ MOD_TEST()
 	EfunctionAdd(modinfo->handle, EFUNC_SPAMREPORT, _spamreport);
 	EfunctionAdd(modinfo->handle, EFUNC_CENTRAL_SPAMREPORT_ENABLED, _central_spamreport_enabled);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamreport);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, spamreport_config_test_set);
 	return MOD_SUCCESS;
 }
 
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
+	init_config();
 	CommandAdd(modinfo->handle, "SPAMREPORT", cmd_spamreport, 3, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamreport);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, spamreport_config_run_set);
 	HookAdd(modinfo->handle, HOOKTYPE_BANNED_CLIENT, 0, spamreport_banned_client);
 	LoadPersistentPointer(modinfo, spamreportcounters, spamreportcounters_free_all);
 	return MOD_SUCCESS;
@@ -82,6 +95,8 @@ MOD_INIT()
 
 MOD_LOAD()
 {
+	if (!cfg.auto_report_server_ban_reason)
+		add_name_list(cfg.auto_report_server_ban_reason, "*spam*");
 	return MOD_SUCCESS;
 }
 
@@ -89,7 +104,57 @@ MOD_UNLOAD()
 {
 	SavePersistentPointer(modinfo, spamreportcounters);
 	free_spamreport_blocks();
+	free_config();
 	return MOD_SUCCESS;
+}
+
+static void init_config(void)
+{
+	memset(&cfg, 0, sizeof(cfg));
+}
+
+static void free_config(void)
+{
+	free_entire_name_list(cfg.auto_report_server_ban_reason);
+	memset(&cfg, 0, sizeof(cfg));
+}
+
+/** Returns 1 if 'name' is a valid source for spamreport::auto-report */
+static int valid_auto_report_source(const char *name)
+{
+	int i;
+
+	for (i = 0; auto_report_sources[i]; i++)
+		if (!strcmp(auto_report_sources[i], name))
+			return 1;
+	return 0;
+}
+
+/** Test a spamreport::auto-report item (single value or a block) */
+static void test_auto_report(ConfigEntry *ce, int *errors)
+{
+	ConfigEntry *cep;
+
+	if (ce->value)
+	{
+		if (!valid_auto_report_source(ce->value))
+		{
+			config_error("%s:%i: spamreport::auto-report: unknown source '%s'",
+			             ce->file->filename, ce->line_number, ce->value);
+			(*errors)++;
+		}
+		return;
+	}
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!valid_auto_report_source(cep->name))
+		{
+			config_error("%s:%i: spamreport::auto-report: unknown source '%s'",
+			             cep->file->filename, cep->line_number, cep->name);
+			(*errors)++;
+		}
+	}
 }
 
 /** Test a spamreport { } block in the configuration file */
@@ -138,6 +203,9 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				else if (!strcmp(cepp->name, "staging"))
 					;
 			}
+		} else if (!strcmp(cep->name, "auto-report"))
+		{
+			test_auto_report(cep, &errors);
 		} else if (!cep->value)
 		{
 			config_error_empty(cep->file->filename, cep->line_number,
@@ -178,8 +246,6 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				             cep->file->filename, cep->line_number);
 				errors++;
 			}
-		} else if (!strcmp(cep->name, "on-server-ban"))
-		{
 		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
@@ -231,6 +297,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
 	Spamreport *s;
+	int has_auto_report = 0;
 
 	/* We are only interested in spamreport { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamreport"))
@@ -245,7 +312,6 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	s = safe_alloc(sizeof(Spamreport));
 	safe_strdup(s->name, ce->value);
-	s->on_server_ban = -1;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -285,23 +351,106 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else if (!strcmp(cep->name, "except"))
 		{
 			conf_match_block(cf, cep, &s->except);
-		} else if (!strcmp(cep->name, "on-server-ban"))
+		} else if (!strcmp(cep->name, "auto-report"))
 		{
-			s->on_server_ban = config_checkval(cep->value, CFG_YESNO);
+			has_auto_report = 1;
+			if (cep->value)
+				add_name_list(s->auto_report, cep->value);
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+				add_name_list(s->auto_report, cepp->name);
 		}
 	}
 
 	if (s->type == SPAMREPORT_TYPE_DRONEBL)
 		s->http_method = HTTP_METHOD_POST;
 
-	/* spamreport::on-server-ban defaults to:
-	 * "yes" for Central Spamreport (since this is usually what you want)
-	 * "no" for any other (eg you don't want to dronebl all your /gline's normally)
+	/* spamreport::auto-report defaults to:
+	 * { spamfilter; server-ban; } for Central Spamreport (since this is usually what you want)
+	 * nothing for any other (eg you don't want to dronebl all your /gline's normally)
 	 */
-	if (s->on_server_ban == -1)
-		s->on_server_ban = (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT) ? 1 : 0;
+	if (!has_auto_report && (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT))
+	{
+		add_name_list(s->auto_report, "spamfilter");
+		add_name_list(s->auto_report, "server-ban");
+	}
 
 	AddListItem(s, spamreports);
+	return 1;
+}
+
+/** Test set::spamreport */
+int spamreport_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	ConfigEntry *cep, *cepp;
+	int errors = 0;
+
+	if ((type != CONFIG_SET) || !ce || !ce->name || strcmp(ce->name, "spamreport"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "auto-report"))
+		{
+			if (cep->value)
+			{
+				config_error("%s:%i: set::spamreport::auto-report must be a block",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "server-ban-reason"))
+				{
+					if (!cepp->value && !cepp->items)
+					{
+						config_error_empty(cepp->file->filename, cepp->line_number,
+						                   "set::spamreport::auto-report", cepp->name);
+						errors++;
+					}
+				} else
+				{
+					config_error_unknown(cepp->file->filename, cepp->line_number,
+					                     "set::spamreport::auto-report", cepp->name);
+					errors++;
+				}
+			}
+		} else
+		{
+			config_error_unknown(cep->file->filename, cep->line_number,
+			                     "set::spamreport", cep->name);
+			errors++;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+/** Process set::spamreport */
+int spamreport_config_run_set(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep, *cepp, *ceppp;
+
+	if ((type != CONFIG_SET) || !ce || !ce->name || strcmp(ce->name, "spamreport"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "auto-report"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!strcmp(cepp->name, "server-ban-reason"))
+				{
+					if (cepp->value)
+						add_name_list(cfg.auto_report_server_ban_reason, cepp->value);
+					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+						add_name_list(cfg.auto_report_server_ban_reason, ceppp->name);
+				}
+			}
+		}
+	}
 	return 1;
 }
 
@@ -312,6 +461,7 @@ void free_spamreport_block(Spamreport *s)
 	safe_free(s->url);
 	safe_free_nvplist(s->parameters);
 	free_security_group(s->except);
+	free_entire_name_list(s->auto_report);
 	safe_free(s);
 }
 
@@ -404,7 +554,7 @@ int _central_spamreport_enabled(void)
 	return 0;
 }
 
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter)
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags)
 {
 	Spamreport *s;
 	OutgoingWebRequest *request;
@@ -432,7 +582,11 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	{
 		int ret = 0;
 		for (s = spamreports; s; s = s->next)
-			ret += spamreport(client, ip, details, s->name, by, source, reason, spamfilter);
+		{
+			if ((flags & SPAMREPORT_FLAG_AUTO) && !find_name_list(s->auto_report, source))
+				continue;
+			ret += spamreport(client, ip, details, s->name, by, source, reason, spamfilter, flags);
+		}
 		return ret;
 	}
 
@@ -577,7 +731,7 @@ CMD_FUNC(cmd_spamreport)
 		}
 	}
 
-	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL, client, "manual", reason, NULL))))
+	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL, client, "manual", reason, NULL, 0))))
 		sendnotice(client, "Could not report spam. No spamreport { } blocks configured, or all filtered out/exempt.");
 	else
 		sendnotice(client, "Sending spam report to %d target(s)", n);
@@ -594,25 +748,30 @@ void spamreportcounters_free_all(ModData *m)
 	}
 }
 
+/** Returns 1 if this server ban should be auto-reported (source "server-ban") */
+static int auto_report_server_ban(const char *reason)
+{
+	return find_name_list_match(cfg.auto_report_server_ban_reason, reason) ? 1 : 0;
+}
+
 int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global)
 {
-	Spamreport *s;
-	NameValuePrioList *details = NULL;
-	TKL *spamfilter = NULL;
-
 	if (!IsUser(client) || (client->flags & CLIENT_FLAG_SKIP_BAN_SPAMREPORT))
 		return 0;
 
 	if (tkl && *tkl->spamfilter_id)
 	{
+		/* Ban placed by a spamfilter */
+		NameValuePrioList *details = NULL;
+		TKL *spamfilter;
+
 		add_nvplist(&details, 0, "spamfilter_id", tkl->spamfilter_id);
 		spamfilter = find_tkl_spamfilter_by_id(tkl->spamfilter_id);
+		spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, spamfilter, SPAMREPORT_FLAG_AUTO);
+		safe_free_nvplist(details);
+	} else if (auto_report_server_ban(reason))
+	{
+		spamreport(client, client->ip, NULL, NULL, NULL, "server-ban", reason, NULL, SPAMREPORT_FLAG_AUTO);
 	}
-
-	for (s = spamreports; s; s = s->next)
-		if (s->on_server_ban)
-			spamreport(client, client->ip, details, s->name, NULL, "server-ban", reason, spamfilter);
-
-	safe_free_nvplist(details);
 	return 0;
 }

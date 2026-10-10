@@ -173,7 +173,7 @@ int (*websocket_create_packet_simple)(int opcode, const char **buf, int *len);
 const char *(*check_deny_link)(ConfigItem_link *link, int auto_connect);
 void (*mtag_add_issued_by)(MessageTag **mtags, Client *client, MessageTag *recv_mtags);
 void (*cancel_ident_lookup)(Client *client);
-int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter);
+int (*spamreport)(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags);
 int (*crule_test)(const char *rule);
 CRuleNode *(*crule_parse)(const char *rule);
 int (*crule_eval)(crule_context *context, CRuleNode *rule);

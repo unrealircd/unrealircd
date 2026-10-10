@@ -5721,6 +5721,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 	int highest = 0;
 	NameValuePrioList *details = NULL;
 	int reported_to_all = 0;
+	int auto_reported = 0;
 
 	if (stopped)
 		*stopped = 0;
@@ -5737,6 +5738,17 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 		/* If this is a soft action and the user is logged in, then the ban does not apply. */
 		if (IsSoftBanAction(action->action) && IsLoggedIn(client))
 			return 0;
+
+		/* Spamfilter auto-report: needs to happen before the user is disconnected */
+		if (spamfilter && !auto_reported && banact_disconnects(action->action) &&
+		    !(take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION))
+		{
+			if (*spamfilter->id)
+				add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
+			spamreport(client, client->ip, details, NULL, NULL, "spamfilter", NULL, spamfilter, SPAMREPORT_FLAG_AUTO);
+			safe_free_nvplist(details);
+			auto_reported = 1;
+		}
 
 		previous_highest = highest;
 		if ((action->action > highest) && (action->action != BAN_ACT_SET) && (action->action != BAN_ACT_REPORT))
@@ -5809,7 +5821,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					find_shun(client);
 					break;
 				} /* else.. */
-				if (reported_to_all)
+				if (reported_to_all || auto_reported)
 					client->flags |= CLIENT_FLAG_SKIP_BAN_SPAMREPORT;
 				if (!find_tkline_match(client, 0))
 				{
@@ -5842,7 +5854,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					break;
 				if (spamfilter && *spamfilter->id)
 					add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
-				spamreport(client, client->ip, details, action->var, NULL, spamfilter ? "spamfilter" : NULL, NULL, spamfilter);
+				spamreport(client, client->ip, details, action->var, NULL, spamfilter ? "spamfilter" : NULL, NULL, spamfilter, 0);
 				safe_free_nvplist(details);
 				if (!action->var)
 					reported_to_all = 1;
