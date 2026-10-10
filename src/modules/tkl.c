@@ -5725,6 +5725,13 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 	if (stopped)
 		*stopped = 0;
 
+	if (!MyConnect(client))
+	{
+		unreal_log(ULOG_ERROR, "tkl", "BUG_TAKE_ACTION_REMOTE_CLIENT", client,
+		           "[BUG] take_action() called for remote client $client.details. This should never happen.");
+		return 0;
+	}
+
 	for (action = actions; action; action = action->next)
 	{
 		/* If this is a soft action and the user is logged in, then the ban does not apply. */

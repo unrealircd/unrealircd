@@ -415,6 +415,9 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	NameValuePrioList *headers = NULL;
 	int num;
 
+	if (client && !MyConnect(client))
+		return 0;
+
 	num = downloads_in_progress();
 	if (num > 100)
 	{
