@@ -358,6 +358,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	int has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0;
 	int has_bantime = 0, has_match_type = 0, has_input_conversion = 0;
 	int has_show_message_content_on_hit = 0;
+	int action_uses_ban_time = 0;
 	char central_spamfilter = 0;
 	int match_type = 0;
 
@@ -437,6 +438,7 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			if (config_detect_duplicate(&has_action, cep, &errors))
 				continue;
 			errors += test_ban_action_config(cep);
+			action_uses_ban_time = ban_action_config_uses_ban_time(cep);
 		} else if (!strcmp(cep->name, "except"))
 		{
 			test_match_block(cf, cep, &errors);
@@ -603,6 +605,13 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	if (central_spamfilter && !has_reason)
 	{
 		config_error("%s:%i: central spamfilter encountered without 'reason', rejected.",
+		             ce->file->filename, ce->line_number);
+		errors++;
+	}
+
+	if (central_spamfilter && action_uses_ban_time && !has_bantime)
+	{
+		config_error("%s:%i: central spamfilter with a ban action encountered without 'ban-time', rejected.",
 		             ce->file->filename, ce->line_number);
 		errors++;
 	}

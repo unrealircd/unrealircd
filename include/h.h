@@ -795,6 +795,7 @@ extern char *trim_str(char *str, int len);
 extern MODVAR char *ban_realhost, *ban_virthost, *ban_ip;
 extern void parse_ban_action_config(ConfigEntry *ce, BanAction **store_action);
 extern int test_ban_action_config(ConfigEntry *ce);
+extern int ban_action_config_uses_ban_time(ConfigEntry *ce);
 extern void free_single_ban_action(BanAction *action);
 extern void free_all_ban_actions(BanAction *actions);
 #define safe_free_all_ban_actions(x) \
@@ -817,6 +818,7 @@ extern BanActionValue banact_chartoval(char c);
 extern char banact_valtochar(BanActionValue val);
 extern BanAction *banact_value_to_struct(BanActionValue val);
 extern int banact_config_only(BanActionValue action);
+extern int banact_uses_ban_time(BanActionValue action);
 extern int only_actions_of_type(BanAction *actions, BanActionValue what);
 extern int has_actions_of_type(BanAction *actions, BanActionValue what);
 extern int only_soft_actions(BanAction *actions);

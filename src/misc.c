@@ -73,34 +73,35 @@ typedef struct {
 	char character;  /** Unique character assigned to item */
 	char *name;   /** Name of item */
 	char config_only;
+	char uses_ban_time; /** uses ::ban-time */
 } BanActTable;
 
 /* clang-format off */
 static BanActTable banacttable[] = {
-	{ BAN_ACT_KILL,		'K',	"kill",			0 },
-	{ BAN_ACT_SOFT_KILL,	'i',	"soft-kill",		0 },
-	{ BAN_ACT_TEMPSHUN,	'S',	"tempshun",		0 },
-	{ BAN_ACT_SOFT_TEMPSHUN,'T',	"soft-tempshun",	0 },
-	{ BAN_ACT_SHUN,		's',	"shun",			0 },
-	{ BAN_ACT_SOFT_SHUN,	'H',	"soft-shun",		0 },
-	{ BAN_ACT_KLINE,	'k',	"kline",		0 },
-	{ BAN_ACT_SOFT_KLINE,	'I',	"soft-kline",		0 },
-	{ BAN_ACT_ZLINE,	'z',	"zline",		0 },
-	{ BAN_ACT_GLINE,	'g',	"gline",		0 },
-	{ BAN_ACT_SOFT_GLINE,	'G',	"soft-gline",		0 },
-	{ BAN_ACT_GZLINE,	'Z',	"gzline",		0 },
-	{ BAN_ACT_BLOCK,	'b',	"block",		0 },
-	{ BAN_ACT_SOFT_BLOCK,	'B',	"soft-block",		0 },
-	{ BAN_ACT_DCCBLOCK,	'd',	"dccblock",		0 },
-	{ BAN_ACT_SOFT_DCCBLOCK,'D',	"soft-dccblock",	0 },
-	{ BAN_ACT_VIRUSCHAN,	'v',	"viruschan",		0 },
-	{ BAN_ACT_SOFT_VIRUSCHAN,'V',	"soft-viruschan",	0 },
-	{ BAN_ACT_WARN,		'w',	"warn",			0 },
-	{ BAN_ACT_SOFT_WARN,	'W',	"soft-warn",		0 },
-	{ BAN_ACT_SET,		'1',	"set",			1 },
-	{ BAN_ACT_REPORT,	'r',	"report",		1 },
-	{ BAN_ACT_STOP,		'0',	"stop",			1 },
-	{ 0, 0, 0, 0 }
+	{ BAN_ACT_GZLINE,		'Z',	"gzline",		0, 1 },
+	{ BAN_ACT_GLINE,		'g',	"gline",		0, 1 },
+	{ BAN_ACT_SOFT_GLINE,		'G',	"soft-gline",		0, 1 },
+	{ BAN_ACT_ZLINE,		'z',	"zline",		0, 1 },
+	{ BAN_ACT_KLINE,		'k',	"kline",		0, 1 },
+	{ BAN_ACT_SOFT_KLINE,		'I',	"soft-kline",		0, 1 },
+	{ BAN_ACT_SHUN,			's',	"shun",			0, 1 },
+	{ BAN_ACT_SOFT_SHUN,		'H',	"soft-shun",		0, 1 },
+	{ BAN_ACT_KILL,			'K',	"kill",			0, 0 },
+	{ BAN_ACT_SOFT_KILL,		'i',	"soft-kill",		0, 0 },
+	{ BAN_ACT_TEMPSHUN,		'S',	"tempshun",		0, 0 },
+	{ BAN_ACT_SOFT_TEMPSHUN,	'T',	"soft-tempshun",	0, 0 },
+	{ BAN_ACT_VIRUSCHAN,		'v',	"viruschan",		0, 0 },
+	{ BAN_ACT_SOFT_VIRUSCHAN,	'V',	"soft-viruschan",	0, 0 },
+	{ BAN_ACT_DCCBLOCK,		'd',	"dccblock",		0, 0 },
+	{ BAN_ACT_SOFT_DCCBLOCK,	'D',	"soft-dccblock",	0, 0 },
+	{ BAN_ACT_BLOCK,		'b',	"block",		0, 0 },
+	{ BAN_ACT_SOFT_BLOCK,		'B',	"soft-block",		0, 0 },
+	{ BAN_ACT_WARN,			'w',	"warn",			0, 0 },
+	{ BAN_ACT_SOFT_WARN,		'W',	"soft-warn",		0, 0 },
+	{ BAN_ACT_REPORT,		'r',	"report",		1, 0 },
+	{ BAN_ACT_SET,			'1',	"set",			1, 0 },
+	{ BAN_ACT_STOP,			'0',	"stop",			1, 0 },
+	{ 0, 0, 0, 0, 0 }
 };
 /* clang-format on */
 
@@ -694,6 +695,19 @@ int test_ban_action_config(ConfigEntry *ce)
 	return errors;
 }
 
+/** Returns 1 if any action item places a ban (and thus possibly requiring ::ban-time) */
+int ban_action_config_uses_ban_time(ConfigEntry *ce)
+{
+	ConfigEntry *cep;
+
+	if (ce->value)
+		return banact_uses_ban_time(banact_stringtoval(ce->value));
+	for (cep = ce->items; cep; cep = cep->next)
+		if (banact_uses_ban_time(banact_stringtoval(cep->name)))
+			return 1;
+	return 0;
+}
+
 BanAction *parse_ban_action_config_helper(const char *name, const char *value)
 {
 	int errors = 0;
@@ -767,6 +781,17 @@ int banact_config_only(BanActionValue action)
 	for (b = &banacttable[0]; b->value; b++)
 		if (b->value == action)
 			return b->config_only;
+	return 0;
+}
+
+/** Return 1 if this ban action places a ban, so it uses the ban-time, like BAN_ACT_GLINE does */
+int banact_uses_ban_time(BanActionValue action)
+{
+	BanActTable *b;
+
+	for (b = &banacttable[0]; b->value; b++)
+		if (b->value == action)
+			return b->uses_ban_time;
 	return 0;
 }
 
