@@ -278,8 +278,8 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
 	int errors = 0;
-	char has_reason = 0, has_ban_time = 0, has_action = 0;
-	char has_dns_type = 0, has_dns_reply = 0, has_dns_name = 0, has_recheck = 0;
+	int has_reason = 0, has_ban_time = 0, has_action = 0;
+	int has_dns_type = 0, has_dns_reply = 0, has_dns_name = 0, has_recheck = 0;
 
 	if (type != CONFIG_MAIN)
 		return 0;
@@ -361,20 +361,12 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 					continue;
 				} else if (!strcmp(cepp->name, "name"))
 				{
-					if (has_dns_name)
-					{
-						config_warn_duplicate(cepp->file->filename,
-						                      cepp->line_number, "blacklist::dns::name");
-					}
-					has_dns_name = 1;
+					if (config_detect_duplicate(&has_dns_name, cepp, &errors))
+						continue;
 				} else if (!strcmp(cepp->name, "type"))
 				{
-					if (has_dns_type)
-					{
-						config_warn_duplicate(cepp->file->filename,
-						                      cepp->line_number, "blacklist::dns::type");
-					}
-					has_dns_type = 1;
+					if (config_detect_duplicate(&has_dns_type, cepp, &errors))
+						continue;
 					if (!strcmp(cepp->value, "record"))
 						;
 					else if (!strcmp(cepp->value, "bitmask"))
@@ -398,41 +390,21 @@ int blacklist_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			continue;
 		} else if (!strcmp(cep->name, "action"))
 		{
-			if (has_action)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "blacklist::action");
+			if (config_detect_duplicate(&has_action, cep, &errors))
 				continue;
-			}
-			has_action = 1;
 			errors += test_ban_action_config(cep);
 		} else if (!strcmp(cep->name, "ban-time"))
 		{
-			if (has_ban_time)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "blacklist::ban-time");
+			if (config_detect_duplicate(&has_ban_time, cep, &errors))
 				continue;
-			}
-			has_ban_time = 1;
 		} else if (!strcmp(cep->name, "reason"))
 		{
-			if (has_reason)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "blacklist::reason");
+			if (config_detect_duplicate(&has_reason, cep, &errors))
 				continue;
-			}
-			has_reason = 1;
 		} else if (!strcmp(cep->name, "recheck"))
 		{
-			if (has_recheck)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "blacklist::recheck");
+			if (config_detect_duplicate(&has_recheck, cep, &errors))
 				continue;
-			}
-			has_recheck = 1;
 		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,

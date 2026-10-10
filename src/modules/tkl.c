@@ -355,9 +355,9 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
 	char *match = NULL, *reason = NULL;
-	char has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0;
-	char has_bantime = 0, has_match_type = 0, has_input_conversion = 0;
-	char has_show_message_content_on_hit = 0;
+	int has_target = 0, has_id = 0, has_match = 0, has_rule = 0, has_action = 0, has_reason = 0;
+	int has_bantime = 0, has_match_type = 0, has_input_conversion = 0;
+	int has_show_message_content_on_hit = 0;
 	char central_spamfilter = 0;
 	int match_type = 0;
 
@@ -372,13 +372,8 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 	{
 		if (!strcmp(cep->name, "id"))
 		{
-			if (has_id)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::id");
+			if (config_detect_duplicate(&has_id, cep, &errors))
 				continue;
-			}
-			has_id = 1;
 			if (!valid_spamfilter_id(cep->value))
 			{
 				config_error("%s:%i: spamfilter::id invalid: maximum size (%d chars) exceeded "
@@ -388,13 +383,8 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 		} else if (!strcmp(cep->name, "target"))
 		{
-			if (has_target)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::target");
+			if (config_detect_duplicate(&has_target, cep, &errors))
 				continue;
-			}
-			has_target = 1;
 			if (cep->value)
 			{
 				if (!spamfilter_getconftargets(cep->value))
@@ -424,13 +414,8 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			continue;
 		} else if (!strcmp(cep->name, "input-conversion"))
 		{
-			if (has_input_conversion)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::input-conversion");
+			if (config_detect_duplicate(&has_input_conversion, cep, &errors))
 				continue;
-			}
-			has_input_conversion = 1;
 			if (cep->value)
 			{
 				if (input_conversion_strtoval(cep->value) < 0)
@@ -460,13 +445,8 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			continue;
 		} else if (!strcmp(cep->name, "action"))
 		{
-			if (has_action)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::action");
+			if (config_detect_duplicate(&has_action, cep, &errors))
 				continue;
-			}
-			has_action = 1;
 			errors += test_ban_action_config(cep);
 		} else if (!strcmp(cep->name, "except"))
 		{
@@ -479,34 +459,19 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			continue;
 		} else if (!strcmp(cep->name, "reason"))
 		{
-			if (has_reason)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::reason");
+			if (config_detect_duplicate(&has_reason, cep, &errors))
 				continue;
-			}
-			has_reason = 1;
 			reason = cep->value;
 		} else if (!strcmp(cep->name, "match") || !strcmp(cep->name, "match-string"))
 		{
-			if (has_match)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::match-string");
+			if (config_detect_duplicate(&has_match, cep, &errors))
 				continue;
-			}
-			has_match = 1;
 			match = cep->value;
 		} else if (!strcmp(cep->name, "rule"))
 		{
 			int val;
-			if (has_rule)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::rule");
+			if (config_detect_duplicate(&has_rule, cep, &errors))
 				continue;
-			}
-			has_rule = 1;
 			if ((val = crule_test(cep->value)))
 			{
 				config_error("%s:%i: spamfilter::rule contains an invalid expression: %s",
@@ -517,21 +482,12 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 		} else if (!strcmp(cep->name, "ban-time"))
 		{
-			if (has_bantime)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::ban-time");
+			if (config_detect_duplicate(&has_bantime, cep, &errors))
 				continue;
-			}
-			has_bantime = 1;
 		} else if (!strcmp(cep->name, "match-type"))
 		{
-			if (has_match_type)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::match-type");
+			if (config_detect_duplicate(&has_match_type, cep, &errors))
 				continue;
-			}
 			if (!strcasecmp(cep->value, "posix"))
 			{
 				config_error("%s:%i: this spamfilter uses match-type 'posix' which is no longer supported. "
@@ -552,16 +508,10 @@ int tkl_config_test_spamfilter(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 				errors++;
 				continue;
 			}
-			has_match_type = 1;
 		} else if (!strcmp(cep->name, "show-message-content-on-hit"))
 		{
-			if (has_show_message_content_on_hit)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamfilter::show-message-content-on-hit");
+			if (config_detect_duplicate(&has_show_message_content_on_hit, cep, &errors))
 				continue;
-			}
-			has_show_message_content_on_hit = 1;
 			if (!spamfilter_show_message_content_on_hit_strtoval(cep->value))
 			{
 				config_error("%s:%i: spamfilter::show-message-content-on-hit: unknown value '%s'",

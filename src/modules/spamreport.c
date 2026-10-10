@@ -97,8 +97,9 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
-	char has_url = 0, has_type = 0, has_type_dronebl = 0, has_http_method = 0;
-	char has_dronebl_type = 0, has_dronebl_rpckey = 0;
+	int has_url = 0, has_type = 0, has_type_dronebl = 0, has_http_method = 0;
+	int has_dronebl_type = 0, has_dronebl_rpckey = 0;
+	int has_type_item = 0;
 
 	/* We are only interested in spamreport { } blocks */
 	if ((type != CONFIG_MAIN) || strcmp(ce->name, "spamreport"))
@@ -140,21 +141,12 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			continue;
 		} else if (!strcmp(cep->name, "url"))
 		{
-			if (has_url)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamreport::url");
+			if (config_detect_duplicate(&has_url, cep, &errors))
 				continue;
-			}
-			has_url = 1;
 		} else if (!strcmp(cep->name, "type"))
 		{
-			if (has_type)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamreport::type");
+			if (config_detect_duplicate(&has_type_item, cep, &errors))
 				continue;
-			}
 			has_type = parse_spamreport_type(cep->value);
 			if (!has_type)
 			{
@@ -164,13 +156,8 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 		} else if (!strcmp(cep->name, "http-method"))
 		{
-			if (has_http_method)
-			{
-				config_warn_duplicate(cep->file->filename,
-				                      cep->line_number, "spamreport::http-method");
+			if (config_detect_duplicate(&has_http_method, cep, &errors))
 				continue;
-			}
-			has_http_method = 1;
 			if (strcmp(cep->value, "get") && strcmp(cep->value, "post"))
 			{
 				config_error("%s:%i: spamreport::http-method: only 'get' and 'post' are supported",
