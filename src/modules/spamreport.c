@@ -240,6 +240,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	s = safe_alloc(sizeof(Spamreport));
 	safe_strdup(s->name, ce->value);
+	s->on_server_ban = -1;
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
@@ -287,6 +288,13 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 
 	if (s->type == SPAMREPORT_TYPE_DRONEBL)
 		s->http_method = HTTP_METHOD_POST;
+
+	/* spamreport::on-server-ban defaults to:
+	 * "yes" for Central Spamreport (since this is usually what you want)
+	 * "no" for any other (eg you don't want to dronebl all your /gline's normally)
+	 */
+	if (s->on_server_ban == -1)
+		s->on_server_ban = (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT) ? 1 : 0;
 
 	AddListItem(s, spamreports);
 	return 1;
@@ -567,6 +575,10 @@ void spamreportcounters_free_all(ModData *m)
 
 int spamreport_banned_client(Client *client, const char *bantype, const char *reason, int global)
 {
-	spamreport(client, client->ip, NULL, NULL, NULL);
+	Spamreport *s;
+
+	for (s = spamreports; s; s = s->next)
+		if (s->on_server_ban)
+			spamreport(client, client->ip, NULL, s->name, NULL);
 	return 0;
 }
