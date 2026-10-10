@@ -110,6 +110,11 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 		config_error("%s:%i: spamreport block has no name, should be like: spamfilter <name> { }",
 		             ce->file->filename, ce->line_number);
 		errors++;
+	} else if (!strcasecmp(ce->value, "all"))
+	{
+		config_error("%s:%i: spamreport: the name 'all' is reserved and cannot be used.",
+		             ce->file->filename, ce->line_number);
+		errors++;
 	}
 
 	for (cep = ce->items; cep; cep = cep->next)
