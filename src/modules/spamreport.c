@@ -51,7 +51,7 @@ int tkl_config_test_spamreport(ConfigFile *, ConfigEntry *, int, int *);
 int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
 Spamreport *find_spamreport_block(const char *name);
 void free_spamreport_blocks(void);
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by);
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason);
 int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
 SpamreportType parse_spamreport_type(const char *s);
@@ -73,7 +73,7 @@ MOD_TEST()
 MOD_INIT()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
-	CommandAdd(modinfo->handle, "SPAMREPORT", cmd_spamreport, MAXPARA, CMD_USER);
+	CommandAdd(modinfo->handle, "SPAMREPORT", cmd_spamreport, 3, CMD_USER);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamreport);
 	HookAdd(modinfo->handle, HOOKTYPE_BANNED_CLIENT, 0, spamreport_banned_client);
 	LoadPersistentPointer(modinfo, spamreportcounters, spamreportcounters_free_all);
@@ -399,7 +399,7 @@ int _central_spamreport_enabled(void)
 	return 0;
 }
 
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by)
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason)
 {
 	Spamreport *s;
 	OutgoingWebRequest *request;
@@ -424,7 +424,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	{
 		int ret = 0;
 		for (s = spamreports; s; s = s->next)
-			ret += spamreport(client, ip, details, s->name, by);
+			ret += spamreport(client, ip, details, s->name, by, source, reason);
 		return ret;
 	}
 
@@ -444,6 +444,8 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		NameValuePrioList *list = NULL;
 		list = duplicate_nvplist(details);
 		add_nvplist(&list, -1, "ip", ip);
+		add_nvplist(&list, -1, "source", source);
+		add_nvplist(&list, -1, "reason", reason);
 		buildvarstring_nvp(s->url, urlbuf, sizeof(urlbuf), list, BUILDVARSTRING_URLENCODE | BUILDVARSTRING_UNKNOWN_VAR_IS_EMPTY | BUILDVARSTRING_KEEP_SPACE_FOR_EMPTY_VAR);
 		url = urlbuf;
 		safe_free_nvplist(list);
@@ -474,7 +476,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		add_nvplist(&headers, 0, "Content-Type", "text/xml");
 	} else if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
 	{
-		return central_spamreport(client, by, s->url);
+		return central_spamreport(client, by, source, reason, details, s->url);
 	} else
 	{
 		abort();
@@ -503,6 +505,8 @@ CMD_FUNC(cmd_spamreport)
 	Spamreport *to = NULL; /* default is NULL, meaning: all */
 	Client *target = NULL;
 	const char *ip;
+	const char *block = NULL; /* NULL means: all */
+	const char *reason = NULL;
 	int n;
 
 	if (!ValidatePermissionsForPath("server-ban:spamreport", client, NULL, NULL, NULL))
@@ -517,6 +521,11 @@ CMD_FUNC(cmd_spamreport)
 		return;
 	}
 
+	if ((parc > 2) && !BadPtr(parv[2]) && strcmp(parv[2], "all"))
+		block = parv[2];
+	if ((parc > 3) && !BadPtr(parv[3]))
+		reason = parv[3];
+
 	ip = parv[1];
 
 	if ((target = find_user(parv[1], NULL)))
@@ -524,10 +533,14 @@ CMD_FUNC(cmd_spamreport)
 		if (!MyUser(target))
 		{
 			/* Forward it to other server */
-			if (parc > 2)
+			if (reason)
+			{
+				sendto_one(target, NULL, ":%s SPAMREPORT %s %s :%s",
+				           client->id, parv[1], block ? block : "all", reason);
+			} else if (block)
 			{
 				sendto_one(target, NULL, ":%s SPAMREPORT %s %s",
-				           client->id, parv[1], parv[2]);
+				           client->id, parv[1], block);
 			} else
 			{
 				sendto_one(target, NULL, ":%s SPAMREPORT %s",
@@ -546,17 +559,17 @@ CMD_FUNC(cmd_spamreport)
 		return;
 	}
 
-	if ((parc > 2) && !BadPtr(parv[2]))
+	if (block)
 	{
-		to = find_spamreport_block(parv[2]);
+		to = find_spamreport_block(block);
 		if (!to)
 		{
-			sendnotice(client, "Could not find spamreport block '%s'", parv[2]);
+			sendnotice(client, "Could not find spamreport block '%s'", block);
 			return;
 		}
 	}
 
-	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL, client))))
+	if (!((n = spamreport(target, ip, NULL, to ? to->name : NULL, client, "manual", reason))))
 		sendnotice(client, "Could not report spam. No spamreport { } blocks configured, or all filtered out/exempt.");
 	else
 		sendnotice(client, "Sending spam report to %d target(s)", n);
@@ -579,6 +592,6 @@ int spamreport_banned_client(Client *client, const char *bantype, const char *re
 
 	for (s = spamreports; s; s = s->next)
 		if (s->on_server_ban)
-			spamreport(client, client->ip, NULL, s->name, NULL);
+			spamreport(client, client->ip, NULL, s->name, NULL, "server-ban", reason);
 	return 0;
 }

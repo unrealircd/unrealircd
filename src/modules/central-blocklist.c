@@ -76,7 +76,7 @@ ModDataInfo *webserver_md = NULL; /* (external module, looked up) */
 ModDataInfo *websocket_md = NULL; /* (external module, looked up) */
 
 /* Forward declarations */
-int _central_spamreport(Client *client, Client *by, const char *url);
+int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, NameValuePrioList *details, const char *url);
 int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int cbl_config_posttest(int *errs);
 int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -1140,11 +1140,12 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 	CALL_NEXT_COMMAND_OVERRIDE();
 }
 
-int _central_spamreport(Client *client, Client *by, const char *url)
+int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, NameValuePrioList *details, const char *url)
 {
 	json_t *j, *requests, *data, *cmds, *item, *clientobj;
 	OutgoingWebRequest *w;
 	NameValuePrioList *headers = NULL;
+	const char *str;
 	int num;
 	char *json_serialized;
 	int i, start;
@@ -1172,6 +1173,12 @@ int _central_spamreport(Client *client, Client *by, const char *url)
 	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
 	if (by)
 		json_object_set_new(j, "reporter", json_string_unreal(by->name));
+	if (source)
+		json_object_set_new(j, "source", json_string_unreal(source));
+	if (reason)
+		json_object_set_new(j, "reason", json_string_unreal(reason));
+	if ((str = get_nvplist(details, "spamfilter_id")))
+		json_object_set_new(j, "spamfilter_id", json_string_unreal(str));
 	requests = json_object();
 	json_object_set_new(j, "reports", requests);
 

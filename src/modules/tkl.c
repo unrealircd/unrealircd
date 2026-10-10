@@ -5702,6 +5702,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 	BanAction *action;
 	int previous_highest = 0;
 	int highest = 0;
+	NameValuePrioList *details = NULL;
 
 	if (stopped)
 		*stopped = 0;
@@ -5811,7 +5812,10 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 			case BAN_ACT_REPORT:
 				if (take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION)
 					break;
-				spamreport(client, client->ip, NULL, action->var, NULL);
+				if (!BadPtr(spamfilter_id))
+					add_nvplist(&details, 0, "spamfilter_id", spamfilter_id);
+				spamreport(client, client->ip, details, action->var, NULL, spamfilter_id ? "spamfilter" : NULL, NULL);
+				safe_free_nvplist(details);
 				break;
 			case BAN_ACT_SET:
 				if (!(take_action_flags & TAKE_ACTION_SKIP_SET))
