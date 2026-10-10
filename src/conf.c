@@ -337,7 +337,7 @@ int config_detect_duplicate(int *var, ConfigEntry *ce, int *errors)
 	{
 		config_error("%s:%d: Duplicate %s directive",
 		             ce->file->filename, ce->line_number,
-		             ce->name);
+		             config_item_name(ce));
 		(*errors)++;
 		return 1;
 	} else
