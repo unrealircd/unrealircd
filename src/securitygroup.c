@@ -794,7 +794,7 @@ int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors)
 		b.banstr = cep->value;
 		b.ban_check_types = BANCHK_TKL;
 		b.what = MODE_ADD;
-		if (!extban->conv_param(&b, extban))
+		if (!*cep->value || !extban->conv_param(&b, extban))
 		{
 			config_error("%s:%i: %s has an invalid value",
 			             cep->file->filename, cep->line_number, cep->name);
@@ -811,6 +811,13 @@ int test_extended_list(Extban *extban, ConfigEntry *cep, int *errors)
 			             cep->file->filename, cep->line_number,
 			             cep->name, cep->value,
 			             cep->name, cep->value);
+			(*errors)++;
+			return 0;
+		}
+		if (!*cep->name)
+		{
+			config_error("%s:%i: %s has an invalid value",
+			             cep->file->filename, cep->line_number, cep->parent->name);
 			(*errors)++;
 			return 0;
 		}
