@@ -69,39 +69,40 @@ static const char *short_weekdays[7] = {
 };
 
 typedef struct {
-	int value;   /** Unique integer value of item */
-	char character;  /** Unique character assigned to item */
-	char *name;   /** Name of item */
-	char config_only;
-	char uses_ban_time; /** uses ::ban-time */
+	int value;          /**< Unique integer value of item */
+	char character;     /**< Unique character assigned to item */
+	char *name;         /**< Name of item */
+	char config_only;   /**< Action only settable through config (not over S2S TKL)*/
+	char disconnects;   /**< disconnects the user */
+	char uses_ban_time; /**< uses ::ban-time */
 } BanActTable;
 
 /* clang-format off */
 static BanActTable banacttable[] = {
-	{ BAN_ACT_GZLINE,		'Z',	"gzline",		0, 1 },
-	{ BAN_ACT_GLINE,		'g',	"gline",		0, 1 },
-	{ BAN_ACT_SOFT_GLINE,		'G',	"soft-gline",		0, 1 },
-	{ BAN_ACT_ZLINE,		'z',	"zline",		0, 1 },
-	{ BAN_ACT_KLINE,		'k',	"kline",		0, 1 },
-	{ BAN_ACT_SOFT_KLINE,		'I',	"soft-kline",		0, 1 },
-	{ BAN_ACT_SHUN,			's',	"shun",			0, 1 },
-	{ BAN_ACT_SOFT_SHUN,		'H',	"soft-shun",		0, 1 },
-	{ BAN_ACT_KILL,			'K',	"kill",			0, 0 },
-	{ BAN_ACT_SOFT_KILL,		'i',	"soft-kill",		0, 0 },
-	{ BAN_ACT_TEMPSHUN,		'S',	"tempshun",		0, 0 },
-	{ BAN_ACT_SOFT_TEMPSHUN,	'T',	"soft-tempshun",	0, 0 },
-	{ BAN_ACT_VIRUSCHAN,		'v',	"viruschan",		0, 0 },
-	{ BAN_ACT_SOFT_VIRUSCHAN,	'V',	"soft-viruschan",	0, 0 },
-	{ BAN_ACT_DCCBLOCK,		'd',	"dccblock",		0, 0 },
-	{ BAN_ACT_SOFT_DCCBLOCK,	'D',	"soft-dccblock",	0, 0 },
-	{ BAN_ACT_BLOCK,		'b',	"block",		0, 0 },
-	{ BAN_ACT_SOFT_BLOCK,		'B',	"soft-block",		0, 0 },
-	{ BAN_ACT_WARN,			'w',	"warn",			0, 0 },
-	{ BAN_ACT_SOFT_WARN,		'W',	"soft-warn",		0, 0 },
-	{ BAN_ACT_REPORT,		'r',	"report",		1, 0 },
-	{ BAN_ACT_SET,			'1',	"set",			1, 0 },
-	{ BAN_ACT_STOP,			'0',	"stop",			1, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ BAN_ACT_GZLINE,		'Z',	"gzline",		0, 1, 1 },
+	{ BAN_ACT_GLINE,		'g',	"gline",		0, 1, 1 },
+	{ BAN_ACT_SOFT_GLINE,		'G',	"soft-gline",		0, 1, 1 },
+	{ BAN_ACT_ZLINE,		'z',	"zline",		0, 1, 1 },
+	{ BAN_ACT_KLINE,		'k',	"kline",		0, 1, 1 },
+	{ BAN_ACT_SOFT_KLINE,		'I',	"soft-kline",		0, 1, 1 },
+	{ BAN_ACT_SHUN,			's',	"shun",			0, 0, 1 },
+	{ BAN_ACT_SOFT_SHUN,		'H',	"soft-shun",		0, 0, 1 },
+	{ BAN_ACT_KILL,			'K',	"kill",			0, 1, 0 },
+	{ BAN_ACT_SOFT_KILL,		'i',	"soft-kill",		0, 1, 0 },
+	{ BAN_ACT_TEMPSHUN,		'S',	"tempshun",		0, 0, 0 },
+	{ BAN_ACT_SOFT_TEMPSHUN,	'T',	"soft-tempshun",	0, 0, 0 },
+	{ BAN_ACT_VIRUSCHAN,		'v',	"viruschan",		0, 0, 0 },
+	{ BAN_ACT_SOFT_VIRUSCHAN,	'V',	"soft-viruschan",	0, 0, 0 },
+	{ BAN_ACT_DCCBLOCK,		'd',	"dccblock",		0, 0, 0 },
+	{ BAN_ACT_SOFT_DCCBLOCK,	'D',	"soft-dccblock",	0, 0, 0 },
+	{ BAN_ACT_BLOCK,		'b',	"block",		0, 0, 0 },
+	{ BAN_ACT_SOFT_BLOCK,		'B',	"soft-block",		0, 0, 0 },
+	{ BAN_ACT_WARN,			'w',	"warn",			0, 0, 0 },
+	{ BAN_ACT_SOFT_WARN,		'W',	"soft-warn",		0, 0, 0 },
+	{ BAN_ACT_REPORT,		'r',	"report",		1, 0, 0 },
+	{ BAN_ACT_SET,			'1',	"set",			1, 0, 0 },
+	{ BAN_ACT_STOP,			'0',	"stop",			1, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0 }
 };
 /* clang-format on */
 
@@ -676,12 +677,27 @@ int test_ban_action_config(ConfigEntry *ce)
 {
 	ConfigEntry *cep;
 	int errors = 0;
+	BanActionValue action;
+	const char *disconnect_action = NULL;
 
 	if (ce->items && !ce->value)
 	{
 		/* action { xxx; } */
 		for (cep = ce->items; cep; cep = cep->next)
+		{
 			errors += test_ban_action_config_helper(cep, cep->name, cep->value);
+			action = banact_stringtoval(cep->name);
+			if (disconnect_action && ((action == BAN_ACT_REPORT) || (action == BAN_ACT_SET)))
+			{
+				config_error("%s:%d: action '%s' must come BEFORE action '%s'. "
+				             "You cannot use '%s' on a user that is already disconnected.",
+				             cep->file->filename, cep->line_number, cep->name,
+				             disconnect_action, cep->name);
+				errors++;
+			}
+			if (banact_disconnects(action) && !disconnect_action)
+				disconnect_action = cep->name;
+		}
 	} else if (!ce->value)
 	{
 		config_error("%s:%d: action has no value", ce->file->filename, ce->line_number);
@@ -784,7 +800,18 @@ int banact_config_only(BanActionValue action)
 	return 0;
 }
 
-/** Return 1 if this ban action places a ban, so it uses the ban-time, like BAN_ACT_GLINE does */
+/** Return 1 if this ban action disconnects the user, like BAN_ACT_KILL or BAN_ACT_GLINE */
+int banact_disconnects(BanActionValue action)
+{
+	BanActTable *b;
+
+	for (b = &banacttable[0]; b->value; b++)
+		if (b->value == action)
+			return b->disconnects;
+	return 0;
+}
+
+/** Return 1 if this ban action places a ban (and thus uses ban-time), like BAN_ACT_GLINE */
 int banact_uses_ban_time(BanActionValue action)
 {
 	BanActTable *b;
