@@ -1039,10 +1039,20 @@ char *spamfilter_target_inttostring(int v)
  */
 char *unreal_decodespace(const char *s)
 {
-	const char *i;
-	static char buf[512], *o;
+	static char buf[512];
 
-	for (i = s, o = buf; (*i) && (o < buf + 510); i++)
+	return unreal_decodespace_r(s, buf, sizeof(buf));
+}
+
+/** Replace underscores back to the space character, writing the result to 'buf'.
+ * This is used for the spamfilter reason.
+ */
+char *unreal_decodespace_r(const char *s, char *buf, size_t buflen)
+{
+	const char *i;
+	char *o;
+
+	for (i = s, o = buf; (*i) && (o < buf + buflen - 1); i++)
 		if (*i == '_')
 		{
 			if (i[1] != '_')
@@ -1063,13 +1073,31 @@ char *unreal_decodespace(const char *s)
  */
 char *unreal_encodespace(const char *s)
 {
+	static char buf[512];
+
+	return unreal_encodespace_r(s, buf, sizeof(buf));
+}
+
+/** Replace spaces to underscore characters, writing the result to 'buf'.
+ * This is used for the spamfilter reason.
+ */
+char *unreal_encodespace_r(const char *s, char *buf, size_t buflen)
+{
 	const char *i;
-	static char buf[512], *o;
+	char *o;
+
+	/* Always initialize the buffer, even for the NULL case */
+	*buf = '\0';
 
 	if (!s)
 		return NULL; /* NULL in = NULL out */
 
-	for (i = s, o = buf; (*i) && (o < buf + 509); i++)
+	/* You would normally expect "buflen - 2" here but that
+	 * would write up to 511 characters for a typical 512 buffer.
+	 * In S2S we cut off at 510, so we use "buflen - 3" to
+	 * handle this typical case.
+	 */
+	for (i = s, o = buf; (*i) && (o < buf + buflen - 3); i++)
 	{
 		if (*i == ' ')
 			*o++ = '_';

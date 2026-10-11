@@ -6207,7 +6207,9 @@ void _run_deferred_rule_only_spamfilters(Client *client)
 
 	if (winner_tkl && !match_spamfilter_exempt(winner_tkl, user_is_exempt_general, user_is_exempt_central))
 	{
-		char *reason = unreal_decodespace(winner_tkl->ptr.spamfilter->tkl_reason);
+		char reason[512];
+
+		unreal_decodespace_r(winner_tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
 		take_action_ex(client, winner_tkl->ptr.spamfilter->action, reason,
 		               winner_tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, winner_tkl);
 	}
@@ -6231,7 +6233,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	const char *str_deconfused = NULL;
 	char deconfused[8192];
 	int ret = -1;
-	char *reason = NULL;
+	char reason[512];
 #ifdef SPAMFILTER_DETECTSLOW
 	struct rusage rnow, rprev;
 	long ms_past;
@@ -6414,7 +6416,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 		return 0;
 
 	/* Spamfilter matched */
-	reason = unreal_decodespace(tkl->ptr.spamfilter->tkl_reason);
+	unreal_decodespace_r(tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
 	ret = take_action_ex(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, tkl);
 	if (!IsDead(client))
 	{
