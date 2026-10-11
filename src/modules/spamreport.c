@@ -46,7 +46,9 @@ struct SpamreportCounter {
 };
 
 struct {
-	NameList *auto_report_server_ban_reason;
+	NameList *ban_or_kill_filter_reason;
+	NameList *ban_or_kill_filter_set_by;
+	SecurityGroup *auto_report_except;
 } cfg;
 
 /* Forward declarations */
@@ -64,12 +66,13 @@ int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
 SpamreportType parse_spamreport_type(const char *s);
 int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global);
+int spamreport_killed_client(Client *client, Client *victim, const char *reason);
 
 /* Variables */
 Spamreport *spamreports = NULL;
 SpamreportCounter *spamreportcounters = NULL;
 /** Valid sources for spamreport::auto-report */
-static const char *auto_report_sources[] = {"spamfilter", "server-ban", NULL};
+static const char *auto_report_sources[] = {"spamfilter", "server-ban", "kill", NULL};
 
 MOD_TEST()
 {
@@ -89,14 +92,15 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamreport);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, spamreport_config_run_set);
 	HookAdd(modinfo->handle, HOOKTYPE_BANNED_CLIENT, 0, spamreport_banned_client);
+	HookAdd(modinfo->handle, HOOKTYPE_KILLED_CLIENT, 0, spamreport_killed_client);
 	LoadPersistentPointer(modinfo, spamreportcounters, spamreportcounters_free_all);
 	return MOD_SUCCESS;
 }
 
 MOD_LOAD()
 {
-	if (!cfg.auto_report_server_ban_reason)
-		add_name_list(cfg.auto_report_server_ban_reason, "*spam*");
+	if (!cfg.ban_or_kill_filter_reason && !cfg.ban_or_kill_filter_set_by)
+		add_name_list(cfg.ban_or_kill_filter_reason, "*spam*");
 	return MOD_SUCCESS;
 }
 
@@ -115,7 +119,9 @@ static void init_config(void)
 
 static void free_config(void)
 {
-	free_entire_name_list(cfg.auto_report_server_ban_reason);
+	free_entire_name_list(cfg.ban_or_kill_filter_reason);
+	free_entire_name_list(cfg.ban_or_kill_filter_set_by);
+	free_security_group(cfg.auto_report_except);
 	memset(&cfg, 0, sizeof(cfg));
 }
 
@@ -139,8 +145,7 @@ static void test_auto_report(ConfigEntry *ce, int *errors)
 	{
 		if (!valid_auto_report_source(ce->value))
 		{
-			config_error("%s:%i: spamreport::auto-report: unknown source '%s'",
-			             ce->file->filename, ce->line_number, ce->value);
+			config_error_unknownopt(ce->file->filename, ce->line_number, "spamreport::auto-report", ce->value);
 			(*errors)++;
 		}
 		return;
@@ -148,10 +153,14 @@ static void test_auto_report(ConfigEntry *ce, int *errors)
 
 	for (cep = ce->items; cep; cep = cep->next)
 	{
-		if (!valid_auto_report_source(cep->name))
+		if (cep->value)
 		{
-			config_error("%s:%i: spamreport::auto-report: unknown source '%s'",
+			config_error("%s:%i: spamreport::auto-report::%s must not have a value",
 			             cep->file->filename, cep->line_number, cep->name);
+			(*errors)++;
+		} else if (!valid_auto_report_source(cep->name))
+		{
+			config_error_unknownopt(cep->file->filename, cep->line_number, "spamreport::auto-report", cep->name);
 			(*errors)++;
 		}
 	}
@@ -354,10 +363,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		} else if (!strcmp(cep->name, "auto-report"))
 		{
 			has_auto_report = 1;
-			if (cep->value)
-				add_name_list(s->auto_report, cep->value);
-			for (cepp = cep->items; cepp; cepp = cepp->next)
-				add_name_list(s->auto_report, cepp->name);
+			unreal_add_names(&s->auto_report, cep);
 		}
 	}
 
@@ -365,13 +371,14 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		s->http_method = HTTP_METHOD_POST;
 
 	/* spamreport::auto-report defaults to:
-	 * { spamfilter; server-ban; } for Central Spamreport (since this is usually what you want)
+	 * { spamfilter; server-ban; kill; } for Central Spamreport (since this is usually what you want)
 	 * nothing for any other (eg you don't want to dronebl all your /gline's normally)
 	 */
 	if (!has_auto_report && (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT))
 	{
 		add_name_list(s->auto_report, "spamfilter");
 		add_name_list(s->auto_report, "server-ban");
+		add_name_list(s->auto_report, "kill");
 	}
 
 	AddListItem(s, spamreports);
@@ -381,7 +388,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 /** Test set::spamreport */
 int spamreport_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep, *cepp, *ceppp;
 	int errors = 0;
 
 	if ((type != CONFIG_SET) || !ce || !ce->name || strcmp(ce->name, "spamreport"))
@@ -400,14 +407,35 @@ int spamreport_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 			}
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->name, "server-ban-reason"))
+				if (!strcmp(cepp->name, "ban-or-kill-filter"))
 				{
-					if (!cepp->value && !cepp->items)
+					if (cepp->value)
 					{
-						config_error_empty(cepp->file->filename, cepp->line_number,
-						                   "set::spamreport::auto-report", cepp->name);
+						config_error("%s:%i: set::spamreport::auto-report::ban-or-kill-filter must be a block",
+						             cepp->file->filename, cepp->line_number);
 						errors++;
+						continue;
 					}
+					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
+					{
+						if (!strcmp(ceppp->name, "reason") || !strcmp(ceppp->name, "set-by"))
+						{
+							if (!ceppp->value && !ceppp->items)
+							{
+								config_error_empty(ceppp->file->filename, ceppp->line_number,
+								                   "set::spamreport::auto-report::ban-or-kill-filter", ceppp->name);
+								errors++;
+							}
+						} else
+						{
+							config_error_unknown(ceppp->file->filename, ceppp->line_number,
+							                     "set::spamreport::auto-report::ban-or-kill-filter", ceppp->name);
+							errors++;
+						}
+					}
+				} else if (!strcmp(cepp->name, "except"))
+				{
+					test_match_block(cf, cepp, &errors);
 				} else
 				{
 					config_error_unknown(cepp->file->filename, cepp->line_number,
@@ -441,12 +469,18 @@ int spamreport_config_run_set(ConfigFile *cf, ConfigEntry *ce, int type)
 		{
 			for (cepp = cep->items; cepp; cepp = cepp->next)
 			{
-				if (!strcmp(cepp->name, "server-ban-reason"))
+				if (!strcmp(cepp->name, "ban-or-kill-filter"))
 				{
-					if (cepp->value)
-						add_name_list(cfg.auto_report_server_ban_reason, cepp->value);
 					for (ceppp = cepp->items; ceppp; ceppp = ceppp->next)
-						add_name_list(cfg.auto_report_server_ban_reason, ceppp->name);
+					{
+						if (!strcmp(ceppp->name, "reason"))
+							unreal_add_names(&cfg.ban_or_kill_filter_reason, ceppp);
+						else if (!strcmp(ceppp->name, "set-by"))
+							unreal_add_names(&cfg.ban_or_kill_filter_set_by, ceppp);
+					}
+				} else if (!strcmp(cepp->name, "except"))
+				{
+					conf_match_block(cf, cepp, &cfg.auto_report_except);
 				}
 			}
 		}
@@ -581,6 +615,8 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 	if (!spamreport_block)
 	{
 		int ret = 0;
+		if ((flags & SPAMREPORT_FLAG_AUTO) && client && user_allowed_by_security_group(client, cfg.auto_report_except))
+			return 0;
 		for (s = spamreports; s; s = s->next)
 		{
 			if ((flags & SPAMREPORT_FLAG_AUTO) && !find_name_list(s->auto_report, source))
@@ -748,10 +784,14 @@ void spamreportcounters_free_all(ModData *m)
 	}
 }
 
-/** Returns 1 if this server ban should be auto-reported (source "server-ban") */
-static int auto_report_server_ban(const char *reason)
+/** Returns 1 if a server ban or kill matches set::spamreport::auto-report::ban-or-kill-filter */
+static int ban_or_kill_filter_match(const char *reason, const char *set_by)
 {
-	return find_name_list_match(cfg.auto_report_server_ban_reason, reason) ? 1 : 0;
+	if (find_name_list_match(cfg.ban_or_kill_filter_reason, reason))
+		return 1;
+	if (set_by && find_name_list_match(cfg.ban_or_kill_filter_set_by, set_by))
+		return 1;
+	return 0;
 }
 
 int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global)
@@ -769,9 +809,23 @@ int spamreport_banned_client(Client *client, const char *bantype, const char *re
 		spamfilter = find_tkl_spamfilter_by_id(tkl->spamfilter_id);
 		spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, spamfilter, SPAMREPORT_FLAG_AUTO);
 		safe_free_nvplist(details);
-	} else if (auto_report_server_ban(reason))
+	} else if (ban_or_kill_filter_match(reason, tkl ? tkl->set_by : NULL))
 	{
 		spamreport(client, client->ip, NULL, NULL, NULL, "server-ban", reason, NULL, SPAMREPORT_FLAG_AUTO);
 	}
+	return 0;
+}
+
+int spamreport_killed_client(Client *client, Client *victim, const char *reason)
+{
+	const char *set_by;
+
+	if (client->user)
+		set_by = make_nick_user_host(client->name, client->user->username, GetHost(client));
+	else
+		set_by = client->name;
+
+	if (ban_or_kill_filter_match(reason, set_by))
+		spamreport(victim, victim->ip, NULL, NULL, NULL, "kill", reason, NULL, SPAMREPORT_FLAG_AUTO);
 	return 0;
 }

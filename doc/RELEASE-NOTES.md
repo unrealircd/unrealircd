@@ -5,38 +5,47 @@ This is the git version (development version) for future UnrealIRCd 6.2.8.
 This is work in progress and may not always be a stable version.
 
 ### Enhancements:
+* A ton of spamreport changes:
+  * A spamreport block can now report automatically, via the new option
+    [spamreport::auto-report](https://www.unrealircd.org/docs/Spamreport_block).
+    Currently it has three sources:
+    * `spamfilter`: when a spamfilter kills or *LINEs a user.
+      The spamfilter itself is included in the report.
+    * `server-ban`: when an online user is banned (eg /GLINE by an oper) [*]
+    * `kill`: when a user is killed (eg /KILL by an oper) [*]
 
+    For [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
+    all three on by default. For other spamreport blocks it is off by default.
+    To turn it off, you put in the spamreport block: `auto-report { }`.
+    You can exempt specific users from being auto reported at all through
+    [set::spamreport::auto-report::except](https://www.unrealircd.org/docs/Set_block#set::spamreport).  
+    [*]: Not all server bans and kills are sent in, only if the ban or kill
+    reason contain the word "spam". This can be configured via
+    [set::spamreport::auto-report::ban-or-kill-filter](https://www.unrealircd.org/docs/Set_block#set::spamreport).
+  * The `SPAMREPORT` command now has an optional reason:  
+    `SPAMREPORT <nick|ip> [name-of-spamreport-block|all] [reason]`
+  * For spamreport blocks of type simple you can now use `$source`,
+    `$reason` and `$spamfilter_id` in the URL.
 
 ### Changes:
 * We continue the gradual transition from `geoip_classic` to `geoip_mmdb`.
   Now also for `./Config -quick` (and thus `./unrealircd upgrade`).
   This because we will stop database updates for classic in mid-2027.
-* A ton of spamreport changes:
-  * A spamreport block can now report automatically, via the new option
-    [spamreport::auto-report](https://www.unrealircd.org/docs/Spamreport_block).
-    Currently it has two sources:
-    * `spamfilter`: when a spamfilter kills or *LINEs a user.
-      The spamfilter itself is included in the report.
-    * `server-ban`: when an online user is banned (eg /GLINE by an oper)
-      and the ban reason contains the word "spam". You can change the word(s)
-      with [set::spamreport::auto-report::server-ban-reason](https://www.unrealircd.org/docs/Set_block#set::spamreport).
-    For [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
-    both are on by default. For other spamreport blocks it is off by default.
-    To turn it off, you put in the spamreport block: `auto-report { }`
-  * The `SPAMREPORT` command now has an optional reason:  
-    `SPAMREPORT <nick|ip> [name-of-spamreport-block|all] [reason]`
-  * For spamreport blocks of type simple you can now use `$source`,
-    `$reason` and `$spamfilter_id` in the URL.
-  * You now get a config error if you use `action { gline; report; }`.
-    This because a report cannot happen after a user is killed.
-    The correct syntax is: `action { report; gline; }`
+* You now get a config error if you use `action { gline; report; }`.
+  This because `report` (and `set`) cannot happen after a user is killed.
+  The correct syntax is: `action { report; gline; }`
 
 ### Fixes:
 * In 6.2.x every server ban was accidentally reported to all spamreport
-  blocks. That could have been especially bad if you had a spamreport
-  block with type `dronebl`.
+  blocks (including Central Spamreport). That could have been especially
+  bad if you had a spamreport block with type `dronebl`.
 
 ### Developers and protocol:
+* In JSON-RPC an except in spamfilter objects previously showed as
+  `match` (which is super confusing). That's now under `except`.
+* New hook `HOOKTYPE_KILLED_CLIENT`, called when a local user is killed.
+* In `HOOKTYPE_BANNED_CLIENT` there is now a `TKL *tkl` parameter (this
+  is NULL when a ban is not a TKL, such as a realname ban).
 
 UnrealIRCd 6.2.7
 -----------------
