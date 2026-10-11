@@ -85,7 +85,7 @@ int antimixedutf8_check(Client *client, TextAnalysis *txa, const char **errmsg)
 		           log_data_integer("score", txa->antimixedutf8_points),
 		           log_data_textanalysis("text_analysis", txa));
 		/* Take the action */
-		retval = take_action(client, cfg.ban_action, cfg.ban_reason, cfg.ban_time, 0, NULL);
+		retval = take_action(client, cfg.ban_action, "antimixedutf8", cfg.ban_reason, cfg.ban_time, 0, NULL);
 		if ((retval == BAN_ACT_WARN) || (retval == BAN_ACT_SOFT_WARN))
 		{
 			/* no action */

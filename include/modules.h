@@ -2441,11 +2441,12 @@ int hooktype_sasl_result(Client *client, int success);
  * This hook can be used to prevent the ban, or as used by the authprompt to delay it.
  * @param client		The client that should be banned
  * @param action		The actions to take, one of BAN_ACT_*
+ * @param source		What caused this, eg "spamfilter" or "blacklist" (can be NULL)
  * @param reason		The ban reason
  * @param duration		The duration of the ban, 0 for permanent ban
  * @return The magic value 99 is used to exempt the user (=do not ban!), otherwise the ban is added.
  */
-int hooktype_take_action(Client *client, BanActionValue action, const char *reason, long duration);
+int hooktype_take_action(Client *client, BanActionValue action, const char *source, const char *reason, long duration);
 
 /** Called when a TKL ban is hit by this user (function prototype for HOOKTYPE_FIND_TKLINE_MATCH).
  * This is called when an existing TKL entry is hit by the user.

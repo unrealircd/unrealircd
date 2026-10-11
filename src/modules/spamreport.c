@@ -55,8 +55,8 @@ struct {
 static void init_config(void);
 static void free_config(void);
 CMD_FUNC(cmd_spamreport);
-int tkl_config_test_spamreport(ConfigFile *, ConfigEntry *, int, int *);
-int tkl_config_run_spamreport(ConfigFile *, ConfigEntry *, int);
+int spamreport_config_test(ConfigFile *, ConfigEntry *, int, int *);
+int spamreport_config_run(ConfigFile *, ConfigEntry *, int);
 int spamreport_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
 int spamreport_config_run_set(ConfigFile *, ConfigEntry *, int);
 Spamreport *find_spamreport_block(const char *name);
@@ -72,14 +72,15 @@ int spamreport_killed_client(Client *client, Client *victim, const char *reason)
 Spamreport *spamreports = NULL;
 SpamreportCounter *spamreportcounters = NULL;
 /** Valid sources for spamreport::auto-report */
-static const char *auto_report_sources[] = {"spamfilter", "server-ban", "kill", NULL};
+static const char *auto_report_sources[] = {"spamfilter", "server-ban", "kill", "antimixedutf8", "antirandom",
+                                            "blacklist", "central-blocklist", "ban-version", "handshake-data-flood", NULL};
 
 MOD_TEST()
 {
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	EfunctionAdd(modinfo->handle, EFUNC_SPAMREPORT, _spamreport);
 	EfunctionAdd(modinfo->handle, EFUNC_CENTRAL_SPAMREPORT_ENABLED, _central_spamreport_enabled);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, tkl_config_test_spamreport);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, spamreport_config_test);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, spamreport_config_test_set);
 	return MOD_SUCCESS;
 }
@@ -89,7 +90,7 @@ MOD_INIT()
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	init_config();
 	CommandAdd(modinfo->handle, "SPAMREPORT", cmd_spamreport, 3, CMD_USER);
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, tkl_config_run_spamreport);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, spamreport_config_run);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, spamreport_config_run_set);
 	HookAdd(modinfo->handle, HOOKTYPE_BANNED_CLIENT, 0, spamreport_banned_client);
 	HookAdd(modinfo->handle, HOOKTYPE_KILLED_CLIENT, 0, spamreport_killed_client);
@@ -167,7 +168,7 @@ static void test_auto_report(ConfigEntry *ce, int *errors)
 }
 
 /** Test a spamreport { } block in the configuration file */
-int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int spamreport_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	ConfigEntry *cep, *cepp;
 	int errors = 0;
@@ -301,7 +302,7 @@ int tkl_config_test_spamreport(ConfigFile *cf, ConfigEntry *ce, int type, int *e
 }
 
 /** Process a spamreport { } block in the configuration file */
-int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
+int spamreport_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
 	ConfigEntry *cepp;
@@ -371,7 +372,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		s->http_method = HTTP_METHOD_POST;
 
 	/* spamreport::auto-report defaults to:
-	 * { spamfilter; server-ban; kill; } for Central Spamreport (since this is usually what you want)
+	 * { spamfilter; server-ban; kill; antimixedutf8; } for Central Spamreport (since this is usually what you want)
 	 * nothing for any other (eg you don't want to dronebl all your /gline's normally)
 	 */
 	if (!has_auto_report && (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT))
@@ -379,6 +380,7 @@ int tkl_config_run_spamreport(ConfigFile *cf, ConfigEntry *ce, int type)
 		add_name_list(s->auto_report, "spamfilter");
 		add_name_list(s->auto_report, "server-ban");
 		add_name_list(s->auto_report, "kill");
+		add_name_list(s->auto_report, "antimixedutf8");
 	}
 
 	AddListItem(s, spamreports);
@@ -794,30 +796,51 @@ static int ban_or_kill_filter_match(const char *reason, const char *set_by)
 	return 0;
 }
 
+/** Returns the ban_action for a banned client, eg "gline" or "soft-kline".
+ * For bans without a TKL this is the bantype, eg "realname".
+ */
+static const char *banned_client_ban_action(const char *bantype, TKL *tkl)
+{
+	static char buf[64];
+
+	if (!tkl)
+		return bantype;
+	if (TKLIsServerBan(tkl) && (tkl->ptr.serverban->subtype & TKL_SUBTYPE_SOFT))
+	{
+		snprintf(buf, sizeof(buf), "soft-%s", tkl_type_config_string(tkl));
+		return buf;
+	}
+	return tkl_type_config_string(tkl);
+}
+
 int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global)
 {
+	NameValuePrioList *details = NULL;
+
 	if (!IsUser(client) || (client->flags & CLIENT_FLAG_SKIP_BAN_SPAMREPORT))
 		return 0;
 
 	if (tkl && *tkl->spamfilter_id)
 	{
 		/* Ban placed by a spamfilter */
-		NameValuePrioList *details = NULL;
 		TKL *spamfilter;
 
 		add_nvplist(&details, 0, "spamfilter_id", tkl->spamfilter_id);
+		add_nvplist(&details, 0, "ban_action", banned_client_ban_action(bantype, tkl));
 		spamfilter = find_tkl_spamfilter_by_id(tkl->spamfilter_id);
 		spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, spamfilter, SPAMREPORT_FLAG_AUTO);
-		safe_free_nvplist(details);
 	} else if (ban_or_kill_filter_match(reason, tkl ? tkl->set_by : NULL))
 	{
-		spamreport(client, client->ip, NULL, NULL, NULL, "server-ban", reason, NULL, SPAMREPORT_FLAG_AUTO);
+		add_nvplist(&details, 0, "ban_action", banned_client_ban_action(bantype, tkl));
+		spamreport(client, client->ip, details, NULL, NULL, "server-ban", reason, NULL, SPAMREPORT_FLAG_AUTO);
 	}
+	safe_free_nvplist(details);
 	return 0;
 }
 
 int spamreport_killed_client(Client *client, Client *victim, const char *reason)
 {
+	NameValuePrioList *details = NULL;
 	const char *set_by;
 
 	if (client->user)
@@ -826,6 +849,10 @@ int spamreport_killed_client(Client *client, Client *victim, const char *reason)
 		set_by = client->name;
 
 	if (ban_or_kill_filter_match(reason, set_by))
-		spamreport(victim, victim->ip, NULL, NULL, NULL, "kill", reason, NULL, SPAMREPORT_FLAG_AUTO);
+	{
+		add_nvplist(&details, 0, "ban_action", "kill");
+		spamreport(victim, victim->ip, details, NULL, NULL, "kill", reason, NULL, SPAMREPORT_FLAG_AUTO);
+		safe_free_nvplist(details);
+	}
 	return 0;
 }

@@ -94,7 +94,7 @@ TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _take_action(Client *client, BanAction *action, const char *reason, long duration, int take_action_flags, int *stopped);
+int _take_action(Client *client, BanAction *action, const char *source, const char *reason, long duration, int take_action_flags, int *stopped);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, const char *cmd);
 void _run_deferred_rule_only_spamfilters(Client *client);
@@ -5693,9 +5693,12 @@ void ban_action_run_all_sets_and_stops(Client *client, BanAction *action, int *s
  * @author Bram Matthys (Syzop), 2003-present
  * @param client             The client which is affected.
  * @param action             The type of ban (one of BAN_ACT_*).
+ * @param source             What caused this, eg "blacklist" or "antimixedutf8" (can be NULL).
+ *                           This is used for logging, spamreport and HOOKTYPE_TAKE_ACTION.
  * @param reason             The ban reason.
  * @param duration           The ban duration in seconds.
  * @param take_action_flags  One of TAKE_ACTION_*
+ * @param stopped            Set to 1 if a 'stop' action was encountered (can be NULL)
  * @note This function assumes that client is a locally connected user.
  * @retval 0	user is exempt or no action needs to be taken for other reasons (eg only var setting)
  * @retval BAN_ACT_*	the highest BAN_ACT_xxx value, eg BAN_ACT_BLOCK or BAN_ACT_GLINE, etc...
@@ -5703,24 +5706,25 @@ void ban_action_run_all_sets_and_stops(Client *client, BanAction *action, int *s
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-static int take_action_ex(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter);
+static int take_action_ex(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter);
 
-int _take_action(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped)
+int _take_action(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped)
 {
-	return take_action_ex(client, actions, reason, duration, take_action_flags, stopped, NULL);
+	return take_action_ex(client, actions, source, reason, duration, take_action_flags, stopped, NULL);
 }
 
 /** Internal variant of take_action() that records the spamfilter id on any
  * *LINE/SHUN it creates, for the gline->spamfilter trace. Kept internal so the public
  * take_action() efunc stays free of this spamfilter-specific concept.
  */
-static int take_action_ex(Client *client, BanAction *actions, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter)
+static int take_action_ex(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter)
 {
 	BanAction *action;
 	int previous_highest = 0;
 	int highest = 0;
 	NameValuePrioList *details = NULL;
 	int reported_to_all = 0;
+	int auto_report_done = 0;
 	int auto_reported = 0;
 
 	if (stopped)
@@ -5729,7 +5733,8 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 	if (!MyConnect(client))
 	{
 		unreal_log(ULOG_ERROR, "tkl", "BUG_TAKE_ACTION_REMOTE_CLIENT", client,
-		           "[BUG] take_action() called for remote client $client.details. This should never happen.");
+		           "[BUG] take_action() called for remote client $client.details. This should never happen.",
+		           log_data_string("source", source));
 		return 0;
 	}
 
@@ -5739,15 +5744,17 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 		if (IsSoftBanAction(action->action) && IsLoggedIn(client))
 			return 0;
 
-		/* Spamfilter auto-report: needs to happen before the user is disconnected */
-		if (spamfilter && !auto_reported && !reported_to_all && banact_disconnects(action->action) &&
+		/* Auto-report (spamreport::auto-report): needs to happen before the user is disconnected */
+		if (source && !auto_report_done && !reported_to_all && (action->action > BAN_ACT_WARN) &&
 		    !(take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION))
 		{
-			if (*spamfilter->id)
+			if (spamfilter && *spamfilter->id)
 				add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
-			spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, spamfilter, SPAMREPORT_FLAG_AUTO);
+			add_nvplist(&details, 0, "ban_action", banact_valtostring(highest_ban_action(actions)));
+			if (spamreport(client, client->ip, details, NULL, NULL, source, reason, spamfilter, SPAMREPORT_FLAG_AUTO) > 0)
+				auto_reported = 1;
 			safe_free_nvplist(details);
-			auto_reported = 1;
+			auto_report_done = 1;
 		}
 
 		previous_highest = highest;
@@ -5815,7 +5822,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					cmd_tkl(NULL, &me, m, 9, tkllayer);
 					safe_free_message_tags(m);
 				}
-				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, != 99, client, action->action, reason, duration);
+				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, != 99, client, action->action, source, reason, duration);
 				if ((action->action == BAN_ACT_SHUN) || (action->action == BAN_ACT_SOFT_SHUN))
 				{
 					find_shun(client);
@@ -5835,7 +5842,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 			case BAN_ACT_KILL:
 				if (take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION)
 					break;
-				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, != 99, client, action->action, reason, duration);
+				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, != 99, client, action->action, source, reason, duration);
 				exit_client(client, NULL, reason);
 				break;
 			case BAN_ACT_SOFT_TEMPSHUN:
@@ -5846,7 +5853,8 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 				unreal_log(ULOG_INFO, "tkl", "TKL_ADD_TEMPSHUN", &me,
 				           "Temporary shun added on user $target.details [reason: $shun_reason] [by: $client]",
 				           log_data_string("shun_reason", reason),
-				           log_data_client("target", client));
+				           log_data_client("target", client),
+				           log_data_string("source", source));
 				SetShunned(client);
 				break;
 			case BAN_ACT_REPORT:
@@ -5854,7 +5862,8 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					break;
 				if (spamfilter && *spamfilter->id)
 					add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
-				spamreport(client, client->ip, details, action->var, NULL, spamfilter ? "spamfilter" : NULL, reason, spamfilter, 0);
+				add_nvplist(&details, 0, "ban_action", banact_valtostring(highest_ban_action(actions)));
+				spamreport(client, client->ip, details, action->var, NULL, source, reason, spamfilter, 0);
 				safe_free_nvplist(details);
 				if (!action->var)
 					reported_to_all = 1;
@@ -6210,7 +6219,7 @@ void _run_deferred_rule_only_spamfilters(Client *client)
 		char reason[512];
 
 		unreal_decodespace_r(winner_tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
-		take_action_ex(client, winner_tkl->ptr.spamfilter->action, reason,
+		take_action_ex(client, winner_tkl->ptr.spamfilter->action, "spamfilter", reason,
 		               winner_tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, winner_tkl);
 	}
 }
@@ -6417,7 +6426,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 	/* Spamfilter matched */
 	unreal_decodespace_r(tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
-	ret = take_action_ex(client, tkl->ptr.spamfilter->action, reason, tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, tkl);
+	ret = take_action_ex(client, tkl->ptr.spamfilter->action, "spamfilter", reason, tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, tkl);
 	if (!IsDead(client))
 	{
 		if ((ret == BAN_ACT_BLOCK) || (ret == BAN_ACT_SOFT_BLOCK))
