@@ -5740,12 +5740,12 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 			return 0;
 
 		/* Spamfilter auto-report: needs to happen before the user is disconnected */
-		if (spamfilter && !auto_reported && banact_disconnects(action->action) &&
+		if (spamfilter && !auto_reported && !reported_to_all && banact_disconnects(action->action) &&
 		    !(take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION))
 		{
 			if (*spamfilter->id)
 				add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
-			spamreport(client, client->ip, details, NULL, NULL, "spamfilter", NULL, spamfilter, SPAMREPORT_FLAG_AUTO);
+			spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, spamfilter, SPAMREPORT_FLAG_AUTO);
 			safe_free_nvplist(details);
 			auto_reported = 1;
 		}
@@ -5854,7 +5854,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *reason
 					break;
 				if (spamfilter && *spamfilter->id)
 					add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
-				spamreport(client, client->ip, details, action->var, NULL, spamfilter ? "spamfilter" : NULL, NULL, spamfilter, 0);
+				spamreport(client, client->ip, details, action->var, NULL, spamfilter ? "spamfilter" : NULL, reason, spamfilter, 0);
 				safe_free_nvplist(details);
 				if (!action->var)
 					reported_to_all = 1;
