@@ -168,6 +168,9 @@ CMD_FUNC(cmd_kill)
 		if (MyUser(client))
 			RunHook(HOOKTYPE_LOCAL_KILL, client, target, reason);
 
+		if (MyUser(target))
+			RunHook(HOOKTYPE_KILLED_CLIENT, client, target, reason);
+
 		if (iConf.hide_killed_by)
 			ircsnprintf(buf2, sizeof(buf2), "Killed (%s)", reason);
 		else
