@@ -650,13 +650,13 @@ LogData *log_data_channel(const char *key, Channel *channel)
 	return d;
 }
 
-LogData *log_data_source(const char *file, int line, const char *function)
+LogData *log_data_source_code(const char *file, int line, const char *function)
 {
 	LogData *d = safe_alloc(sizeof(LogData));
 	json_t *j;
 
 	d->type = LOG_FIELD_OBJECT_NOFREE;
-	safe_strdup(d->key, "source");
+	safe_strdup(d->key, "source_code");
 	d->value.object = j = json_object();
 	json_object_set_new(j, "file", json_string_unreal(file));
 	json_object_set_new(j, "line", json_integer(line));
@@ -1956,7 +1956,7 @@ void do_unreal_log_internal(LogLevel loglevel, const char *subsystem, const char
 			case LOG_FIELD_OBJECT_NOFREE:
 				/* Same as LOG_FIELD_OBJECT but don't steal the reference,
 				 * is freed outside of logging routines by caller.
-				 * Only used by log_data_source().
+				 * Only used by log_data_source_code().
 				 */
 				json_object_set(j_details, d->key, d->value.object);
 				break;

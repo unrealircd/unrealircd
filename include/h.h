@@ -1547,10 +1547,10 @@ extern const char *log_type_valtostring(LogType v);
 #ifdef DEBUGMODE
  /* In debug mode we include file/linenumber. We put this arg at the end, however
   * there is an issue if unreal_log() is used with a parameter like xyz ? log_data_string("zzz") : NULL,
-  * since then our log_data_source() would be beyond NULL and thus would never be freed,
+  * since then our log_data_source_code() would be beyond NULL and thus would never be freed,
   * so we allocate and handle that differently. File/line would still be lost but at
   * least there is no memory leak. Alternative solution is to specify first couple of
-  * parameters explicitly, put log_data_source() at the beginning of the argument list
+  * parameters explicitly, put log_data_source_code() at the beginning of the argument list
   * and then use non-portable ## __VA_ARGS__ for the remainder.
   */
  #define unreal_log(level, sys, id, ...) \
@@ -1558,7 +1558,7 @@ extern const char *log_type_valtostring(LogType v);
 	 { \
 		 if (!log_throttled((sys), (id))) \
 		 { \
-			 LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
+			 LogData *lds = log_data_source_code(__FILE__, __LINE__, __FUNCTION__); \
 			 do_unreal_log((level), (sys), (id), __VA_ARGS__, lds, NULL); \
 			 log_data_free(lds); \
 		 } \
@@ -1568,7 +1568,7 @@ extern const char *log_type_valtostring(LogType v);
 	 { \
 		 if (!log_throttled((sys), (id))) \
 		 { \
-			 LogData *lds = log_data_source(__FILE__, __LINE__, __FUNCTION__); \
+			 LogData *lds = log_data_source_code(__FILE__, __LINE__, __FUNCTION__); \
 			 do_unreal_log_raw((level), (sys), (id), __VA_ARGS__, lds, NULL); \
 			 log_data_free(lds); \
 		 } \
@@ -1598,7 +1598,7 @@ extern LogData *log_data_integer(const char *key, int64_t integer);
 extern LogData *log_data_timestamp(const char *key, time_t ts);
 extern LogData *log_data_client(const char *key, Client *client);
 extern LogData *log_data_channel(const char *key, Channel *channel);
-extern LogData *log_data_source(const char *file, int line, const char *function);
+extern LogData *log_data_source_code(const char *file, int line, const char *function);
 extern LogData *log_data_socket_error(int fd);
 extern LogData *log_data_link_block(ConfigItem_link *link);
 extern LogData *log_data_tkl(const char *key, TKL *tkl);
