@@ -61,7 +61,7 @@ int spamreport_config_test_set(ConfigFile *, ConfigEntry *, int, int *);
 int spamreport_config_run_set(ConfigFile *, ConfigEntry *, int);
 Spamreport *find_spamreport_block(const char *name);
 void free_spamreport_blocks(void);
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags);
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *tkl, int flags);
 int _central_spamreport_enabled(void);
 void spamreportcounters_free_all(ModData *m);
 SpamreportType parse_spamreport_type(const char *s);
@@ -182,7 +182,7 @@ int spamreport_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 
 	if (!ce->value)
 	{
-		config_error("%s:%i: spamreport block has no name, should be like: spamfilter <name> { }",
+		config_error("%s:%i: spamreport block has no name, should be like: spamreport <name> { }",
 		             ce->file->filename, ce->line_number);
 		errors++;
 	} else if (!strcasecmp(ce->value, "all"))
@@ -335,7 +335,7 @@ int spamreport_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 			if ((s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT) &&
 			    !is_module_loaded("central-blocklist"))
 			{
-				config_warn("%s:%d: blacklist block with type 'central-spamreport' but the 'central-blocklist' module is not loaded.",
+				config_warn("%s:%d: spamreport block with type 'central-spamreport' but the 'central-blocklist' module is not loaded.",
 				            ce->file->filename, ce->line_number);
 			}
 		} else if (!strcmp(cep->name, "http-method"))
@@ -590,11 +590,11 @@ int _central_spamreport_enabled(void)
 	return 0;
 }
 
-int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *spamfilter, int flags)
+int _spamreport(Client *client, const char *ip, NameValuePrioList *details, const char *spamreport_block, Client *by, const char *source, const char *reason, TKL *tkl, int flags)
 {
 	Spamreport *s;
 	OutgoingWebRequest *request;
-	char urlbuf[512];
+	char urlbuf[4096];
 	char bodybuf[512];
 	char *url = NULL;
 	char *body = NULL;
@@ -623,7 +623,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		{
 			if ((flags & SPAMREPORT_FLAG_AUTO) && !find_name_list(s->auto_report, source))
 				continue;
-			ret += spamreport(client, ip, details, s->name, by, source, reason, spamfilter, flags);
+			ret += spamreport(client, ip, details, s->name, by, source, reason, tkl, flags);
 		}
 		return ret;
 	}
@@ -676,7 +676,7 @@ int _spamreport(Client *client, const char *ip, NameValuePrioList *details, cons
 		add_nvplist(&headers, 0, "Content-Type", "text/xml");
 	} else if (s->type == SPAMREPORT_TYPE_CENTRAL_SPAMREPORT)
 	{
-		return central_spamreport(client, by, source, reason, spamfilter, details, s->url);
+		return central_spamreport(client, by, source, reason, tkl, details, s->url);
 	} else
 	{
 		abort();
@@ -823,16 +823,13 @@ int spamreport_banned_client(Client *client, const char *bantype, const char *re
 	if (tkl && *tkl->spamfilter_id)
 	{
 		/* Ban placed by a spamfilter */
-		TKL *spamfilter;
-
 		add_nvplist(&details, 0, "spamfilter_id", tkl->spamfilter_id);
 		add_nvplist(&details, 0, "ban_action", banned_client_ban_action(bantype, tkl));
-		spamfilter = find_tkl_spamfilter_by_id(tkl->spamfilter_id);
-		spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, spamfilter, SPAMREPORT_FLAG_AUTO);
+		spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, tkl, SPAMREPORT_FLAG_AUTO);
 	} else if (ban_or_kill_filter_match(reason, tkl ? tkl->set_by : NULL))
 	{
 		add_nvplist(&details, 0, "ban_action", banned_client_ban_action(bantype, tkl));
-		spamreport(client, client->ip, details, NULL, NULL, "server-ban", reason, NULL, SPAMREPORT_FLAG_AUTO);
+		spamreport(client, client->ip, details, NULL, NULL, "server-ban", reason, tkl, SPAMREPORT_FLAG_AUTO);
 	}
 	safe_free_nvplist(details);
 	return 0;
@@ -851,7 +848,7 @@ int spamreport_killed_client(Client *client, Client *victim, const char *reason)
 	if (ban_or_kill_filter_match(reason, set_by))
 	{
 		add_nvplist(&details, 0, "ban_action", "kill");
-		spamreport(victim, victim->ip, details, NULL, NULL, "kill", reason, NULL, SPAMREPORT_FLAG_AUTO);
+		spamreport(victim, victim->ip, details, NULL, client, "kill", reason, NULL, SPAMREPORT_FLAG_AUTO);
 		safe_free_nvplist(details);
 	}
 	return 0;

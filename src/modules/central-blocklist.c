@@ -76,7 +76,7 @@ ModDataInfo *webserver_md = NULL; /* (external module, looked up) */
 ModDataInfo *websocket_md = NULL; /* (external module, looked up) */
 
 /* Forward declarations */
-int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url);
+int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, TKL *tkl, NameValuePrioList *details, const char *url);
 int cbl_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int cbl_config_posttest(int *errs);
 int cbl_config_run(ConfigFile *cf, ConfigEntry *ce, int type);
@@ -1140,7 +1140,7 @@ CMD_OVERRIDE_FUNC(cbl_override_spamreport_gather)
 	CALL_NEXT_COMMAND_OVERRIDE();
 }
 
-int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, TKL *spamfilter, NameValuePrioList *details, const char *url)
+int _central_spamreport(Client *client, Client *by, const char *source, const char *reason, TKL *tkl, NameValuePrioList *details, const char *url)
 {
 	json_t *j, *requests, *data, *cmds, *item, *clientobj, *originobj;
 	OutgoingWebRequest *w;
@@ -1195,8 +1195,13 @@ int _central_spamreport(Client *client, Client *by, const char *source, const ch
 		json_object_set_new(originobj, "ban_action", json_string_unreal(str));
 	if ((str = get_nvplist(details, "spamfilter_id")))
 		json_object_set_new(originobj, "spamfilter_id", json_string_unreal(str));
-	if (spamfilter)
-		json_expand_tkl(originobj, "spamfilter", spamfilter, 1);
+	if (tkl)
+	{
+		if (TKLIsSpamfilter(tkl))
+			json_expand_tkl(originobj, "spamfilter", tkl, 1);
+		else
+			json_expand_tkl(originobj, "ban", tkl, 1);
+	}
 
 	/* We add the flood counters here explicitly, because when "client" was created
 	 * earlier there were no or limited flood counts yet (during registration phase).
