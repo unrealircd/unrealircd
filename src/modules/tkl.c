@@ -219,9 +219,12 @@ static const char *tkl_s2s_get_id(TKL *tkl);
 static void tkl_s2s_set_id(TKL *tkl, const char *value);
 static const char *tkl_s2s_get_spamfilter_id(TKL *tkl);
 static void tkl_s2s_set_spamfilter_id(TKL *tkl, const char *value);
+static const char *tkl_s2s_get_source(TKL *tkl);
+static void tkl_s2s_set_source(TKL *tkl, const char *value);
 static const TKLS2SField tkl_s2s_fields[] = {
     {"id", tkl_s2s_get_id, tkl_s2s_set_id},
     {"spamfilter_id", tkl_s2s_get_spamfilter_id, tkl_s2s_set_spamfilter_id},
+    {"source", tkl_s2s_get_source, tkl_s2s_set_source},
     {NULL, NULL, NULL},
 };
 
@@ -1369,6 +1372,17 @@ static void tkl_s2s_set_spamfilter_id(TKL *tkl, const char *value)
 		strlcpy(tkl->spamfilter_id, value, sizeof(tkl->spamfilter_id));
 }
 
+static const char *tkl_s2s_get_source(TKL *tkl)
+{
+	return tkl->source[0] ? tkl->source : NULL;
+}
+
+static void tkl_s2s_set_source(TKL *tkl, const char *value)
+{
+	if (!BadPtr(value) && (strlen(value) < sizeof(tkl->source)))
+		strlcpy(tkl->source, value, sizeof(tkl->source));
+}
+
 /** Append s2s-tkl/<field> message tags describing 'tkl' onto '*mtags' (for sending over S2S). */
 static void tkl_add_s2s_mtags(TKL *tkl, MessageTag **mtags)
 {
@@ -1390,19 +1404,29 @@ static void tkl_add_s2s_mtags(TKL *tkl, MessageTag **mtags)
 	}
 }
 
-/** Build a one-element s2s-tkl/spamfilter_id message tag from 'spamfilter_id', or NULL if it is empty.
- * Lets a locally-created server ban carry its spamfilter id through the same path as a remote one.
+/** Convert various take_action() parameters to s2s-tkl message tags.
+ * This because in take_action() we use the cmd_tkl layer and thus
+ * need to provide these as message tags.
  */
-static MessageTag *tkl_spamfilter_id_mtag(const char *spamfilter_id)
+static MessageTag *take_action_to_s2s_mtags(const char *source, const char *spamfilter_id)
 {
-	MessageTag *m;
+	MessageTag *mtags = NULL, *m;
 
-	if (BadPtr(spamfilter_id))
-		return NULL;
-	m = safe_alloc(sizeof(MessageTag));
-	safe_strdup(m->name, "s2s-tkl/spamfilter_id");
-	safe_strdup(m->value, spamfilter_id);
-	return m;
+	if (!BadPtr(source))
+	{
+		m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "s2s-tkl/source");
+		safe_strdup(m->value, source);
+		AddListItem(m, mtags);
+	}
+	if (!BadPtr(spamfilter_id))
+	{
+		m = safe_alloc(sizeof(MessageTag));
+		safe_strdup(m->name, "s2s-tkl/spamfilter_id");
+		safe_strdup(m->value, spamfilter_id);
+		AddListItem(m, mtags);
+	}
+	return mtags;
 }
 
 /** Read s2s-tkl/<field> message tags from 'mtags' into 'tkl' (on receiving an S2S TKL command). */
@@ -3893,9 +3917,10 @@ void tkl_expire_entry(TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_EXPIRE", NULL,
-		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id $spamfilter_id",
+		           "Expiring $tkl.type_string '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id $source $spamfilter_id",
 		           log_data_tkl("tkl", tkl),
 		           log_data_optional_name_value("id", "id", tkl->id),
+		           log_data_optional_name_value("source", "source", tkl->source),
 		           log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->spamfilter_id));
 	} else if (TKLIsNameBan(tkl))
 	{
@@ -4743,7 +4768,7 @@ void tkl_sync_send_entry(int add, Client *sender, Client *to, TKL *tkl)
 
 	typ = tkl_typetochar(tkl->type);
 
-	/* Carry the s2s-tkl/ fields (id, spamfilter_id) on add; del matches by mask so needs no tags. */
+	/* Carry the s2s-tkl/ fields (id, spamfilter_id, source) on add; del matches by mask so needs no tags. */
 	if (add)
 		tkl_add_s2s_mtags(tkl, &mtags);
 
@@ -4972,9 +4997,10 @@ void _sendnotice_tkl_add(TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_ADD", NULL,
-		           "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id $spamfilter_id",
+		           "$tkl.type_string added: '$tkl' [reason: $tkl.reason] [by: $tkl.set_by] [duration: $tkl.duration_string] $id $source $spamfilter_id",
 		           log_data_tkl("tkl", tkl),
 		           log_data_optional_name_value("id", "id", tkl->id),
+		           log_data_optional_name_value("source", "source", tkl->source),
 		           log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->spamfilter_id));
 	} else if (TKLIsNameBan(tkl))
 	{
@@ -5012,10 +5038,11 @@ void _sendnotice_tkl_del(const char *removed_by, TKL *tkl)
 	if (TKLIsServerBan(tkl))
 	{
 		unreal_log(ULOG_INFO, "tkl", "TKL_DEL", NULL,
-		           "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string] $id $spamfilter_id",
+		           "$tkl.type_string removed: '$tkl' [reason: $tkl.reason] [by: $removed_by] [set at: $tkl.set_at_string] $id $source $spamfilter_id",
 		           log_data_tkl("tkl", tkl),
 		           log_data_string("removed_by", removed_by),
 		           log_data_optional_name_value("id", "id", tkl->id),
+		           log_data_optional_name_value("source", "source", tkl->source),
 		           log_data_optional_name_value("spamfilter_id", "spamfilter-id", tkl->spamfilter_id));
 	} else if (TKLIsNameBan(tkl))
 	{
@@ -5326,26 +5353,32 @@ CMD_FUNC(cmd_tkl_add)
 		 * Note that we only update common fields,
 		 * which is acceptable to me. -- Syzop
 		 */
-		const char *incoming_id = tkl_s2s_mtag_value(recv_mtags, "id");
-		const char *incoming_spamfilter_id = NULL;
+		const char *mtag_id = tkl_s2s_mtag_value(recv_mtags, "id");
+		const char *mtag_spamfilter_id = NULL;
+		const char *mtag_source = NULL;
 		int changed = 0;
 
 		/* id: an assigned id beats a blank one; two assigned ids tie-break by older
-		 * set_at, then lexicographically. The "spamfilter_id" travels with the winning "id".
+		 * set_at, then lexicographically. The "spamfilter_id" and "source" travel with the winning "id".
 		 * This is done before set_at is lowered below, so the tie-break sees the original set_at.
 		 */
-		if (!BadPtr(incoming_id) && (strlen(incoming_id) < sizeof(tkl->id)) && strcmp(tkl->id, incoming_id))
+		if (!BadPtr(mtag_id) && (strlen(mtag_id) < sizeof(tkl->id)) && strcmp(tkl->id, mtag_id))
 		{
 			if (!tkl->id[0] ||
 			    (set_at < tkl->set_at) ||
-			    ((set_at == tkl->set_at) && (strcmp(incoming_id, tkl->id) < 0)))
+			    ((set_at == tkl->set_at) && (strcmp(mtag_id, tkl->id) < 0)))
 			{
-				strlcpy(tkl->id, incoming_id, sizeof(tkl->id));
-				incoming_spamfilter_id = tkl_s2s_mtag_value(recv_mtags, "spamfilter_id");
-				if (!BadPtr(incoming_spamfilter_id) && (strlen(incoming_spamfilter_id) < sizeof(tkl->spamfilter_id)))
-					strlcpy(tkl->spamfilter_id, incoming_spamfilter_id, sizeof(tkl->spamfilter_id));
+				strlcpy(tkl->id, mtag_id, sizeof(tkl->id));
+				mtag_spamfilter_id = tkl_s2s_mtag_value(recv_mtags, "spamfilter_id");
+				if (!BadPtr(mtag_spamfilter_id) && (strlen(mtag_spamfilter_id) < sizeof(tkl->spamfilter_id)))
+					strlcpy(tkl->spamfilter_id, mtag_spamfilter_id, sizeof(tkl->spamfilter_id));
 				else
 					tkl->spamfilter_id[0] = '\0';
+				mtag_source = tkl_s2s_mtag_value(recv_mtags, "source");
+				if (!BadPtr(mtag_source) && (strlen(mtag_source) < sizeof(tkl->source)))
+					strlcpy(tkl->source, mtag_source, sizeof(tkl->source));
+				else
+					tkl->source[0] = '\0';
 				changed = 1;
 			}
 		}
@@ -5380,11 +5413,12 @@ CMD_FUNC(cmd_tkl_add)
 		return;
 	}
 
-	/* New entry: assign its unique id. Honor a supplied s2s-tkl/id (and spamfilter_id) from a
-	 * remote server or services; if none and we are the originating server, generate a random one;
-	 * otherwise leave it blank (eg the tag was dropped by an old server in the path).
-	 */
+	/* Extract fields from the various s2s-tkl message tags (if present) */
 	tkl_extract_s2s_mtags(tkl, recv_mtags);
+	/* For the unique id: if we were unable to extract it and we are the
+	 * originating server, then generate a random one. Otherwise it stays
+	 * blank, eg when an old server in the path dropped the tag.
+	 */
 	if (!tkl->id[0] && IsMe(client))
 		tkl_generate_id(tkl);
 
@@ -5818,7 +5852,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 				tkllayer[7] = mo2;
 				tkllayer[8] = reason;
 				{
-					MessageTag *m = tkl_spamfilter_id_mtag(spamfilter ? spamfilter->id : NULL); /* NULL unless set by a spamfilter */
+					MessageTag *m = take_action_to_s2s_mtags(source, spamfilter ? spamfilter->id : NULL);
 					cmd_tkl(NULL, &me, m, 9, tkllayer);
 					safe_free_message_tags(m);
 				}

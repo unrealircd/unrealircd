@@ -29,7 +29,7 @@ ModuleHeader MOD_HEADER = {
 
 #define TKLDB_MAGIC 0x10101010
 /* Database version */
-#define TKLDB_VERSION 6260
+#define TKLDB_VERSION 6280
 /* Save tkls to file every <this> seconds */
 #define TKLDB_SAVE_EVERY 300
 /* The very first save after boot, apply this delta, this
@@ -407,12 +407,17 @@ int write_tkline(UnrealDB *db, const char *tmpfname, TKL *tkl)
 	W_SAFE(unrealdb_write_str(db, tkl->set_by));
 	W_SAFE(unrealdb_write_int64(db, tkl->set_at));
 	W_SAFE(unrealdb_write_int64(db, tkl->expire_at));
-	W_SAFE(unrealdb_write_str(db, tkl->id));     /* since TKLDB_VERSION 6260 */
-	W_SAFE(unrealdb_write_str(db, tkl->spamfilter_id)); /* since TKLDB_VERSION 6260 */
+
+	/* id and spamfilter_id (since TKLDB_VERSION 6260) */
+	W_SAFE(unrealdb_write_str(db, tkl->id));
+	W_SAFE(unrealdb_write_str(db, tkl->spamfilter_id));
 
 	/* Hit-stat fields for all TKL types (since TKLDB_VERSION 6260): hits, lasthit. */
 	W_SAFE(unrealdb_write_int64(db, tkl->hits));
 	W_SAFE(unrealdb_write_int64(db, tkl->lasthit));
+
+	/* source (since TKLDB_VERSION 6280) */
+	W_SAFE(unrealdb_write_str(db, tkl->source));
 
 	if (TKLIsServerBan(tkl))
 	{
@@ -582,6 +587,14 @@ int read_tkldb(void)
 			tkl->hits = v;
 			R_SAFE(unrealdb_read_int64(db, &v));
 			tkl->lasthit = v;
+		}
+
+		/* source was added in TKLDB_VERSION 6280 */
+		if (version >= 6280)
+		{
+			R_SAFE(unrealdb_read_str(db, &str));
+			strlcpy(tkl->source, str, sizeof(tkl->source));
+			safe_free(str);
 		}
 
 		/* Save some CPU... if it's already expired then don't bother adding */
@@ -810,6 +823,7 @@ int read_tkldb(void)
 		{
 			strlcpy(added->id, tkl->id, sizeof(added->id));
 			strlcpy(added->spamfilter_id, tkl->spamfilter_id, sizeof(added->spamfilter_id));
+			strlcpy(added->source, tkl->source, sizeof(added->source));
 			added->hits = tkl->hits;
 			added->lasthit = tkl->lasthit;
 			if (TKLIsSpamfilter(added))
