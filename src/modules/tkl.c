@@ -5757,9 +5757,10 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 	int previous_highest = 0;
 	int highest = 0;
 	NameValuePrioList *details = NULL;
-	int reported_to_all = 0;
 	int auto_report_done = 0;
 	int auto_reported = 0;
+	int spamreported_to_all = 0;
+	int spamreport_allowed = 1;
 
 	if (stopped)
 		*stopped = 0;
@@ -5772,6 +5773,26 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 		return 0;
 	}
 
+	/* Spamfilters on target "user" and "away" are (also) checked from
+	 * a rescan loop in check_pings(), which eventually reach us here.
+	 * For these, we set spamreport_allowed=0 if the ban action does not
+	 * disconnect the user. The reason for that is that these user/away
+	 * rescans happen multiple times (on a rehash, on every spamfilter
+	 * add with a user or away target, etc.), so we keep spamreporting
+	 * the same user over and over if the action is something like block.
+	 * The safe case is, of course, if this does disconnect a user,
+	 * then the user is gone so no risk of double reporting.
+	 * FIXME: actually this goes beyond auto-report, it also impacts
+	 *        repeated log lines. Something to fix later.
+	 */
+	if (take_action_flags & TAKE_ACTION_RESCAN)
+	{
+		spamreport_allowed = 0;
+		for (action = actions; action; action = action->next)
+			if (banact_disconnects(action->action))
+				spamreport_allowed = 1;
+	}
+
 	for (action = actions; action; action = action->next)
 	{
 		/* If this is a soft action and the user is logged in, then the ban does not apply. */
@@ -5779,7 +5800,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 			return 0;
 
 		/* Auto-report (spamreport::auto-report): needs to happen before the user is disconnected */
-		if (source && !auto_report_done && !reported_to_all && (action->action > BAN_ACT_WARN) &&
+		if (source && spamreport_allowed && !auto_report_done && !spamreported_to_all && (action->action > BAN_ACT_WARN) &&
 		    !(take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION))
 		{
 			if (spamfilter && *spamfilter->id)
@@ -5862,7 +5883,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 					find_shun(client);
 					break;
 				} /* else.. */
-				if (reported_to_all || auto_reported)
+				if (spamreported_to_all || auto_reported)
 					client->flags |= CLIENT_FLAG_SKIP_BAN_SPAMREPORT;
 				if (!find_tkline_match(client, 0))
 				{
@@ -5892,7 +5913,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 				SetShunned(client);
 				break;
 			case BAN_ACT_REPORT:
-				if (take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION)
+				if ((take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION) || !spamreport_allowed)
 					break;
 				if (spamfilter && *spamfilter->id)
 					add_nvplist(&details, 0, "spamfilter_id", spamfilter->id);
@@ -5900,7 +5921,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 				spamreport(client, client->ip, details, action->var, NULL, source, reason, spamfilter, 0);
 				safe_free_nvplist(details);
 				if (!action->var)
-					reported_to_all = 1;
+					spamreported_to_all = 1;
 				break;
 			case BAN_ACT_SET:
 				if (!(take_action_flags & TAKE_ACTION_SKIP_SET))
@@ -6176,7 +6197,7 @@ static void run_rule_only_spamfilter_loop(Client *client, const char *str_in, co
 				continue;
 		}
 
-		if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
+		if ((flags & SPAMFLAG_RESCAN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
 			continue;
 
 		/* If the action is 'soft' (for non-logged in users only) then
@@ -6287,6 +6308,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	int stop_processing_central_spamfilters = 0;
 	int content_revealed = 0;
 	crule_context context;
+	int take_action_flags = TAKE_ACTION_SKIP_SET;
 
 	if (rettkl)
 		*rettkl = NULL; /* initialize to NULL */
@@ -6351,7 +6373,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 				continue;
 		}
 
-		if ((flags & SPAMFLAG_NOWARN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
+		if ((flags & SPAMFLAG_RESCAN) && only_actions_of_type(tkl->ptr.spamfilter->action, BAN_ACT_WARN))
 			continue;
 
 		/* If the action is 'soft' (for non-logged in users only) then
@@ -6460,7 +6482,9 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 
 	/* Spamfilter matched */
 	unreal_decodespace_r(tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
-	ret = take_action_ex(client, tkl->ptr.spamfilter->action, "spamfilter", reason, tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, tkl);
+	if (flags & SPAMFLAG_RESCAN)
+		take_action_flags |= TAKE_ACTION_RESCAN; /* SPAMFLAG_RESCAN is only used by the rescans for "user" and "away" */
+	ret = take_action_ex(client, tkl->ptr.spamfilter->action, "spamfilter", reason, tkl->ptr.spamfilter->tkl_duration, take_action_flags, NULL, tkl);
 	if (!IsDead(client))
 	{
 		if ((ret == BAN_ACT_BLOCK) || (ret == BAN_ACT_SOFT_BLOCK))

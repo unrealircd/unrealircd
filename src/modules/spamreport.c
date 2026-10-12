@@ -813,25 +813,35 @@ static const char *banned_client_ban_action(const char *bantype, TKL *tkl)
 	return tkl_type_config_string(tkl);
 }
 
+/* For auto-report 'server-ban': this filters on two criteria (AND):
+ * 1) server ban must be set by an oper (or services)
+ * 2) matches the set::spamreport::auto-report::ban-or-kill-filter
+ */
 int spamreport_banned_client(Client *client, const char *bantype, const char *reason, TKL *tkl, int global)
 {
 	NameValuePrioList *details = NULL;
 
-	if (!IsUser(client) || (client->flags & CLIENT_FLAG_SKIP_BAN_SPAMREPORT))
+	if (!IsUser(client))
 		return 0;
 
-	if (tkl && *tkl->spamfilter_id)
-	{
-		/* Ban placed by a spamfilter */
-		add_nvplist(&details, 0, "spamfilter_id", tkl->spamfilter_id);
-		add_nvplist(&details, 0, "ban_action", banned_client_ban_action(bantype, tkl));
-		spamreport(client, client->ip, details, NULL, NULL, "spamfilter", reason, tkl, SPAMREPORT_FLAG_AUTO);
-	} else if (ban_or_kill_filter_match(reason, tkl ? tkl->set_by : NULL))
+	/* Already reported via take_action() - corner case */
+	if (client->flags & CLIENT_FLAG_SKIP_BAN_SPAMREPORT)
+		return 0;
+
+	/* Don't report automatic bans: those are placed by take_action() and
+	 * fill in "source" since 6.2.8. The extra check on "spamfilter_id" is
+	 * just for older servers, it can be removed eventually.
+	 */
+	if (tkl && (*tkl->source || *tkl->spamfilter_id))
+		return 0;
+
+	/* check set::spamreport::auto-report::ban-or-kill-filter */
+	if (ban_or_kill_filter_match(reason, tkl ? tkl->set_by : NULL))
 	{
 		add_nvplist(&details, 0, "ban_action", banned_client_ban_action(bantype, tkl));
 		spamreport(client, client->ip, details, NULL, NULL, "server-ban", reason, tkl, SPAMREPORT_FLAG_AUTO);
+		safe_free_nvplist(details);
 	}
-	safe_free_nvplist(details);
 	return 0;
 }
 

@@ -1253,7 +1253,7 @@ typedef struct CRuleNode CRuleNode;
 #define SPAMF_RAW        0x0800 /* R */
 
 /* Other flags only for function calls: */
-#define SPAMFLAG_NOWARN 0x0001
+#define SPAMFLAG_RESCAN 0x0001 /**< spamfilter "user" and "away" rescans from check_pings() */
 
 /* Ban actions. These must be ordered by severity (!) */
 typedef enum BanActionValue {
@@ -1309,6 +1309,8 @@ struct BanAction {
 #define TAKE_ACTION_SKIP_SET 0x1
 /** Don't ban/kill/block/etc, but do return value as if we did */
 #define TAKE_ACTION_SIMULATE_USER_ACTION 0x2
+/** Rescan of an online user (spamfilter target user/away): only spamreport if an action removes the user */
+#define TAKE_ACTION_RESCAN 0x4
 
 /** spamreport(): only send to spamreport blocks that have spamreport::auto-report with a matching 'source' */
 #define SPAMREPORT_FLAG_AUTO 0x1
