@@ -830,12 +830,13 @@ int cbl_is_handshake_finished(Client *client)
 	if (!(client->user && *client->user->username && client->name[0] && IsNotSpoof(client)))
 		return 1;
 
+	/* Also for exempt users: spamreport uses this */
+	if (!json_object_get(CBL(client)->handshake, "client"))
+		cbl_add_client_info(client);
+
 	/* User is exempt */
 	if (user_allowed_by_security_group(client, cfg.except))
 		return 1;
-
-	if (!json_object_get(CBL(client)->handshake, "client"))
-		cbl_add_client_info(client);
 
 	if (cfg.blocklist_enabled)
 		return cbl_start_request(client);
@@ -1228,6 +1229,10 @@ int _central_spamreport(Client *client, Client *by, const char *source, const ch
 	json_object_set_new(j, "unrealircd_version", json_string_unreal(VERSIONONLY));
 	requests = json_object();
 	json_object_set_new(j, "reports", requests);
+
+	/* It would be very rare for this to be missing, but if so, add it because it is kinda crucial */
+	if (!json_object_get(CBL(client)->handshake, "client"))
+		cbl_add_client_info(client);
 
 	data = json_deep_copy(CBL(client)->handshake); /* .. deep copy. */
 	json_object_set_new(requests, client->id, data); /* ..and steal reference */
