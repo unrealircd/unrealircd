@@ -550,6 +550,49 @@ void show_client_json(Client *client)
 	safe_free(json_serialized);
 }
 
+/** Parse the HTTP "Cookie" header passed in 'header' and add
+ * the cookies to 'web' under item 'cookies' as 'name' with the
+ * value being a trimmed sha256 hash.
+ * We don't want to see the real cookies, this provides enough info.
+ * Note that this function may be called multiple times, in that
+ * case it will add to the existing 'cookies' item.
+ */
+static void cbl_add_cookies(json_t *web, const char *header)
+{
+	json_t *cookies;
+	char buf[8192];
+	char *p, *name, *eq;
+	const char *value;
+	char hash[65];
+
+	cookies = json_object_get(web, "cookies");
+	if (!cookies)
+	{
+		cookies = json_object();
+		json_object_set_new(web, "cookies", cookies);
+	}
+
+	strlcpy(buf, header, sizeof(buf));
+	for (name = strtoken(&p, buf, ";"); name; name = strtoken(&p, NULL, ";"))
+	{
+		while (*name == ' ')
+			name++;
+		value = "";
+		eq = strchr(name, '=');
+		if (eq)
+		{
+			*eq = '\0';
+			value = eq + 1;
+		}
+		if (!*name)
+			continue;
+		/* Make a SHA256 hash and cut off after 16 hex chars */
+		sha256hash(hash, value, strlen(value));
+		hash[16] = '\0';
+		json_object_set_new(cookies, name, json_string_unreal(hash));
+	}
+}
+
 void cbl_add_client_info(Client *client)
 {
 	char buf[BUFSIZE + 1];
@@ -623,7 +666,17 @@ void cbl_add_client_info(Client *client)
 		json_object_set_new(child, "web", web);
 		json_object_set_new(web, "headers", headers);
 		for (nv = WEB(client)->headers; nv; nv = nv->next)
+		{
+			if (!strcasecmp(nv->name, "Cookie"))
+			{
+				if (nv->value)
+					cbl_add_cookies(web, nv->value);
+				continue;
+			}
+			if (!strcasecmp(nv->name, "Authorization"))
+				continue; /* filtered out */
 			json_object_set_new(headers, nv->name, json_string_unreal(nv->value));
+		}
 	}
 
 	if (websocket_md && WSU(client))
@@ -687,7 +740,8 @@ CMD_OVERRIDE_FUNC(cbl_override)
 	    !IsUnknown(client) ||
 	    !strcmp(ovr->command->cmd, "PASS") ||
 	    !strcmp(ovr->command->cmd, "WEBIRC") ||
-	    !strcmp(ovr->command->cmd, "AUTHENTICATE"))
+	    !strcmp(ovr->command->cmd, "AUTHENTICATE") ||
+	    !strcmp(ovr->command->cmd, "AUTH"))
 	{
 		CALL_NEXT_COMMAND_OVERRIDE();
 		return;
