@@ -5161,8 +5161,11 @@ CMD_FUNC(cmd_tkl_add)
 		/* Some simple validation on usermask and hostmask:
 		 * may not contain an @. Yeah, some services or self-written
 		 * linked servers are known to have sent this in the past.
+		 * Extended server bans are exempt, that is: the usermask
+		 * portion may not contain a @, but for example with extban
+		 * ~realname:*foo@bar* the hostmask portion can be *foo@bar*.
 		 */
-		if (strchr(usermask, '@') || strchr(hostmask, '@'))
+		if (strchr(usermask, '@') || (!is_extended_server_ban(usermask) && strchr(hostmask, '@')))
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
 			           "Invalid TKL entry from $client: "
@@ -5208,8 +5211,11 @@ CMD_FUNC(cmd_tkl_add)
 		/* Some simple validation on usermask and hostmask:
 		 * may not contain an @. Yeah, some services or self-written
 		 * linked servers are known to have sent this in the past.
+		 * Extended server bans are exempt, that is: the usermask
+		 * portion may not contain a @, but for example with extban
+		 * ~realname:*foo@bar* the hostmask portion can be *foo@bar*.
 		 */
-		if (strchr(usermask, '@') || strchr(hostmask, '@'))
+		if (strchr(usermask, '@') || (!is_extended_server_ban(usermask) && strchr(hostmask, '@')))
 		{
 			unreal_log(ULOG_WARNING, "tkl", "TKL_ADD_INVALID", client,
 			           "Invalid TKL entry from $client: "
