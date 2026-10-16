@@ -1618,7 +1618,9 @@ struct LocalClient {
 	time_t idle_since;                         /**< Last time a RESETIDLE message was received (PRIVMSG) */
 	TrafficStats traffic;                      /**< Traffic statistics */
 	ModData moddata[MODDATA_MAX_LOCAL_CLIENT]; /**< LocalClient attached module data, used by the ModData system */
-	char *error_str;                           /**< Quit reason set by dead_socket() in case of socket/buffer error, later used by exit_client() */
+	char *deadsocket_quit_reason;              /**< Quit reason set by dead_socket() in case of socket/buffer error, later used by exit_client() */
+	char *deadsocket_reject_message;           /**< Reject message for ERR_YOUREBANNEDCREEP and the notice, set by banned_client() for deadsocket_exit() */
+	MessageTag *deadsocket_quit_mtags;         /**< Message tags for the QUIT, eg unrealircd.org/real-quit-reason. Set by banned_client() for deadsocket_exit() */
 	char sasl_agent[NICKLEN + 1];              /**< SASL: SASL Agent the user is interacting with */
 	unsigned char sasl_out;                    /**< SASL: Number of outgoing sasl messages */
 	unsigned char sasl_complete;               /**< SASL: >0 if SASL authentication was successful */

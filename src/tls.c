@@ -1329,11 +1329,11 @@ static int fatal_tls_error(int ssl_error, int where, int my_errno, Client *clien
 	if (errtmp)
 	{
 		SET_ERRNO(errtmp);
-		safe_strdup(client->local->error_str, strerror(errtmp));
+		safe_strdup(client->local->deadsocket_quit_reason, strerror(errtmp));
 	} else
 	{
 		SET_ERRNO(P_EIO);
-		safe_strdup(client->local->error_str, ssl_errstr);
+		safe_strdup(client->local->deadsocket_quit_reason, ssl_errstr);
 	}
 
 	return -1;

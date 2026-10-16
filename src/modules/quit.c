@@ -545,6 +545,9 @@ void _banned_client(Client *client, const char *bantype, const char *reason, TKL
 	{
 		sendnumeric(client, ERR_YOUREBANNEDCREEP, buf);
 		sendnotice(client, "%s", buf);
+	} else
+	{
+		safe_strdup(client->local->deadsocket_reject_message, buf);
 	}
 
 	/* The final message in the ERROR is shorter. */
@@ -571,6 +574,9 @@ void _banned_client(Client *client, const char *bantype, const char *reason, TKL
 		/* Special handling for direct Z-line code */
 		client->flags |= CLIENT_FLAG_DEADSOCKET_IS_BANNED;
 		dead_socket(client, buf);
+		safe_free_message_tags(client->local->deadsocket_quit_mtags);
+		client->local->deadsocket_quit_mtags = mtags;
+		mtags = NULL;
 	}
 	safe_free_message_tags(mtags);
 }

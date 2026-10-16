@@ -997,7 +997,7 @@ int dead_socket(Client *to, const char *notice)
 	/* We may get here because of the 'CPR' in check_deadsockets().
 	 * In which case, we return -1 as well.
 	 */
-	if (to->local->error_str)
+	if (to->local->deadsocket_quit_reason)
 		return -1; /* don't overwrite & don't send multiple times */
 
 	if (!IsUser(to) && !IsUnknown(to) && !IsRPC(to) && !IsControl(to) && !IsClosing(to))
@@ -1009,7 +1009,7 @@ int dead_socket(Client *to, const char *notice)
 		           "Link to server $client.details closed: $reason",
 		           log_data_string("reason", notice));
 	}
-	safe_strdup(to->local->error_str, notice);
+	safe_strdup(to->local->deadsocket_quit_reason, notice);
 
 	/* Let's terminate DNS requests as well, as these are now useless */
 	unrealdns_delreq_bycptr(to);
@@ -1023,20 +1023,20 @@ void deadsocket_exit(Client *client, int special)
 	if (client->flags & CLIENT_FLAG_DEADSOCKET_IS_BANNED)
 	{
 		/* For this case we need to send some extra lines */
-		sendnumeric(client, ERR_YOUREBANNEDCREEP, client->local->error_str);
-		sendnotice(client, "%s", client->local->error_str);
+		sendnumeric(client, ERR_YOUREBANNEDCREEP, client->local->deadsocket_reject_message);
+		sendnotice(client, "%s", client->local->deadsocket_reject_message);
 	}
 
 	if (special)
 	{
 		sendto_one(client, NULL, "ERROR :Closing Link: %s (%s)", get_client_name(client, FALSE),
-		           client->local->error_str ? client->local->error_str : "Dead socket");
+		           client->local->deadsocket_quit_reason ? client->local->deadsocket_quit_reason : "Dead socket");
 		send_queued(client);
 		/* Caller takes care of freeing 'client' - only used by HOOKTYPE_ACCEPT */
 		return;
 	} else
 	{
-		exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
+		exit_client(client, client->local->deadsocket_quit_mtags, client->local->deadsocket_quit_reason ? client->local->deadsocket_quit_reason : "Dead socket");
 	}
 }
 

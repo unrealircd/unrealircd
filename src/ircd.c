@@ -259,8 +259,7 @@ EVENT(check_deadsockets)
 		/* No need to notify opers here. It's already done when dead socket is set */
 		if (IsDeadSocket(client))
 		{
-			ClearDeadSocket(client); /* CPR. So we send the error. */
-			exit_client(client, NULL, client->local->error_str ? client->local->error_str : "Dead socket");
+			deadsocket_exit(client, 0);
 			continue;
 		}
 	}

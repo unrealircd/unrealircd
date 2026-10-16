@@ -188,7 +188,9 @@ void free_client(Client *client)
 				}
 			}
 			safe_free(client->local->passwd);
-			safe_free(client->local->error_str);
+			safe_free(client->local->deadsocket_quit_reason);
+			safe_free(client->local->deadsocket_reject_message);
+			safe_free_message_tags(client->local->deadsocket_quit_mtags);
 			safe_free(client->local->sni_servername);
 			if (client->local->hostp)
 				unreal_free_hostent(client->local->hostp);
