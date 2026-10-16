@@ -730,7 +730,8 @@ LogData *log_data_tls_error(void)
 		if (name == NULL)
 		{
 			/* Set tls_error.name to the first error that was encountered */
-			json_object_set_new(j, "name", json_string_unreal(buf));
+			name = json_string_unreal(buf);
+			json_object_set_new(j, "name", name);
 		}
 		strlcat(all_errors, buf, sizeof(all_errors));
 		strlcat(all_errors, "\n", sizeof(all_errors));
@@ -929,6 +930,22 @@ static void buildlogstring_eat_space(char **o, char *outbuf, int *left)
 	}
 }
 
+/** Only these $fields may have data with newlines (\n). */
+static const char *log_fields_allow_newlines[] = {
+    "tls_error", /* the OpenSSL error stack, one error per line */
+    NULL,
+};
+
+static int log_field_allows_newlines(const char *name)
+{
+	int i;
+
+	for (i = 0; log_fields_allow_newlines[i]; i++)
+		if (!strcmp(log_fields_allow_newlines[i], name))
+			return 1;
+	return 0;
+}
+
 void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details, json_t *optional_keys)
 {
 	const char *i, *p;
@@ -937,6 +954,8 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 	int cnt, found;
 	char varname[256], *varp, *varpp;
 	char buf[BUFSIZE];
+	char valbuf[BUFSIZE];
+	const char *lf;
 	json_t *t, *opt;
 
 #ifdef DEBUGMODE
@@ -1011,6 +1030,11 @@ void buildlogstring(const char *inbuf, char *outbuf, size_t len, json_t *details
 				opt = json_object_get(optional_keys, varname);
 				if (output && *output)
 				{
+					if (!log_field_allows_newlines(varname) && (lf = strchr(output, '\n')))
+					{
+						strlncpy(valbuf, output, sizeof(valbuf), lf - output);
+						output = valbuf;
+					}
 					if (opt && json_is_string(opt))
 					{
 						/* name:value field: show it as "[label: value]" (the JSON keeps the raw value) */
