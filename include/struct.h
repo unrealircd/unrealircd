@@ -1311,6 +1311,13 @@ struct BanAction {
 #define TAKE_ACTION_SIMULATE_USER_ACTION 0x2
 /** Rescan of an online user (spamfilter target user/away): only spamreport if an action removes the user */
 #define TAKE_ACTION_RESCAN 0x4
+/** Don't use exit_client(), use dead_socket() instead */
+#define TAKE_ACTION_NO_EXIT_CLIENT 0x8
+
+/** Ignore soft bans (soft-kline, soft-gline, etc) */
+#define FIND_TKLINE_MATCH_SKIP_SOFT 0x1
+/** Don't use exit_client(), use dead_socket() instead */
+#define FIND_TKLINE_MATCH_NO_EXIT_CLIENT 0x2
 
 /** spamreport(): only send to spamreport blocks that have spamreport::auto-report with a matching 'source' */
 #define SPAMREPORT_FLAG_AUTO 0x1

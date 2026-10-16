@@ -919,7 +919,7 @@ extern MODVAR void (*sendnotice_tkl_add)(TKL *tkl);
 extern MODVAR void (*free_tkl)(TKL *tkl);
 extern MODVAR void (*tkl_del_line)(TKL *tkl);
 extern MODVAR void (*tkl_check_local_remove_shun)(TKL *tmp);
-extern MODVAR int (*find_tkline_match)(Client *cptr, int skip_soft);
+extern MODVAR int (*find_tkline_match)(Client *cptr, int flags);
 extern MODVAR void (*tkl_hit)(Client *client, TKL *tkl);
 extern MODVAR void (*remove_config_tkls)(int flag);
 extern MODVAR void (*config_tkl_hits_restore)(void);

@@ -91,6 +91,7 @@ struct BLUser {
 	Client *client;
 	int is_ipv6;
 	int refcnt;
+	int in_ip_change; /**< 1 if in HOOKTYPE_IP_CHANGE, so we kill with dead_socket() */
 	/* The following save_* fields are used by softbans: */
 	BanAction *save_action;
 	long save_tkltime;
@@ -119,7 +120,7 @@ int blacklist_ip_change(Client *client, const char *oldip);
 int blacklist_quit(Client *client, MessageTag *mtags, const char *comment);
 int blacklist_preconnect(Client *client);
 void blacklist_resolver_callback(void *arg, int status, int timeouts, struct hostent *he);
-int blacklist_start_check(Client *client, int recheck);
+int blacklist_start_check(Client *client, int recheck, int ip_change);
 int blacklist_dns_request(Client *client, Blacklist *bl);
 int blacklist_rehash(void);
 int blacklist_rehash_complete(void);
@@ -652,17 +653,19 @@ void blacklist_md_free(ModData *md)
 
 int blacklist_handshake(Client *client)
 {
-	blacklist_start_check(client, 0);
+	blacklist_start_check(client, 0, 0);
 	return 0;
 }
 
 int blacklist_ip_change(Client *client, const char *oldip)
 {
-	blacklist_start_check(client, 0);
+	blacklist_start_check(client, 0, 1);
+	if (IsDeadSocket(client))
+		return HOOK_DENY;
 	return 0;
 }
 
-int blacklist_start_check(Client *client, int recheck)
+int blacklist_start_check(Client *client, int recheck, int ip_change)
 {
 	Blacklist *bl;
 
@@ -681,11 +684,12 @@ int blacklist_start_check(Client *client, int recheck)
 		SetBLUser(client, safe_alloc(sizeof(BLUser)));
 		BLUSER(client)->client = client;
 	}
+	BLUSER(client)->in_ip_change = ip_change;
 
 	for (bl = conf_blacklist; bl; bl = bl->next)
 	{
 		/* Stop processing if client is (being) killed already */
-		if (!BLUSER(client))
+		if (!BLUSER(client) || IsDeadSocket(client))
 			break;
 
 		if (recheck && !bl->recheck)
@@ -700,6 +704,8 @@ int blacklist_start_check(Client *client, int recheck)
 			blacklist_dns_request(client, bl);
 	}
 
+	if (BLUSER(client))
+		BLUSER(client)->in_ip_change = 0;
 	return 0;
 }
 
@@ -844,6 +850,9 @@ int blacklist_parse_reply(struct hostent *he, int entry)
 int blacklist_action(Client *client, char *opernotice, BanAction *ban_action, char *ban_reason, long ban_time,
                      char *blacklist, char *blacklist_dns_name, int blacklist_dns_reply)
 {
+	BLUser *blu = BLUSER(client);
+	int flags = 0;
+
 	unreal_log_raw(ULOG_INFO, "blacklist", "BLACKLIST_HIT", client,
 	               opernotice,
 	               log_data_string("blacklist_name", blacklist),
@@ -852,7 +861,9 @@ int blacklist_action(Client *client, char *opernotice, BanAction *ban_action, ch
 	               log_data_string("ban_action", ban_actions_to_string(ban_action)),
 	               log_data_string("ban_reason", ban_reason),
 	               log_data_integer("ban_time", ban_time));
-	return take_action(client, ban_action, "blacklist", ban_reason, ban_time, 0, NULL);
+	if (blu && blu->in_ip_change)
+		flags = TAKE_ACTION_NO_EXIT_CLIENT;
+	return take_action(client, ban_action, "blacklist", ban_reason, ban_time, flags, NULL);
 }
 
 void blacklist_hit(Client *client, Blacklist *bl, int reply)
@@ -860,8 +871,11 @@ void blacklist_hit(Client *client, Blacklist *bl, int reply)
 	char opernotice[512], banbuf[512], reply_num[5];
 	NameValuePrioList *nvp = NULL;
 	BLUser *blu = BLUSER(client);
+	int flags = FIND_TKLINE_MATCH_SKIP_SOFT;
 
-	if (find_tkline_match(client, 1))
+	if (blu && blu->in_ip_change)
+		flags |= FIND_TKLINE_MATCH_NO_EXIT_CLIENT;
+	if (find_tkline_match(client, flags))
 		return; /* already klined/glined. Don't send the warning from below. */
 
 	if (IsUser(client))
@@ -979,7 +993,7 @@ int blacklist_preconnect(Client *client)
 void blacklist_recheck_user(Client *client)
 {
 	SetLastBLCheck(client, TStime());
-	blacklist_start_check(client, 1);
+	blacklist_start_check(client, 1, 0);
 }
 
 EVENT(blacklist_recheck)

@@ -86,7 +86,7 @@ static void _tkl_check_local_remove_shun(TKL *tmp);
 char *_tkl_uhost(TKL *tkl, char *buf, size_t buflen, int options);
 void tkl_expire_entry(TKL *tmp);
 EVENT(tkl_check_expire);
-int _find_tkline_match(Client *client, int skip_soft);
+int _find_tkline_match(Client *client, int flags);
 int _find_shun(Client *client);
 int _find_spamfilter_user(Client *client, int flags);
 TKL *_find_qline(Client *client, const char *nick, int *ishold);
@@ -4124,14 +4124,18 @@ int find_tkline_match_matcher(Client *client, int skip_soft, TKL *tkl)
  * @note Do not continue processing if the client is killed (0 return value).
  * @note Return value changed with regards to UnrealIRCd 4!
  */
-int _find_tkline_match(Client *client, int skip_soft)
+int _find_tkline_match(Client *client, int flags)
 {
 	TKL *tkl;
 	int banned = 0;
 	int index, index2;
+	int noexit = 0;
 
 	if (IsServer(client) || IsMe(client))
 		return 0;
+
+	if (flags & FIND_TKLINE_MATCH_NO_EXIT_CLIENT)
+		noexit = NO_EXIT_CLIENT;
 
 	/* First, the TKL ip hash table entries.. */
 	index2 = tkl_ip_hash(GetIP(client));
@@ -4141,7 +4145,7 @@ int _find_tkline_match(Client *client, int skip_soft)
 		{
 			for (tkl = tklines_ip_hash[index][index2]; tkl; tkl = tkl->next)
 			{
-				banned = find_tkline_match_matcher(client, skip_soft, tkl);
+				banned = find_tkline_match_matcher(client, flags & FIND_TKLINE_MATCH_SKIP_SOFT, tkl);
 				if (banned)
 					break;
 			}
@@ -4157,7 +4161,7 @@ int _find_tkline_match(Client *client, int skip_soft)
 		{
 			for (tkl = tklines[index]; tkl; tkl = tkl->next)
 			{
-				banned = find_tkline_match_matcher(client, skip_soft, tkl);
+				banned = find_tkline_match_matcher(client, flags & FIND_TKLINE_MATCH_SKIP_SOFT, tkl);
 				if (banned)
 					break;
 			}
@@ -4178,15 +4182,15 @@ int _find_tkline_match(Client *client, int skip_soft)
 		ircstats.is_ref++;
 		tkl_hit(client, tkl);
 		if (tkl->type & TKL_GLOBAL)
-			banned_client(client, "G-Lined", tkl->ptr.serverban->reason, tkl, 1, 0);
+			banned_client(client, "G-Lined", tkl->ptr.serverban->reason, tkl, 1, noexit);
 		else
-			banned_client(client, "K-Lined", tkl->ptr.serverban->reason, tkl, 0, 0);
+			banned_client(client, "K-Lined", tkl->ptr.serverban->reason, tkl, 0, noexit);
 		return 1; /* killed */
 	} else if (tkl->type & TKL_ZAP)
 	{
 		ircstats.is_ref++;
 		tkl_hit(client, tkl);
-		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, tkl, (tkl->type & TKL_GLOBAL) ? 1 : 0, 0);
+		banned_client(client, "Z-Lined", tkl->ptr.serverban->reason, tkl, (tkl->type & TKL_GLOBAL) ? 1 : 0, noexit);
 		return 1; /* killed */
 	}
 
@@ -5779,9 +5783,13 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 	int auto_reported = 0;
 	int spamreported_to_all = 0;
 	int spamreport_allowed = 1;
+	int find_tkline_match_flags = 0;
 
 	if (stopped)
 		*stopped = 0;
+
+	if (take_action_flags & TAKE_ACTION_NO_EXIT_CLIENT)
+		find_tkline_match_flags = FIND_TKLINE_MATCH_NO_EXIT_CLIENT;
 
 	if (!MyConnect(client))
 	{
@@ -5903,7 +5911,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 				} /* else.. */
 				if (spamreported_to_all || auto_reported)
 					client->flags |= CLIENT_FLAG_SKIP_BAN_SPAMREPORT;
-				if (!find_tkline_match(client, 0))
+				if (!find_tkline_match(client, find_tkline_match_flags))
 				{
 					/* Not banned! revert the return value that we had in mind... */
 					highest = previous_highest;
@@ -5916,7 +5924,10 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 				if (take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION)
 					break;
 				RunHookReturnInt(HOOKTYPE_TAKE_ACTION, != 99, client, action->action, source, reason, duration);
-				exit_client(client, NULL, reason);
+				if (take_action_flags & TAKE_ACTION_NO_EXIT_CLIENT)
+					dead_socket(client, reason);
+				else
+					exit_client(client, NULL, reason);
 				break;
 			case BAN_ACT_SOFT_TEMPSHUN:
 			case BAN_ACT_TEMPSHUN:
@@ -5955,7 +5966,7 @@ static int take_action_ex(Client *client, BanAction *actions, const char *source
 				break;
 		}
 
-		if (IsDead(client))
+		if (IsDead(client) || ((take_action_flags & TAKE_ACTION_NO_EXIT_CLIENT) && IsDeadSocket(client)))
 			break; /* stop processing actions */
 	}
 

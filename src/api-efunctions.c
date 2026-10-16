@@ -72,7 +72,7 @@ TKL *(*tkl_add_banexception)(int type, const char *usermask, const char *hostmas
                              time_t expire_at, time_t set_at, int soft, const char *bantypes, int flags);
 void (*tkl_del_line)(TKL *tkl);
 void (*tkl_check_local_remove_shun)(TKL *tmp);
-int (*find_tkline_match)(Client *client, int skip_soft);
+int (*find_tkline_match)(Client *client, int flags);
 void (*tkl_hit)(Client *client, TKL *tkl);
 void (*remove_config_tkls)(int flag);
 void (*config_tkl_hits_restore)(void);
