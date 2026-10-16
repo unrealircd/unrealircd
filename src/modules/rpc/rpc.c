@@ -73,6 +73,7 @@ int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type);
 int rpc_config_test_rpc_class(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int rpc_config_run_rpc_class(ConfigFile *cf, ConfigEntry *ce, int type);
 int rpc_client_accept(Client *client);
+int rpc_accept_check_match(Client *client);
 int rpc_pre_local_handshake_timeout(Client *client, const char **comment);
 void rpc_client_handshake_unix_socket(Client *client);
 void rpc_client_handshake_web(Client *client);
@@ -165,6 +166,7 @@ MOD_INIT()
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_user);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, rpc_config_run_rpc_class);
 	HookAdd(modinfo->handle, HOOKTYPE_HANDSHAKE, -5000, rpc_client_accept);
+	HookAdd(modinfo->handle, HOOKTYPE_ACCEPT, 0, rpc_accept_check_match);
 	HookAdd(modinfo->handle, HOOKTYPE_PRE_LOCAL_HANDSHAKE_TIMEOUT, 0, rpc_pre_local_handshake_timeout);
 	HookAdd(modinfo->handle, HOOKTYPE_RAWPACKET_IN, INT_MIN, rpc_packet_in_unix_socket);
 	HookAdd(modinfo->handle, HOOKTYPE_SERVER_QUIT, 0, rpc_handle_server_quit);
@@ -453,6 +455,22 @@ int rpc_config_test_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type, int *err
 	return errors ? -1 : 1;
 }
 
+/** rpc-user::match may only contain ip and mask items, because it is checked on accept(), before TLS */
+static int rpc_match_is_ip_only(SecurityGroup *s)
+{
+	NameValuePrioList *p;
+
+	for (p = s->printable_list; p; p = p->next)
+	{
+		if (strcmp(p->name, "ip") && strcmp(p->name, "mask") && strcmp(p->name, "include-mask") &&
+		    strcmp(p->name, "exclude-ip") && strcmp(p->name, "exclude-mask"))
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
 int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type)
 {
 	ConfigEntry *cep;
@@ -471,6 +489,12 @@ int rpc_config_run_rpc_user(ConfigFile *cf, ConfigEntry *ce, int type)
 		if (!strcmp(cep->name, "match") || !strcmp(cep->name, "mask"))
 		{
 			conf_match_block(cf, cep, &e->match);
+			if (!rpc_match_is_ip_only(e->match))
+			{
+				config_warn("%s:%d: rpc-user %s: match can only use ip and mask items. "
+				            "It is used as an IP filter before accepting any HTTPS connection",
+				            cep->file->filename, cep->line_number, e->name);
+			}
 		} else if (!strcmp(cep->name, "password"))
 		{
 			AuthBlockToAuthConfig(cep, &e->auth);
@@ -1245,6 +1269,24 @@ int rpc_client_accept(Client *client)
 	return 0;
 }
 
+/** Called on accept(), before TLS: close the connection right away if no rpc-user { } block matches */
+int rpc_accept_check_match(Client *client)
+{
+	RPCUser *r;
+
+	if (!RPC_PORT(client) || (client->local->listener->socket_type == SOCKET_TYPE_UNIX))
+		return HOOK_CONTINUE;
+
+	for (r = rpcusers; r; r = r->next)
+	{
+		if (user_allowed_by_security_group(client, r->match))
+			return HOOK_CONTINUE;
+	}
+
+	dead_socket(client, "Access denied");
+	return 2; /* HOOK_DENY_ALWAYS: close now, without a TLS handshake */
+}
+
 /** Called upon handshake of unix socket (direct JSON usage, no auth) */
 void rpc_client_handshake_unix_socket(Client *client)
 {
@@ -1263,33 +1305,12 @@ void rpc_client_handshake_unix_socket(Client *client)
 /** Called upon handshake, after TLS is ready (before any HTTP header parsing) */
 void rpc_client_handshake_web(Client *client)
 {
-	RPCUser *r;
-	char found = 0;
-
 	/* Explicitly mark as RPC, since the TLS layer may
 	 * have set us to SetUnknown() after the TLS handshake.
 	 */
 	SetRPC(client);
 	if (!client->rpc)
 		client->rpc = safe_alloc(sizeof(RPCClient));
-
-	/* Is the client allowed by any rpc-user { } block?
-	 * If not, reject the client immediately, before
-	 * processing any HTTP data.
-	 */
-	for (r = rpcusers; r; r = r->next)
-	{
-		if (user_allowed_by_security_group(client, r->match))
-		{
-			found = 1;
-			break;
-		}
-	}
-	if (!found)
-	{
-		webserver_send_response(client, 401, "Access denied");
-		return;
-	}
 
 	/* Allow incoming data to be read from now on.. */
 	fd_setselect(client->local->fd, FD_SELECT_READ, read_packet, client);
