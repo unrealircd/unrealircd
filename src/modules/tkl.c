@@ -94,7 +94,7 @@ TKL *_find_tkline_match_zap(Client *client);
 void _tkl_stats(Client *client, int type, const char *para, int *cnt);
 void _tkl_sync(Client *client);
 CMD_FUNC(_cmd_tkl);
-int _take_action(Client *client, BanAction *action, const char *source, const char *reason, long duration, int take_action_flags, int *stopped);
+int _take_action(Client *client, BanAction *action, const char *source, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter);
 int _match_spamfilter(Client *client, const char *str_in, int type, const char *cmd, const char *target, int flags, ClientContext *clictx, TKL **rettk);
 int _match_spamfilter_mtags(Client *client, MessageTag *mtags, const char *cmd);
 void _run_deferred_rule_only_spamfilters(Client *client);
@@ -5755,6 +5755,8 @@ void ban_action_run_all_sets_and_stops(Client *client, BanAction *action, int *s
  * @param duration           The ban duration in seconds.
  * @param take_action_flags  One of TAKE_ACTION_*
  * @param stopped            Set to 1 if a 'stop' action was encountered (can be NULL)
+ * @param spamfilter         The spamfilter that caused this (can be NULL). If set, the spamfilter id
+ *                           goes into spamfilter_id on any corresponding *LINEs.
  * @note This function assumes that client is a locally connected user.
  * @retval 0	user is exempt or no action needs to be taken for other reasons (eg only var setting)
  * @retval BAN_ACT_*	the highest BAN_ACT_xxx value, eg BAN_ACT_BLOCK or BAN_ACT_GLINE, etc...
@@ -5762,18 +5764,7 @@ void ban_action_run_all_sets_and_stops(Client *client, BanAction *action, int *s
  * @note Be sure to check IsDead(client) if return value is 1 and you are
  *       considering to continue processing.
  */
-static int take_action_ex(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter);
-
-int _take_action(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped)
-{
-	return take_action_ex(client, actions, source, reason, duration, take_action_flags, stopped, NULL);
-}
-
-/** Internal variant of take_action() that records the spamfilter id on any
- * *LINE/SHUN it creates, for the gline->spamfilter trace. Kept internal so the public
- * take_action() efunc stays free of this spamfilter-specific concept.
- */
-static int take_action_ex(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter)
+int _take_action(Client *client, BanAction *actions, const char *source, const char *reason, long duration, int take_action_flags, int *stopped, TKL *spamfilter)
 {
 	BanAction *action;
 	int previous_highest = 0;
@@ -6303,8 +6294,8 @@ void _run_deferred_rule_only_spamfilters(Client *client)
 		char reason[512];
 
 		unreal_decodespace_r(winner_tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
-		take_action_ex(client, winner_tkl->ptr.spamfilter->action, "spamfilter", reason,
-		               winner_tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, winner_tkl);
+		take_action(client, winner_tkl->ptr.spamfilter->action, "spamfilter", reason,
+		            winner_tkl->ptr.spamfilter->tkl_duration, TAKE_ACTION_SKIP_SET, NULL, winner_tkl);
 	}
 }
 
@@ -6513,7 +6504,7 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	unreal_decodespace_r(tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
 	if (flags & SPAMFLAG_RESCAN)
 		take_action_flags |= TAKE_ACTION_RESCAN; /* SPAMFLAG_RESCAN is only used by the rescans for "user" and "away" */
-	ret = take_action_ex(client, tkl->ptr.spamfilter->action, "spamfilter", reason, tkl->ptr.spamfilter->tkl_duration, take_action_flags, NULL, tkl);
+	ret = take_action(client, tkl->ptr.spamfilter->action, "spamfilter", reason, tkl->ptr.spamfilter->tkl_duration, take_action_flags, NULL, tkl);
 	if (!IsDead(client))
 	{
 		if ((ret == BAN_ACT_BLOCK) || (ret == BAN_ACT_SOFT_BLOCK))

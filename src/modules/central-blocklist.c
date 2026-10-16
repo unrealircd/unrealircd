@@ -907,7 +907,7 @@ void cbl_handle_response(Client *client, json_t *response)
 				           "CBL: Client $client.details is rejected by central-blocklist (score $spam_score)",
 				           log_data_integer("spam_score", spam_score));
 			}
-			if (take_action(client, action->ban_action, "central-blocklist", action->ban_reason, action->ban_time, 0, NULL) <= BAN_ACT_WARN)
+			if (take_action(client, action->ban_action, "central-blocklist", action->ban_reason, action->ban_time, 0, NULL, NULL) <= BAN_ACT_WARN)
 				cbl_allow(client);
 			return;
 		}

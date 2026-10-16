@@ -863,7 +863,7 @@ int blacklist_action(Client *client, char *opernotice, BanAction *ban_action, ch
 	               log_data_integer("ban_time", ban_time));
 	if (blu && blu->in_ip_change)
 		flags = TAKE_ACTION_NO_EXIT_CLIENT;
-	return take_action(client, ban_action, "blacklist", ban_reason, ban_time, flags, NULL);
+	return take_action(client, ban_action, "blacklist", ban_reason, ban_time, flags, NULL, NULL);
 }
 
 void blacklist_hit(Client *client, Blacklist *bl, int reply)

@@ -46,6 +46,7 @@ This is work in progress and may not always be a stable version.
 * New hook `HOOKTYPE_KILLED_CLIENT`, called when a local user is killed.
 * In `HOOKTYPE_BANNED_CLIENT` there is now a `TKL *tkl` parameter (this
   is NULL when a ban is not a TKL, such as a realname ban).
+* The function `take_action()` changed and has two more parameters.
 
 UnrealIRCd 6.2.7
 -----------------

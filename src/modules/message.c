@@ -599,7 +599,7 @@ int ban_version(Client *client, const char *text)
 		if (find_tkl_exception(TKL_BAN_VERSION, client))
 			return 0; /* we are exempt */
 
-		return take_action(client, ban->action, "ban-version", ban->reason, BAN_VERSION_TKL_TIME, 0, NULL);
+		return take_action(client, ban->action, "ban-version", ban->reason, BAN_VERSION_TKL_TIME, 0, NULL, NULL);
 	}
 
 	return 0;
