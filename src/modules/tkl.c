@@ -3147,9 +3147,17 @@ int _tkl_ip_hash(const char *ip)
 int tkl_ip_hash_tkl(TKL *tkl)
 {
 	if (TKLIsServerBan(tkl))
+	{
+		if (tkl->ptr.serverban->usermask && is_extended_server_ban(tkl->ptr.serverban->usermask))
+			return -1;
 		return tkl_ip_hash(tkl->ptr.serverban->hostmask);
+	}
 	if (TKLIsBanException(tkl))
+	{
+		if (tkl->ptr.banexception->usermask && is_extended_server_ban(tkl->ptr.banexception->usermask))
+			return -1;
 		return tkl_ip_hash(tkl->ptr.banexception->hostmask);
+	}
 	return -1;
 }
 
@@ -3175,9 +3183,13 @@ int _tkl_ip_hash_type(int type)
  * This is simply a helper that is used at 3 places and I hate duplicate code.
  * NOTE: this function may return NULL.
  */
-TKL *tkl_find_head(char type, const char *hostmask, TKL *def)
+TKL *tkl_find_head(char type, const char *usermask, const char *hostmask, TKL *def)
 {
 	int index, index2;
+
+	/* Extended server bans are never in the ip hash table */
+	if (is_extended_server_ban(usermask))
+		return def;
 
 	/* First, check ip hash table TKL's... */
 	index = tkl_ip_hash_type(type);
@@ -4888,7 +4900,7 @@ TKL *_find_tkl_serverban(int type, const char *usermask, const char *hostmask, i
 	if (!TKLIsServerBanType(type))
 		abort();
 
-	head = tkl_find_head(tpe, hostmask, tklines[tkl_hash(tpe)]);
+	head = tkl_find_head(tpe, usermask, hostmask, tklines[tkl_hash(tpe)]);
 	for (tkl = head; tkl; tkl = tkl->next)
 	{
 		if (tkl->type == type)
@@ -4916,7 +4928,7 @@ TKL *_find_tkl_banexception(int type, const char *usermask, const char *hostmask
 	if (!TKLIsBanExceptionType(type))
 		abort();
 
-	head = tkl_find_head(tpe, hostmask, tklines[tkl_hash(tpe)]);
+	head = tkl_find_head(tpe, usermask, hostmask, tklines[tkl_hash(tpe)]);
 	for (tkl = head; tkl; tkl = tkl->next)
 	{
 		if (tkl->type == type)
