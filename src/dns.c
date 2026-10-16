@@ -145,7 +145,7 @@ static int unrealdns_sock_create_cb(ares_socket_t fd, int type, void *data)
 	 */
 	if (data == RESOLVER_CHANNEL_CLIENT)
 		fd_open(fd, "DNS Resolver Socket for clients", FDCLOSE_NONE);
-	if (data == RESOLVER_CHANNEL_HTTPS)
+	else if (data == RESOLVER_CHANNEL_HTTPS)
 		fd_open(fd, "DNS Resolver Socket for HTTPS", FDCLOSE_NONE);
 	else if (data == RESOLVER_CHANNEL_DNSBL)
 		fd_open(fd, "DNS Resolver Socket for DNSBLs", FDCLOSE_NONE);
