@@ -662,12 +662,10 @@ int mm_parse_repo_db(char *url, const char *filename)
 int mm_refresh_repository(void)
 {
 	char *sourceslist = mm_sourceslist_file();
-	FILE *fd;
-	char buf[512];
+	NameList *repos = NULL, *e;
+	const char *error;
 	const char *tmpfile;
-	int linenr = 0;
 	int success = 0;
-	int numrepos = 0;
 
 	if (!file_exists(TMPDIR))
 	{
@@ -685,53 +683,46 @@ int mm_refresh_repository(void)
 	}
 
 	printf("Reading module repository list from '%s'...\n", mm_sourceslist_file());
-	fd = fopen(sourceslist, "r");
-	if (!fd)
+	if (!read_name_list_file(sourceslist, &repos, &error))
 	{
-		fprintf(stderr, "ERROR: Could not open '%s': %s\n", sourceslist, strerror(errno));
+		fprintf(stderr, "ERROR: Could not read '%s': %s\n", sourceslist, error);
 		return 0;
 	}
 
-	while ((fgets(buf, sizeof(buf), fd)))
-	{
-		char *line = buf;
-		linenr++;
-		stripcrlf(line);
-		/* Skip whitespace */
-		while (*line == ' ')
-			line++;
-		/* Skip empty lines and ones that start with a hash mark (#) */
-		if (!*line || (*line == '#'))
-			continue;
-		if (!str_starts_with_case_sensitive(line, "https://"))
-		{
-			fprintf(stderr, "ERROR in %s on line %d: URL should start with https://",
-			        sourceslist, linenr);
-			fclose(fd);
-			return 0;
-		}
-		printf("Checking module repository %s...\n", line);
-		numrepos++;
-		tmpfile = synchronous_http_request(line, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_TRANSFER_TIMEOUT);
-		if (tmpfile)
-		{
-			if (!mm_parse_repo_db(line, tmpfile))
-			{
-				fclose(fd);
-				return 0;
-			}
-			success++;
-		}
-	}
-	fclose(fd);
-
-	if (numrepos == 0)
+	if (!repos)
 	{
 		fprintf(stderr, "ERROR: No repositories listed in module repository list. "
 		                "Did you remove the default UnrealIRCd repository?\n"
 		                "All commands, except for './unrealircd module uninstall third/name-of-module', are unavailable.\n");
 		return 0;
 	}
+
+	for (e = repos; e; e = e->next)
+	{
+		if (!str_starts_with_case_sensitive(e->name, "https://"))
+		{
+			fprintf(stderr, "ERROR in %s: URL '%s' should start with https://\n",
+			        sourceslist, e->name);
+			free_entire_name_list(repos);
+			return 0;
+		}
+	}
+
+	for (e = repos; e; e = e->next)
+	{
+		printf("Checking module repository %s...\n", e->name);
+		tmpfile = synchronous_http_request(e->name, 1, MODULEMANAGER_CONNECT_TIMEOUT, MODULEMANAGER_TRANSFER_TIMEOUT);
+		if (tmpfile)
+		{
+			if (!mm_parse_repo_db(e->name, tmpfile))
+			{
+				free_entire_name_list(repos);
+				return 0;
+			}
+			success++;
+		}
+	}
+	free_entire_name_list(repos);
 
 	return success ? 1 : 0;
 }
