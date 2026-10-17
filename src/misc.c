@@ -2512,6 +2512,26 @@ void skip_whitespace(char **p)
 		;
 }
 
+/** Strip whitespace (if any) from the end of the string */
+void strip_trailing_whitespace(char *str)
+{
+	char *p = str + strlen(str);
+
+	while ((p > str) && ((p[-1] == ' ') || (p[-1] == '\t')))
+		*--p = '\0';
+}
+
+/** Strip CR/LF and remove whitespace at the start and end of a line.
+ * This modifies 'str' and returns a pointer into it.
+ */
+char *cleanline(char *str)
+{
+	stripcrlf(str);
+	skip_whitespace(&str);
+	strip_trailing_whitespace(str);
+	return str;
+}
+
 /** Keep reading '*p' until we hit any of the 'stopchars'.
  * Actually behaves like strstr() but then hit the end
  * of the string (\0) i guess?

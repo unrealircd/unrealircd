@@ -657,6 +657,72 @@ NameList *find_name_list_integer(NameList *list, int v)
 	return find_name_list(list, buf);
 }
 
+/** Read a file with one entry per line into a NameList.
+ * Whitespace at the start and end of each line is removed.
+ * Empty lines, lines starting with a # and lines that are
+ * too long are skipped. The list keeps the order of the file.
+ * @param fname	The file to read
+ * @param list	The resulting list, NULL if the file has no entries
+ * @param error	Set to the reason if the file could not be read
+ * @returns 1 on success (also for an empty list), 0 if the file could not be read
+ * @ingroup ListFunctions
+ */
+int read_name_list_file(const char *fname, NameList **list, const char **error)
+{
+	FILE *fd;
+	char buf[1024];
+	char *line;
+	NameList *tail = NULL, *n;
+
+	*list = NULL;
+
+	fd = fopen(fname, "r");
+	if (!fd)
+	{
+		*error = strerror(errno);
+		return 0;
+	}
+
+	while (fgets(buf, sizeof(buf), fd))
+	{
+		/* If the line is too long (doesn't contain LF), we skip it entirely */
+		if (!strchr(buf, '\n') && !feof(fd))
+		{
+			/* Eat everything and continue.. */
+			while (fgets(buf, sizeof(buf), fd) && !strchr(buf, '\n'))
+				;
+			continue;
+		}
+
+		line = cleanline(buf);
+
+		/* Empty lines and comment lines are ignored */
+		if (!*line || (*line == '#'))
+			continue;
+
+		/* We do manual pointer tracking here to speed things up */
+		n = safe_alloc(sizeof(NameList) + strlen(line) + 1);
+		strcpy(n->name, line); /* safe, allocated above */
+		if (tail)
+			tail->next = n;
+		else
+			*list = n;
+		n->prev = tail;
+		tail = n;
+	}
+
+	if (ferror(fd))
+	{
+		*error = strerror(errno);
+		fclose(fd);
+		free_entire_name_list(*list);
+		return 0;
+	}
+
+	fclose(fd);
+	return 1;
+}
+
 NameValuePrioList *add_nvplist(NameValuePrioList **lst, int priority, const char *name, const char *value)
 {
 	va_list vl;
