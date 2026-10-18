@@ -27,6 +27,21 @@ ModuleHeader MOD_HEADER = {
     "unrealircd-6",
 };
 
+/** The type of WEBIRC client (in practice: secure or not).
+ * Do not change these numbers, they are used in S2S.
+ */
+typedef enum WEBIRCType {
+	WEBIRC_TYPE_WEBIRC = 1,        /**< Via WEBIRC */
+	WEBIRC_TYPE_WEBIRC_SECURE = 2, /**< Via WEBIRC and gateway indicated the client is securely connected */
+} WEBIRCType;
+
+typedef struct WEBIRCUser {
+	WEBIRCType type; /**< One of WEBIRC_TYPE_* (secure or not)  */
+	char *name;      /**< Name of the proxy { } block. NULL for remote clients on older servers. */
+	char *ip;        /**< IP of the gateway. NULL for remote clients on older servers. */
+	char *host;      /**< Hostname of the gateway (and otherwise the IP). NULL for remote clients on older servers. */
+} WEBIRCUser;
+
 /* Global variables */
 ModDataInfo *webirc_md = NULL;
 
@@ -38,23 +53,9 @@ void webirc_md_unserialize(const char *str, ModData *m);
 void webirc_md_free(ModData *md);
 int webirc_secure_connect(Client *client);
 
-#define IsWEBIRC(x)       (moddata_client(x, webirc_md).l)
-#define IsWEBIRCSecure(x) (moddata_client(x, webirc_md).l == 2)
-#define ClearWEBIRC(x) \
-	do \
-	{ \
-		moddata_client(x, webirc_md).l = 0; \
-	} while (0)
-#define SetWEBIRC(x) \
-	do \
-	{ \
-		moddata_client(x, webirc_md).l = 1; \
-	} while (0)
-#define SetWEBIRCSecure(x) \
-	do \
-	{ \
-		moddata_client(x, webirc_md).l = 2; \
-	} while (0)
+#define WEBIRC(x)         ((WEBIRCUser *)moddata_client(x, webirc_md).ptr)
+#define IsWEBIRC(x)       (WEBIRC(x) != NULL)
+#define IsWEBIRCSecure(x) (WEBIRC(x) && (WEBIRC(x)->type == WEBIRC_TYPE_WEBIRC_SECURE))
 
 #define MSG_WEBIRC "WEBIRC"
 
@@ -102,22 +103,63 @@ MOD_UNLOAD()
 
 const char *webirc_md_serialize(ModData *m)
 {
-	static char buf[32];
-	if (m->i == 0)
+	static char buf[512];
+	WEBIRCUser *w = m->ptr;
+
+	if (!w)
 		return NULL; /* not set */
-	snprintf(buf, sizeof(buf), "%d", m->i);
+
+	if (!w->name && !w->ip && !w->host)
+		snprintf(buf, sizeof(buf), "%d", (int)w->type);
+	else
+		snprintf(buf, sizeof(buf), "%d;%s;%s;%s", (int)w->type,
+		         w->name ? w->name : "", w->ip ? w->ip : "", w->host ? w->host : "");
 	return buf;
 }
 
 void webirc_md_unserialize(const char *str, ModData *m)
 {
-	m->i = atoi(str);
+	WEBIRCUser *w;
+	char buf[512];
+	char *type, *name, *ip, *host, *p = NULL;
+	int t;
+
+	if (m->ptr)
+		webirc_md_free(m);
+	if (BadPtr(str))
+		return; /* empty/freed */
+
+	strlcpy(buf, str, sizeof(buf));
+	type = strtoken_noskip(&p, buf, ";");
+	t = atoi(type);
+	if (t <= 0)
+		return;
+
+	m->ptr = w = safe_alloc(sizeof(WEBIRCUser));
+	w->type = t;
+
+	name = strtoken_noskip(&p, NULL, ";");
+	ip = strtoken_noskip(&p, NULL, ";");
+	host = strtoken_noskip(&p, NULL, ";");
+	if (!BadPtr(name) && security_group_valid_name(name))
+		safe_strdup(w->name, name);
+	if (!BadPtr(ip) && is_valid_ip(ip))
+		safe_strdup(w->ip, ip);
+	if (!BadPtr(host) && (valid_host(host, 1) || is_valid_ip(host)))
+		safe_strdup(w->host, host);
 }
 
 void webirc_md_free(ModData *md)
 {
-	/* we have nothing to free actually, but we must set to zero */
-	md->l = 0;
+	WEBIRCUser *w = md->ptr;
+
+	if (w)
+	{
+		safe_free(w->name);
+		safe_free(w->host);
+		safe_free(w->ip);
+		safe_free(md->ptr);
+	}
 }
 
 ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType type, char **errorstr)
@@ -155,13 +197,23 @@ ConfigItem_proxy *find_webirc(Client *client, const char *password, ProxyType ty
 #define WEBIRC_STRINGLEN (sizeof(WEBIRC_STRING) - 1)
 
 /* Does the CGI:IRC host spoofing work */
-void dowebirc(Client *client, const char *ip, const char *host, const char *options)
+void dowebirc(Client *client, ConfigItem_proxy *proxy, const char *ip, const char *host, const char *options)
 {
+	char gateway_ip[IPLEN + 1];
+	char gateway_host[HOSTLEN + 1];
+	WEBIRCUser *w;
+
 	if (IsWEBIRC(client))
 	{
 		exit_client(client, NULL, "Double CGI:IRC request (already identified)");
 		return;
 	}
+
+	strlcpy(gateway_ip, client->ip, sizeof(gateway_ip));
+	if (client->local->hostp && client->local->hostp->h_name)
+		strlcpy(gateway_host, client->local->hostp->h_name, sizeof(gateway_host));
+	else
+		strlcpy(gateway_host, client->ip, sizeof(gateway_host));
 
 	if (host && !strcmp(ip, host))
 		host = NULL; /* host did not resolve, make it NULL */
@@ -183,7 +235,11 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 	/* Update sockhost */
 	set_sockhost(client, client->ip);
 
-	SetWEBIRC(client);
+	moddata_client(client, webirc_md).ptr = w = safe_alloc(sizeof(WEBIRCUser));
+	w->type = WEBIRC_TYPE_WEBIRC;
+	safe_strdup(w->name, proxy->name);
+	safe_strdup(w->ip, gateway_ip);
+	safe_strdup(w->host, gateway_host);
 
 	if (options)
 	{
@@ -198,7 +254,7 @@ void dowebirc(Client *client, const char *ip, const char *host, const char *opti
 			if (!strcmp(name, "secure") && IsSecure(client))
 			{
 				/* The entire [client]--[webirc gw]--[server] chain is secure */
-				SetWEBIRCSecure(client);
+				w->type = WEBIRC_TYPE_WEBIRC_SECURE;
 			}
 		}
 	}
@@ -231,7 +287,7 @@ CMD_FUNC(cmd_webirc)
 	}
 
 	/* And do our job.. */
-	dowebirc(client, ip, host, options);
+	dowebirc(client, e, ip, host, options);
 }
 
 int webirc_local_pass(Client *client, const char *password)
@@ -262,7 +318,7 @@ int webirc_local_pass(Client *client, const char *password)
 			}
 			*host++ = '\0';
 
-			dowebirc(client, ip, host, NULL);
+			dowebirc(client, e, ip, host, NULL);
 			return HOOK_DENY;
 		}
 		/* fallthrough if not in webirc block.. */
