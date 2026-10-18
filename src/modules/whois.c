@@ -595,7 +595,7 @@ CMD_FUNC(cmd_whois)
 				{
 					buf[len - 1] = '\0';
 					add_nvplist_numeric_fmt(&list, -15000 - security_groups_whois_lines, "security-groups",
-					                        target, RPL_WHOISSPECIAL,
+					                        client, RPL_WHOISSPECIAL,
 					                        "%s :is in security-groups: %s", target->name, buf);
 					security_groups_whois_lines++;
 					*buf = '\0';
