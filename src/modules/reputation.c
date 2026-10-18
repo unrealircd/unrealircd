@@ -1449,7 +1449,7 @@ int reputation_whois(Client *client, Client *target, NameValuePrioList **list)
 	reputation = Reputation(target);
 	if (reputation > 0)
 	{
-		add_nvplist_numeric_fmt(list, 0, "reputation", client, RPL_WHOISSPECIAL,
+		add_nvplist_numeric_fmt(list, 10000, "reputation", client, RPL_WHOISSPECIAL,
 		                        "%s :is using an IP with a reputation score of %d",
 		                        target->name, reputation);
 	}

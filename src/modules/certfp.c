@@ -134,7 +134,7 @@ int certfp_whois(Client *client, Client *target, NameValuePrioList **list)
 		return 0;
 
 	if (whois_get_policy(client, target, "certfp") == WHOIS_CONFIG_DETAILS_FULL)
-		add_nvplist_numeric(list, 0, "certfp", client, RPL_WHOISCERTFP, target->name, fp);
+		add_nvplist_numeric(list, -29000, "certfp", client, RPL_WHOISCERTFP, target->name, fp);
 
 	return 0;
 }

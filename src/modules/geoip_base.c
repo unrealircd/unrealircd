@@ -347,7 +347,7 @@ int geoip_base_whois_country(Client *client, Client *target, NameValuePrioList *
 	// we only have country atm, but if we add city then city goes in 'full' and
 	// country goes in 'limited'
 	// if policy == WHOIS_CONFIG_DETAILS_LIMITED ...
-	add_nvplist_numeric_fmt(list, 0, "geo", client, RPL_WHOISCOUNTRY,
+	add_nvplist_numeric_fmt(list, 20000, "geo", client, RPL_WHOISCOUNTRY,
 	                        "%s %s :is connecting from %s",
 	                        target->name,
 	                        geo->country_code,
@@ -369,7 +369,7 @@ int geoip_base_whois_asn(Client *client, Client *target, NameValuePrioList **lis
 		return 0;
 
 	// WHOIS_CONFIG_DETAILS_LIMITED / WHOIS_CONFIG_DETAILS_FULL distinction makes no sense here
-	add_nvplist_numeric_fmt(list, 0, "asn", client, RPL_WHOISASN,
+	add_nvplist_numeric_fmt(list, 30000, "asn", client, RPL_WHOISASN,
 	                        "%s %u :is connecting from AS%u [%s]",
 	                        target->name,
 	                        geo->asn,

@@ -127,7 +127,7 @@ int servicebot_whois(Client *client, Client *target, NameValuePrioList **list)
 	if (IsServiceBot(target) && !hideoper &&
 	    (whois_get_policy(client, target, "services") > WHOIS_CONFIG_DETAILS_NONE))
 	{
-		add_nvplist_numeric(list, 0, "services", client, RPL_WHOISOPERATOR, target->name, "a Network Service");
+		add_nvplist_numeric(list, 50000, "services", client, RPL_WHOISOPERATOR, target->name, "a Network Service");
 	}
 
 	return 0;

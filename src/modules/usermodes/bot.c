@@ -76,7 +76,7 @@ int bot_whois(Client *client, Client *target, NameValuePrioList **list)
 	if (whois_get_policy(client, target, "bot") == WHOIS_CONFIG_DETAILS_NONE)
 		return 0;
 
-	add_nvplist_numeric(list, 0, "bot", client, RPL_WHOISBOT, target->name, NETWORK_NAME);
+	add_nvplist_numeric(list, 60000, "bot", client, RPL_WHOISBOT, target->name, NETWORK_NAME);
 
 	return 0;
 }
