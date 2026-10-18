@@ -52,6 +52,7 @@ const char *webirc_md_serialize(ModData *m);
 void webirc_md_unserialize(const char *str, ModData *m);
 void webirc_md_free(ModData *md);
 int webirc_secure_connect(Client *client);
+int webirc_whois(Client *client, Client *target, NameValuePrioList **list);
 
 #define WEBIRC(x)         ((WEBIRCUser *)moddata_client(x, webirc_md).ptr)
 #define IsWEBIRC(x)       (WEBIRC(x) != NULL)
@@ -83,6 +84,7 @@ MOD_INIT()
 
 	HookAdd(modinfo->handle, HOOKTYPE_LOCAL_PASS, 0, webirc_local_pass);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, webirc_secure_connect);
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, webirc_whois);
 
 	CommandAdd(modinfo->handle, MSG_WEBIRC, cmd_webirc, MAXPARA, CMD_UNREGISTERED);
 
@@ -336,5 +338,37 @@ int webirc_secure_connect(Client *client)
 	 */
 	if (IsWEBIRC(client) && IsSecureConnect(client) && !IsWEBIRCSecure(client))
 		client->umodes &= ~UMODE_SECURE;
+	return 0;
+}
+
+/** Show the WEBIRC gateway in WHOIS */
+int webirc_whois(Client *client, Client *target, NameValuePrioList **list)
+{
+	WhoisConfigDetails policy = whois_get_policy(client, target, "webirc");
+	WEBIRCUser *w = WEBIRC(target);
+	const char *ip = "*", *host = "*";
+
+	if (!w || (policy <= WHOIS_CONFIG_DETAILS_NONE))
+		return 0;
+
+	if (policy == WHOIS_CONFIG_DETAILS_FULL)
+	{
+		if (w->ip)
+			ip = w->ip;
+		if (w->host)
+			host = w->host;
+	}
+
+	if (w->name)
+	{
+		add_nvplist_numeric_fmt(list, 40001, "webirc", client, RPL_WHOISGATEWAY,
+		                        "%s %s %s :is connecting via WebIRC gateway %s",
+		                        target->name, host, ip, w->name);
+	} else
+	{
+		/* Servers older than 6.2.8 didn't communicate name/ip/host in S2S: */
+		add_nvplist_numeric(list, 40001, "webirc", client, RPL_WHOISGATEWAY,
+		                    target->name, host, ip, "is connecting via a WebIRC gateway");
+	}
 	return 0;
 }

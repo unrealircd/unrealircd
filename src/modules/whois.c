@@ -165,6 +165,8 @@ static void whois_config_setdefaults(void)
 
 	whois_config_add("websocket", WHOIS_CONFIG_USER_OPER, WHOIS_CONFIG_DETAILS_FULL);
 
+	whois_config_add("webirc", WHOIS_CONFIG_USER_OPER, WHOIS_CONFIG_DETAILS_FULL);
+
 	whois_config_add("certfp", WHOIS_CONFIG_USER_EVERYONE, WHOIS_CONFIG_DETAILS_FULL);
 
 	whois_config_add("shunned", WHOIS_CONFIG_USER_OPER, WHOIS_CONFIG_DETAILS_FULL);
