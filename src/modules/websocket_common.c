@@ -495,31 +495,44 @@ void websocket_mdata_free(ModData *m)
 		safe_free(wsu->handshake_key);
 		safe_free(wsu->lefttoparse);
 		safe_free(wsu->sec_websocket_protocol);
+		safe_free(wsu->origin);
 		safe_free(m->ptr);
 	}
 }
 
-/** This only serializes wsu->type atm */
+/** Serializes wsu->type and wsu->origin (if set), eg "2;webchat.example.net" */
 const char *websocket_mdata_serialize(ModData *m)
 {
-	static char buf[32];
+	static char buf[512];
 	WebSocketUser *wsu = m->ptr;
 
 	if (!wsu)
 		return NULL; /* not set */
 
-	snprintf(buf, sizeof(buf), "%d", wsu->type);
+	if (wsu->origin)
+		snprintf(buf, sizeof(buf), "%d;%s", wsu->type, wsu->origin);
+	else
+		snprintf(buf, sizeof(buf), "%d", wsu->type);
 	return buf;
 }
 
-/** This only sets wsu->type atm */
+/** Sets wsu->type and wsu->origin (if present and valid) */
 void websocket_mdata_unserialize(const char *str, ModData *m)
 {
 	WebSocketUser *wsu;
+	char buf[512];
+	char *type, *origin, *p = NULL;
+
 	if (m->ptr)
 		websocket_mdata_free(m);
 	if (BadPtr(str))
 		return; /* empty/freed */
 	m->ptr = wsu = safe_alloc(sizeof(WebSocketUser));
-	wsu->type = atoi(str);
+
+	strlcpy(buf, str, sizeof(buf));
+	type = strtoken_noskip(&p, buf, ";");
+	wsu->type = atoi(type);
+	origin = strtoken_noskip(&p, NULL, ";");
+	if (origin && (valid_host(origin, 1) || is_valid_ip(origin)))
+		safe_strdup(wsu->origin, origin);
 }

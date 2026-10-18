@@ -2127,6 +2127,7 @@ struct WebSocketUser {
 	int lefttoparselen;           /**< Length of lefttoparse buffer */
 	WebSocketType type;           /**< WEBSOCKET_TYPE_BINARY or WEBSOCKET_TYPE_TEXT */
 	char *sec_websocket_protocol; /**< Only valid during parsing of the request, after that it is NULL again */
+	char *origin;                 /**< Hostname from the Origin header, NULL if not sent or invalid */
 };
 
 #define WEBSOCKET_MAGIC_KEY "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" /* see RFC6455 */
@@ -2156,7 +2157,6 @@ struct ConfigItem_listen {
 	WebServer *webserver;                    /**< For the webserver module */
 	void (*start_handshake)(Client *client); /**< Function to call on accept() */
 	int websocket_options;                   /**< Websocket options (for the websocket module) */
-	NameList *websocket_origin;              /**< List of permitted Origin */
 	int rpc_options;                         /**< For the RPC module */
 };
 

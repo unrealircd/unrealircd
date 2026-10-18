@@ -1440,7 +1440,6 @@ extern void skip_whitespace(char **p);
 extern void strip_trailing_whitespace(char *str);
 extern char *cleanline(char *str);
 extern void read_until(char **p, char *stopchars);
-extern int is_ip_valid(const char *ip);
 extern int is_file_readable(const char *file, const char *dir);
 /* json.c */
 extern int log_json_filter;

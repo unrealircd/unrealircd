@@ -32,9 +32,11 @@ ModuleHeader MOD_HEADER = {
 #define WEBSOCKET_TYPE(client) (WSU(client)->type)
 
 /* Forward declarations */
-int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int websocket_config_test_listener(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
+int websocket_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs);
 int websocket_config_posttest(int *);
-int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
+int websocket_config_run_listener(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr);
+int websocket_config_run_set(ConfigFile *cf, ConfigEntry *ce, int type);
 int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **msg, int *length);
 int websocket_handle_handshake(Client *client, const char *readbuf, int *length);
 int websocket_handshake_send_response(Client *client);
@@ -42,6 +44,15 @@ int websocket_handle_body_websocket(Client *client, WebRequest *web, const char 
 int websocket_secure_connect(Client *client);
 int websocket_handle_request(Client *client, WebRequest *web);
 int websocket_config_listener(ConfigItem_listen *listener);
+static int websocket_config_valid_host_entry(const char *str);
+int websocket_stats(Client *client, const char *para);
+static int websocket_check_origin(Client *client, WebRequest *web);
+static void parse_origin_host(const char *origin, char *host, size_t hostsize);
+
+/* set::websocket */
+static struct {
+	NameList *allowed_origins; /**< Permitted Origins (eg official webchat of your network) */
+} cfg;
 
 /* Global variables */
 ModDataInfo *websocket_md = NULL; /* (by us) */
@@ -50,7 +61,8 @@ static int ws_text_mode_available = 1;
 
 MOD_TEST()
 {
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, websocket_config_test);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, websocket_config_test_listener);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGTEST, 0, websocket_config_test_set);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIGPOSTTEST, 0, websocket_config_posttest);
 
 	/* Call MOD_INIT very early, since we manage sockets, but depend on websocket_common */
@@ -68,10 +80,14 @@ MOD_INIT()
 	if (!websocket_md)
 		config_warn("The 'websocket_common' module is not loaded, even though it was promised to be ???");
 
-	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_ex);
+	memset(&cfg, 0, sizeof(cfg));
+
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN_EX, 0, websocket_config_run_listener);
+	HookAdd(modinfo->handle, HOOKTYPE_CONFIGRUN, 0, websocket_config_run_set);
 	HookAdd(modinfo->handle, HOOKTYPE_PACKET, INT_MAX, websocket_packet_out);
 	HookAdd(modinfo->handle, HOOKTYPE_SECURE_CONNECT, 0, websocket_secure_connect);
 	HookAdd(modinfo->handle, HOOKTYPE_CONFIG_LISTENER, 0, websocket_config_listener);
+	HookAdd(modinfo->handle, HOOKTYPE_STATS, 0, websocket_stats);
 
 	/* Call MOD_LOAD very late, since we manage sockets, but depend on websocket_common */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD - 1);
@@ -84,15 +100,17 @@ MOD_LOAD()
 
 	if (non_utf8_nick_chars_in_use || (iConf.allowed_channelchars == ALLOWED_CHANNELCHARS_ANY))
 		ws_text_mode_available = 0;
+
 	return MOD_SUCCESS;
 }
 
 MOD_UNLOAD()
 {
+	free_entire_name_list(cfg.allowed_origins);
 	return MOD_SUCCESS;
 }
 
-int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+int websocket_config_test_listener(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 {
 	int errors = 0;
 	ConfigEntry *cep;
@@ -142,6 +160,11 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 			errors++;
 		} else if (!strcmp(cep->name, "allow-origin"))
 		{
+			config_error("%s:%i: listen::options::websocket::allow-origin has been moved to "
+			             "set::websocket::allowed-origins. "
+			             "See https://www.unrealircd.org/docs/Set_block#set::websocket",
+			             cep->file->filename, cep->line_number);
+			errors++;
 		} else
 		{
 			config_error("%s:%i: unknown directive listen::options::websocket::%s",
@@ -162,9 +185,9 @@ int websocket_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 	return errors ? -1 : 1;
 }
 
-int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
+int websocket_config_run_listener(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr)
 {
-	ConfigEntry *cep, *cepp;
+	ConfigEntry *cep;
 	ConfigItem_listen *l;
 	static char warned_once_channel = 0;
 
@@ -200,12 +223,97 @@ int websocket_config_run_ex(ConfigFile *cf, ConfigEntry *ce, int type, void *ptr
 					warned_once_channel = 1;
 				}
 			}
-		} else if (!strcmp(cep->name, "allow-origin"))
-		{
-			for (cepp = cep->items; cepp; cepp = cepp->next)
-				add_name_list(l->websocket_origin, cepp->name);
 		}
 	}
+	return 1;
+}
+
+/** Is this a valid hostname entry for set::websocket::allowed-origins? */
+static int websocket_config_valid_host_entry(const char *str)
+{
+	const char *p;
+
+	if (!*str || (strlen(str) > HOSTLEN))
+		return 0;
+
+	/* Explicitly allow IPv4 or IPv6 (with colons) */
+	if (is_valid_ip(str))
+		return 1;
+
+	/* Similar to valid_host(), but also allow '?' and '*' */
+	for (p = str; *p; p++)
+		if (!isalnum(*p) && !strchr("-._*?", *p))
+			return 0;
+
+	return 1;
+}
+
+/** Config test for set::websocket */
+int websocket_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
+{
+	int errors = 0;
+	ConfigEntry *cep, *cepp;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!ce || !ce->name || strcmp(ce->name, "websocket"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "allowed-origins"))
+		{
+			if (cep->value)
+			{
+				config_error("%s:%i: set::websocket::allowed-origins must be a block, eg: "
+				             "allowed-origins { webchat.example.net; }",
+				             cep->file->filename, cep->line_number);
+				errors++;
+				continue;
+			}
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+			{
+				if (!websocket_config_valid_host_entry(cepp->name))
+				{
+					config_error("%s:%i: set::websocket::allowed-origins: invalid hostname '%s'. "
+					             "Use a hostname like webchat.example.net",
+					             cepp->file->filename, cepp->line_number, cepp->name);
+					errors++;
+				}
+			}
+		} else
+		{
+			config_error("%s:%i: unknown directive set::websocket::%s",
+			             cep->file->filename, cep->line_number, cep->name);
+			errors++;
+		}
+	}
+
+	*errs = errors;
+	return errors ? -1 : 1;
+}
+
+/** Config run for set::websocket */
+int websocket_config_run_set(ConfigFile *cf, ConfigEntry *ce, int type)
+{
+	ConfigEntry *cep, *cepp;
+
+	if (type != CONFIG_SET)
+		return 0;
+
+	if (!ce || !ce->name || strcmp(ce->name, "websocket"))
+		return 0;
+
+	for (cep = ce->items; cep; cep = cep->next)
+	{
+		if (!strcmp(cep->name, "allowed-origins"))
+		{
+			for (cepp = cep->items; cepp; cepp = cepp->next)
+				append_name_list(cfg.allowed_origins, cepp->name);
+		}
+	}
+
 	return 1;
 }
 
@@ -246,6 +354,19 @@ int websocket_config_posttest(int *errs)
 
 	*errs = errors;
 	return errors ? -1 : 1;
+}
+
+int websocket_stats(Client *client, const char *para)
+{
+	NameList *n;
+
+	if (strcmp(para, "S"))
+		return 0;
+
+	for (n = cfg.allowed_origins; n; n = n->next)
+		sendtxtnumeric(client, "websocket::allowed-origins: %s", n->name);
+
+	return 1;
 }
 
 /* Add LF (if needed) to a buffer. Max 4K. */
@@ -351,33 +472,8 @@ int websocket_handle_request(Client *client, WebRequest *web)
 		}
 	}
 
-	/** Finally, validate the websocket request (handshake) and proceed or reject. */
-	if (client->local->listener->websocket_origin)
-	{
-		const char *origin = get_nvplist(web->headers, "Origin");
-		char origin_host[256];
-
-		*origin_host = '\0';
-		if (origin)
-		{
-			char *start = strstr(origin, "://");
-			char *p;
-			if (start)
-			{
-				start += 3;
-				p = strchr(start, '/');
-				if (p)
-					strlncpy(origin_host, start, sizeof(origin_host), p - start);
-				else
-					strlcpy(origin_host, start, sizeof(origin_host));
-			}
-		}
-		if (!find_name_list_match(client->local->listener->websocket_origin, origin_host))
-		{
-			webserver_send_response(client, 403, "This site is not permitted to connect to us with websockets");
-			return 0;
-		}
-	}
+	if (!websocket_check_origin(client, web))
+		return 0;
 
 	/* Not websocket and webredir loaded? Let that module serve a redirect. */
 	if (!WSU(client)->handshake_key)
@@ -484,4 +580,78 @@ int websocket_handshake_send_response(Client *client)
 	send_queued(client);
 
 	return 0;
+}
+
+/** Validate the websocket origin.
+ * @returns 1 if allowed, 0 if rejected (403 already sent).
+ */
+static int websocket_check_origin(Client *client, WebRequest *web)
+{
+	const char *origin = get_nvplist(web->headers, "Origin");
+	char origin_host[HOSTLEN + 1];
+
+	if (!origin)
+		return 1; /* No Origin header = non-browser client = allowed */
+
+	parse_origin_host(origin, origin_host, sizeof(origin_host));
+	if (!strcmp(origin, "null"))
+		safe_strdup(WSU(client)->origin, "null");
+	else if (valid_host(origin_host, 1) || is_valid_ip(origin_host))
+		safe_strdup(WSU(client)->origin, origin_host);
+
+	if (!cfg.allowed_origins)
+		return 1; /* No set::websocket::allowed-origins = no restrictions */
+
+	/* We don't care about origins that are not http:// or https://.
+	 * This because we don't want to block things like tauri:// phone apps.
+	 */
+	if (strstr(origin, "://") && strncasecmp(origin, "http://", 7) && strncasecmp(origin, "https://", 8))
+		return 1;
+
+	if (*origin_host)
+	{
+		/* Some phone apps use this (Tauri and Capacitor), safe to exempt. */
+		if (!strcasecmp(origin_host, "localhost") || match_simple("*.localhost", origin_host))
+			return 1;
+		if (find_name_list_match(cfg.allowed_origins, origin_host))
+			return 1;
+	}
+
+	webserver_send_response(client, 403, "This site is not permitted to connect to us with websockets");
+	return 0;
+}
+
+/** Extract the hostname from an Origin header value,
+ * eg "https://webchat.example.net:8443" becomes "webchat.example.net".
+ */
+static void parse_origin_host(const char *origin, char *host, size_t hostsize)
+{
+	const char *start, *end;
+
+	*host = '\0';
+
+	start = strstr(origin, "://");
+	if (!start)
+		return;
+	start += 3;
+
+	if (*start == '[')
+	{
+		/* IPv6: https://[::1]:8080 */
+		start++;
+		end = strchr(start, ']');
+		if (!end)
+			return;
+	} else
+	{
+		/* IPv4/hostname: https://example.com:8443 */
+		end = start;
+		while (*end && *end != ':' && *end != '/')
+			end++;
+	}
+
+	if (end - start >= hostsize)
+		return;
+
+	strlncpy(host, start, hostsize, end - start);
 }
