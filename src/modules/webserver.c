@@ -300,8 +300,8 @@ int webserver_handshake_helper(char *buffer, int len, char **key, char **value, 
 		if (*p == ':')
 		{
 			*p++ = '\0';
-			if (*p++ != ' ')
-				break; /* missing mandatory space after ':' */
+			/* Optional whitespace before the value (RFC 9112) */
+			skip_whitespace(&p);
 
 			v = p; /* SET VALUE */
 			nextptr = NULL; /* set to "we are done" in case next for loop fails */
@@ -317,6 +317,7 @@ int webserver_handshake_helper(char *buffer, int len, char **key, char **value, 
 					break;
 				}
 			}
+			strip_trailing_whitespace(v);
 			/* A key-value pair was succesfully parsed, return it */
 			*key = k;
 			*value = v;
@@ -798,13 +799,26 @@ void do_parse_forwarded_header(const char *input, HTTPForwardedHeader *forwarded
 void do_parse_x_forwarded_for_header(const char *input, HTTPForwardedHeader *forwarded)
 {
 	char *buf = NULL;
-	char *name, *value, *p = NULL;
+	char *name, *value, *p = NULL, *x;
 
 	safe_strdup(buf, input);
 
 	for (name = strtoken(&p, buf, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		skip_whitespace(&name);
+		if ((*name == '[') && (x = strchr(name, ']')))
+		{
+			/* IPv6 between brackets, we cut off at the ']' */
+			name++;
+			*x = '\0';
+		} else if ((x = strchr(name, ':')) && !strchr(x + 1, ':'))
+		{
+			/* A string with only one ':', so not IPv6 (which always has more).
+			 * This can only mean an IPv4 address with a port, eg 192.0.2.10:51200.
+			 * Cut off the port part, we only care about the IP.
+			 */
+			*x = '\0';
+		}
 		strlcpy(forwarded->ip, name, sizeof(forwarded->ip));
 	}
 
@@ -813,9 +827,9 @@ void do_parse_x_forwarded_for_header(const char *input, HTTPForwardedHeader *for
 
 void do_parse_x_forwarded_proto_header(const char *value, HTTPForwardedHeader *forwarded)
 {
-	if (!strcmp(value, "https"))
+	if (!strcasecmp(value, "https") || !strcasecmp(value, "wss"))
 		forwarded->secure = 1;
-	else if (!strcmp(value, "http"))
+	else if (!strcasecmp(value, "http") || !strcasecmp(value, "ws"))
 		forwarded->secure = 0;
 }
 

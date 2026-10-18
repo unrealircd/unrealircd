@@ -4846,37 +4846,39 @@ int _test_proxy(ConfigFile *conf, ConfigEntry *ce)
 			if (proxy_type == 0)
 			{
 				config_error("%s:%i: unknown proxy::type '%s'. "
-				             "Only the following types are supported: 'webirc', 'old' or 'web'.",
+				             "Only the following types are supported: 'webirc', 'old', "
+				             "'forwarded', 'x-forwarded' or 'cloudflare'. "
+				             "See https://www.unrealircd.org/docs/Proxy_block",
 				             cep->file->filename, cep->line_number, cep->value);
 				errors++;
 			}
 		} else
 		{
 			config_error_unknown(cep->file->filename, cep->line_number,
-			                     "webirc", cep->name);
+			                     ce->name, cep->name);
 			errors++;
 		}
 	}
 	if (!has_mask)
 	{
-		config_error_missing(ce->file->filename, ce->line_number,
-		                     "webirc::mask");
+		config_error("%s:%d: %s::mask is missing",
+		             ce->file->filename, ce->line_number, ce->name);
 		errors++;
 	}
 
 	if (!has_password && (proxy_type == PROXY_WEBIRC))
 	{
-		config_error_missing(ce->file->filename, ce->line_number,
-		                     "webirc::password");
+		config_error("%s:%d: %s::password is missing",
+		             ce->file->filename, ce->line_number, ce->name);
 		errors++;
 	}
 
 	if (has_password && (proxy_type == PROXY_WEBIRC_PASS))
 	{
-		config_error("%s:%i: webirc block has type set to 'old' but has a password set. "
+		config_error("%s:%i: %s block has type set to 'old' but has a password set. "
 		             "Passwords are not used with type 'old'. Either remove the password or "
 		             "use the 'webirc' method instead.",
-		             ce->file->filename, ce->line_number);
+		             ce->file->filename, ce->line_number, ce->name);
 		errors++;
 	}
 
