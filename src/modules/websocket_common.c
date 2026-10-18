@@ -38,6 +38,7 @@ int websocket_send_pong(Client *client, const char *buf, int len);
 const char *websocket_mdata_serialize(ModData *m);
 void websocket_mdata_unserialize(const char *str, ModData *m);
 void websocket_mdata_free(ModData *m);
+int websocket_whois(Client *client, Client *target, NameValuePrioList **list);
 
 /* Global variables */
 ModDataInfo *websocket_md;
@@ -72,6 +73,8 @@ MOD_INIT()
 	mreq.type = MODDATATYPE_CLIENT;
 	mreq.priority = -999996;
 	websocket_md = ModDataAdd(modinfo->handle, mreq);
+
+	HookAdd(modinfo->handle, HOOKTYPE_WHOIS, 0, websocket_whois);
 
 	/* Unload last, since we manage sockets */
 	ModuleSetOptions(modinfo->handle, MOD_OPT_PRIORITY, WEBSOCKET_MODULE_PRIORITY_UNLOAD);
@@ -535,4 +538,19 @@ void websocket_mdata_unserialize(const char *str, ModData *m)
 	origin = strtoken_noskip(&p, NULL, ";");
 	if (origin && (valid_host(origin, 1) || is_valid_ip(origin)))
 		safe_strdup(wsu->origin, origin);
+}
+
+/** Show the websocket origin in WHOIS */
+int websocket_whois(Client *client, Client *target, NameValuePrioList **list)
+{
+	if (whois_get_policy(client, target, "websocket") <= WHOIS_CONFIG_DETAILS_NONE)
+		return 0;
+
+	if (!WSU(target) || !WSU(target)->origin)
+		return 0;
+
+	add_nvplist_numeric_fmt(list, 40000, "websocket", client, RPL_WHOISGATEWAY,
+	                        "%s * * :is connecting from WebSocket origin %s",
+	                        target->name, WSU(target)->origin);
+	return 0;
 }

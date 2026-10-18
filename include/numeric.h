@@ -175,6 +175,7 @@
 #define RPL_USERIP	     340
 #define RPL_INVITING         341
 #define RPL_WHOISCOUNTRY     344
+#define RPL_WHOISGATEWAY     350
 
 #define RPL_VERSION          351
 
@@ -448,6 +449,7 @@
 #define STR_RPL_ENDOFINVEXLIST       /* 347 */ "%s :End of Channel Invite List"
 #define STR_RPL_EXLIST               /* 348 */ "%s %s %s %lld"
 #define STR_RPL_ENDOFEXLIST          /* 349 */ "%s :End of Channel Exception List"
+#define STR_RPL_WHOISGATEWAY         /* 350 */ "%s %s %s :%s"
 #define STR_RPL_VERSION              /* 351 */ "%s.%s %s :%s%s%s [%s=%d]"
 #define STR_RPL_WHOREPLY             /* 352 */ "%s %s %s %s %s %s :%d %s"
 #define STR_RPL_NAMREPLY             /* 353 */ "%s"
