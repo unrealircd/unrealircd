@@ -422,6 +422,13 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 			}
 			if (!strcasecmp(key, "Content-Length"))
 			{
+				/* Only digits, and only one Content-Length header (RFC 9110 section 8.6) */
+				if (!str_is_all_digits(value) || (strlen(value) > 18) || (WEB(client)->content_length >= 0))
+				{
+					webserver_send_response(client, 400, "Invalid Content-Length");
+					safe_free(netbuf);
+					return -1; /* dead */
+				}
 				WEB(client)->content_length = atoll(value);
 			} else if (!strcasecmp(key, "Transfer-Encoding"))
 			{
@@ -493,6 +500,36 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 	return 0; /* don't let UnrealIRCd process this */
 }
 
+/** Returns the HTTP status code text, eg "Not Found" for 404 */
+static const char *webserver_status_code_text(int status)
+{
+	switch (status)
+	{
+		case 200:
+			return "OK";
+		case 201:
+			return "Created";
+		case 400:
+			return "Bad Request";
+		case 401:
+			return "Unauthorized";
+		case 403:
+			return "Forbidden";
+		case 404:
+			return "Not Found";
+		case 416:
+			return "Range Not Satisfiable";
+		case 431:
+			return "Request Header Fields Too Large";
+		case 500:
+			return "Internal Server Error";
+		case 501:
+			return "Not Implemented";
+		default:
+			return "???";
+	}
+}
+
 /** Send a HTTP(S) response.
  * @param client	Client to send to
  * @param status	HTTP status code
@@ -502,30 +539,10 @@ int webserver_handle_request_header(Client *client, const char *readbuf, int *le
 void _webserver_send_response(Client *client, int status, char *msg)
 {
 	char buf[512];
-	char *statusmsg = "???";
-
-	if (status == 200)
-		statusmsg = "OK";
-	else if (status == 201)
-		statusmsg = "Created";
-	else if (status == 500)
-		statusmsg = "Internal Server Error";
-	else if (status == 400)
-		statusmsg = "Bad Request";
-	else if (status == 401)
-		statusmsg = "Unauthorized";
-	else if (status == 403)
-		statusmsg = "Forbidden";
-	else if (status == 404)
-		statusmsg = "Not Found";
-	else if (status == 416)
-		statusmsg = "Range Not Satisfiable";
-	else if (status == 431)
-		statusmsg = "Request Header Fields Too Large";
 
 	snprintf(buf, sizeof(buf),
 	         "HTTP/1.1 %d %s\r\nServer: %s\r\nConnection: close\r\n\r\n",
-	         status, statusmsg, WEB_SOFTWARE);
+	         status, webserver_status_code_text(status), WEB_SOFTWARE);
 	if (msg)
 	{
 		strlcat(buf, msg, sizeof(buf));

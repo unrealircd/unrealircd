@@ -707,14 +707,18 @@ int rpc_handle_webrequest(Client *client, WebRequest *web)
 	{
 		if (web->method != HTTP_METHOD_POST)
 		{
-			webserver_send_response(client, 200, "To use the UnrealIRCd RPC API you need to make a POST request. See https://www.unrealircd.org/docs/RPC\n");
+			webserver_send_response(client, 200, "To use the UnrealIRCd RPC API you need to make a POST request. See https://www.unrealircd.org/docs/RPC");
 			return 0;
 		}
-		webserver_send_response(client, 200, NULL); /* continue.. */
-		return 1; /* accept */
+		if ((web->content_length <= 0) && (web->transfer_encoding != TRANSFER_ENCODING_CHUNKED))
+		{
+			webserver_send_response(client, 400, "Empty POST request. JSON expected.");
+			return 0;
+		}
+		return 1; /* accept, the 200 is sent once the body is complete */
 	}
 
-	webserver_send_response(client, 404, "Page not found.\n");
+	webserver_send_response(client, 404, "Page not found.");
 	return 0;
 }
 
@@ -727,7 +731,7 @@ int rpc_handle_webrequest_websocket(Client *client, WebRequest *web)
 
 	if (!websocket_md)
 	{
-		webserver_send_response(client, 405, "Websockets are disabled on this server (module 'websocket_common' not loaded).\n");
+		webserver_send_response(client, 501, "Websockets are disabled on this server (module 'websocket_common' not loaded).");
 		return 0;
 	}
 
@@ -786,10 +790,14 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 		return rpc_handle_body_websocket(client, web, buf, len);
 	}
 
+	/* Already handled, ignore any data that comes after the body (such as a stray CRLF) */
+	if (web->request_body_complete)
+		return 0;
+
 	/* We only handle POST to /api -- reject all the rest */
 	if (strcmp(web->uri, "/api") || (web->method != HTTP_METHOD_POST))
 	{
-		webserver_send_response(client, 404, "Page not found\n");
+		webserver_send_response(client, 404, "Page not found");
 		return 0;
 	}
 
@@ -797,7 +805,7 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 	// NB: chunked transfers?
 	if (!webserver_handle_body(client, web, buf, len))
 	{
-		webserver_send_response(client, 400, "Error handling POST body data\n");
+		webserver_send_response(client, 400, "Error handling POST body data");
 		return 0;
 	}
 
@@ -806,10 +814,11 @@ int rpc_handle_webrequest_data(Client *client, WebRequest *web, const char *buf,
 	{
 		if (!web->request_buffer)
 		{
-			webserver_send_response(client, 500, "Error while processing POST body data\n");
+			webserver_send_response(client, 400, "Empty POST request. JSON expected.");
 			return 0;
 		}
 		//config_status("GOT: '%s'", buf);
+		webserver_send_response(client, 200, NULL);
 		rpc_call_text(client, web->request_buffer, web->request_buffer_size);
 		send_queued(client);
 		webserver_close_client(client);
