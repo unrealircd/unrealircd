@@ -715,6 +715,8 @@ int rpc_handle_webrequest(Client *client, WebRequest *web)
 			webserver_send_response(client, 400, "Empty POST request. JSON expected.");
 			return 0;
 		}
+		/* Allow the same request size as JSON-RPC over websocket (the webserver default is 4k) */
+		web->config_max_request_buffer_size = 16384;
 		return 1; /* accept, the 200 is sent once the body is complete */
 	}
 

@@ -179,6 +179,9 @@ int webserver_packet_in(Client *client, const char *readbuf, int *length)
 	if (!WEB(client))
 		return 1; /* "normal" IRC client */
 
+	if (IsDead(client) || IsDeadSocket(client))
+		return -1; /* client is being terminated, don't process any data */
+
 	if (!WEBSERVER(client))
 		return 0; /* handler is gone!? */
 
@@ -620,12 +623,19 @@ int webserver_handle_body_append_buffer(Client *client, const char *buf, int len
 int _webserver_handle_body(Client *client, WebRequest *web, const char *readbuf, int pktsize)
 {
 	char *buf;
-	long long n;
+	long long n, remaining;
 	char *free_this_buffer = NULL;
 
 	if (WEB(client)->transfer_encoding == TRANSFER_ENCODING_NONE)
 	{
-		if (!webserver_handle_body_append_buffer(client, readbuf, pktsize))
+		if (WEB(client)->content_length >= 0)
+		{
+			/* Don't read beyond Content-Length, anything after it is ignored */
+			remaining = WEB(client)->content_length - WEB(client)->request_buffer_size;
+			if (pktsize > remaining)
+				pktsize = remaining;
+		}
+		if ((pktsize > 0) && !webserver_handle_body_append_buffer(client, readbuf, pktsize))
 			return 0;
 
 		if ((WEB(client)->content_length >= 0) &&
