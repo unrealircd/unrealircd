@@ -216,14 +216,11 @@ struct jwt_service *find_jwt_service(struct jwt_service *services, const char *n
 
 int extjwt_valid_integer_string(const char *in, int min, int max)
 {
-	int i, val;
+	int val;
 	if (BadPtr(in))
 		return 0;
-	for (i = 0; in[i]; i++)
-	{
-		if (!isdigit(in[i]))
-			return 0;
-	}
+	if (!str_is_all_digits(in))
+		return 0;
 	val = atoi(in);
 	if (val < min || val > max)
 		return 0;

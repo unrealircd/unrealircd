@@ -98,17 +98,11 @@ int extban_asn_is_ok(BanContext *b)
 {
 	if (b->is_ok_check == EXCHK_PARAM)
 	{
-		const char *p;
-
 		if (!strcmp(b->banstr, "*"))
 			return EX_ALLOW;
 
-		if (!*b->banstr)
+		if (!str_is_all_digits(b->banstr))
 			return extban_asn_usage(b->client);
-
-		for (p = b->banstr; *p; p++)
-			if (!isdigit(*p))
-				return extban_asn_usage(b->client);
 
 		return EX_ALLOW;
 	}

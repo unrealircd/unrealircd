@@ -1717,3 +1717,16 @@ int str_ends_with_case_insensitive(const char *haystack, const char *needle)
 
 	return !strncasecmp(haystack + haystacklen - needlelen, needle, needlelen) ? 1 : 0;
 }
+
+/** Checks if a string consists of only digits (0-9).
+ * @returns 1 if it does, 0 if not or if the string is empty.
+ */
+int str_is_all_digits(const char *str)
+{
+	if (!*str)
+		return 0;
+	for (; *str; str++)
+		if (!isdigit(*str))
+			return 0;
+	return 1;
+}
