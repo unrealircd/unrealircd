@@ -477,13 +477,15 @@ int websocket_handle_request(Client *client, WebRequest *web)
 	if (!websocket_check_origin(client, web))
 		return 0;
 
-	/* Not websocket and webredir loaded? Let that module serve a redirect. */
+	/* Not a websocket request */
 	if (!WSU(client)->handshake_key)
 	{
+		/* Is webredir loaded? Let that module serve a redirect. */
 		if (is_module_loaded("webredir"))
 		{
 			const char *parx[2] = {NULL, NULL};
 			do_cmd(client, NULL, "GET", 1, parx);
+			return -1;
 		}
 		webserver_send_response(client, 404, "This port is for IRC WebSocket only");
 		return 0;

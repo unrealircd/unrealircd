@@ -189,10 +189,19 @@ int webredir_config_run(ConfigFile *cf, ConfigEntry *ce, int type)
 
 CMD_FUNC(webredir)
 {
+	char buf[512];
+
 	if (!MyConnect(client))
 		return;
 
-	sendto_one(client, NULL, "HTTP/1.1 301 Moved Permanently");
-	sendto_one(client, NULL, "Location: %s\r\n\r\n", cfg.url);
+	snprintf(buf, sizeof(buf),
+	         "HTTP/1.1 301 Moved Permanently\r\n"
+	         "Location: %s\r\n"
+	         "Content-Length: 0\r\n"
+	         "Connection: close\r\n"
+	         "\r\n",
+	         cfg.url);
+	dbuf_put(&client->local->sendQ, buf, strlen(buf));
+	send_queued(client);
 	dead_socket(client, "Connection closed");
 }
