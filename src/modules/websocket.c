@@ -435,6 +435,8 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 		}
 		return 0;
 	}
+	if (MyConnect(to) && WEBSOCKET_PORT(to))
+		*msg = NULL;
 	return 0;
 }
 
