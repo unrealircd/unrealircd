@@ -50,12 +50,13 @@ void strrangetok(char *in, char *out, char tok, short first, short last)
 /* cmd_alias is a special type of command, it has an extra argument 'cmd'. */
 static int recursive_alias = 0;
 
-void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int parc, const char *parv[], const char *cmd)
+void cmd_alias(ClientContext *clictx, Client *client, MessageTag *recv_mtags, int parc, const char *parv[], const char *cmd)
 {
 	ConfigItem_alias *alias;
 	Client *acptr;
 	int ret;
 	char request[BUFSIZE];
+	MessageTag *mtags = NULL;
 
 	if (!(alias = find_alias(cmd)))
 	{
@@ -118,11 +119,13 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 			 */
 			if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 			{
+				if (!msg)
+					return;
 				new_message(client, NULL, &mtags);
 				sendto_channel(channel, client, client->direction,
 				               NULL, 0, SEND_ALL | SKIP_DEAF, mtags,
 				               ":%s PRIVMSG %s :%s",
-				               client->name, channel->name, parv[1]);
+				               client->name, channel->name, msg);
 				free_message_tags(mtags);
 				return;
 			}
@@ -253,11 +256,13 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *mtags, int par
 					 */
 						if (can_send_to_channel(client, channel, &msg, &errmsg, 0, clictx))
 						{
+							if (!msg)
+								return;
 							new_message(client, NULL, &mtags);
 							sendto_channel(channel, client, client->direction,
 							               NULL, 0, SEND_ALL | SKIP_DEAF, mtags,
 							               ":%s PRIVMSG %s :%s",
-							               client->name, channel->name, parv[1]);
+							               client->name, channel->name, msg);
 							free_message_tags(mtags);
 							return;
 						}
