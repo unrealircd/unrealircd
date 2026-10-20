@@ -23,6 +23,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_starttls);
+int starttls_is_handshake_finished(Client *client);
 
 #define MSG_STARTTLS "STARTTLS"
 
@@ -45,6 +46,7 @@ MOD_INIT()
 	memset(&cap, 0, sizeof(cap));
 	cap.name = "tls";
 	ClientCapabilityAdd(modinfo->handle, &cap, &CLICAP_STARTTLS);
+	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, 0, starttls_is_handshake_finished);
 
 	return MOD_SUCCESS;
 }
@@ -123,4 +125,12 @@ fail:
 	client->local->ssl = NULL;
 	ClearTLS(client);
 	SetUnknown(client);
+}
+
+int starttls_is_handshake_finished(Client *client)
+{
+	if (client->local->ssl && !SSL_is_init_finished(client->local->ssl))
+		return 0;
+
+	return 1;
 }
