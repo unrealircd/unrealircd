@@ -279,6 +279,15 @@ RPC_CALL_FUNC(rpc_server_connect)
 		return;
 	}
 
+	if (link->outgoing_without_certificate_verification)
+	{
+		rpc_error(client, request, JSON_RPC_ERROR_DENIED,
+		          "Link block does not verify the certificate of the other side. "
+		          "Outgoing connects are refused because it allows a man-in-the-middle attack. "
+		          "Please follow this guide to link securely: https://www.unrealircd.org/docs/Linking_servers_(genlinkblock)");
+		return;
+	}
+
 	if ((err = check_deny_link(link, 0)))
 	{
 		rpc_error_fmt(client, request, JSON_RPC_ERROR_DENIED, "Server linking is denied via a deny link { } block: %s", err);

@@ -28,6 +28,18 @@ This is work in progress and may not always be a stable version.
     `$reason` and `$spamfilter_id` in the URL.
 
 ### Changes:
+* Link blocks with `link::outgoing` that use a password (not spkifp/certfp/cert)
+  will now raise a warning. We have already been warning about this since
+  2017 at link time so this should not be a surprise for anyone.
+  In Q1 2027 this will become an error.
+  * Link blocks without spkifp/certfp/cert allow a
+    [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).
+  * Please refer to our [linking guide](https://www.unrealircd.org/docs/Linking_servers_(genlinkblock))
+    on how to link two unrealircd servers securely. It's very simple.
+  * Link blocks without an outgoing section, or link blocks that link
+    to localhost, are exempt. You can also manually exempt a link block via
+    link::options::no-certificate-verification. Only do so if you insist to
+    link without cert validation, for example when you are linking over a VPN.
 * We continue the gradual transition from `geoip_classic` to `geoip_mmdb`.
   Now also for `./Config -quick` (and thus `./unrealircd upgrade`).
   This because we will stop database updates for classic in mid-2027.

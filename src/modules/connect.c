@@ -110,6 +110,16 @@ CMD_FUNC(cmd_connect)
 		return;
 	}
 
+	if (aconf->outgoing_without_certificate_verification)
+	{
+		sendnotice(client,
+		           "*** Connect: Link block '%s' does not verify the certificate of the other side. "
+		           "Outgoing connects are refused because it allows a man-in-the-middle attack. "
+		           "Please follow this guide to link securely: https://www.unrealircd.org/docs/Linking_servers_(genlinkblock)",
+		           parv[1]);
+		return;
+	}
+
 	if ((str = check_deny_link(aconf, 0)))
 	{
 		sendnotice(client, "*** Connect: Disallowed by connection rule: %s", str);

@@ -6596,6 +6596,37 @@ int _test_help(ConfigFile *conf, ConfigEntry *ce)
 	return errors;
 }
 
+/** Returns 1 if this link block does not verify the certificate of the
+ * other side and outgoing connects should be refused.
+ */
+static int is_outgoing_link_without_certificate_verification(ConfigItem_link *link)
+{
+	if (!link->outgoing.hostname)
+		return 0;
+
+	if (!strcmp(link->outgoing.hostname, "127.0.0.1") || !strcmp(link->outgoing.hostname, "::1") ||
+	    !strcasecmp(link->outgoing.hostname, "localhost"))
+	{
+		return 0;
+	}
+
+	if ((link->outgoing.options & CONNECT_OUTGOING_INSECURE) ||
+	    (link->options & CONNECT_NO_CERTIFICATE_VERIFICATION) ||
+	    link->verify_certificate)
+	{
+		return 0;
+	}
+
+	if ((link->auth->type == AUTHTYPE_TLS_CLIENTCERT) ||
+	    (link->auth->type == AUTHTYPE_TLS_CLIENTCERTFP) ||
+	    (link->auth->type == AUTHTYPE_SPKIFP))
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
 int _conf_link(ConfigFile *conf, ConfigEntry *ce)
 {
 	ConfigEntry *cep, *cepp, *ceppp;
@@ -6684,6 +6715,29 @@ int _conf_link(ConfigFile *conf, ConfigEntry *ce)
 	/* The default is 'hub *', unless you specify leaf or hub manually. */
 	if (!link->hub && !link->leaf)
 		safe_strdup(link->hub, "*");
+
+	if (is_outgoing_link_without_certificate_verification(link))
+	{
+#if 0
+		link->outgoing_without_certificate_verification = 1;
+		unreal_log(ULOG_WARNING, "config", "CONFIG_LINK_WITHOUT_CERTIFICATE_VERIFICATION", NULL,
+		           "$file:$line_number: Link block '$link_block' does not verify the certificate of the other side.\n"
+		           "Outgoing connects to $link_block will be refused because it allows a man-in-the-middle attack.\n"
+		           "Please follow this guide to link securely: https://www.unrealircd.org/docs/Linking_servers_(genlinkblock)",
+		           log_data_string("file", ce->file->filename),
+		           log_data_integer("line_number", ce->line_number),
+		           log_data_link_block(link));
+#else
+		/* This is for 6.2.8: only warn, don't set the flag yet */
+		unreal_log(ULOG_WARNING, "config", "CONFIG_LINK_WITHOUT_CERTIFICATE_VERIFICATION", NULL,
+		           "$file:$line_number: Link block '$link_block' does not verify the certificate of the other side.\n"
+		           "In a future UnrealIRCd release (Q1 2027), outgoing connects to $link_block will be refused because it allows a man-in-the-middle attack.\n"
+		           "Please follow this guide to link securely: https://www.unrealircd.org/docs/Linking_servers_(genlinkblock)",
+		           log_data_string("file", ce->file->filename),
+		           log_data_integer("line_number", ce->line_number),
+		           log_data_link_block(link));
+#endif
+	}
 
 	/* An outgoing link with no link::outgoing::tls-options of its own uses the
 	 * shared set::server-linking context at connect time

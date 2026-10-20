@@ -2191,11 +2191,12 @@ struct ConfigItem_link {
 	int options;             /**< Generic options such as quarantine */
 	int verify_certificate;
 	/* internal: */
-	int refcount;            /**< Reference counter (used so we know if the struct may be freed) */
-	time_t hold;             /**< For how long the server is "on hold" for outgoing connects (why?) */
-	char *connect_ip;        /**< actual IP to use for outgoing connect (filled in after host is resolved) */
-	SSL_CTX *ssl_ctx;        /**< SSL Context for outgoing connection (optional) */
-	TLSOptions *tls_options; /**< SSL Options for outgoing connection (optional) */
+	int refcount;                                  /**< Reference counter (used so we know if the struct may be freed) */
+	time_t hold;                                   /**< For how long the server is "on hold" for outgoing connects (why?) */
+	char *connect_ip;                              /**< actual IP to use for outgoing connect (filled in after host is resolved) */
+	int outgoing_without_certificate_verification; /**< Outgoing connects are refused due to lack of certificate verification */
+	SSL_CTX *ssl_ctx;                              /**< SSL Context for outgoing connection (optional) */
+	TLSOptions *tls_options;                       /**< SSL Options for outgoing connection (optional) */
 };
 
 struct ConfigItem_ban {

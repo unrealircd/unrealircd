@@ -767,7 +767,8 @@ int server_needs_linking(ConfigItem_link *aconf)
 	 */
 	if (!(aconf->outgoing.options & CONNECT_OUTGOING_AUTO) ||
 	    (!aconf->outgoing.hostname && !aconf->outgoing.file) ||
-	    (aconf->flag.temporary == 1))
+	    (aconf->flag.temporary == 1) ||
+	    aconf->outgoing_without_certificate_verification)
 	{
 		return 0;
 	}
@@ -2363,6 +2364,16 @@ void _connect_server(ConfigItem_link *aconf, Client *by, struct hostent *hp)
 		 */
 		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_NO_OUTGOING", NULL,
 		           "Connect to $link_block failed: link block is for incoming only (no link::outgoing::hostname or link::outgoing::file set)",
+		           log_data_link_block(aconf));
+		return;
+	}
+
+	if (aconf->outgoing_without_certificate_verification)
+	{
+		unreal_log(ULOG_ERROR, "link", "LINK_ERROR_OUTGOING_WITHOUT_CERTIFICATE_VERIFICATION", NULL,
+		           "Connect to $link_block refused: link block does not verify the certificate of the other side, "
+		           "which allows a man-in-the-middle attack.\n"
+		           "Please follow this guide to link securely: https://www.unrealircd.org/docs/Linking_servers_(genlinkblock)",
 		           log_data_link_block(aconf));
 		return;
 	}
