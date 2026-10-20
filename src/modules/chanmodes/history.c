@@ -210,9 +210,16 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 									long v;
 									CheckNull(cep5);
 									v = config_checkval(cep5->value, CFG_TIME);
-									if (v < 1)
+									if (v < 60)
 									{
-										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::time must be a positive number.",
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::time must be at least 1 minute.",
+										             cep5->file->filename, cep5->line_number);
+										errors++;
+										continue;
+									}
+									if (v > INT_MAX)
+									{
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::registered::time is too large.",
 										             cep5->file->filename, cep5->line_number);
 										errors++;
 										continue;
@@ -247,9 +254,16 @@ int history_config_test(ConfigFile *cf, ConfigEntry *ce, int type, int *errs)
 									long v;
 									CheckNull(cep5);
 									v = config_checkval(cep5->value, CFG_TIME);
-									if (v < 1)
+									if (v < 60)
 									{
-										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::time must be a positive number.",
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::time must be at least 1 minute.",
+										             cep5->file->filename, cep5->line_number);
+										errors++;
+										continue;
+									}
+									if (v > INT_MAX)
+									{
+										config_error("%s:%i: set::history::channel::max-storage-per-channel::unregistered::time is too large.",
 										             cep5->file->filename, cep5->line_number);
 										errors++;
 										continue;
