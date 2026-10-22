@@ -7353,10 +7353,11 @@ void test_tlsblock(ConfigFile *conf, ConfigEntry *cep, int *totalerrors)
 
 	for (cepp = cep->items; cepp; cepp = cepp->next)
 	{
-		if (!strcmp(cepp->name, "renegotiate-timeout"))
+		if (!strcmp(cepp->name, "renegotiate-timeout") || !strcmp(cepp->name, "renegotiate-bytes"))
 		{
-		} else if (!strcmp(cepp->name, "renegotiate-bytes"))
-		{
+			config_warn("%s:%i: %s no longer exists, this setting is now ignored. "
+			            "TLS renegotiations are always refused nowadays.",
+			            cepp->file->filename, cepp->line_number, config_var(cepp));
 		} else if (!strcmp(cepp->name, "ciphers") || !strcmp(cepp->name, "server-cipher-list"))
 		{
 			CheckNull(cepp);
@@ -7646,8 +7647,6 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, T
 		safe_strdup(tlsoptions->outdated_protocols, inherit_from->outdated_protocols);
 		safe_strdup(tlsoptions->outdated_ciphers, inherit_from->outdated_ciphers);
 		tlsoptions->options = inherit_from->options;
-		tlsoptions->renegotiate_bytes = inherit_from->renegotiate_bytes;
-		tlsoptions->renegotiate_timeout = inherit_from->renegotiate_timeout;
 		tlsoptions->sts_port = inherit_from->sts_port;
 		tlsoptions->sts_duration = inherit_from->sts_duration;
 		tlsoptions->sts_preload = inherit_from->sts_preload;
@@ -7727,12 +7726,6 @@ void conf_tlsblock(ConfigFile *conf, ConfigEntry *cep, TLSOptions *tlsoptions, T
 		} else if (!strcmp(cepp->name, "outdated-ciphers"))
 		{
 			safe_strdup(tlsoptions->outdated_ciphers, cepp->value);
-		} else if (!strcmp(cepp->name, "renegotiate-bytes"))
-		{
-			tlsoptions->renegotiate_bytes = config_checkval(cepp->value, CFG_SIZE);
-		} else if (!strcmp(cepp->name, "renegotiate-timeout"))
-		{
-			tlsoptions->renegotiate_timeout = config_checkval(cepp->value, CFG_TIME);
 		} else if (!strcmp(cepp->name, "options"))
 		{
 			tlsoptions->options = 0;

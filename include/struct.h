@@ -1976,8 +1976,6 @@ struct TLSOptions {
 	char *outdated_protocols;
 	char *outdated_ciphers;
 	long options;
-	int renegotiate_bytes;
-	int renegotiate_timeout;
 	int sts_port;
 	long sts_duration;
 	int sts_preload;

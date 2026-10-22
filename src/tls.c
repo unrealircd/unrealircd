@@ -1028,7 +1028,6 @@ void unreal_tls_client_handshake(int fd, int revents, void *data)
 {
 	Client *client = data;
 	SSL_CTX *ctx = (client->server && client->server->conf) ? tls_ctx_for_outgoing_link(client->server->conf) : ctx_client;
-	TLSOptions *tlsoptions = get_tls_options_for_client(client);
 
 	if (!ctx)
 	{
@@ -1050,18 +1049,6 @@ void unreal_tls_client_handshake(int fd, int revents, void *data)
 	SSL_set_fd(client->local->ssl, client->local->fd);
 	SSL_set_connect_state(client->local->ssl);
 	SSL_set_nonblocking(client->local->ssl);
-
-	if (tlsoptions->renegotiate_bytes > 0)
-	{
-		BIO_set_ssl_renegotiate_bytes(SSL_get_rbio(client->local->ssl), tlsoptions->renegotiate_bytes);
-		BIO_set_ssl_renegotiate_bytes(SSL_get_wbio(client->local->ssl), tlsoptions->renegotiate_bytes);
-	}
-
-	if (tlsoptions->renegotiate_timeout > 0)
-	{
-		BIO_set_ssl_renegotiate_timeout(SSL_get_rbio(client->local->ssl), tlsoptions->renegotiate_timeout);
-		BIO_set_ssl_renegotiate_timeout(SSL_get_wbio(client->local->ssl), tlsoptions->renegotiate_timeout);
-	}
 
 	if (client->server && client->server->conf)
 	{
