@@ -343,6 +343,12 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	SSL_CTX_set_options(ctx, SSL_OP_NO_RX_CERTIFICATE_COMPRESSION);
 #endif
 
+#ifdef SSL_OP_NO_RENEGOTIATION
+	/* No TLS renegotiations. OpenSSL 3.0.0 and later already do this by default */
+	if (server)
+		SSL_CTX_set_options(ctx, SSL_OP_NO_RENEGOTIATION);
+#endif
+
 	/* Let's first check the simple case of file exist. That's because the
 	 * SSL_CTX_use_certificate_chain_file() later on works but produces like
 	 * four lines of output, which is a bit verbose for such a simple case.
