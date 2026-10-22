@@ -1331,6 +1331,11 @@ void rpc_client_handshake_web(Client *client)
 
 int rpc_pre_local_handshake_timeout(Client *client, const char **comment)
 {
+	/* Don't hang up RPC connections on a UNIX socket */
+	if (IsRPC(client) && client->local->listener &&
+	    (client->local->listener->socket_type == SOCKET_TYPE_UNIX))
+		return HOOK_ALLOW;
+
 	/* Don't hang up websocket connections */
 	if (IsRPC(client) && WSU(client) && WSU(client)->handshake_completed)
 	{
