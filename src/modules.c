@@ -309,6 +309,12 @@ const char *is_module_deprecated(const char *name, int phase)
 		           "If you insist on using geoip_classic then re-run ./Config, answer 'classic' at the GeoIP question and run make install.\n"
 		           "Note that database updates for 'geoip_classic' will stop in mid-2027.");
 		return "deprecated module not available";
+	} else if (!strcmp(name, "tls_antidos"))
+	{
+		unreal_log(ULOG_ERROR, "config", "CONFIG_LOAD_DEPRECATED_MODULE", NULL,
+		           "The tls_antidos module has been removed. It is no longer needed (TLS renegotiations are always refused).\n"
+		           "Please remove the loadmodule \"tls_antidos\"; line from your configuration.");
+		return "Module no longer exists, see error above";
 	}
 	return NULL;
 }

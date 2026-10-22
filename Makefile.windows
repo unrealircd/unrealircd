@@ -399,7 +399,6 @@ DLL_FILES=\
  src/modules/tkl.dll \
  src/modules/tkldb.dll \
  src/modules/tline.dll \
- src/modules/tls_antidos.dll \
  src/modules/tls_cipher.dll \
  src/modules/topic.dll \
  src/modules/trace.dll \
@@ -1339,9 +1338,6 @@ src/modules/tkldb.dll: src/modules/tkldb.c $(INCLUDES)
 
 src/modules/tline.dll: src/modules/tline.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/tline.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/tline.pdb $(MODLFLAGS)
-
-src/modules/tls_antidos.dll: src/modules/tls_antidos.c $(INCLUDES)
-	$(CC) $(MODCFLAGS) src/modules/tls_antidos.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/tls_antidos.pdb $(MODLFLAGS)
 
 src/modules/tls_cipher.dll: src/modules/tls_cipher.c $(INCLUDES)
 	$(CC) $(MODCFLAGS) src/modules/tls_cipher.c /Fesrc/modules/ /Fosrc/modules/ /Fdsrc/modules/tls_cipher.pdb $(MODLFLAGS)
