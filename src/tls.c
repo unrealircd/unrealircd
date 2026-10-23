@@ -347,6 +347,10 @@ SSL_CTX *init_ctx(TLSOptions *tlsoptions, int server)
 	/* No TLS renegotiations. OpenSSL 3.0.0 and later already do this by default */
 	if (server)
 		SSL_CTX_set_options(ctx, SSL_OP_NO_RENEGOTIATION);
+#elif defined(SSL_OP_NO_CLIENT_RENEGOTIATION)
+	/* Same, but for LibreSSL <4.1.0 which doesn't have SSL_OP_NO_RENEGOTIATION */
+	if (server)
+		SSL_CTX_set_options(ctx, SSL_OP_NO_CLIENT_RENEGOTIATION);
 #endif
 
 	/* Let's first check the simple case of file exist. That's because the
