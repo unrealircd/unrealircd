@@ -63,8 +63,6 @@ MOD_UNLOAD()
 
 void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 {
-	Extban *extban;
-	const char *nextbanstr;
 	Ban *ban, *bnext;
 	Ban **banlist;
 	BanContext *b;
@@ -125,24 +123,13 @@ void unban_user(Client *client, Channel *channel, Client *acptr, char chmode)
 	for (ban = *banlist; ban; ban = bnext)
 	{
 		bnext = ban->next;
-		if (match_simple(ban->banstr, uhost) ||
+		if ((!IsHidden(acptr) && match_simple(ban->banstr, uhost)) ||
 		    (*vhost && match_simple(ban->banstr, vhost)) ||
-		    (*ihost && match_simple(ban->banstr, ihost)) ||
+		    (!IsHidden(acptr) && *ihost && match_simple(ban->banstr, ihost)) ||
 		    (*chost && match_simple(ban->banstr, chost)))
 		{
 			add_send_mode_param(channel, client, '-', chmode, ban->banstr);
 			del_listmode(banlist, channel, ban->banstr);
-		} else if (chmode != 'I' && *ban->banstr == '~' && (extban = findmod_by_bantype(ban->banstr, &nextbanstr)))
-		{
-			if (extban->is_banned_events & b->ban_check_types)
-			{
-				b->banstr = nextbanstr;
-				if (extban->is_banned(b))
-				{
-					add_send_mode_param(channel, acptr, '-', chmode, ban->banstr);
-					del_listmode(banlist, channel, ban->banstr);
-				}
-			}
 		}
 	}
 	safe_free(b);
