@@ -998,13 +998,13 @@ void blacklist_recheck_user(Client *client)
 
 EVENT(blacklist_recheck)
 {
-	Client *client;
+	Client *client, *next;
 	time_t last_check;
 
 	if (BLACKLIST_RECHECK_TIME == 0)
 		return;
 
-	list_for_each_entry(client, &lclient_list, lclient_node)
+	list_for_each_entry_safe(client, next, &lclient_list, lclient_node)
 	{
 		/* Only check connected users */
 		if (!IsUser(client))
