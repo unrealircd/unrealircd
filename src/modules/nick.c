@@ -1354,8 +1354,13 @@ int AllowClient(Client *client)
 			}
 		}
 
+		if (client->local->class == aconf->class)
+			return 1;
+
 		if (!((aconf->class->clients + 1) > aconf->class->maxclients))
 		{
+			if (client->local->class)
+				client->local->class->clients--;
 			client->local->class = aconf->class;
 			client->local->class->clients++;
 		} else
