@@ -4,6 +4,15 @@ UnrealIRCd 6.2.8-git
 This is the git version (development version) for future UnrealIRCd 6.2.8.
 This is work in progress and may not always be a stable version.
 
+For an important security pre-announcement, see
+https://forums.unrealircd.org/viewtopic.php?t=9486
+
+That Saturday 7-Nov-2026 the patches will be ported to this git version.
+However, 6.2.7.1 will not exist in git, and neither will 6.2.8 be released
+that Saturday (is not ready yet).
+
+I REPEAT: THIS GIT VERSION IS NOT AND WILL NOT BE UNREALIRCD 6.2.7.1.
+
 ### Enhancements:
 * A ton of spamreport changes:
   * A spamreport block can now report automatically, via the new option
