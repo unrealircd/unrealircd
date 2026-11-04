@@ -518,6 +518,18 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 	return m;
 }
 
+static int listmode_full(Ban *ban)
+{
+	int cnt = 0;
+
+	for (; ban; ban = ban->next)
+	{
+		if (++cnt >= MAXBANS * 2)
+			return 1;
+	}
+	return 0;
+}
+
 const char *mode_ban_handler(Client *client, Channel *channel, const char *param, int what, int extbtype, Ban **banlist)
 {
 	const char *tmpstr;
@@ -591,6 +603,9 @@ const char *mode_ban_handler(Client *client, Channel *channel, const char *param
 			}
 		}
 	}
+
+	if ((what == MODE_ADD) && !MyUser(client) && listmode_full(*banlist))
+		return NULL;
 
 	if ((what == MODE_ADD && (add_listmode(banlist, client, channel, tmpstr) != 1)) ||
 	    (what == MODE_DEL && del_listmode(banlist, channel, tmpstr)))
