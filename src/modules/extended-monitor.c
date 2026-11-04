@@ -120,6 +120,9 @@ int extended_monitor_realname_change(Client *client, const char *oldinfo)
 
 int extended_monitor_notification(Client *client, Watch *watch, Link *lp, int event, void *data)
 {
+	if (!IsUser(client))
+		return 0;
+
 	if (!(lp->flags & WATCH_FLAG_TYPE_MONITOR))
 		return 0;
 
