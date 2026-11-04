@@ -580,7 +580,7 @@ int read_whowasdb(void)
 			break;
 		}
 
-		if (nick && username && hostname && realname)
+		if (nick && username && hostname && realname && server)
 		{
 			/* This is basically duplicating the code from create_whowas_entry() in src/whowas.c.
 			 * But we have no choice, as we can't use that function since we don't have a Client *.
