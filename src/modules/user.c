@@ -23,6 +23,7 @@
 #include "unrealircd.h"
 
 CMD_FUNC(cmd_user);
+int user_is_handshake_finished(Client *client);
 
 #define MSG_USER "USER"
 
@@ -37,6 +38,7 @@ ModuleHeader MOD_HEADER = {
 MOD_INIT()
 {
 	CommandAdd(modinfo->handle, MSG_USER, cmd_user, 4, CMD_UNREGISTERED);
+	HookAdd(modinfo->handle, HOOKTYPE_IS_HANDSHAKE_FINISHED, 0, user_is_handshake_finished);
 	MARK_AS_OFFICIAL_MODULE(modinfo);
 	return MOD_SUCCESS;
 }
@@ -107,4 +109,12 @@ CMD_FUNC(cmd_user)
 		register_user(client);
 		return;
 	}
+}
+
+int user_is_handshake_finished(Client *client)
+{
+	if (client->user && !client->user->server)
+		return 0;
+
+	return 1;
 }
