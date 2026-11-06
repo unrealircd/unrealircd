@@ -4,14 +4,9 @@ UnrealIRCd 6.2.8-git
 This is the git version (development version) for future UnrealIRCd 6.2.8.
 This is work in progress and may not always be a stable version.
 
-For an important security pre-announcement, see
-https://forums.unrealircd.org/viewtopic.php?t=9486
-
-That Saturday 7-Nov-2026 the patches will be ported to this git version.
-However, 6.2.7.1 will not exist in git, and neither will 6.2.8 be released
-that Saturday (is not ready yet).
-
-I REPEAT: THIS GIT VERSION IS NOT AND WILL NOT BE UNREALIRCD 6.2.7.1.
+NOTE: Current git now contains the security fixes that went into 6.2.7.1.
+But current git is not the same as 6.2.7.1, it contains more fixes, changes,
+enhancements, that will in the future be released as 6.2.8.
 
 ### Enhancements:
 * A ton of spamreport changes:
@@ -68,6 +63,35 @@ I REPEAT: THIS GIT VERSION IS NOT AND WILL NOT BE UNREALIRCD 6.2.7.1.
 * In `HOOKTYPE_BANNED_CLIENT` there is now a `TKL *tkl` parameter (this
   is NULL when a ban is not a TKL, such as a realname ban).
 * The function `take_action()` changed and has two more parameters.
+
+UnrealIRCd 6.2.7.1
+-------------------
+
+This is a security release. It fixes a CRITICAL bug that allows any
+ordinary user to execute commands with server or IRCOp authority.
+It also fixes several crashes, hangs, and a bug where it was possible
+to "decloak" a user (reveal the user's IP address).
+
+All these bugs were found during an extensive internal audit with the
+help of AI.
+
+NOTE: These fixes are also available through one 'hot-patch', so you can
+fix your existing UnrealIRCd 6 without a restart (except on Windows).
+See the security advisory for details.
+
+### Fixes:
+* CRITICAL issue that can be abused by any normal user to execute
+  commands with server or IRCOp authority. This means any ordinary user
+  can KILL, GLINE, and do many more bad things.
+* A normal user could "decloak" another user, revealing the IP address
+  of the victim.
+* Another leak of the IP address
+* Blacklist recheck could hang the server
+* Crash on CHGIDENT from Services, which a normal user can trigger
+* Counting error which could cause a "This server is full" message to
+  every new connect, until the server is restarted.
+* Limit the number of bans Services can set, to 2x set::maxbans
+* Potential flood issue with TLS renegotiations
 
 UnrealIRCd 6.2.7
 -----------------
