@@ -36,7 +36,7 @@ INCLUDES = ../include/channel.h \
 
 MODULES= \
 	cloak_md5.so cloak_sha256.so cloak_none.so \
-	sethost.so chghost.so chgident.so setname.so \
+	sethost.so chghost.so chgident.so setname.so whoami.so \
 	setident.so sdesc.so svsmode.so swhois.so\
 	svsmotd.so svsnline.so who_old.so whox.so mkpasswd.so \
 	away.so svsnoop.so svsnick.so svso.so svslogin.so \
