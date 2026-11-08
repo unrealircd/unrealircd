@@ -704,7 +704,8 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 
 	for (channels = user->user->channel; channels; channels = channels->next)
 	{
-		check_invisible = invisible_user_in_channel(user, channels->channel); // FIXME: we only have a slow version of this function
+		/* 'channels' is the membership of 'user' itself, so we can check the +D invisible flag directly */
+		check_invisible = (channels->memb_flags & MEMB_FLAG_INVISIBLE) ? 1 : 0;
 
 		for (lm = channels->channel->local_members; lm; lm = lm->next)
 		{
@@ -719,9 +720,11 @@ void sendto_local_common_channels(Client *user, Client *skip, long clicap, Messa
 			if (acptr == skip)
 				continue; /* the one to skip */
 
-			// FIXME: use user_can_see_member_fast()
-			if (check_invisible && user_can_see_member(acptr, user, channels->channel))
-				continue; /* the sending user (quit'ing or nick changing) is 'invisible' -- skip */
+			/* The sending user (quit'ing or nick changing) is 'invisible' to acptr -- skip.
+			 * Note: target membership is that of 'user', the member modes are those of 'acptr'.
+			 */
+			if (check_invisible && !user_can_see_membership_fast(acptr, user, channels->channel, channels, lm->ptr->member_modes))
+				continue;
 
 			acptr->local->serial = current_serial;
 			va_start(vl, pattern);
@@ -785,8 +788,11 @@ void quit_sendto_local_common_channels(Client *leaving, MessageTag *mtags, const
 				if (acptr->local->serial == current_serial)
 					continue; /* message already sent to this client */
 
-				if (!user_can_see_member_fast(acptr, leaving, mb->channel, lm->ptr, mb->member_modes))
-					continue; /* the sending user (QUITing) is 'invisible' -- skip */
+				/* The sending user (QUITing) is 'invisible' to acptr -- skip.
+				 * Note: target membership is that of 'leaving', the member modes are those of 'acptr'.
+				 */
+				if (!user_can_see_membership_fast(acptr, leaving, mb->channel, mb, lm->ptr->member_modes))
+					continue;
 
 				acptr->local->serial = current_serial;
 				if (!reason)
