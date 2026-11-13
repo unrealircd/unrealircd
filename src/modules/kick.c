@@ -361,7 +361,7 @@ CMD_FUNC(cmd_kick)
 			Hook *h;
 			for (h = Hooks[HOOKTYPE_PRE_LOCAL_KICK]; h; h = h->next)
 			{
-				if ((*(h->func.intfunc))(client, target, channel, comment) > 0)
+				if ((*(h->func.conststringfunc))(client, target, channel, comment))
 				{
 					breakit = 1;
 					break;
