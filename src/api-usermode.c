@@ -402,7 +402,10 @@ void remove_oper_privileges(Client *client, int broadcast_mode_change)
 	if (broadcast_mode_change && (client->umodes != oldumodes))
 		send_umode_out(client, 1, oldumodes);
 	if (MyUser(client)) /* only do if it's our client, remote servers will send a SWHOIS cmd */
+	{
 		swhois_delete(client, "oper", "*", &me, NULL);
+		safe_free(client->user->operlogin);
+	}
 }
 
 /** Return long integer mode for a user mode character (eg: 'x' -> 0x10) */
