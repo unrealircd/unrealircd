@@ -1098,6 +1098,7 @@ void start_dns_and_ident_lookup(Client *client)
 	{
 		if (should_show_connect_info(client))
 			sendto_one(client, NULL, ":%s %s", me.name, REPORT_DO_DNS);
+		SetDNSLookup(client);
 		he = unrealdns_doclient(client);
 
 		if (client->local->hostp)
@@ -1114,20 +1115,20 @@ void start_dns_and_ident_lookup(Client *client)
 			goto doauth;
 		}
 
-		if (!he)
+		if (he)
 		{
-			/* Resolving in progress */
-			SetDNSLookup(client);
-		} else if (he->h_name == NULL)
-		{
-			/* Host was negatively cached */
-			unreal_free_hostent(he);
-			dns_finished(client, DNS_FINISHED_FAIL);
-		} else
-		{
-			/* Host was in our cache */
-			client->local->hostp = he;
-			dns_finished(client, DNS_FINISHED_SUCCESS_CACHED);
+			ClearDNSLookup(client);
+			if (he->h_name == NULL)
+			{
+				/* Host was negatively cached */
+				unreal_free_hostent(he);
+				dns_finished(client, DNS_FINISHED_FAIL);
+			} else
+			{
+				/* Host was in our cache */
+				client->local->hostp = he;
+				dns_finished(client, DNS_FINISHED_SUCCESS_CACHED);
+			}
 		}
 	} else
 	{
