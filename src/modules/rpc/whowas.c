@@ -153,7 +153,7 @@ RPC_CALL_FUNC(rpc_whowas_get)
 			continue;
 		if (nick && !match_simple(nick, e->name))
 			continue;
-		if (ip && !match_simple(ip, e->ip))
+		if (ip && (!e->ip || !match_simple(ip, e->ip)))
 			continue;
 		item = json_object();
 		json_expand_whowas(item, NULL, e, details);
