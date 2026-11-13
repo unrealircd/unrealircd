@@ -469,15 +469,8 @@ void load_tunefile(void)
 	if (!tunefile)
 		return;
 	/* We ignore the first line, hence the weird looking double fgets here... */
-	if (!fgets(buf, sizeof(buf), tunefile) || !fgets(buf, sizeof(buf), tunefile))
-	{
-		char *errstr = strerror(errno);
-		unreal_log(ULOG_WARNING, "config", "READ_TUNE_FILE_FAILED", NULL,
-		           "Unable to read tunefile '$filename': $system_error",
-		           log_data_string("filename", conf_files->tune_file),
-		           log_data_string("system_error", errstr));
-	}
-	irccounts.me_max = atol(buf);
+	if (fgets(buf, sizeof(buf), tunefile) && fgets(buf, sizeof(buf), tunefile))
+		irccounts.me_max = atol(buf);
 	fclose(tunefile);
 }
 
