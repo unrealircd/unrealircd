@@ -361,6 +361,18 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 		echo "On Linux consider running 'apt install wget' or a similar command."
 		exit 1
 	fi
+	if [ "$MAKE" = "" ]; then
+		MAKE="make"
+	fi
+	if ! $MAKE --version 2>&1|grep -q "GNU Make"; then
+		if gmake --version 2>&1|grep -q "GNU Make"; then
+			MAKE="gmake"
+		else
+			echo "UnrealIRCd requires GNU Make ('gmake') to build. Please install it,"
+			echo "eg 'pkg install gmake' on FreeBSD and 'pkg_add gmake' on OpenBSD."
+			exit 1
+		fi
+	fi
 	cd "$BUILDDIR" || exit 1
 
 	# Weird way to get version, but ok.
@@ -433,8 +445,8 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	fi
 
 	echo "Patch applied successfully. Now recompiling..."
-	make || gmake || exit 1
-	make install || gmake install || exit 1
+	$MAKE || exit 1
+	$MAKE install || exit 1
 
 	cd $SCRIPTDIR
 	if [ "$1" = "hot-patch" ]; then
