@@ -50,6 +50,7 @@ enhancements, that will in the future be released as 6.2.8.
 * You now get a config error if you use `action { gline; report; }`.
   This because `report` (and `set`) cannot happen after a user is killed.
   The correct syntax is: `action { report; gline; }`
+* Update shipped libs: PCRE2 (10.49)
 
 ### Fixes:
 * In 6.2.x every server ban was accidentally reported to all spamreport
