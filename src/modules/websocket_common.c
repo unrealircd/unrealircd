@@ -333,7 +333,8 @@ int _websocket_create_packet_simple(int opcode, const char **buf, int *len)
 	{
 		/* Short payload */
 		sendbuf[1] = (char)*len;
-		memcpy(&sendbuf[2], *buf, *len);
+		if (*len > 0)
+			memcpy(&sendbuf[2], *buf, *len);
 		*buf = sendbuf;
 		*len += 2;
 	} else
