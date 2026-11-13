@@ -383,6 +383,7 @@ int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst
 	uint32_t total;
 	uint64_t when;
 	int i;
+	int cnt = 0;
 	Ban *e = NULL;
 
 	R_SAFE(unrealdb_read_int32(db, &total));
@@ -394,6 +395,14 @@ int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst
 		R_SAFE(unrealdb_read_str(db, &e->banstr));
 		R_SAFE(unrealdb_read_str(db, &e->who));
 		R_SAFE(unrealdb_read_int64(db, &when));
+		if (cnt >= MAXBANS * 2)
+		{
+			/* Similar limit as in add_listmode_ex(). And continue reading... */
+			safe_free(e->banstr);
+			safe_free(e->who);
+			safe_free(e);
+			continue;
+		}
 		str = clean_ban_mask(e->banstr, MODE_ADD, ban_type, &me, channel, 0);
 		if (str == NULL)
 		{
@@ -418,6 +427,7 @@ int read_listmode(UnrealDB *db, Channel *channel, ExtbanType ban_type, Ban **lst
 			e->when = when;
 			e->next = *lst;
 			*lst = e;
+			cnt++;
 		}
 	}
 
