@@ -400,14 +400,16 @@ void *_labeled_response_save_context(void)
  */
 void _labeled_response_set_context(void *ctx)
 {
-	if (ctx == NULL)
+	LabeledResponseContext *lr = ctx;
+
+	if (!lr || !lr->client)
 	{
 		/* This means: clear the current context */
 		memset(&currentcmd, 0, sizeof(currentcmd));
 	} else
 	{
 		/* Set the current context to the provided one */
-		memcpy(&currentcmd, ctx, sizeof(LabeledResponseContext));
+		memcpy(&currentcmd, lr, sizeof(LabeledResponseContext));
 	}
 }
 
