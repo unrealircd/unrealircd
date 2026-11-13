@@ -74,7 +74,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *recv_mtags, in
 
 	if (alias->type == ALIAS_SERVICES)
 	{
-		if (SERVICES_NAME && (acptr = find_user(alias->nick, NULL)))
+		if ((acptr = find_user_on_server(alias->nick, SERVICES_NAME)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
@@ -84,7 +84,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *recv_mtags, in
 			sendnumeric(client, ERR_SERVICESDOWN, alias->nick);
 	} else if (alias->type == ALIAS_STATS)
 	{
-		if (STATS_SERVER && (acptr = find_user(alias->nick, NULL)))
+		if ((acptr = find_user_on_server(alias->nick, STATS_SERVER)))
 		{
 			if (alias->spamfilter && match_spamfilter(client, parv[1], SPAMF_USERMSG, cmd, alias->nick, 0, clictx, NULL))
 				return;
@@ -211,7 +211,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *recv_mtags, in
 
 				if (format->type == ALIAS_SERVICES)
 				{
-					if (SERVICES_NAME && (acptr = find_user(format->nick, NULL)))
+					if ((acptr = find_user_on_server(format->nick, SERVICES_NAME)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;
@@ -221,7 +221,7 @@ void cmd_alias(ClientContext *clictx, Client *client, MessageTag *recv_mtags, in
 						sendnumeric(client, ERR_SERVICESDOWN, format->nick);
 				} else if (format->type == ALIAS_STATS)
 				{
-					if (STATS_SERVER && (acptr = find_user(format->nick, NULL)))
+					if ((acptr = find_user_on_server(format->nick, STATS_SERVER)))
 					{
 						if (alias->spamfilter && match_spamfilter(client, output, SPAMF_USERMSG, cmd, format->nick, 0, clictx, NULL))
 							return;

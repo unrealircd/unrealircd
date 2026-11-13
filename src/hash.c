@@ -576,6 +576,26 @@ Client *find_user(const char *name, Client *requester)
 	return NULL;
 }
 
+/** Find a user (a person) on a specific server.
+ * This is used by aliases eg find_user_on_server("NickServ", SERVICES_NAME).
+ * So a /NS always goes to Services and not someone impersonating services.
+ * @param name        The name to search for (eg: "NickServ")
+ * @param server      The name of the server the user must be on (eg: "services.example.net")
+ * @returns If the user is found on that server then the Client is returned, otherwise NULL.
+ */
+Client *find_user_on_server(const char *name, const char *server)
+{
+	Client *client = find_user(name, NULL);
+
+	if (!client || !server)
+		return NULL; /* Not found */
+
+	if (smycmp(client->user->server, server))
+		return NULL; /* User exists with that name, but is on the wrong server */
+
+	return client;
+}
+
 
 /** Find a channel by name.
  * @param name			The channel name to search for

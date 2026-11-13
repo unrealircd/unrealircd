@@ -240,6 +240,7 @@ extern Client *find_client(const char *, Client *);
 extern Client *find_name(const char *, Client *);
 extern Client *find_nickserv(const char *, Client *);
 extern Client *find_user(const char *, Client *);
+extern Client *find_user_on_server(const char *name, const char *server);
 extern Client *find_server(const char *, Client *);
 extern Client *find_server_by_uid(const char *uid);
 extern Client *find_service(const char *, Client *);
