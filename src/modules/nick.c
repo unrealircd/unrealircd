@@ -110,7 +110,7 @@ int can_use_nick(Client *client, const char *nick)
 
 	for (h = Hooks[HOOKTYPE_CAN_USE_NICK]; h; h = h->next)
 	{
-		char *change_nick_error_from_hook = NULL;
+		const char *change_nick_error_from_hook = NULL;
 		int ret = (*(h->func.intfunc))(client, nick, &change_nick_error_from_hook);
 		if (ret == HOOK_DENY)
 		{
