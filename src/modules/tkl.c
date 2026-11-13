@@ -6234,6 +6234,9 @@ static void run_rule_only_spamfilter_loop(Client *client, const char *str_in, co
 		if (!crule_eval(&context, tkl->ptr.spamfilter->rule))
 			continue;
 
+		if (tkl->ptr.spamfilter->except && user_allowed_by_security_group_context(client, tkl->ptr.spamfilter->except, &context))
+			continue;
+
 		match_spamfilter_hit(client, str_in, str, target, cmd, destination,
 		                     tkl, winner_tkl,
 		                     user_is_exempt_general, user_is_exempt_central,
