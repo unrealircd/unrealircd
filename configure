@@ -10167,8 +10167,10 @@ fi
 
 UNRLINCDIR="`pwd`/include"
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if explicit -std=gnu17 is needed" >&5
-printf %s "checking if explicit -std=gnu17 is needed... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if the compiler supports -std=gnu17" >&5
+printf %s "checking if the compiler supports -std=gnu17... " >&6; }
+save_cflags="$CFLAGS"
+CFLAGS="$CFLAGS -std=gnu17"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <sys/types.h>
@@ -10191,12 +10193,12 @@ main (void)
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"
 then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
 else case e in #(
-  e) CFLAGS="$CFLAGS -std=gnu17"
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; } ;;
+  e) CFLAGS="$save_cflags"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; } ;;
 esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
