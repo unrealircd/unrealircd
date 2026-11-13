@@ -105,18 +105,6 @@ static void send_local_chan_mode_mlm(MessageTag *recv_mtags, Client *client, Cha
 	}
 }
 
-static int listmode_full(Ban *ban)
-{
-	int cnt = 0;
-
-	for (; ban; ban = ban->next)
-	{
-		if (++cnt >= MAXBANS * 2)
-			return 1;
-	}
-	return 0;
-}
-
 /** SJOIN: Synchronize channel modes, +beI lists and users (server-to-server command)
  * Extensive technical documentation is available at:
  * https://www.unrealircd.org/docs/Server_protocol:SJOIN_command
@@ -559,21 +547,21 @@ CMD_FUNC(cmd_sjoin)
 			/* Adding of list modes */
 			if (*item_modes == 'b')
 			{
-				if (!listmode_full(channel->banlist) && (add_listmode_ex(&channel->banlist, client, channel, item, setby, setat) == 1))
+				if (add_listmode_ex(&channel->banlist, client, channel, item, setby, setat) == 1)
 				{
 					Addit('b', item);
 				}
 			}
 			if (*item_modes == 'e')
 			{
-				if (!listmode_full(channel->exlist) && (add_listmode_ex(&channel->exlist, client, channel, item, setby, setat) == 1))
+				if (add_listmode_ex(&channel->exlist, client, channel, item, setby, setat) == 1)
 				{
 					Addit('e', item);
 				}
 			}
 			if (*item_modes == 'I')
 			{
-				if (!listmode_full(channel->invexlist) && (add_listmode_ex(&channel->invexlist, client, channel, item, setby, setat) == 1))
+				if (add_listmode_ex(&channel->invexlist, client, channel, item, setby, setat) == 1)
 				{
 					Addit('I', item);
 				}

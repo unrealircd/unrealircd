@@ -246,9 +246,9 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 	int cnt = 0;
 	int do_not_add = 0;
 	char isnew = 0;
+	int limit;
 
-	//if (MyUser(client))
-	//	collapse(banid);
+	limit = (MyUser(client) || IsMe(client)) ? MAXBANS : MAXBANS * 2;
 
 	if (!*list && (MAXBANS < 1))
 	{
@@ -261,9 +261,7 @@ int add_listmode_ex(Ban **list, Client *client, Channel *channel, const char *ba
 	}
 	for (ban = *list; ban; ban = ban->next)
 	{
-		/* Check MAXBANS only for local clients and 'me' (for +b's set during +f).
-		 */
-		if ((MyUser(client) || IsMe(client)) && (++cnt >= MAXBANS))
+		if (++cnt >= limit)
 			do_not_add = 1;
 		if (identical_ban(ban->banstr, banid))
 			break; /* update existing ban (potentially) */
