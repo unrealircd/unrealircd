@@ -2210,8 +2210,8 @@ int hooktype_log(LogLevel loglevel, const char *subsystem, const char *event_id,
  * @param client		The client
  * @param str			The text that matched, this may be stripped from color and control codes.
  * @param str_in		The original text
- * @param target		The spamfilter type, one of SPAMF_*, such as SPAMF_CHANMSG.
- * @param destination		The destination, such as the name of another client or channel
+ * @param type			The spamfilter type, one of SPAMF_*, such as SPAMF_CHANMSG.
+ * @param target		The destination, such as the name of another client or channel
  * @param tkl			The spamfilter TKL entry that matched
  * @return The return value is ignored (use return 0)
  */
@@ -2383,7 +2383,7 @@ int hooktype_can_sajoin(Client *target, Channel *channel, Client *client);
  * @param what			Always MODE_DEL at the moment
  * @param modechar		The mode character: q/a/o/h/v
  * @param client_access		Channel member modes of 'client', eg "o", never NULL but can be empty.
- * @param target_access		Channel member modes of 'client', eg "h", never NULL but can be empty.
+ * @param target_access		Channel member modes of 'victim', eg "h", never NULL but can be empty.
  * @param reject_reason		The error string that should be sent to the client
  * @retval HOOK_CONTINUE	Proceed normally (allow it)
  * @retval HOOK_DENY		Reject the mode change
