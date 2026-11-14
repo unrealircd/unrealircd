@@ -455,6 +455,8 @@ char *mm_sourceslist_file(void)
 /** Free a managed module struct */
 void free_managed_module(ManagedModule *m)
 {
+	if (!m)
+		return;
 	safe_free(m->repo_url);
 	safe_free(m->name);
 	safe_free(m->source);
