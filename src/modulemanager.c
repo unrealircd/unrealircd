@@ -801,6 +801,11 @@ int mm_get_module_status(ManagedModule *m)
 
 	our_module = mm_parse_module_c_file(m->name, fname, 1);
 	our_sha256sum = sha256sum_file(fname);
+	if (!our_sha256sum)
+	{
+		fprintf(stderr, "ERROR: Unable to read '%s': %s\n", fname, strerror(errno));
+		exit(-1);
+	}
 
 	if (our_module && our_module->version && (strnatcasecmp(m->version, our_module->version) < 0))
 	{
