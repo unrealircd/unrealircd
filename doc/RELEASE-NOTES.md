@@ -26,7 +26,7 @@ item under *Changes*.
     You can exempt specific users from being auto reported at all through
     [set::spamreport::auto-report::except](https://www.unrealircd.org/docs/Set_block#set::spamreport).  
     [*]: Not all server bans and kills are sent in, only if the ban or kill
-    reason contain the word "spam". This can be configured via
+    reason contains the word "spam". This can be configured via
     [set::spamreport::auto-report::ban-or-kill-filter](https://www.unrealircd.org/docs/Set_block#set::spamreport).
   * The `SPAMREPORT` command now has an optional reason:  
     `SPAMREPORT <nick|ip> [name-of-spamreport-block|all] [reason]`
@@ -61,6 +61,10 @@ item under *Changes*.
     to localhost, are exempt. You can also manually exempt a link block via
     link::options::no-certificate-verification. Only do so if you insist to
     link without cert validation, for example when you are linking over a VPN.
+* JSON-RPC: a connection from an IP that does not match any
+  [rpc-user block](https://www.unrealircd.org/docs/Rpc-user_block)
+  is now closed immediately, even before the TLS handshake starts.
+  This means `rpc-user::match` may only contain `ip` or `mask` items.
 * We continue the gradual transition from `geoip_classic` to `geoip_mmdb`.
   Now also for `./Config -quick` (and thus `./unrealircd upgrade`).
   This because we will stop database updates for classic in mid-2027.
@@ -72,6 +76,30 @@ item under *Changes*.
   cannot downgrade to 6.2.7.1 or older without losing your tkldb.
 
 ### Fixes:
+* Crash with an alias of `type channel` (we don't ship with any by default)
+* Crash in JSON-RPC `whowas.get` with an `ip` filter
+* Crash with certain empty config values, eg `match { country ""; }`
+* `./unrealircd hot-patch` could fail after a distro upgrade that came
+  with a newer compiler. We now always compile with `-std=gnu17` if the
+  compiler supports it.
+* On FreeBSD `./unrealircd hot-patch` did not work and (even worse)
+  it reported success.
+* Aliases like `NS` which have `type services` could deliver to an
+  ordinary user if they were called `NickServ`. Note that this was
+  only possible if Services were down and you had no Q-lines for
+  such nicks. Anope adds such Q-lines automatically.
+* If sending a DNS query failed (eg no route to the DNS server), a client
+  would hang and time out after 40 seconds.
+* Channel messages to a prefix were sent to the wrong users.
+  For example, `~#channel` messages were delivered to +vhoaq, and
+  messages to `+#channel` were delivered to +hoaq.
+* [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
+  did not work if the value contained a `@` (eg `~realname:*@*`) or
+  when the value was an actual IP address (eg `~realname:1.2.3.4`).
+  Servers on 6.2.7 and older still reject bans with a `@`.
+* Clients on a UNIX socket listener (eg for Tor or I2P) never got a
+  registration timeout, so one user could keep many unregistered
+  connections open.
 * In 6.2.x every server ban was accidentally reported to all spamreport
   blocks (including Central Spamreport). That could have been especially
   bad if you had a spamreport block with type `dronebl`.
@@ -81,14 +109,26 @@ item under *Changes*.
   origin and WEBIRC gateway to IRCOps, similar to InspIRCd:  
   `:irc.example.net 350 x whoisuser * * :is connecting from WebSocket origin webchat.example.net`  
   `:irc.example.net 350 x whoisuser gw.example.org 192.0.2.1 :is connecting via WebIRC gateway kiwiirc`
-* JSON-RPC: an except in spamfilter objects previously showed as
-  `match` (which is super confusing). That's now under `except`.
+* JSON-RPC:
+  * An exception in spamfilter objects previously showed as `match`
+    (which is super confusing). That's now under `except`.
+  * TKL entries now have a `source` for automatic server bans
+* In JSON-logging with DEBUGMODE, the file field in the log is now
+  `source_code` instead of `source`. This so it does not conflict
+  with the TKL `source`.
 * New hook `HOOKTYPE_KILLED_CLIENT`, called when a local user is killed.
 * In `HOOKTYPE_BANNED_CLIENT` there is now a `TKL *tkl` parameter (this
   is NULL when a ban is not a TKL, such as a realname ban).
 * The function `take_action()` changed and has two more parameters.
-* The websocket origin and the WEBIRC gateway name, IP and host are
-  synced via (early) moddata across servers.
+  And, `take_action_ex()` which was added in 6.2.6 is removed again.
+* New functions that may be useful for module coders:
+  `find_user_on_server()`, `read_name_list_file()`, `cleanline()`,
+  `strip_trailing_whitespace()`, `str_is_all_digits()`,
+  `unreal_encodespace_r()` and `unreal_decodespace_r()`.
+* S2S: the websocket origin and the WEBIRC gateway name, IP and host are
+  synced via (early) moddata.
+* S2S: we now communicate the TKL source through the `s2s-tkl/source`
+  message tag.
 
 
 UnrealIRCd 6.2.7.1
