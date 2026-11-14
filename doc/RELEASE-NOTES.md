@@ -1,16 +1,18 @@
-UnrealIRCd 6.2.8-git
-=================
+UnrealIRCd 6.2.8-rc1
+=====================
 
-This will be 6.2.8-rc1 soon.......
+This is the Release Candidate for future version 6.2.8. You can help us by
+testing this release and reporting bugs to https://bugs.unrealircd.org/
 
-If you use a webchat that connects directly to UnrealIRCd with websockets
-then you need to add it to set::websocket::allowed-origins. See the first
-item under *Changes*.
+IMPORTANT: If you use a webchat that connects directly to UnrealIRCd with
+websockets then you MUST add it to set::websocket::allowed-origins.
+See the first item under *Changes*.
 
 ### Enhancements:
 * Automatic server bans now have a "source", which shows up in the log,
   like: `[source: blacklist]`.
-* A ton of spamreport changes:
+* A `WHOIS` by an IRCOp now shows the websocket origin and WEBIRC gateway
+* A ton of [spamreport](https://www.unrealircd.org/docs/Spamreport_block) changes:
   * A spamreport block can now report automatically, via the new option
     [spamreport::auto-report](https://www.unrealircd.org/docs/Spamreport_block).
     The main sources are:
@@ -32,7 +34,6 @@ item under *Changes*.
     `SPAMREPORT <nick|ip> [name-of-spamreport-block|all] [reason]`
   * For spamreport blocks of type simple you can now use `$source`,
     `$reason` and `$spamfilter_id` in the URL.
-* A `WHOIS` by an IRCOp now shows the websocket origin and WEBIRC gateway
 
 ### Changes:
 * Websocket connections from browsers are now refused, unless the website
@@ -48,7 +49,7 @@ item under *Changes*.
     (non-browsers).
   * We always block `Origin: null`, eg when testing from a file:// page.
 * The per-listen block `listen::options::websocket::allow-origin` moved to
-  this new setting. The old setting now gives a config error.
+  this new setting. The old setting gives a config error.
 * Link blocks with `link::outgoing` that use a password (not spkifp/certfp/cert)
   will now raise a warning. We have already been warning about this since
   2017 at link time so this should not be a surprise for anyone.
@@ -80,8 +81,8 @@ item under *Changes*.
 * Crash in JSON-RPC `whowas.get` with an `ip` filter
 * Crash with certain empty config values, eg `match { country ""; }`
 * `./unrealircd hot-patch` could fail after a distro upgrade that came
-  with a newer compiler. We now always compile with `-std=gnu17` if the
-  compiler supports it.
+  with a newer compiler.  
+  We now always compile with `-std=gnu17` if the compiler supports it.
 * On FreeBSD `./unrealircd hot-patch` did not work and (even worse)
   it reported success.
 * Aliases like `NS` which have `type services` could deliver to an
@@ -89,30 +90,31 @@ item under *Changes*.
   only possible if Services were down and you had no Q-lines for
   such nicks. Anope adds such Q-lines automatically.
 * If sending a DNS query failed (eg no route to the DNS server), a client
-  would hang and time out after 40 seconds.
+  would hang and time out after 40 seconds. This would be rare.
+  Normal DNS failures, like a timeout or NXDOMAIN, were unaffected.
 * Channel messages to a prefix were sent to the wrong users.
   For example, `~#channel` messages were delivered to +vhoaq, and
   messages to `+#channel` were delivered to +hoaq.
 * [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
   did not work if the value contained a `@` (eg `~realname:*@*`) or
   when the value was an actual IP address (eg `~realname:1.2.3.4`).
-  Servers on 6.2.7 and older still reject bans with a `@`.
+  Note that if you add such bans now, they won't work on 6.2.7 or
+  older servers that are linked.
 * Clients on a UNIX socket listener (eg for Tor or I2P) never got a
-  registration timeout, so one user could keep many unregistered
-  connections open.
+  registration timeout, keeping many unregistered connections open.
 * In 6.2.x every server ban was accidentally reported to all spamreport
   blocks (including Central Spamreport). That could have been especially
   bad if you had a spamreport block with type `dronebl`.
 
 ### Developers and protocol:
-* We now use numeric 350 (RPL_WHOISGATEWAY) for displaying the websocket
-  origin and WEBIRC gateway to IRCOps, similar to InspIRCd:  
+* Numeric 350 (RPL_WHOISGATEWAY) now shows the websocket origin and
+  WEBIRC gateway to IRCOps, similar to InspIRCd:  
   `:irc.example.net 350 x whoisuser * * :is connecting from WebSocket origin webchat.example.net`  
   `:irc.example.net 350 x whoisuser gw.example.org 192.0.2.1 :is connecting via WebIRC gateway kiwiirc`
 * JSON-RPC:
   * An exception in spamfilter objects previously showed as `match`
-    (which is super confusing). That's now under `except`.
-  * TKL entries now have a `source` for automatic server bans
+    (which is super confusing). It is now under `except`.
+  * TKL entries now have a `source` for automatic server bans.
 * In JSON-logging with DEBUGMODE, the file field in the log is now
   `source_code` instead of `source`. This so it does not conflict
   with the TKL `source`.
