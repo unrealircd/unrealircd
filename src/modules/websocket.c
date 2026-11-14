@@ -58,6 +58,7 @@ static struct {
 ModDataInfo *websocket_md = NULL; /* (by us) */
 ModDataInfo *webserver_md = NULL; /* (external module, looked up) */
 static int ws_text_mode_available = 1;
+static int allowed_origins_configured = 0;
 
 MOD_TEST()
 {
@@ -264,6 +265,7 @@ int websocket_config_test_set(ConfigFile *cf, ConfigEntry *ce, int type, int *er
 	{
 		if (!strcmp(cep->name, "allowed-origins"))
 		{
+			allowed_origins_configured = 1;
 			if (cep->value)
 			{
 				config_error("%s:%i: set::websocket::allowed-origins must be a block, eg: "
@@ -351,6 +353,16 @@ int websocket_config_posttest(int *errs)
 		config_error("Add the following line to your config file: loadmodule \"webserver\";");
 	if (!websocket_common_module)
 		config_error("Add the following line to your config file: loadmodule \"websocket_common\";");
+
+	if (!allowed_origins_configured)
+	{
+		config_warn("The websocket module is loaded but set::websocket::allowed-origins is not set. "
+		            "In 6.2.8 and higher you need to explicitly allow a webchat, otherwise "
+		            "it cannot connect to your server.");
+		config_warn("To allow a webchat you add it by hostname, eg: "
+		            "set { websocket { allowed-origins { webchat.example.net; } } } "
+		            "See https://www.unrealircd.org/docs/Set_block#set::websocket");
+	}
 
 	*errs = errors;
 	return errors ? -1 : 1;
@@ -591,6 +603,7 @@ int websocket_handshake_send_response(Client *client)
  */
 static int websocket_check_origin(Client *client, WebRequest *web)
 {
+	static time_t last_origin_rejected_log = 0;
 	const char *origin = get_nvplist(web->headers, "Origin");
 	char origin_host[HOSTLEN + 1];
 
@@ -602,9 +615,6 @@ static int websocket_check_origin(Client *client, WebRequest *web)
 		safe_strdup(WSU(client)->origin, "null");
 	else if (valid_host(origin_host, 1) || is_valid_ip(origin_host))
 		safe_strdup(WSU(client)->origin, origin_host);
-
-	if (!cfg.allowed_origins)
-		return 1; /* No set::websocket::allowed-origins = no restrictions */
 
 	/* We don't care about origins that are not http:// or https://.
 	 * This because we don't want to block things like tauri:// phone apps.
@@ -619,6 +629,15 @@ static int websocket_check_origin(Client *client, WebRequest *web)
 			return 1;
 		if (find_name_list_match(cfg.allowed_origins, origin_host))
 			return 1;
+	}
+
+	if (TStime() - last_origin_rejected_log >= 60)
+	{
+		unreal_log(ULOG_WARNING, "websocket", "WEBSOCKET_ORIGIN_NOT_ALLOWED", client,
+		           "Rejected websocket connection from $client.ip: origin '$origin' is not in "
+		           "set::websocket::allowed-origins (this message is shown at most once per minute)",
+		           log_data_string("origin", WSU(client)->origin ? WSU(client)->origin : "<invalid>"));
+		last_origin_rejected_log = TStime();
 	}
 
 	webserver_send_response(client, 403, "This site is not permitted to connect to us with websockets");

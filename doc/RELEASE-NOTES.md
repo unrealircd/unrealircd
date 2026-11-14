@@ -1,25 +1,27 @@
 UnrealIRCd 6.2.8-git
 =================
 
-This is the git version (development version) for future UnrealIRCd 6.2.8.
-This is work in progress and may not always be a stable version.
+This will be 6.2.8-rc1 soon.......
 
-NOTE: Current git now contains the security fixes that went into 6.2.7.1.
-But current git is not the same as 6.2.7.1, it contains more fixes, changes,
-enhancements, that will in the future be released as 6.2.8.
+If you use a webchat that connects directly to UnrealIRCd with websockets
+then you need to add it to set::websocket::allowed-origins. See the first
+item under *Changes*.
 
 ### Enhancements:
+* Automatic server bans now have a "source", which shows up in the log,
+  like: `[source: blacklist]`.
 * A ton of spamreport changes:
   * A spamreport block can now report automatically, via the new option
     [spamreport::auto-report](https://www.unrealircd.org/docs/Spamreport_block).
-    Currently it has three sources:
+    The main sources are:
     * `spamfilter`: when a spamfilter kills or *LINEs a user.
       The spamfilter itself is included in the report.
+    * `antimixedutf8`: when antimixedutf8 takes action, eg blocks a message.
     * `server-ban`: when an online user is banned (eg /GLINE by an oper) [*]
     * `kill`: when a user is killed (eg /KILL by an oper) [*]
 
     For [Central Spamreport](https://www.unrealircd.org/docs/Central_spamreport)
-    all three on by default. For other spamreport blocks it is off by default.
+    all four on by default. For other spamreport blocks it is off by default.
     To turn it off, you put in the spamreport block: `auto-report { }`.
     You can exempt specific users from being auto reported at all through
     [set::spamreport::auto-report::except](https://www.unrealircd.org/docs/Set_block#set::spamreport).  
@@ -30,8 +32,23 @@ enhancements, that will in the future be released as 6.2.8.
     `SPAMREPORT <nick|ip> [name-of-spamreport-block|all] [reason]`
   * For spamreport blocks of type simple you can now use `$source`,
     `$reason` and `$spamfilter_id` in the URL.
+* A `WHOIS` by an IRCOp now shows the websocket origin and WEBIRC gateway
 
 ### Changes:
+* Websocket connections from browsers are now refused, unless the website
+  is listed in
+  [set::websocket::allowed-origins](https://www.unrealircd.org/docs/Set_block#set::websocket).
+  * If you have a webchat that connects directly to UnrealIRCd using
+    websockets, then be sure to add it through:  
+    `set { websocket { allowed-origins { webchat.example.net; } } }`  
+  * If the websocket module is loaded but no allowed-origins are configured
+    we print out a warning.
+  * Clients that are rejected show up in the log at a rate of max 1/min.
+  * Clients that do not send an Origin header are still allowed in
+    (non-browsers).
+  * We always block `Origin: null`, eg when testing from a file:// page.
+* The per-listen block `listen::options::websocket::allow-origin` moved to
+  this new setting. The old setting now gives a config error.
 * Link blocks with `link::outgoing` that use a password (not spkifp/certfp/cert)
   will now raise a warning. We have already been warning about this since
   2017 at link time so this should not be a surprise for anyone.
@@ -51,6 +68,8 @@ enhancements, that will in the future be released as 6.2.8.
   This because `report` (and `set`) cannot happen after a user is killed.
   The correct syntax is: `action { report; gline; }`
 * Update shipped libs: PCRE2 (10.49)
+* The tkldb database now saves ban sources. The downside is that you
+  cannot downgrade to 6.2.7.1 or older without losing your tkldb.
 
 ### Fixes:
 * In 6.2.x every server ban was accidentally reported to all spamreport
@@ -58,12 +77,19 @@ enhancements, that will in the future be released as 6.2.8.
   bad if you had a spamreport block with type `dronebl`.
 
 ### Developers and protocol:
-* In JSON-RPC an except in spamfilter objects previously showed as
+* We now use numeric 350 (RPL_WHOISGATEWAY) for displaying the websocket
+  origin and WEBIRC gateway to IRCOps, similar to InspIRCd:  
+  `:irc.example.net 350 x whoisuser * * :is connecting from WebSocket origin webchat.example.net`  
+  `:irc.example.net 350 x whoisuser gw.example.org 192.0.2.1 :is connecting via WebIRC gateway kiwiirc`
+* JSON-RPC: an except in spamfilter objects previously showed as
   `match` (which is super confusing). That's now under `except`.
 * New hook `HOOKTYPE_KILLED_CLIENT`, called when a local user is killed.
 * In `HOOKTYPE_BANNED_CLIENT` there is now a `TKL *tkl` parameter (this
   is NULL when a ban is not a TKL, such as a realname ban).
 * The function `take_action()` changed and has two more parameters.
+* The websocket origin and the WEBIRC gateway name, IP and host are
+  synced via (early) moddata across servers.
+
 
 UnrealIRCd 6.2.7.1
 -------------------
