@@ -180,6 +180,11 @@ static PreprocessorItem parse_if_function(char *p, const char *funcname, ConfigI
 		return PREPROCESSOR_ERROR;
 	}
 	*p = '\0';
+	if ((condition == IF_DEFINED) && (*name == '$'))
+	{
+		config_warn("%s:%i: Invalid condition. Use defined(%s), not defined(%s). ",
+		            filename, linenumber, name + 1, name);
+	}
 	cc = safe_alloc(sizeof(ConditionalConfig));
 	cc->condition = condition;
 	cc->negative = negative;
@@ -241,8 +246,8 @@ PreprocessorItem evaluate_preprocessor_if(char *statement, const char *filename,
 	 * environment("VARNAME")
 	 * environment("VARNAME") == "value"
 	 * module-version("name") >= "2.0"
-	 * defined($XYZ)
-	 * !defined($XYZ)
+	 * defined(XYZ)
+	 * !defined(XYZ)
 	 * @else is also supported (handled in conf.c, not here).
 	 * We do not support && or || or anything else at this time.
 	 */
