@@ -2671,7 +2671,7 @@ struct ParseMode {
 	char buf[512];       /* internal parse buffer */
 };
 
-#define MAXMULTILINEMODES 3
+#define MAXMULTILINEMODES 12
 typedef struct MultiLineMode MultiLineMode;
 struct MultiLineMode {
 	char *modeline[MAXMULTILINEMODES + 1];

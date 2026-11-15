@@ -49,6 +49,7 @@ int do_extmode_char(Channel *channel, Cmode *handler, const char *param, u_int w
 void do_mode_char_member_mode_new(Channel *channel, Cmode *handler, const char *param, u_int what,
                                   Client *client, u_int *pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
 MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, int pcount, char pvar[MAXMODEPARAMS][MODEBUFLEN + 3]);
+static int mode_line_prefix_len(Client *client, Channel *channel);
 
 static char *mode_cutoff(const char *s);
 void mode_operoverride_msg(Client *client, Channel *channel, char *modebuf, char *parabuf);
@@ -397,6 +398,27 @@ void _do_mode(Channel *channel, Client *client, MessageTag *recv_mtags, int parc
 	opermode = 0;
 }
 
+/** Length of a MODE line without its modes and parameters.
+ * This calculates the longest form of the line:
+ * - to clients: ":nick!user@host MODE #channel "
+ * - to servers: ":id MODE #channel ", plus a TS if the source is a server
+ */
+static int mode_line_prefix_len(Client *client, Channel *channel)
+{
+	int len, s2s_len;
+
+	if (client->user)
+		len = strlen(client->name) + strlen(client->user->username) + strlen(GetHost(client)) + strlen(channel->name) + 11;
+	else
+		len = strlen(client->name) + strlen(channel->name) + 11;
+
+	s2s_len = strlen(client->id) + strlen(channel->name) + 9;
+	if (IsServer(client) || IsMe(client))
+		s2s_len += 21;
+
+	return MAX(len, s2s_len);
+}
+
 /* make_mode_str -- written by binary
  *	Reconstructs the mode string, to make it look clean.  mode_buf will
  *  contain the +x-y stuff, and the parabuf will contain the parameters.
@@ -408,12 +430,7 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 	int cnt, z, i;
 	MultiLineMode *m = safe_alloc(sizeof(MultiLineMode));
 	int curr = 0;
-	int initial_len;
-
-	if (client->user)
-		initial_len = strlen(client->name) + strlen(client->user->username) + strlen(GetHost(client)) + strlen(channel->name) + 11;
-	else
-		initial_len = strlen(client->name) + strlen(channel->name) + 11;
+	int initial_len = mode_line_prefix_len(client, channel);
 
 	/* Reserve room for the first element */
 	curr = 0;
@@ -465,7 +482,8 @@ MultiLineMode *make_mode_str(Client *client, Channel *channel, Cmode_t oldem, in
 	/* Now for parameter modes we do both addition and removal. Eg +b-e ban!x@y exempt!z@z */
 	for (cnt = 0; cnt < pcount; cnt++)
 	{
-		if ((strlen(m->modeline[curr]) + strlen(m->paramline[curr]) + strlen(&pvar[cnt][2])) > 507)
+		if (*m->paramline[curr] &&
+		    (initial_len + strlen(m->modeline[curr]) + strlen(m->paramline[curr]) + strlen(&pvar[cnt][2]) > 507))
 		{
 			if (curr == MAXMULTILINEMODES)
 			{
