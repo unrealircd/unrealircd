@@ -83,8 +83,8 @@ See the first item under *Changes*.
 * `./unrealircd hot-patch` could fail after a distro upgrade that came
   with a newer compiler.  
   We now always compile with `-std=gnu17` if the compiler supports it.
-* On FreeBSD `./unrealircd hot-patch` did not work and (even worse)
-  it reported success.
+* Fix `./unrealircd hot-patch` on *BSD: on OpenBSD it hung, and on
+  FreeBSD it did not recompile and reported success.
 * Aliases like `NS` which have `type services` could deliver to an
   ordinary user if they were called `NickServ`. Note that this was
   only possible if Services were down and you had no Q-lines for
