@@ -968,7 +968,7 @@ static int hbm_return_before(HistoryResult *r, HistoryLogObject *h, HistoryFilte
 		if (started)
 		{
 			/* Check if we need to stop */
-			if (filter->timestamp_b && (strcmp(l->time, filter->timestamp_b) < 0))
+			if (filter->timestamp_b && (strcmp(l->time, filter->timestamp_b) <= 0))
 			{
 				break;
 			} else if (filter->msgid_b && !strcmp(l->msgid, filter->msgid_b))
@@ -1265,17 +1265,7 @@ static int hbm_return_between(HistoryResult *r, HistoryLogObject *h, HistoryFilt
 		return hbm_return_after(r, h, filter);
 	} else if (direction == 0)
 	{
-		/* Create a temporary filter, swapping directions */
-		char *x, *y;
-		HistoryFilter f;
-		memset(&f, 0, sizeof(f));
-		f.cmd = HFC_BEFORE;
-		f.limit = filter->limit;
-		f.timestamp_a = filter->timestamp_b;
-		f.timestamp_b = filter->timestamp_a;
-		f.msgid_a = filter->msgid_b;
-		f.msgid_b = filter->msgid_a;
-		return hbm_return_after(r, h, &f);
+		return hbm_return_before(r, h, filter);
 	}
 
 	/* else direction is -1 which means not found / invalid */
