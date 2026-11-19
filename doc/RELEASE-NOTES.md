@@ -80,11 +80,13 @@ See the first item under *Changes*.
 * Crash with an alias of `type channel` (we don't ship with any by default)
 * Crash in JSON-RPC `whowas.get` with an `ip` filter
 * Crash with certain empty config values, eg `match { country ""; }`
-* `./unrealircd hot-patch` could fail after a distro upgrade that came
-  with a newer compiler.  
-  We now always compile with `-std=gnu17` if the compiler supports it.
-* Fix `./unrealircd hot-patch` on *BSD: on OpenBSD it hung, and on
-  FreeBSD it did not recompile and reported success.
+* Multiple `./unrealircd hot-patch` fixes:
+  * It could previously fail after a distro upgrade that came with a
+    newer compiler. We now always compile with `-std=gnu17` if the
+    compiler supports it.
+  * With non-GNU patch on *BSD it would hang and say "Patch already
+    applied" after pressing ENTER (which wasn't true).
+  * On FreeBSD it would fail to recompile too and report success.
 * Aliases like `NS` which have `type services` could deliver to an
   ordinary user if they were called `NickServ`. Note that this was
   only possible if Services were down and you had no Q-lines for

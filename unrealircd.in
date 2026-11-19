@@ -429,12 +429,30 @@ elif [ "$1" = "hot-patch" -o "$1" = "cold-patch" ] ; then
 	echo ""
 	echo ""
 
-	if patch -f --dry-run -p1 -R <patch 1>/dev/null 2>&1; then
-		echo "Patch already applied. Nothing to do."
-		exit 1
+	unset POSIXLY_CORRECT
+	BATCH=""
+	if patch --version </dev/null 2>&1 | grep -q -e 'GNU patch' -e 'Free Software Foundation'; then
+		# GNU patch
+		if patch --dry-run -p1 -R <patch 1>/dev/null 2>&1; then
+			echo "Patch already applied. Nothing to do."
+			exit 1
+		fi
+	else
+		# Other patch programs, such as BSD patch and busybox.
+		# This uses -f which may cause side-effects, so not doing for GNU Patch.
+		if patch -f --dry-run -p1 -R <patch 1>/dev/null 2>&1 && \
+		   patch --dry-run -p1 -R -N <patch 1>/dev/null 2>&1; then
+			echo "Patch already applied. Nothing to do."
+			exit 1
+		fi
+		# BSD patch knows -t, so it does not ask about a missing file.
+		# busybox does not know -t.
+		if patch -t --version </dev/null >/dev/null 2>&1; then
+			BATCH="-t"
+		fi
 	fi
 
-	if ! patch -f --dry-run -p1 -N <patch 1>/dev/null 2>&1; then
+	if ! patch --dry-run -p1 -N $BATCH <patch 1>/dev/null 2>&1; then
 		echo "Patch failed to apply (no files changed)"
 		exit 1
 	fi
