@@ -6147,16 +6147,16 @@ static void match_spamfilter_hit(Client *client, const char *str_in, const char 
 
 			RunHook(HOOKTYPE_LOCAL_SPAMFILTER, client, str, str_in, target, destination, tkl);
 		}
+
+		/* Set 'winner_tkl' to the spamfilter with the strongest action. */
+		if (!*winner_tkl)
+			*winner_tkl = tkl;
+		else
+			*winner_tkl = choose_winning_spamfilter(tkl, *winner_tkl);
 	}
 
 	/* Run any SET actions */
 	ban_action_run_all_sets_and_stops(client, tkl->ptr.spamfilter->action, &stopped);
-
-	/* Set 'winner_tkl' to the spamfilter with the strongest action. */
-	if (!*winner_tkl)
-		*winner_tkl = tkl;
-	else
-		*winner_tkl = choose_winning_spamfilter(tkl, *winner_tkl);
 
 	/* If set::spamfilter::stop-on-first-match is enabled, then we also stop
 	 * (this is different than an ::action stop but the effect is the same...
@@ -6292,7 +6292,7 @@ void _run_deferred_rule_only_spamfilters(Client *client)
 	                              &stop_processing_general_spamfilters, &stop_processing_central_spamfilters,
 	                              &content_revealed);
 
-	if (winner_tkl && !match_spamfilter_exempt(winner_tkl, user_is_exempt_general, user_is_exempt_central))
+	if (winner_tkl)
 	{
 		char reason[512];
 
@@ -6499,9 +6499,6 @@ int _match_spamfilter(Client *client, const char *str_in, int target, const char
 	tkl = winner_tkl;
 	if (!tkl)
 		return 0; /* NOMATCH, we are done */
-
-	if (match_spamfilter_exempt(tkl, user_is_exempt_general, user_is_exempt_central))
-		return 0;
 
 	/* Spamfilter matched */
 	unreal_decodespace_r(tkl->ptr.spamfilter->tkl_reason, reason, sizeof(reason));
