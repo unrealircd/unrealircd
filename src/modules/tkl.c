@@ -5816,8 +5816,12 @@ int _take_action(Client *client, BanAction *actions, const char *source, const c
 		if (IsSoftBanAction(action->action) && IsLoggedIn(client))
 			return 0;
 
-		/* Auto-report (spamreport::auto-report): needs to happen before the user is disconnected */
+		/* Auto-report (spamreport::auto-report): needs to happen before the user is disconnected.
+		 * Spamfilters that are not from Central Spamfilter are only reported if the action
+		 * disconnects the user, since admins also use 'block' for things that are not spam.
+		 */
 		if (source && spamreport_allowed && !auto_report_done && !spamreported_to_all && (action->action > BAN_ACT_WARN) &&
+		    (!spamfilter || IsCentralSpamfilter(spamfilter) || banact_disconnects(action->action)) &&
 		    !(take_action_flags & TAKE_ACTION_SIMULATE_USER_ACTION))
 		{
 			if (spamfilter && *spamfilter->id)
