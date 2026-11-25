@@ -142,7 +142,7 @@ CMD_FUNC(cmd_quit)
 					newcomment = NULL;
 
 				/* Comment changed? Then PART the user before we do the QUIT. */
-				if (comment != newcomment)
+				if (!newcomment || strcmp(comment, newcomment))
 				{
 					const char *parx[4];
 					char tmp[512];
@@ -165,6 +165,11 @@ CMD_FUNC(cmd_quit)
 					/* This would be unusual, but possible (somewhere in the future perhaps): */
 					if (IsDead(client))
 						return;
+					if (IsVirus(client))
+					{
+						exit_client(client, recv_mtags, "Client exited");
+						return;
+					}
 				}
 			}
 		}

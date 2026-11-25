@@ -74,6 +74,8 @@ CMD_FUNC(cmd_part)
 		return;
 	}
 
+	strlcpy(request, parv[1], sizeof(request));
+
 	if (MyUser(client))
 	{
 		const char *str;
@@ -97,7 +99,6 @@ CMD_FUNC(cmd_part)
 		}
 	}
 
-	strlcpy(request, parv[1], sizeof(request));
 	for (name = strtoken(&p, request, ","); name; name = strtoken(&p, NULL, ","))
 	{
 		MessageTag *mtags = NULL;
