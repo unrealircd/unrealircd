@@ -367,7 +367,7 @@ void efunctions_switchover(void)
 		int found = 0;
 		for (e = Efunctions[i]; e; e = e->next)
 		{
-			if (e->willberemoved)
+			if (e->willberemoved && !(e->owner->options & MOD_OPT_PERM))
 				continue;
 			if (!efunction_table[i].funcptr)
 			{
