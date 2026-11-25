@@ -126,6 +126,7 @@ int blacklist_rehash(void);
 int blacklist_rehash_complete(void);
 void blacklist_set_handshake_delay(void);
 void blacklist_free_bluser_if_able(BLUser *bl);
+void blacklist_reset_softban(BLUser *bl);
 EVENT(blacklist_recheck);
 
 #define SetBLUser(x, y) \
@@ -659,6 +660,10 @@ int blacklist_handshake(Client *client)
 
 int blacklist_ip_change(Client *client, const char *oldip)
 {
+	/* We might have a pending softban for the old IP. If so, clear it */
+	if (BLUSER(client))
+		blacklist_reset_softban(BLUSER(client));
+	/* Start DNSBL checks for the new IP (which can be fatal) */
 	blacklist_start_check(client, 0, 1);
 	if (IsDeadSocket(client))
 		return HOOK_DENY;
@@ -723,6 +728,7 @@ int blacklist_dns_request(Client *client, Blacklist *d)
 	if (strchr(ip, '.'))
 	{
 		/* IPv4 */
+		BLUSER(client)->is_ipv6 = 0;
 		if (sscanf(ip, "%u.%u.%u.%u", &e[0], &e[1], &e[2], &e[3]) != 4)
 			return 0;
 
@@ -787,12 +793,19 @@ void blacklist_free_bluser_if_able(BLUser *bl)
 	if (bl->refcnt > 0)
 		return; /* unable, still have DNS requests/replies in-flight */
 
+	blacklist_reset_softban(bl);
+	safe_free(bl);
+}
+
+/* Undo a pending softban (user disconnected or IP changed) */
+void blacklist_reset_softban(BLUser *bl)
+{
 	safe_free(bl->save_opernotice);
 	safe_free(bl->save_reason);
 	safe_free(bl->save_blacklist);
 	safe_free(bl->save_blacklist_dns_name);
 	free_all_ban_actions(bl->save_action);
-	safe_free(bl);
+	bl->save_action = NULL;
 }
 
 char *getdnsblname(char *p, Client *client)
