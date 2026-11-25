@@ -1159,6 +1159,11 @@ int unreal_tls_accept(Client *client, int fd)
 		return -1;
 	}
 
+	if (DBufLength(&client->local->sendQ) > 0)
+		fd_setselect(fd, FD_SELECT_WRITE, send_queued_cb, client);
+	else
+		fd_setselect(fd, FD_SELECT_WRITE, NULL, client);
+
 	client->local->listener->start_handshake(client);
 
 	return 1;
