@@ -447,7 +447,7 @@ int websocket_packet_out(Client *from, Client *to, Client *intended_to, char **m
 		}
 		return 0;
 	}
-	if (MyConnect(to) && WEBSOCKET_PORT(to))
+	if (MyConnect(to) && webserver_md && WEB(to))
 		*msg = NULL;
 	return 0;
 }
