@@ -41,9 +41,9 @@ int sasl_is_handshake_finished(Client *client);
 EVENT(sasl_timeout);
 
 /* Macros */
-#define MSG_AUTHENTICATE   "AUTHENTICATE"
-#define MSG_SASL           "SASL"
-#define AGENT_SID(agent_p) (agent_p->user != NULL ? agent_p->user->server : agent_p->name)
+#define MSG_AUTHENTICATE "AUTHENTICATE"
+#define MSG_SASL         "SASL"
+#define AGENT_SID(agent) (agent->user != NULL ? agent->user->server : agent->name)
 
 /* Variables */
 long CAP_SASL = 0L;
@@ -209,6 +209,21 @@ CMD_FUNC(cmd_sasl)
 	              client->name, parv[1], parv[2], *parv[3], parv[4], parc > 5 ? parv[5] : "");
 }
 
+/** Find the SASL agent that is serving this client */
+static Client *find_sasl_agent_for_client(Client *client)
+{
+	Client *agent;
+
+	if (!*client->local->sasl_agent)
+		return NULL;
+
+	agent = find_client(client->local->sasl_agent, NULL);
+	if (agent && (IsMe(agent) || IsServer(agent) || (IsUser(agent) && !MyConnect(agent))))
+		return agent;
+
+	return NULL;
+}
+
 /*
  * AUTHENTICATE message
  *
@@ -216,7 +231,7 @@ CMD_FUNC(cmd_sasl)
  */
 CMD_FUNC(cmd_authenticate)
 {
-	Client *agent_p = NULL;
+	Client *agent = NULL;
 
 	/* Failing to use CAP REQ for sasl is a protocol violation. */
 	if (!SASL_SERVER || !MyConnect(client) || BadPtr(parv[1]) || !HasCapability(client, "sasl"))
@@ -237,13 +252,12 @@ CMD_FUNC(cmd_authenticate)
 	if (client->user == NULL)
 		make_user(client);
 
-	if (*client->local->sasl_agent)
-		agent_p = find_client(client->local->sasl_agent, NULL);
+	agent = find_sasl_agent_for_client(client);
 
 	client->local->sasl_out++;
 	client->local->sasl_sent_time = TStime();
 
-	if (agent_p == NULL)
+	if (agent == NULL)
 	{
 		char *addr = BadPtr(client->ip) ? "0" : client->ip;
 		const char *certfp = moddata_client_get(client, "certfp");
@@ -266,20 +280,22 @@ CMD_FUNC(cmd_authenticate)
 		}
 	} else
 	{
-		if (agent_p == &me)
+		if (agent == &me)
 		{
 			/* We are the SASL server (some module handling auth) */
 			RunHook(HOOKTYPE_SASL_AUTHENTICATE, client, 0, parv[1]);
 		} else
 		{
 			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s C %s",
-			              me.name, AGENT_SID(agent_p), client->id, parv[1]);
+			              me.name, AGENT_SID(agent), client->id, parv[1]);
 		}
 	}
 }
 
 static int abort_sasl(Client *client)
 {
+	Client *agent;
+
 	client->local->sasl_sent_time = 0;
 
 	if (client->local->sasl_out == 0 || client->local->sasl_complete)
@@ -288,16 +304,12 @@ static int abort_sasl(Client *client)
 	client->local->sasl_out = client->local->sasl_complete = 0;
 	sendnumeric(client, ERR_SASLABORTED);
 
-	if (*client->local->sasl_agent)
+	agent = find_sasl_agent_for_client(client);
+	if (agent)
 	{
-		Client *agent_p = find_client(client->local->sasl_agent, NULL);
-
-		if (agent_p != NULL)
-		{
-			sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s D A",
-			              me.name, AGENT_SID(agent_p), client->id);
-			return 0;
-		}
+		sendto_server(NULL, 0, 0, NULL, ":%s SASL %s %s D A",
+		              me.name, AGENT_SID(agent), client->id);
+		return 0;
 	}
 
 	sendto_server(NULL, 0, 0, NULL, ":%s SASL * %s D A", me.name, client->id);
