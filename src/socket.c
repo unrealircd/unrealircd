@@ -1281,6 +1281,13 @@ void read_packet(int fd, int revents, void *data)
 
 		ClearPingWarning(client);
 
+		if (IsStartTLSHandshake(client) && client->local->ssl && SSL_is_init_finished(client->local->ssl))
+		{
+			client->local->listener->start_handshake(client);
+			if (IsDead(client))
+				return;
+		}
+
 		processdata = 1;
 		for (h = Hooks[HOOKTYPE_RAWPACKET_IN]; h; h = h->next)
 		{
