@@ -1,8 +1,14 @@
 UnrealIRCd 6.2.8-rc1
 =====================
 
-This is the Release Candidate for future version 6.2.8. You can help us by
-testing this release and reporting bugs to https://bugs.unrealircd.org/
+UnrealIRCd 6.2.8 comes with lots of fixes and security improvements.
+Most of these were found during our own internal audits with AI.
+In general it is a good idea to upgrade to the latest version,
+but for 6.2.8 there is no need to rush.
+
+Speaking of AI, we have a new [AI policy](../AI_POLICY.md) for code.
+We already allowed AI in the [security policy](../SECURITY.md), as long as
+actual live confirmed issues are brought up.
 
 IMPORTANT: If you use a webchat that connects directly to UnrealIRCd with
 websockets then you MUST add it to set::websocket::allowed-origins.
@@ -72,14 +78,26 @@ See the first item under *Changes*.
 * You now get a config error if you use `action { gline; report; }`.
   This because `report` (and `set`) cannot happen after a user is killed.
   The correct syntax is: `action { report; gline; }`
+* `./Config` runs faster again because it uses `make -j4` on most systems.
 * Update shipped libs: PCRE2 (10.49)
 * The tkldb database now saves ban sources. The downside is that you
   cannot downgrade to 6.2.7.1 or older without losing your tkldb.
+* Clarified in the [security policy](https://www.unrealircd.org/docs/Policy:_Handling_of_security_issues)
+  that the configuration file (and remote includes) are considered trusted,
+  just like in many other projects such as Apache, nginx and NodeJS.
 
 ### Fixes:
 * Crash with an alias of `type channel` (we don't ship with any by default)
 * Crash in JSON-RPC `whowas.get` with an `ip` filter
 * Crash with certain empty config values, eg `match { country ""; }`
+* Crash if someone takes the nick of a SASL agent (rare, as eg Anope
+  q-lines NickServ)
+* Crash with set::part-instead-of-quit-on-comment-change with a spamfilter
+  viruschan action
+* Crashes and weird behavior (eg 100% CPU) with a non-webirc proxy block
+* DNSBL checks did not work for IPv4 users behind an IPv6 WEBIRC gateway.
+* Users exempt from Central Spamfilter could bypass other spamfilters.
+* Injection of fake log lines
 * Multiple `./unrealircd hot-patch` fixes:
   * It could previously fail after a distro upgrade that came with a
     newer compiler. We now always compile with `-std=gnu17` if the
@@ -95,18 +113,20 @@ See the first item under *Changes*.
   would hang and time out after 40 seconds. This would be rare.
   Normal DNS failures, like a timeout or NXDOMAIN, were unaffected.
 * Channel messages to a prefix were sent to the wrong users.
-  For example, `~#channel` messages were delivered to +vhoaq, and
-  messages to `+#channel` were delivered to +hoaq.
+  For example, both `~#channel` and `+#channel` messages were delivered
+  to +hoaq.
 * [Extended server bans](https://www.unrealircd.org/docs/Extended_server_bans)
   did not work if the value contained a `@` (eg `~realname:*@*`) or
   when the value was an actual IP address (eg `~realname:1.2.3.4`).
-  Note that if you add such bans now, they won't work on 6.2.7 or
+  Note that if you add such bans now, they won't work on 6.2.7.1 or
   older servers that are linked.
 * Clients on a UNIX socket listener (eg for Tor or I2P) never got a
   registration timeout, keeping many unregistered connections open.
 * In 6.2.x every server ban was accidentally reported to all spamreport
   blocks (including Central Spamreport). That could have been especially
   bad if you had a spamreport block with type `dronebl`.
+* `CHATHISTORY BETWEEN` sometimes returned the oldest messages instead
+  of the newest.
 
 ### Developers and protocol:
 * Numeric 350 (RPL_WHOISGATEWAY) now shows the websocket origin and
