@@ -9,17 +9,21 @@ for information on older versions and End Of Life dates.
 ## Scope
 
 In general, issues triggered by regular users involving memory safety issues
-(such as OOB read/write or UAF), sensitive information disclosure, privilege elevation,
-Denial of Service (e.g. a crash), or remote code execution fall within the scope of
-this security policy.
+(such as OOB read/write or UAF), sensitive information disclosure,
+privilege elevation, Denial of Service (e.g. a crash), or remote code execution
+fall within the scope of this security policy.
 
-Issues that require IRCOp rights, server-to-server traffic, or editing of config
-files may still fall within scope, but are classified case by case depending on
-the impact and circumstances.
+Issues that require IRCOp rights, JSON-RPC access, or server-to-server traffic
+may still fall within scope, but are classified case by case depending on the
+impact and circumstances.
 
-Issues that require shell access as the same user running UnrealIRCd are not
-considered security issues. See the
-[full policy](https://www.unrealircd.org/docs/Policy:_Handling_of_security_issues)
+Out of scope:
+* Issues that require a bad guy to edit a configuration file are out of scope.
+  The configuration file (and remote includes) are considered trusted.
+* Issues that require shell access as the same user running UnrealIRCd are
+  not considered security issues.
+
+See the [full policy](https://www.unrealircd.org/docs/Policy:_Handling_of_security_issues)
 for details.
 
 ## Use of AI or other tools
