@@ -1,5 +1,5 @@
-UnrealIRCd 6.2.8-rc1
-=====================
+UnrealIRCd 6.2.8
+=================
 
 UnrealIRCd 6.2.8 comes with lots of fixes and security improvements.
 Most of these were found during our own internal audits with AI.
@@ -10,7 +10,7 @@ Speaking of AI, we have a new [AI policy](../AI_POLICY.md) for code.
 We already allowed AI in the [security policy](../SECURITY.md), as long as
 actual live confirmed issues are brought up.
 
-IMPORTANT: If you use a webchat that connects directly to UnrealIRCd with
+**IMPORTANT:** If you use a webchat that connects directly to UnrealIRCd with
 websockets then you MUST add it to set::websocket::allowed-origins.
 See the first item under *Changes*.
 
@@ -45,6 +45,8 @@ See the first item under *Changes*.
 * Websocket connections from browsers are now refused, unless the website
   is listed in
   [set::websocket::allowed-origins](https://www.unrealircd.org/docs/Set_block#set::websocket).
+  This because otherwise any website could connect visitors to your IRC
+  server (without a prompt) to eg spam or flood from many IPs.
   * If you have a webchat that connects directly to UnrealIRCd using
     websockets, then be sure to add it through:  
     `set { websocket { allowed-origins { webchat.example.net; } } }`  
